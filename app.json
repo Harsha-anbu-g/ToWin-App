@@ -1,11 +1,15 @@
 {
   "expo": {
-    "name": "App",
-    "slug": "App",
+    "name": "ToWin",
+    "slug": "towin",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "towin",
     "userInterfaceStyle": "light",
+    "extra": {
+      "apiBaseUrl": "http://192.168.0.13:8080/api"
+    },
     "ios": {
       "supportsTablet": true
     },
@@ -19,6 +23,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-font"
+    ]
   }
 }
