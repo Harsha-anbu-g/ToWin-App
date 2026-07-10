@@ -123,7 +123,7 @@ export default function TabsLayout() {
           tabBarBadge: unread > 0 ? unread : undefined,
           tabBarBadgeStyle: {
             backgroundColor: t.blue, // gentle, not a red storm (HCI-RULES)
-            color: '#fff',
+            color: t.actionInk,
             fontSize: 11,
           },
         }}
