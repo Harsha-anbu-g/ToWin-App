@@ -15,6 +15,14 @@ export const light = {
   blueSoft: '#BFD9EA', // soft borders
   blueTint: '#E6F2FA', // light fills
   blueWash: '#EAF5FB', // lighter fills
+  skyBarFrom: '#7FC0E0', // trust-ladder bar gradient start (user-locked)
+
+  // Filled action controls — the fill that carries button text. The owner's
+  // explicit call (2026-07-06): the sky-blue brand fill stays, white text on
+  // it included, accepting the 2.8:1 ratio on these fills. Do NOT swap in a
+  // darker blue "for contrast" — that was tried and rejected as off-brand.
+  actionFill: '#4FA3CE', // web: var(--blue)
+  actionInk: '#ffffff',
 
   // Neutral slate — avatars & trust badge
   slateTint: '#EEF1F4',
@@ -75,6 +83,7 @@ export const light = {
   greyLine: '#e5e7eb',
   starGold: '#f5b400', // rating stars — stays lit in both themes
   tortoiseBed: '#ffffff', // light circle behind the tortoise — light in BOTH themes
+  logoGreen: '#025E32', // the mark's own stroke, sampled from the artwork — NOT greenDeep
   segActive: '#ffffff', // active chip on a segmented-control track
   btnDisabled: '#94a3b8',
   shadowMenu: '0 8px 24px rgba(0,0,0,0.12)', // dropdowns/drawers (web string; RN uses elevation)
