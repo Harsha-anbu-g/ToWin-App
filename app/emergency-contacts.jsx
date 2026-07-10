@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import api from '../src/api/client';
+import SosCard from '../src/components/home/SosCard';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
@@ -69,10 +70,12 @@ export default function EmergencyContacts() {
     ]);
 
   return (
-    <Screen back title="Emergency contacts" keyboard>
-      <Card>
+    <Screen back title="Emergency" keyboard>
+      <SosCard />
+
+      <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-          These people get an alert the moment you press the SOS button on your Home feed.
+          These people get an alert the moment you press the SOS button above.
         </Text>
       </Card>
 
