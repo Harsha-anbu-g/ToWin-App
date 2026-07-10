@@ -1,13 +1,20 @@
 // Legal document sheet — port of Register.jsx's LegalModal (placeholder docs).
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Button from './ui/Button';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function LegalModal({ title, sections, visible, onClose }) {
   const { t, spacing, radius, text, fontFamily } = useTheme();
+  const reducedMotion = useReducedMotion();
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reducedMotion ? 'none' : 'fade'}
+      onRequestClose={onClose}
+    >
       <View
         style={{
           flex: 1,
