@@ -9,22 +9,26 @@ import { UserPlus } from 'lucide-react-native';
 import Screen from '../../src/components/ui/Screen';
 import CheckinCard from '../../src/components/home/CheckinCard';
 import GameCard from '../../src/components/home/GameCard';
+import MyJobsCard from '../../src/components/home/MyJobsCard';
 import MyRequestsCard from '../../src/components/home/MyRequestsCard';
 import NearbyHelpersCard from '../../src/components/home/NearbyHelpersCard';
+import OpenRequestsCard from '../../src/components/home/OpenRequestsCard';
 import SosCard from '../../src/components/home/SosCard';
 import TrustSummaryCard from '../../src/components/home/TrustSummaryCard';
-import Card from '../../src/components/ui/Card';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function HomeScreen() {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, spacing, text } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
+  // HELPER: helper feed. ELDER: elder feed. BOTH: elder feed + helper section
+  // (web DashboardRouter parity — BOTH renders the elder dashboard).
   const isHelper = user?.role === 'HELPER';
+  const isBoth = user?.role === 'BOTH';
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -70,23 +74,19 @@ export default function HomeScreen() {
         contentContainerStyle={{ padding: spacing[5], paddingBottom: spacing[12], gap: spacing[4] }}
       >
         {isHelper ? (
-          // US-009 replaces this with the helper feed (trust score, open requests, my jobs)
-          <Card>
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
-            >
-              Welcome back
-            </Text>
-            <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
-              Your helper feed arrives in the next build step. Use the blue Find requests button
-              below to browse meanwhile.
-            </Text>
-          </Card>
+          <View style={{ gap: spacing[4] }}>
+            <TrustSummaryCard />
+            <OpenRequestsCard />
+            <MyJobsCard />
+            <CheckinCard />
+            <GameCard />
+          </View>
         ) : (
           <View style={{ gap: spacing[4] }}>
             <CheckinCard />
             <MyRequestsCard />
+            {isBoth ? <OpenRequestsCard /> : null}
+            {isBoth ? <MyJobsCard /> : null}
             <NearbyHelpersCard />
             <TrustSummaryCard />
             <GameCard />
