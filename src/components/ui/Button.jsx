@@ -1,7 +1,8 @@
-// ToWin buttons — DESIGN.md: exactly ONE filled sky-blue pill primary per screen;
-// secondary = outlined hairline pill; text = quiet tertiary. Elder rules: min 44pt
-// target, pressed feedback via opacity only (no layout shift).
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+// Button — Material (react-native-paper) under the app's own API, so every
+// screen keeps its props while the look is MD3. Variants: primary (contained),
+// secondary (outlined), text, destructive (outlined, error color).
+// Elder rules hold: >=44pt target, readable 16px label.
+import { Button as PaperButton } from 'react-native-paper';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function Button({
@@ -14,75 +15,28 @@ export default function Button({
   accessibilityLabel,
   accessibilityHint,
 }) {
-  const { t, spacing, radius, text } = useTheme();
+  const { t } = useTheme();
 
-  const palette = {
-    primary: {
-      backgroundColor: disabled ? t.btnDisabled : t.actionFill,
-      borderWidth: 0,
-      color: t.actionInk,
-    },
-    secondary: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: t.border,
-      color: t.ink,
-    },
-    text: {
-      backgroundColor: 'transparent',
-      borderWidth: 0,
-      color: t.blueDeep,
-    },
-    destructive: {
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: t.redLine,
-      color: t.redDeep,
-    },
-  }[variant];
-
-  const blocked = disabled || loading;
+  const mode =
+    variant === 'primary' ? 'contained' : variant === 'text' ? 'text' : 'outlined';
+  const textColor =
+    variant === 'destructive' ? t.redDeep : variant === 'primary' ? t.actionInk : t.blueDeep;
 
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PaperButton
+      mode={mode}
+      onPress={onPress}
+      disabled={disabled}
+      loading={loading}
+      buttonColor={variant === 'primary' ? t.actionFill : undefined}
+      textColor={textColor}
       accessibilityLabel={accessibilityLabel ?? title}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: blocked, busy: loading }}
-      disabled={blocked}
-      onPress={onPress}
-      hitSlop={4}
-      style={({ pressed }) => [
-        {
-          minHeight: 44,
-          borderRadius: radius.pill,
-          paddingHorizontal: spacing[6],
-          paddingVertical: spacing[3],
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexDirection: 'row',
-          backgroundColor: palette.backgroundColor,
-          borderWidth: palette.borderWidth,
-          borderColor: palette.borderColor,
-          opacity: pressed ? 0.82 : disabled && variant !== 'primary' ? 0.5 : 1,
-        },
-        style,
-      ]}
+      style={[{ borderRadius: 999 }, variant === 'destructive' ? { borderColor: t.redLine } : null, style]}
+      contentStyle={{ minHeight: 48 }}
+      labelStyle={{ fontSize: 16, fontWeight: '600', letterSpacing: 0.1 }}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color={palette.color} />
-      ) : (
-        <Text
-          style={{
-            color: palette.color,
-            fontSize: text.base,
-            fontWeight: '600',
-            textAlign: 'center',
-          }}
-        >
-          {title}
-        </Text>
-      )}
-    </Pressable>
+      {title}
+    </PaperButton>
   );
 }

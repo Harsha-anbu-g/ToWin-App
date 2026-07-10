@@ -31,7 +31,7 @@ export default function Welcome() {
           }}
         >
           It takes{' '}
-          <Text style={{ fontFamily: 'Newsreader_400Regular_Italic' }}>two</Text>
+          <Text style={{ fontFamily: fontFamily.displayItalic }}>two</Text>
           {'\n'}To Win
         </Text>
         <Text

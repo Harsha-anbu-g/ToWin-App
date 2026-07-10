@@ -3,8 +3,8 @@
 // Drafts survive leaving the chat (HCI rule 9); a failed send restores the
 // text and offers retry. The assistant FAB stays off this screen (HCI rule 8).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -53,6 +53,17 @@ export default function ChatThread() {
     drafts.set(connectionId, input);
   }, [connectionId, input]);
 
+  // Only poll while this thread is the focused screen — pushing the friend's
+  // profile on top (or backgrounding) must stop the 5s cycle. Also keeps the
+  // mark-seen effect honest: unseen messages aren't "seen" by a buried screen.
+  const [isFocused, setIsFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, [])
+  );
+
   const { data: connections } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
@@ -62,23 +73,28 @@ export default function ChatThread() {
   const { data } = useQuery({
     queryKey: ['messages', connectionId],
     queryFn: async () => (await api.get(`/messages/${connectionId}?size=50`)).data,
-    refetchInterval: 5000, // web Messages.jsx polls every 5s
+    refetchInterval: isFocused ? 5000 : false, // web Messages.jsx polls every 5s — only while focused
     enabled: !!connectionId,
   });
-  const messages = [...(data?.content ?? (Array.isArray(data) ? data : []))].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // newest first (inverted list)
+  const messages = useMemo(
+    () =>
+      [...(data?.content ?? (Array.isArray(data) ? data : []))].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // newest first (inverted list)
+      ),
+    [data]
   );
 
   // Mark seen when the thread is open and new messages arrive
   const seenOnce = useRef('');
   useEffect(() => {
+    if (!isFocused) return;
     const newestIncoming = messages.find((m) => m.senderId !== user?.userId);
     if (newestIncoming && seenOnce.current !== newestIncoming.id) {
       seenOnce.current = newestIncoming.id;
       api.post(`/messages/${connectionId}/seen`).catch(() => {});
       queryClient.invalidateQueries({ queryKey: ['unread-count'] });
     }
-  }, [messages, connectionId, user?.userId, queryClient]);
+  }, [messages, connectionId, user?.userId, queryClient, isFocused]);
 
   const send = useMutation({
     mutationFn: (content) => api.post(`/messages/${connectionId}/send`, { content }),
@@ -99,7 +115,7 @@ export default function ChatThread() {
     send.mutate(content);
   };
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = useCallback(({ item, index }) => {
     const mine = item.senderId === user?.userId;
     // Inverted list: the "previous" message in time is the NEXT index
     const prev = messages[index + 1];
@@ -145,7 +161,7 @@ export default function ChatThread() {
         </View>
       </View>
     );
-  };
+  }, [messages, user?.userId, t, spacing, radius, text]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: t.surface }}>

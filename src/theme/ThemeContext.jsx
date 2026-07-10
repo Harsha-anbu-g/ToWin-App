@@ -1,7 +1,7 @@
 // Mirrors ToWin/frontend/src/context/ThemeContext.jsx: light is the ONLY default,
 // night mode is strictly opt-in (Profile toggle), persisted under "towin-theme",
 // and the OS appearance is never followed (elder predictability).
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { light, dark, spacing, radius, text, fontFamily } from './tokens';
 
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }) {
     })();
   }, []);
 
-  const toggle = async () => {
+  const toggle = useCallback(async () => {
     const next = mode === 'dark' ? 'light' : 'dark';
     setMode(next);
     try {
@@ -30,15 +30,16 @@ export function ThemeProvider({ children }) {
     } catch {
       // persistence failed — the in-memory theme still applies this session
     }
-  };
+  }, [mode]);
 
-  const t = mode === 'dark' ? dark : light;
-
-  return (
-    <ThemeContext.Provider value={{ mode, toggle, t, spacing, radius, text, fontFamily }}>
-      {children}
-    </ThemeContext.Provider>
+  // Stable value: useTheme() is consumed by nearly every component, so a fresh
+  // object here would re-render the whole tree on every provider render.
+  const value = useMemo(
+    () => ({ mode, toggle, t: mode === 'dark' ? dark : light, spacing, radius, text, fontFamily }),
+    [mode, toggle]
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export const useTheme = () => useContext(ThemeContext);

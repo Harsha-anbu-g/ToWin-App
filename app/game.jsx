@@ -1,7 +1,7 @@
 // Peekaboo — the calm memory game (port of PeekabooGame.jsx logic: 6 pairs,
 // 60 seconds, misses flip back after 1.2s). Tiles are big and touch-friendly;
 // no flashy motion — state changes resolve instantly (reduced-motion safe).
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Turtle } from 'lucide-react-native';
 import Button from '../src/components/ui/Button';
@@ -17,6 +17,10 @@ export default function GameScreen() {
   const [locked, setLocked] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIME);
   const [phase, setPhase] = useState('playing'); // playing | won | lost
+  // The 1.2s flip-back timer must not outlive the screen (or a restart) — a
+  // dangling timer would setState after unmount / corrupt a fresh board.
+  const flipBackTimer = useRef(null);
+  useEffect(() => () => clearTimeout(flipBackTimer.current), []);
 
   useEffect(() => {
     if (phase !== 'playing') return;
@@ -42,7 +46,7 @@ export default function GameScreen() {
     if (next.length === 2) {
       setLocked(true);
       const [a, b] = next;
-      setTimeout(() => {
+      flipBackTimer.current = setTimeout(() => {
         setCards((prev) => resolvePair(prev, a, b));
         setSelected([]);
         setLocked(false);
@@ -51,6 +55,7 @@ export default function GameScreen() {
   };
 
   const restart = () => {
+    clearTimeout(flipBackTimer.current);
     setCards(initCards());
     setSelected([]);
     setLocked(false);

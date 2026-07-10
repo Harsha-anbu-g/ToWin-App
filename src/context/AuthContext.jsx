@@ -4,7 +4,7 @@
 // storage. An expired token at boot is treated as logged out from the start,
 // so pages never render broken and silently empty. Absent `ev` claim
 // (old/grandfathered tokens) = verified.
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { setOnSessionExpired, setTokenGetter } from '../api/client';
 import { parseJwtPayload } from '../lib/jwt';
@@ -76,11 +76,14 @@ export function AuthProvider({ children }) {
     })();
   }, [logout]);
 
-  return (
-    <AuthContext.Provider value={{ user, booted, login, logout, sessionExpired }}>
-      {children}
-    </AuthContext.Provider>
+  // Stable value — useAuth() consumers span the whole app; don't re-render them
+  // all just because the provider re-rendered.
+  const value = useMemo(
+    () => ({ user, booted, login, logout, sessionExpired }),
+    [user, booted, login, logout, sessionExpired]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

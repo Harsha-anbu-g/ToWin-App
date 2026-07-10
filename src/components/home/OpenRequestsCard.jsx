@@ -91,7 +91,13 @@ export function RequestRow({ need, apply, withdraw, divider }) {
             </Text>
           </View>
         ) : (
-          <Button title="Offer to help" variant="secondary" onPress={() => apply.mutate(need.id)} />
+          <Button
+            title="Offer to help"
+            variant="secondary"
+            onPress={() => apply.mutate(need.id)}
+            loading={apply.isPending && apply.variables === need.id}
+            disabled={apply.isPending}
+          />
         )}
       </View>
     </View>

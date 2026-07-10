@@ -9,6 +9,8 @@ import { AuthProvider } from '../src/context/AuthContext';
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useLocalSearchParams: () => ({ connectionId: 'c1' }),
+  // Screens under test behave as the focused screen (runs the effect on mount).
+  useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
 
