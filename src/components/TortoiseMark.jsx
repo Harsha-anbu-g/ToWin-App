@@ -22,6 +22,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useTheme } from '../theme/ThemeContext';
+import { TORTOISE_CELL_GREEN } from '../theme/parity';
 import { CELLS, DRAW, STROKE, VIEWBOX } from './tortoiseMarkPaths';
 
 const APath = Animated.createAnimatedComponent(Path);
@@ -122,13 +123,16 @@ export default function TortoiseMark({ size = 82, intro = false, running = false
             />
           )
         )}
-        {CELLS.map(([id, cx, cy, d], i) =>
-          intro ? (
-            <CellPath key={id} d={d} cx={cx} cy={cy} index={i} running={running} />
-          ) : (
-            <Path key={id} d={d} />
-          )
-        )}
+        {/* Shell cells sit a shade lighter than the outline (artwork parity) */}
+        <G stroke={TORTOISE_CELL_GREEN}>
+          {CELLS.map(([id, cx, cy, d], i) =>
+            intro ? (
+              <CellPath key={id} d={d} cx={cx} cy={cy} index={i} running={running} />
+            ) : (
+              <Path key={id} d={d} />
+            )
+          )}
+        </G>
       </G>
     </Svg>
   );
