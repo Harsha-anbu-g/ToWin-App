@@ -5,12 +5,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
+import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -196,6 +197,7 @@ function AddFriends() {
   const { user } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
   // Elders discover helpers; helpers discover elders; BOTH sees helpers first.
   const path = user?.role === 'HELPER' ? '/discover/elders' : '/discover/helpers';
@@ -222,55 +224,69 @@ function AddFriends() {
       showToast(err?.response?.data?.message || 'Could not send the request. Please try again.', 'error'),
   });
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ['discover', path] });
+    await queryClient.invalidateQueries({ queryKey: ['connections'] });
+    setRefreshing(false);
+  };
+
+  // Virtualized (50+ people rule): one FlatList, each person a row card.
   return (
-    <Card>
-      <Text
-        accessibilityRole="header"
-        style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
-      >
-        People near you
-      </Text>
-      {isLoading ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Looking around…</Text>
-      ) : people.length === 0 ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-          Nobody new to show right now. Check back soon — new people join every day.
+    <FlatList
+      data={isLoading ? [] : people}
+      keyExtractor={(p) => p.userId}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+      contentContainerStyle={{ padding: spacing[5], paddingTop: 0, paddingBottom: spacing[12], gap: spacing[3] }}
+      ListHeaderComponent={
+        <Text
+          accessibilityRole="header"
+          style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[2] }}
+        >
+          People near you
         </Text>
-      ) : (
-        people.map((p) => {
-          const already = connectedIds.has(p.userId);
-          return (
-            <View
-              key={p.userId}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3], marginTop: spacing[4] }}
-            >
-              <Avatar name={p.name} uri={p.photoUrl} size={48} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: text.base, color: t.ink }}>
-                  {p.name}
-                  {p.age ? `, ${p.age}` : ''}
-                </Text>
-                <Text numberOfLines={1} style={{ fontSize: text.sm, color: t.inkSlate }}>
-                  {p.city ?? 'Nearby'}
-                  {Number.isFinite(p.distanceKm) && p.distanceKm > 0 ? ` · ${p.distanceKm.toFixed(0)} km` : ''}
-                  {Number.isFinite(p.trustScore) ? ` · ${p.trustScore} trust` : ''}
-                </Text>
-              </View>
-              {already ? (
-                <Text style={{ fontSize: text.sm, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
-              ) : (
-                <Button
-                  title="Add"
-                  variant="secondary"
-                  onPress={() => request.mutate(p.userId)}
-                  style={{ paddingHorizontal: spacing[4] }}
-                />
-              )}
+      }
+      ListEmptyComponent={
+        <Card>
+          {isLoading ? (
+            <SkeletonCard />
+          ) : (
+            <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
+              Nobody new to show right now. Check back soon — new people join every day.
+            </Text>
+          )}
+        </Card>
+      }
+      renderItem={({ item: p }) => {
+        const already = connectedIds.has(p.userId);
+        return (
+          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+            <Avatar name={p.name} uri={p.photoUrl} size={48} />
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: text.base, color: t.ink }}>
+                {p.name}
+                {p.age ? `, ${p.age}` : ''}
+              </Text>
+              <Text numberOfLines={1} style={{ fontSize: text.sm, color: t.inkSlate }}>
+                {p.city ?? 'Nearby'}
+                {Number.isFinite(p.distanceKm) && p.distanceKm > 0 ? ` · ${p.distanceKm.toFixed(0)} km` : ''}
+                {Number.isFinite(p.trustScore) ? ` · ${p.trustScore} trust` : ''}
+              </Text>
             </View>
-          );
-        })
-      )}
-    </Card>
+            {already ? (
+              <Text style={{ fontSize: text.sm, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
+            ) : (
+              <Button
+                title="Add"
+                variant="secondary"
+                onPress={() => request.mutate(p.userId)}
+                style={{ paddingHorizontal: spacing[4] }}
+              />
+            )}
+          </Card>
+        );
+      }}
+    />
   );
 }
 
@@ -288,10 +304,8 @@ export default function FriendsScreen() {
 
   return (
     <Screen back title="Friends" scroll={false} contentStyle={{ padding: 0 }}>
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-        contentContainerStyle={{ padding: spacing[5], paddingBottom: spacing[12] }}
-      >
+      {/* Segments stay fixed; each segment owns its own scroll container */}
+      <View style={{ paddingHorizontal: spacing[5], paddingTop: spacing[2] }}>
         <Segmented
           value={seg}
           onChange={setSeg}
@@ -300,8 +314,17 @@ export default function FriendsScreen() {
             { value: 'add', label: 'Add friends' },
           ]}
         />
-        {seg === 'mine' ? <MyFriends /> : <AddFriends />}
-      </ScrollView>
+      </View>
+      {seg === 'mine' ? (
+        <ScrollView
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+          contentContainerStyle={{ padding: spacing[5], paddingTop: 0, paddingBottom: spacing[12] }}
+        >
+          <MyFriends />
+        </ScrollView>
+      ) : (
+        <AddFriends />
+      )}
     </Screen>
   );
 }
