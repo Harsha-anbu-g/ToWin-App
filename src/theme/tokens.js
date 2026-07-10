@@ -1,239 +1,238 @@
-// ToWin Mobile theme — CLAUDE DESIGN (owner's pivot, 2026-07-10): Anthropic's
-// official brand palette replaces the website's parchment/sky-blue system.
-// Ivory #faf9f5 canvas, dark #141413 ink, orange #d97757 as THE action color,
-// blue #6a9bcc / green #788c5d as secondary accents. Trust stays gold (product
-// semantics), reds stay semantic. Token KEYS are unchanged so every screen
-// reskins from this one file. ("blue*" keys now carry the ACTION hue = orange;
-// "sky*" keys carry the secondary blue accent.)
+// ToWin design tokens — 1:1 port of ToWin/frontend/src/index.css (user-approved 2026-07-05).
+// Light block: index.css :root (lines 19–169). Dark: the [data-theme="dark"] overrides
+// (lines 177–280) layered over light, mirroring the CSS cascade. Values are verbatim;
+// do not "improve" them — the palette is locked (see ToWin/DESIGN.md).
 
 export const light = {
-  // ACTION hue (Claude orange) — key names kept for compatibility
-  blue: '#d97757', // primary action
-  blueFocus: '#d97757',
-  blueDark: '#8f4a2e',
-  blueOnDark: '#d97757',
-  blueDeep: '#a04f2d', // action text/icons on light (readable orange)
-  blueTeal: '#b05e3a', // wordmark
-  blueMid: '#e6ab93', // loading / disabled
-  blueSoft: '#eccab7', // soft borders on tinted surfaces
-  blueTint: '#f7e7de', // light fills
-  blueWash: '#faf0e9', // lighter fills
-  skyBarFrom: '#e0997c', // trust-ladder bar gradient start (action family)
+  // Brand blue — sky-blue scale
+  blue: '#4FA3CE', // primary action
+  blueFocus: '#0071e3',
+  blueDark: '#004499',
+  blueOnDark: '#4FA3CE',
+  blueDeep: '#2E7DA6', // text/icons on light
+  blueTeal: '#3D8AB0',
+  blueMid: '#7BB8D6', // loading / disabled
+  blueSoft: '#BFD9EA', // soft borders
+  blueTint: '#E6F2FA', // light fills
+  blueWash: '#EAF5FB', // lighter fills
+  skyBarFrom: '#7FC0E0', // trust-ladder bar gradient start (user-locked)
 
-  // Filled action controls — Claude orange with white ink
-  actionFill: '#d97757',
+  // Filled action controls — the fill that carries button text. The owner's
+  // explicit call (2026-07-06): the sky-blue brand fill stays, white text on
+  // it included, accepting the 2.8:1 ratio on these fills. Do NOT swap in a
+  // darker blue "for contrast" — that was tried and rejected as off-brand.
+  actionFill: '#4FA3CE', // web: var(--blue)
   actionInk: '#ffffff',
 
-  // Neutral — warm Anthropic grays
-  slateTint: '#f0eee6',
-  slateSoft: '#d9d7cc',
+  // Neutral slate — avatars & trust badge
+  slateTint: '#EEF1F4',
+  slateSoft: '#D7DCE2',
 
-  // Typography colors — warm dark ramp
-  ink: '#141413',
-  ink2: '#3d3d3a',
-  ink3: '#6e6d66',
-  ink4: '#91908a',
-  inkFaint: '#b0aea5', // mid gray — faint hints / disabled text
-  inkDeep: '#33322e',
-  inkSlate: '#5f5e58', // common secondary text
-  inkSlate2: '#6a6963',
-  inkSlateDark: '#454440',
-  slate: '#7c7b74',
-  leaf: '#788c5d', // success accent (Anthropic green)
-  redMild: '#cf6a66',
+  // Typography colors
+  ink: '#1d1d1f',
+  ink2: '#333333',
+  ink3: '#7a7a7a',
+  ink4: '#a0a0a5',
+  inkFaint: '#c8c8cd', // faintest hints / disabled text
+  inkDeep: '#2d3748', // heavy slate headings
+  inkSlate: '#5a6470', // common secondary text
+  inkSlate2: '#5a6b75',
+  inkSlateDark: '#3a4450',
+  slate: '#718096',
+  leaf: '#3d8b5a', // success text accent
+  redMild: '#cf6a66', // soft error text
 
-  // Surfaces — ivory world
-  canvas: '#ffffff', // cards
-  surface: '#faf9f5', // page background (Anthropic Light)
-  surface2: '#f0eee6',
-  surfacePearl: '#fcfbf8',
-  surfaceDark: '#262624',
-  surfaceBlack: '#141413',
+  // Surfaces
+  canvas: '#ffffff', // cards — elevation via surface contrast, not shadow
+  surface: '#f6f4ef', // warm off-white — the page canvas + input fills
+  surface2: '#f1eee8',
+  surfacePearl: '#fbfaf6',
+  surfaceDark: '#272729',
+  surfaceBlack: '#000000',
 
-  // Borders — the Anthropic light gray as hairlines
-  border: '#e8e6dc',
-  borderSoft: '#f0eee6',
+  // Borders — warm hairlines (ink-on-paper feel)
+  border: '#e5e1d9',
+  borderSoft: '#efebe3',
 
   // Semantic
   red: '#cc0000',
-  redError: '#dc2626',
-  redTint: '#fef2f2',
-  redSoft: '#fca5a5',
-  redDeep: '#9b3535',
+  redError: '#dc2626', // form-field errors
+  redTint: '#fef2f2', // error background
+  redSoft: '#fca5a5', // error border
+  redDeep: '#9b3535', // destructive (end connection)
   amber: '#b05000',
-  greenDeep: '#4f6338', // achieved / success text (Anthropic green, darkened)
-  greenTint: '#eef0e7', // success background
-  trustGold: '#9C7A3C', // trust stays gold — product semantics
+  greenDeep: '#1a5c2e', // trusted / success text
+  greenTint: '#ebf6ee', // success background
+  trustGold: '#9C7A3C', // ALWAYS used for "trust" text
 
   // Alias tokens — role names, not hues
-  hairline: '#f0efe9',
-  hairline2: '#e3e1d7',
-  skyLine: '#d6e2ee', // secondary-blue chip borders (Anthropic blue family)
-  skyLine2: '#cfdeec',
-  skyGhost: '#f4f8fb',
-  greenWash: '#f2f4ec',
-  greenLine: '#c9d3b6',
+  hairline: '#f0f0f0', // menu/list row separators
+  hairline2: '#e0e0e0',
+  skyLine: '#dcebf4', // borders on sky-tinted chips
+  skyLine2: '#d8eaf4',
+  skyGhost: '#f4fafd', // faintest sky fill
+  greenWash: '#f0fdf4',
+  greenLine: '#bfe0c9',
   redLine: '#fecaca',
-  goldWash: '#f7efdd',
-  goldLine: '#e7d3a5',
-  goldDeep: '#7a5b1e',
-  greyFill: '#f0eee6',
-  greyFill2: '#eeece3',
-  greyFill3: '#eae8de', // segmented-control track
-  greyLine: '#e0ded3',
+  goldWash: '#fbeed9', // trust wash
+  goldLine: '#fde68a',
+  goldDeep: '#7a5b1e', // trust text on gold wash
+  greyFill: '#f5f5f7',
+  greyFill2: '#f3f4f6',
+  greyFill3: '#f0f0f3', // segmented-control track
+  greyLine: '#e5e7eb',
   starGold: '#f5b400', // rating stars — stays lit in both themes
-  tortoiseBed: '#ffffff',
-  logoGreen: '#025E32', // the tortoise mark keeps its own stroke
-  segActive: '#ffffff',
-  btnDisabled: '#b0aea5',
-  shadowMenu: '0 8px 24px rgba(20,20,19,0.12)',
-  scrim: 'rgba(20,20,19,0.3)',
+  tortoiseBed: '#ffffff', // light circle behind the tortoise — light in BOTH themes
+  logoGreen: '#025E32', // the mark's own stroke, sampled from the artwork — NOT greenDeep
+  segActive: '#ffffff', // active chip on a segmented-control track
+  btnDisabled: '#94a3b8',
+  shadowMenu: '0 8px 24px rgba(0,0,0,0.12)', // dropdowns/drawers (web string; RN uses elevation)
+  scrim: 'rgba(0,0,0,0.2)', // drawer backdrop
 
   // One-off role aliases
-  dotIdle: '#dfddd2',
-  chipNeutral: '#efede4',
+  dotIdle: '#dfe6ec',
+  chipNeutral: '#f2f4f7',
   redLineSoft: '#fee2e2',
-  ringIdle: '#c8c6bb',
-  idleGrey: '#d3d1c6',
-  trackEmpty: '#dcdacf',
-  goldWash2: '#f9f2e0',
-  skyLine3: '#a9c4de', // Anthropic blue mid
-  skyLine4: '#dbe5ee',
-  skyHairline: '#e4ecf3',
-  greyLine2: '#d4d2c7',
-  greyText: '#98978f',
-  greyText2: '#c0beb4',
-  hairline3: '#efede7',
-  greyFill4: '#e9e7dd',
-  cardIdle: '#fbfaf7',
-  inputLine: '#d8d6cb',
+  ringIdle: '#c8ccd2',
+  idleGrey: '#d0d0d5', // empty stars / idle dots
+  trackEmpty: '#d8d8de', // trust-ladder empty segments
+  goldWash2: '#fff7e6', // champion badge fill
+  skyLine3: '#a8d4ec',
+  skyLine4: '#dbe7ef',
+  skyHairline: '#e2eef5',
+  greyLine2: '#d1d5db',
+  greyText: '#9ca3af',
+  greyText2: '#c0c0c8',
+  hairline3: '#f0f0f2',
+  greyFill4: '#ededf0',
+  cardIdle: '#fafafa', // not-yet-earned trust cards
+  inputLine: '#d8dce2',
   redWash2: '#fff5f5',
   redMid: '#cc3333',
-  avatarGrey: '#e8e6dc',
-  bubbleIn: '#f0eee6', // incoming chat bubble
+  avatarGrey: '#e8e8ed',
+  bubbleIn: '#f0f0f5', // incoming chat bubble
   amberWash: '#fef3c7',
   amberDeep: '#92400e',
-  greenVerified: '#5a7040',
-  inkSoft: '#3a3a37',
-  inkMid: '#5a5a55',
-  steelText: '#8a897f',
-  lineIdle: '#e6e4d9',
-  hoverWash: '#f6f5f0',
-  steel2: '#6b6a63',
-  steel3: '#7a7970',
-  footerText: '#8e8d85',
-  railLine: '#eceade',
-  lineIdle2: '#d8d6cb',
-  infoWash: '#eff5fa', // secondary-blue info fills
-  infoLine: '#b9d0e4',
+  greenVerified: '#1a7a3a',
+  inkSoft: '#3a3a3c',
+  inkMid: '#5a5a5a',
+  steelText: '#8a8d94',
+  lineIdle: '#e6e8ec',
+  hoverWash: '#fafbfc',
+  steel2: '#6b7280',
+  steel3: '#7a8490',
+  footerText: '#8e8e93',
+  railLine: '#ececef', // segmented-tab rail
+  lineIdle2: '#d8d8d8',
+  infoWash: '#f0f7ff', // linked-account panel
+  infoLine: '#bfdbfe',
 };
 
-// Night mode — Claude dark: near-black warm charcoal, cards sit LIGHTER than
-// the page (elevation grammar kept); orange stays the action; text-role hues
-// lighten only as far as contrast requires.
+// Night mode — warm charcoal, never blue-black. Cards sit LIGHTER than the page
+// (elevation grammar preserved); brand action blue unchanged; text-role hues
+// lightened only as far as contrast on dark requires, same families.
 export const dark = {
   ...light,
 
-  blueFocus: '#d97757',
-  blueDark: '#b05e3a',
-  blueDeep: '#e69673', // action text on dark
-  blueTeal: '#e08b66',
-  blueSoft: 'rgba(217, 119, 87, 0.42)',
-  blueTint: 'rgba(217, 119, 87, 0.16)',
-  blueWash: 'rgba(217, 119, 87, 0.10)',
-  skyBarFrom: '#c97b58',
+  blueFocus: '#4FA3CE',
+  blueDark: '#2E7DA6',
+  blueDeep: '#7ec0e4',
+  blueTeal: '#6fb4d8',
+  blueSoft: 'rgba(79, 163, 206, 0.42)',
+  blueTint: 'rgba(79, 163, 206, 0.16)',
+  blueWash: 'rgba(79, 163, 206, 0.10)',
 
-  slateTint: '#34332f',
-  slateSoft: '#4b4a45',
+  slateTint: '#33363b',
+  slateSoft: '#4a4e55',
 
-  ink: '#faf9f5',
-  ink2: '#e3e1da',
-  ink3: '#aeada4',
-  ink4: '#94938b',
-  inkFaint: '#6f6e67',
-  inkDeep: '#d2d0c8',
-  inkSlate: '#b3b2a9',
-  inkSlate2: '#a9a8a0',
-  inkSlateDark: '#c9c8c0',
-  slate: '#9c9b93',
-  leaf: '#9db27f',
+  ink: '#f2f0ec',
+  ink2: '#ddd9d2',
+  ink3: '#a8a49c',
+  ink4: '#949089',
+  inkFaint: '#6f6c66',
+  inkDeep: '#ccd3da',
+  inkSlate: '#aeb6bf',
+  inkSlate2: '#a7b1b9',
+  inkSlateDark: '#c6ccd4',
+  slate: '#98a4b2',
+  leaf: '#7cc28f',
   redMild: '#e89490',
 
-  canvas: '#262624', // cards — lighter than the page
-  surface: '#1b1a19', // page — Claude dark
-  surface2: '#232220',
-  surfacePearl: '#21201e',
+  canvas: '#2a2927', // cards — lighter than the page (elevation)
+  surface: '#201f1d', // page canvas — warm charcoal
+  surface2: '#262523',
+  surfacePearl: '#232220',
 
-  border: '#3a3934',
-  borderSoft: '#33322d',
+  border: '#3a3833',
+  borderSoft: '#33312d',
 
   red: '#ff6b5e',
   redError: '#f87171',
   redTint: 'rgba(220, 38, 38, 0.16)',
   redSoft: 'rgba(248, 113, 113, 0.45)',
-  redDeep: '#c26a5a',
+  redDeep: '#b45050',
   amber: '#e0954e',
-  greenDeep: '#a3b884',
-  greenTint: 'rgba(120, 140, 93, 0.18)',
+  greenDeep: '#7cc28f',
+  greenTint: 'rgba(61, 139, 90, 0.18)',
   trustGold: '#c9a468',
 
-  hairline: '#33322d',
-  hairline2: '#3a3934',
-  skyLine: 'rgba(106, 155, 204, 0.30)',
-  skyLine2: 'rgba(106, 155, 204, 0.26)',
-  skyGhost: 'rgba(106, 155, 204, 0.07)',
-  greenWash: 'rgba(120, 140, 93, 0.12)',
-  greenLine: 'rgba(157, 178, 127, 0.38)',
+  hairline: '#33312d',
+  hairline2: '#3a3833',
+  skyLine: 'rgba(79, 163, 206, 0.30)',
+  skyLine2: 'rgba(79, 163, 206, 0.26)',
+  skyGhost: 'rgba(79, 163, 206, 0.07)',
+  greenWash: 'rgba(61, 139, 90, 0.12)',
+  greenLine: 'rgba(124, 194, 143, 0.38)',
   redLine: 'rgba(248, 113, 113, 0.35)',
   goldWash: 'rgba(201, 164, 104, 0.14)',
   goldLine: 'rgba(201, 164, 104, 0.40)',
   goldDeep: '#d4b478',
-  greyFill: '#2e2d2a',
-  greyFill2: '#2e2d2a',
-  greyFill3: '#2e2d2a',
-  greyLine: '#3a3934',
-  tortoiseBed: '#f0eee6',
-  segActive: '#403f3a',
-  btnDisabled: '#55544f',
+  greyFill: '#2e2d2b',
+  greyFill2: '#2e2d2b',
+  greyFill3: '#2e2d2b',
+  greyLine: '#3a3833',
+  tortoiseBed: '#f2efe9', // warm pearl — the mascot keeps a lit face at night
+  segActive: '#403e3a', // lighter than the track — same elevation grammar
+  btnDisabled: '#55534f',
   shadowMenu: '0 8px 24px rgba(0, 0, 0, 0.5)',
   scrim: 'rgba(0, 0, 0, 0.45)',
 
-  dotIdle: '#4b4a45',
-  chipNeutral: '#34332f',
+  dotIdle: '#4a4e55',
+  chipNeutral: '#33363b',
   redLineSoft: 'rgba(248, 113, 113, 0.25)',
-  ringIdle: '#5a5951',
-  idleGrey: '#55544f',
-  trackEmpty: '#3a3934',
+  ringIdle: '#5a5751',
+  idleGrey: '#55534f',
+  trackEmpty: '#3a3833',
   goldWash2: 'rgba(201, 164, 104, 0.16)',
-  skyLine3: 'rgba(106, 155, 204, 0.45)',
-  skyLine4: 'rgba(106, 155, 204, 0.30)',
-  skyHairline: 'rgba(106, 155, 204, 0.22)',
-  greyLine2: '#3f3e38',
-  greyText: '#94938b',
-  greyText2: '#6f6e67',
-  hairline3: '#33322d',
+  skyLine3: 'rgba(79, 163, 206, 0.45)',
+  skyLine4: 'rgba(79, 163, 206, 0.30)',
+  skyHairline: 'rgba(79, 163, 206, 0.22)',
+  greyLine2: '#3f3d38',
+  greyText: '#949089',
+  greyText2: '#6f6c66',
+  hairline3: '#33312d',
   greyFill4: '#33322f',
-  cardIdle: '#252421',
-  inputLine: '#4b4a45',
+  cardIdle: '#252422',
+  inputLine: '#4a4e55',
   redWash2: 'rgba(220, 38, 38, 0.10)',
   redMid: '#ef8080',
   avatarGrey: '#33322f',
   bubbleIn: '#333230',
   amberWash: 'rgba(224, 149, 78, 0.15)',
   amberDeep: '#e5b083',
-  greenVerified: '#9db27f',
-  inkSoft: '#e3e1da',
-  inkMid: '#b5b4ab',
-  steelText: '#aeada4',
-  lineIdle: '#3a3934',
-  hoverWash: '#2e2d2a',
-  steel2: '#a4a39a',
-  steel3: '#8b8a81',
-  footerText: '#94938b',
-  railLine: '#33322d',
-  lineIdle2: '#3f3e38',
-  infoWash: 'rgba(106, 155, 204, 0.10)',
-  infoLine: 'rgba(106, 155, 204, 0.35)',
+  greenVerified: '#7cc28f',
+  inkSoft: '#ddd9d2',
+  inkMid: '#b5b1a9',
+  steelText: '#a8a49c',
+  lineIdle: '#3a3833',
+  hoverWash: '#2e2d2b',
+  steel2: '#a4adb8',
+  steel3: '#8b8781',
+  footerText: '#949089',
+  railLine: '#33312d',
+  lineIdle2: '#3f3d38',
+  infoWash: 'rgba(79, 163, 206, 0.10)',
+  infoLine: 'rgba(79, 163, 206, 0.35)',
 };
 
 // 8px spacing scale — adopt instead of raw px
@@ -245,8 +244,8 @@ export const radius = { sm: 8, md: 11, lg: 14, xl: 18, '2xl': 20, pill: 9999 };
 export const text = { xs: 13, sm: 15, base: 18, lg: 22, xl: 28, '2xl': 34, '3xl': 40 };
 
 export const fontFamily = {
-  display: 'Poppins_500Medium', // headings — Anthropic brand (Poppins)
-  displayItalic: 'Poppins_500Medium_Italic',
+  display: 'Newsreader_400Regular', // headings + tagline — weight 400 ONLY
+  displayItalic: 'Newsreader_400Regular_Italic', // the italic "two" in the tagline
   body: undefined, // system font: SF Pro on iOS, Roboto on Android
-  sans: undefined,
+  sans: undefined, // system UI sans — wordmark, chips, tabular numerals
 };

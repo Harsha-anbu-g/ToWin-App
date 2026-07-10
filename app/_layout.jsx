@@ -1,6 +1,5 @@
 import { QueryClient, QueryClientProvider, focusManager } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
-import { Poppins_500Medium, Poppins_500Medium_Italic } from '@expo-google-fonts/poppins';
+import { useFonts, Newsreader_400Regular, Newsreader_400Regular_Italic } from '@expo-google-fonts/newsreader';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
@@ -58,8 +57,8 @@ function ThemedShell() {
 
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
-    Poppins_500Medium,
-    Poppins_500Medium_Italic,
+    Newsreader_400Regular,
+    Newsreader_400Regular_Italic,
   });
 
   // RN has no window focus, so React Query never knows the app was backgrounded

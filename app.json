@@ -7,10 +7,10 @@
     "icon": "./assets/icon.png",
     "scheme": "towin",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#faf9f5",
+    "backgroundColor": "#f6f4ef",
     "splash": {
       "image": "./assets/splash-icon.png",
-      "backgroundColor": "#faf9f5",
+      "backgroundColor": "#f6f4ef",
       "resizeMode": "contain"
     },
     "extra": {
@@ -24,7 +24,7 @@
     "android": {
       "package": "com.towin.app",
       "adaptiveIcon": {
-        "backgroundColor": "#faf9f5",
+        "backgroundColor": "#f6f4ef",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
