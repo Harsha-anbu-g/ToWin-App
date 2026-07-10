@@ -1,7 +1,9 @@
-// Welcome — the mobile replacement for the web landing story: wordmark, the
-// tagline (serif, italic "two"), one filled primary. Calm, one idea.
+// Welcome — the mobile replacement for the web landing story: the tortoise
+// draws itself in and "ToWin" wipes in beside it (same intro as the website's
+// landing, every visit), the tagline (serif, italic "two"), one filled primary.
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
+import { IntroBrandLockup } from '../../src/components/TortoiseMark';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -12,17 +14,8 @@ export default function Welcome() {
 
   return (
     <Screen scroll={false} contentStyle={{ justifyContent: 'space-between' }}>
-      <View style={{ alignItems: 'center', marginTop: spacing[16] }}>
-        <Text
-          style={{
-            fontSize: text.lg,
-            color: t.blueTeal,
-            fontWeight: '600',
-            letterSpacing: 0.3,
-          }}
-        >
-          ToWin
-        </Text>
+      <View style={{ alignItems: 'center', marginTop: spacing[12] }}>
+        <IntroBrandLockup />
       </View>
 
       <View style={{ alignItems: 'center', paddingHorizontal: spacing[6] }}>
