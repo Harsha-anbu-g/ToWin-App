@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { MessageCircleQuestionMark, Send, X } from 'lucide-react-native';
 import api from '../api/client';
+import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
 const FALLBACK =
@@ -22,6 +23,7 @@ const FALLBACK =
 
 export default function AskAiAssistant() {
   const { t, spacing, radius, text } = useTheme();
+  const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -69,7 +71,12 @@ export default function AskAiAssistant() {
         <MessageCircleQuestionMark size={24} color={t.blueDeep} />
       </Pressable>
 
-      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
+      <Modal
+        visible={open}
+        transparent
+        animationType={reducedMotion ? 'none' : 'slide'}
+        onRequestClose={() => setOpen(false)}
+      >
         <View style={{ flex: 1, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
           <View
             style={{

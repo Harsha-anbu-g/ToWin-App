@@ -7,6 +7,11 @@
     "icon": "./assets/icon.png",
     "scheme": "towin",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#f6f4ef",
+    "splash": {
+      "backgroundColor": "#f6f4ef",
+      "resizeMode": "contain"
+    },
     "extra": {
       "apiBaseUrl": "http://192.168.0.13:8080/api"
     },
@@ -15,7 +20,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#f6f4ef",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
