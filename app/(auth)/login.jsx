@@ -8,17 +8,11 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
+import DemoAccountsCard from '../../src/components/DemoAccountsCard';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
-import { yearsOld } from '../../src/lib/copy';
-
-// Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as web.
-const DEMO = {
-  ELDER: { identifier: 'elder', password: '12345678', label: 'Try as an Elder', sub: `Margaret, ${yearsOld('1953-05-14')}` },
-  HELPER: { identifier: 'helper', password: '123456789', label: 'Try as a Helper', sub: `Harsha, ${yearsOld('2003-03-14')}` },
-};
 
 export default function Login() {
   const { t, spacing, radius, text, fontFamily } = useTheme();
@@ -29,30 +23,11 @@ export default function Login() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [guestLoading, setGuestLoading] = useState('');
   const [showPwd, setShowPwd] = useState(false);
 
   const finishLogin = async (token) => {
     await login(token);
     router.replace('/'); // index routes by role/verification state
-  };
-
-  const handleGuest = async (role) => {
-    setGuestLoading(role);
-    setError('');
-    try {
-      const { identifier, password } = DEMO[role];
-      const { data } = await api.post('/auth/login', { identifier, password });
-      await finishLogin(data.token);
-    } catch (err) {
-      setError(
-        err?.response?.status === 429
-          ? err.response.data?.message || 'Too many attempts. Please try again later.'
-          : 'Could not start demo session. Please try again.'
-      );
-    } finally {
-      setGuestLoading('');
-    }
   };
 
   const handleSubmit = async () => {
@@ -77,56 +52,9 @@ export default function Login() {
     }
   };
 
-  const sans = { fontSize: text.sm, color: t.inkSlate };
-
   return (
     <Screen keyboard>
-      {/* Demo accounts — shown first so users don't miss it (mirrors web) */}
-      <View
-        style={{
-          backgroundColor: t.blueWash,
-          borderWidth: 1.5,
-          borderColor: t.blue,
-          borderRadius: radius.lg,
-          padding: spacing[4],
-          marginBottom: spacing[5],
-        }}
-      >
-        <Text style={{ ...sans, fontWeight: '600', color: t.ink, textAlign: 'center' }}>
-          Just want to see how it works?
-        </Text>
-        <Text style={{ fontSize: text.xs, color: t.inkSlate, textAlign: 'center', marginTop: 2, marginBottom: spacing[3] }}>
-          Look around with a sample account, no account needed.
-        </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[2] }}>
-          {['ELDER', 'HELPER'].map((role) => (
-            <Pressable
-              key={role}
-              accessibilityRole="button"
-              accessibilityLabel={DEMO[role].label}
-              disabled={!!guestLoading}
-              onPress={() => handleGuest(role)}
-              style={({ pressed }) => ({
-                flex: 1,
-                minHeight: 56,
-                backgroundColor: t.canvas,
-                borderWidth: 1.5,
-                borderColor: pressed ? t.blue : t.blueSoft,
-                borderRadius: radius.md,
-                alignItems: 'center',
-                justifyContent: 'center',
-                paddingVertical: spacing[3],
-                opacity: guestLoading && guestLoading !== role ? 0.5 : 1,
-              })}
-            >
-              <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.blueTeal }}>
-                {guestLoading === role ? 'Opening…' : DEMO[role].label}
-              </Text>
-              <Text style={{ fontSize: 12, color: t.ink3, marginTop: 2 }}>{DEMO[role].sub}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
+      <DemoAccountsCard onError={setError} />
 
       <Card>
         <Text
