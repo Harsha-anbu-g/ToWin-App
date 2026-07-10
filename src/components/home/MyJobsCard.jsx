@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import Card from '../ui/Card';
+import SkeletonCard from '../ui/Skeleton';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -32,7 +33,7 @@ export default function MyJobsCard() {
       </Text>
 
       {isLoading ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Loading…</Text>
+        <SkeletonCard />
       ) : jobs.length === 0 ? (
         <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           Nothing yet. Offer to help with a request and it will show up here.

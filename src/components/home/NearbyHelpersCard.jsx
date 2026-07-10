@@ -8,6 +8,7 @@ import api from '../../api/client';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import SkeletonCard from '../ui/Skeleton';
 import TrustBadge from '../ui/TrustBadge';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -32,7 +33,7 @@ export default function NearbyHelpersCard() {
       </Text>
 
       {isLoading ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Looking around…</Text>
+        <SkeletonCard />
       ) : preview.length === 0 ? (
         <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           No helpers to show just yet. Check back soon — new helpers join all the time.
