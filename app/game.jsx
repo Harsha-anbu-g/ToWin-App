@@ -62,7 +62,7 @@ export default function GameScreen() {
   const timerColor = timeLeft <= 15 ? t.redError : timeLeft <= 30 ? t.starGold : t.greenDeep;
 
   return (
-    <Screen title="Peekaboo">
+    <Screen back title="Peekaboo">
       <Card>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text style={{ fontSize: text.base, color: t.inkSlate }}>

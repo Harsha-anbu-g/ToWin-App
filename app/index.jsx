@@ -11,6 +11,7 @@ export default function Index() {
   if (!booted) return null; // splash background holds until restore finishes
 
   if (!user) return <Redirect href="/(auth)/welcome" />;
+  if (user.role === 'ADMIN') return <Redirect href="/admin" />; // web parity: admins never see the feeds
   if (user.emailVerified === false) return <Redirect href="/(auth)/verify-pending" />;
   return <Redirect href="/(tabs)/home" />;
 }

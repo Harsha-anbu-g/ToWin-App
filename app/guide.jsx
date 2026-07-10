@@ -67,7 +67,7 @@ export default function Guide() {
   );
 
   return (
-    <Screen title="How ToWin works">
+    <Screen back title="How ToWin works">
       <Card>
         <H>Welcome to ToWin</H>
         <P>

@@ -69,7 +69,7 @@ export default function EmergencyContacts() {
     ]);
 
   return (
-    <Screen title="Emergency contacts" keyboard>
+    <Screen back title="Emergency contacts" keyboard>
       <Card>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           These people get an alert the moment you press the SOS button on your Home feed.

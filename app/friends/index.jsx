@@ -287,7 +287,7 @@ export default function FriendsScreen() {
   };
 
   return (
-    <Screen title="Friends" scroll={false} contentStyle={{ padding: 0 }}>
+    <Screen back title="Friends" scroll={false} contentStyle={{ padding: 0 }}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
         contentContainerStyle={{ padding: spacing[5], paddingBottom: spacing[12] }}

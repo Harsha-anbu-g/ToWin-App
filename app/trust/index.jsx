@@ -119,7 +119,7 @@ export default function TrustScreen() {
     );
 
   return (
-    <Screen title="Trust">
+    <Screen back title="Trust">
       {/* Score header */}
       <Card>
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

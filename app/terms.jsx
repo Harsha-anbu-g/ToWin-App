@@ -8,7 +8,7 @@ import { useTheme } from '../src/theme/ThemeContext';
 export default function Terms() {
   const { t, spacing, text } = useTheme();
   return (
-    <Screen title="Terms of service">
+    <Screen back title="Terms of service">
       <Card>
         <Text
           style={{
