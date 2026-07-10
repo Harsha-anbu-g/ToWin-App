@@ -1,7 +1,11 @@
 // Screen shell — parchment page canvas + safe areas + optional header row
 // (wordmark/title left, actions right). One idea per screen; 64px section rhythm.
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+// `back` renders a VISIBLE back chevron — elders shouldn't need to know the
+// swipe gesture (HCI: user control and freedom).
+import { useRouter } from 'expo-router';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function Screen({
@@ -9,15 +13,19 @@ export default function Screen({
   title,
   headerLeft,
   headerRight,
+  back = false,
   scroll = true,
   keyboard = false,
   style,
   contentStyle,
 }) {
   const { t, spacing, text, fontFamily } = useTheme();
+  const router = useRouter();
+
+  const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
   const header =
-    title || headerLeft || headerRight ? (
+    title || headerLeft || headerRight || back ? (
       <View
         style={{
           flexDirection: 'row',
@@ -28,7 +36,25 @@ export default function Screen({
           minHeight: 56,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, gap: spacing[2] }}>
+          {back ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Back"
+              onPress={goBack}
+              hitSlop={8}
+              style={({ pressed }) => ({
+                minWidth: 44,
+                minHeight: 44,
+                marginLeft: -spacing[2],
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <ArrowLeft size={24} color={t.blueDeep} />
+            </Pressable>
+          ) : null}
           {headerLeft ?? (
             <Text
               accessibilityRole="header"
@@ -37,6 +63,7 @@ export default function Screen({
                 fontSize: text.xl,
                 color: t.ink,
                 letterSpacing: -0.5,
+                flexShrink: 1,
               }}
             >
               {title}

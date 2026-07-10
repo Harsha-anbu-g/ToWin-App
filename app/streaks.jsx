@@ -66,7 +66,7 @@ export default function StreaksScreen() {
   const done = streak?.alreadyCheckedIn;
 
   return (
-    <Screen title="Check-in">
+    <Screen back title="Check-in">
       <Card>
         <Text
           accessibilityRole="header"

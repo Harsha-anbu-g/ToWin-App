@@ -89,7 +89,7 @@ export default function ProfileEdit() {
   const set = (key) => (v) => setForm((f) => ({ ...f, [key]: v }));
 
   return (
-    <Screen title="Edit my profile" keyboard>
+    <Screen back title="Edit my profile" keyboard>
       <Card>
         <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}>
           About me

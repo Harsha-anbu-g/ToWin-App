@@ -8,7 +8,7 @@ import { useTheme } from '../src/theme/ThemeContext';
 export default function Privacy() {
   const { t, spacing, text } = useTheme();
   return (
-    <Screen title="Privacy policy">
+    <Screen back title="Privacy policy">
       <Card>
         <Text
           style={{

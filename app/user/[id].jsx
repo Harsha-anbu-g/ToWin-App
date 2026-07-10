@@ -106,7 +106,7 @@ export default function UserProfile() {
     ]);
 
   return (
-    <Screen title={profile?.name ?? 'Profile'}>
+    <Screen back title={profile?.name ?? 'Profile'}>
       {isLoading ? (
         <Card>
           <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading profile…</Text>

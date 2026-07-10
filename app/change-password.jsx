@@ -44,7 +44,7 @@ export default function ChangePassword() {
   };
 
   return (
-    <Screen title="Change password" keyboard scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    <Screen back title="Change password" keyboard scroll={false} contentStyle={{ justifyContent: 'center' }}>
       <Card>
         <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}>
           Choose a new password
