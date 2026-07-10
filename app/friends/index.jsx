@@ -260,7 +260,7 @@ function AddFriends() {
       renderItem={({ item: p }) => {
         const already = connectedIds.has(p.userId);
         return (
-          <Card style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
+          <Card contentStyle={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
             <Avatar name={p.name} uri={p.photoUrl} size={48} />
             <View style={{ flex: 1 }}>
               <Text style={{ fontSize: text.base, color: t.ink }}>

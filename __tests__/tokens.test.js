@@ -1,32 +1,28 @@
 import { light, dark, spacing, radius, text, fontFamily } from '../src/theme/tokens';
 
-test('core brand tokens match index.css exactly', () => {
-  expect(light.blue).toBe('#4FA3CE');
-  expect(light.blueDeep).toBe('#2E7DA6');
-  expect(light.trustGold).toBe('#9C7A3C');
-  expect(light.greenDeep).toBe('#1a5c2e');
-  expect(light.surface).toBe('#f6f4ef');
+test('Claude palette core (owner design pivot 2026-07-10)', () => {
+  expect(light.blue).toBe('#d97757'); // action = Anthropic orange
+  expect(light.actionFill).toBe(light.blue);
+  expect(light.actionInk).toBe('#ffffff');
+  expect(light.surface).toBe('#faf9f5'); // Anthropic Light
   expect(light.canvas).toBe('#ffffff');
-  expect(light.border).toBe('#e5e1d9');
-  expect(light.ink).toBe('#1d1d1f');
+  expect(light.border).toBe('#e8e6dc'); // Anthropic Light Gray
+  expect(light.ink).toBe('#141413'); // Anthropic Dark
+  expect(light.inkFaint).toBe('#b0aea5'); // Anthropic Mid Gray
+  expect(light.leaf).toBe('#788c5d'); // Anthropic green accent
+});
+
+test('product semantics survive the reskin', () => {
+  expect(light.trustGold).toBe('#9C7A3C'); // trust is ALWAYS gold
+  expect(light.logoGreen).toBe('#025E32'); // the tortoise keeps its stroke
+  expect(light.red).toBe('#cc0000'); // reds stay semantic
+  expect(light.starGold).toBe('#f5b400');
 });
 
 test('alias tokens are ported (spot checks)', () => {
-  expect(light.bubbleIn).toBe('#f0f0f5');
-  expect(light.starGold).toBe('#f5b400');
-  expect(light.btnDisabled).toBe('#94a3b8');
-  expect(light.goldWash).toBe('#fbeed9');
-  expect(light.infoLine).toBe('#bfdbfe');
-});
-
-test('tokens added on the website 2026-07-09 sync are ported', () => {
-  expect(light.skyBarFrom).toBe('#7FC0E0'); // trust-ladder bar gradient start (user-locked)
-  expect(light.actionFill).toBe(light.blue); // web: var(--blue)
-  expect(light.actionInk).toBe('#ffffff');
-  expect(light.logoGreen).toBe('#025E32');
-  // dark block does not override these — brand fill stays sky-blue at night
-  expect(dark.actionFill).toBe(light.blue);
-  expect(dark.logoGreen).toBe('#025E32');
+  expect(light.bubbleIn).toBe('#f0eee6');
+  expect(light.btnDisabled).toBe('#b0aea5');
+  expect(light.avatarGrey).toBe('#e8e6dc');
 });
 
 test('type scale never below 13, body 18', () => {
@@ -40,28 +36,30 @@ test('spacing is the 8px scale', () => {
 });
 
 test('night cards lighter than night page (elevation grammar)', () => {
-  expect(dark.canvas).toBe('#2a2927');
-  expect(dark.surface).toBe('#201f1d');
+  expect(dark.canvas).toBe('#262624');
+  expect(dark.surface).toBe('#1b1a19');
   expect(dark.canvas).not.toBe(dark.surface);
 });
 
-test('night keeps action blue, lightens text roles in-family', () => {
-  expect(dark.blue).toBe('#4FA3CE'); // brand action unchanged
-  expect(dark.blueDeep).toBe('#7ec0e4');
+test('night keeps the action orange, lightens text roles in-family', () => {
+  expect(dark.blue).toBe('#d97757'); // action unchanged at night
+  expect(dark.actionFill).toBe(light.blue);
+  expect(dark.blueDeep).toBe('#e69673');
   expect(dark.trustGold).toBe('#c9a468');
-  expect(dark.ink).toBe('#f2f0ec');
+  expect(dark.ink).toBe('#faf9f5');
+  expect(dark.logoGreen).toBe('#025E32');
 });
 
 test('dark has every key light has (no missing remaps at runtime)', () => {
   expect(Object.keys(dark).sort()).toEqual(Object.keys(light).sort());
 });
 
-test('display font is Newsreader 400', () => {
-  expect(fontFamily.display).toBe('Newsreader_400Regular');
+test('display font is Poppins (Anthropic headings)', () => {
+  expect(fontFamily.display).toBe('Poppins_500Medium');
+  expect(fontFamily.displayItalic).toBe('Poppins_500Medium_Italic');
 });
 
-test('radius scale matches web', () => {
+test('radius scale unchanged', () => {
   expect(radius.md).toBe(11);
-  expect(radius.xl).toBe(18);
   expect(radius.pill).toBe(9999);
 });

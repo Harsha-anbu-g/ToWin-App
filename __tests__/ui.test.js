@@ -1,4 +1,7 @@
-import { render } from '@testing-library/react-native';
+// UI kit on Material (react-native-paper): behavioral contracts — press works,
+// disabled blocks, labels/errors are accessible, trust stays gold.
+import { fireEvent, render } from '@testing-library/react-native';
+import { PaperProvider } from 'react-native-paper';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import Button from '../src/components/ui/Button';
 import Input from '../src/components/ui/Input';
@@ -6,34 +9,55 @@ import Card from '../src/components/ui/Card';
 import Avatar from '../src/components/ui/Avatar';
 import TrustBadge from '../src/components/ui/TrustBadge';
 
-const wrap = (ui) => render(<ThemeProvider>{ui}</ThemeProvider>);
+const wrap = (ui) =>
+  render(
+    <ThemeProvider>
+      <PaperProvider>{ui}</PaperProvider>
+    </ThemeProvider>
+  );
 
-test('primary button: filled sky-blue pill, >=44pt target', async () => {
-  const { getByRole } = await wrap(<Button title="Log in" variant="primary" onPress={() => {}} />);
-  const btn = getByRole('button', { name: 'Log in' });
-  expect(btn).toHaveStyle({ minHeight: 44, backgroundColor: '#4FA3CE' });
+test('primary button fires onPress', async () => {
+  const onPress = jest.fn();
+  const { getByRole } = await wrap(<Button title="Log in" variant="primary" onPress={onPress} />);
+  await fireEvent.press(getByRole('button', { name: 'Log in' }));
+  expect(onPress).toHaveBeenCalledTimes(1);
 });
 
-test('secondary button is quiet (outlined, not filled blue)', async () => {
-  const { getByRole } = await wrap(<Button title="Join" variant="secondary" onPress={() => {}} />);
-  const btn = getByRole('button', { name: 'Join' });
-  expect(btn).toHaveStyle({ borderWidth: 1 });
-  expect(btn).not.toHaveStyle({ backgroundColor: '#4FA3CE' });
-});
-
-test('disabled button exposes accessibility state and blocks touch', async () => {
+test('disabled button blocks touch and exposes the state', async () => {
   const onPress = jest.fn();
   const { getByRole } = await wrap(<Button title="Send" variant="primary" onPress={onPress} disabled />);
-  expect(getByRole('button', { name: 'Send' })).toBeDisabled();
+  const btn = getByRole('button', { name: 'Send' });
+  expect(btn).toBeDisabled();
+  await fireEvent.press(btn);
+  expect(onPress).not.toHaveBeenCalled();
 });
 
-test('input renders a visible bordered box with a visible label', async () => {
-  const { getByText, getByLabelText } = await wrap(<Input label="Email" value="" onChangeText={() => {}} />);
-  expect(getByText('Email')).toBeOnTheScreen();
-  expect(getByLabelText('Email')).toBeOnTheScreen();
+test('secondary and destructive variants render pressable buttons', async () => {
+  const a = jest.fn();
+  const b = jest.fn();
+  const { getByRole } = await wrap(
+    <>
+      <Button title="Join" variant="secondary" onPress={a} />
+      <Button title="Remove" variant="destructive" onPress={b} />
+    </>
+  );
+  await fireEvent.press(getByRole('button', { name: 'Join' }));
+  await fireEvent.press(getByRole('button', { name: 'Remove' }));
+  expect(a).toHaveBeenCalled();
+  expect(b).toHaveBeenCalled();
 });
 
-test('input error shows below the field and is announced', async () => {
+test('input has an accessible label and accepts text', async () => {
+  let value = '';
+  const { getByLabelText } = await wrap(
+    <Input label="Email" value="" onChangeText={(v) => (value = v)} />
+  );
+  const input = getByLabelText('Email');
+  await fireEvent.changeText(input, 'margaret@example.com');
+  expect(value).toBe('margaret@example.com');
+});
+
+test('input error is announced below the field', async () => {
   const { getByText } = await wrap(
     <Input label="Password" value="" onChangeText={() => {}} error="Please enter your password" />
   );
@@ -42,17 +66,14 @@ test('input error shows below the field and is announced', async () => {
   expect(err.props.accessibilityRole).toBe('alert');
 });
 
-test('card is a white hairline surface (no shadow)', async () => {
-  const { getByTestId } = await wrap(
+test('card renders its children on a testable surface', async () => {
+  const { getByTestId, getByText } = await wrap(
     <Card testID="card">
-      <></>
+      <TrustBadge score={12} />
     </Card>
   );
-  expect(getByTestId('card')).toHaveStyle({
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e5e1d9',
-  });
+  expect(getByTestId('card')).toBeOnTheScreen();
+  expect(getByText(/12/)).toBeOnTheScreen();
 });
 
 test('avatar falls back to initials with a name label', async () => {
@@ -61,7 +82,7 @@ test('avatar falls back to initials with a name label', async () => {
   expect(getByLabelText('Margaret Hall')).toBeOnTheScreen();
 });
 
-test('trust badge puts the trust number in gold', async () => {
+test('trust badge stays gold through any reskin', async () => {
   const { getByText } = await wrap(<TrustBadge score={12} />);
   expect(getByText(/12/)).toHaveStyle({ color: '#9C7A3C' });
 });

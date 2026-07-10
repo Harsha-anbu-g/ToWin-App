@@ -36,7 +36,7 @@ export default function CheckEmail() {
 
   return (
     <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
-      <Card style={{ alignItems: 'stretch' }}>
+      <Card contentStyle={{ alignItems: 'stretch' }}>
         <Text
           accessibilityRole="header"
           style={{

@@ -1,8 +1,8 @@
-// ToWin input — full visible box on surface fill with hairline border (NEVER
-// borderless), radius 11, calm sky focus, visible label above, error below the
-// field announced to screen readers. Elder rules: >=44pt, 18px text.
-import { useState } from 'react';
-import { Text, TextInput, View } from 'react-native';
+// Input — Material outlined text field (react-native-paper) under the app's
+// own API: label, error (announced), helper, and an optional rightSlot overlay
+// (used for the password eye toggles). Elder rules: >=48pt, 18px text.
+import { Text, View } from 'react-native';
+import { TextInput as PaperInput } from 'react-native-paper';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function Input({
@@ -17,45 +17,23 @@ export default function Input({
   ...rest
 }) {
   const { t, spacing, radius, text } = useTheme();
-  const [focused, setFocused] = useState(false);
 
   return (
     <View style={style}>
-      {label ? (
-        <Text
-          style={{
-            fontSize: text.sm,
-            color: t.inkSlate,
-            marginBottom: spacing[2],
-            fontWeight: '500',
-          }}
-        >
-          {label}
-        </Text>
-      ) : null}
       <View>
-        <TextInput
+        <PaperInput
+          mode="outlined"
+          label={label}
           accessibilityLabel={label}
           value={value}
           onChangeText={onChangeText}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          placeholderTextColor={t.ink4}
+          error={!!error}
           style={[
-            {
-              minHeight: 48,
-              backgroundColor: t.surface,
-              borderWidth: focused ? 2 : 1,
-              borderColor: error ? t.redError : focused ? t.blue : t.border,
-              borderRadius: radius.md,
-              paddingHorizontal: spacing[4],
-              paddingVertical: spacing[3],
-              fontSize: text.base,
-              color: t.ink,
-            },
-            rightSlot ? { paddingRight: 52 } : null,
+            { backgroundColor: t.canvas, fontSize: text.base, minHeight: 48 },
+            rightSlot ? { paddingRight: 40 } : null,
             inputStyle,
           ]}
+          outlineStyle={{ borderRadius: radius.md }}
           {...rest}
         />
         {rightSlot ? (
@@ -63,7 +41,7 @@ export default function Input({
             style={{
               position: 'absolute',
               right: 2,
-              top: 0,
+              top: 6,
               bottom: 0,
               justifyContent: 'center',
             }}

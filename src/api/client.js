@@ -19,7 +19,12 @@ export const setOnSessionExpired = (fn) => {
   onSessionExpired = fn;
 };
 
-const api = axios.create({ baseURL: API_BASE_URL });
+// A hard timeout so a dead connection rejects instead of hanging forever —
+// without it the SOS button (and every other pending state) can sit on
+// "Sending…" with no fallback message when the network silently stalls.
+const REQUEST_TIMEOUT_MS = 15_000;
+
+const api = axios.create({ baseURL: API_BASE_URL, timeout: REQUEST_TIMEOUT_MS });
 
 api.interceptors.request.use((config) => {
   const token = getToken();
