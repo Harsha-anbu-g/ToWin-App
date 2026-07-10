@@ -1,0 +1,46 @@
+{
+  "version": "2.0.0",
+  "date": "2026-07-10T16:45:00Z",
+  "mode": "daily",
+  "scope": "full",
+  "diff_mode": false,
+  "phases_run": [0,1,2,3,5,6,7,8,9,10,11,12,13,14],
+  "attack_surface": {
+    "code": { "public_endpoints": 0, "authenticated": 0, "admin": 1, "api": 1, "uploads": 0, "integrations": 2, "background_jobs": 0, "websockets": 0,
+      "note": "mobile client — REST consumer of Spring Boot API; integrations = backend LLM proxy (/assistant/chat) + OAuth deep-link callback" },
+    "infrastructure": { "ci_workflows": 0, "webhook_receivers": 0, "container_configs": 0, "iac_configs": 0, "deploy_targets": 1, "secret_management": "SecureStore (device keychain) for JWT; no .env; no secrets in repo" }
+  },
+  "findings": [
+    {
+      "id": 1, "severity": "HIGH", "confidence": 9, "status": "VERIFIED", "phase": 5, "phase_name": "Infrastructure Shadow Surface",
+      "category": "Infrastructure", "fingerprint": "infra-app.json-cleartext-http-api-base",
+      "title": "Cleartext HTTP API base URL baked into every build profile",
+      "file": "app.json", "line": 17,
+      "description": "expo.extra.apiBaseUrl = http://192.168.0.13:8080/api (also the fallback in src/api/config.js:8). eas.json has no per-profile override, so preview/production builds inherit a plaintext-HTTP LAN URL.",
+      "exploit_scenario": "Today: anyone on the same Wi-Fi as a dev/Expo Go tester runs a passive capture and reads the JWT, login credentials, chat messages and emergency-contact numbers in cleartext. If a release ships with an ATS/cleartextTraffic exception to 'make it work', the same interception works on any coffee-shop network.",
+      "impact": "Session hijack (bearer JWT), credential theft, PII disclosure (elder safety data).",
+      "recommendation": "app.config.js resolving apiBaseUrl per EAS profile; HTTPS (Railway) for preview/prod; keep the LAN IP only for local dev and never add a global cleartext exception.",
+      "verification": "self-verified (code + eas.json read; no per-profile extra found)"
+    },
+    {
+      "id": 2, "severity": "MEDIUM", "confidence": 8, "status": "VERIFIED", "phase": 9, "phase_name": "OWASP A07 Auth Failures",
+      "category": "OWASP A07", "fingerprint": "auth-demo-credentials-rate-limit-bypass",
+      "title": "Extractable demo credentials documented as bypassing the login rate limiter",
+      "file": "src/components/DemoAccountsCard.jsx", "line": 12,
+      "description": "Hardcoded demo logins (elder/12345678, helper/123456789) ship in the JS bundle; the code comment states they bypass the login rate limiter (web parity).",
+      "exploit_scenario": "Extract credentials from the published bundle, script unlimited /auth/login (limiter bypassed by design), then use the demo session to spam SOS/messages/reports or probe authenticated endpoints at scale.",
+      "impact": "Abuse platform + noisy-neighbour harm to real users; reputational risk from SOS spam.",
+      "recommendation": "Server-side: separate throttle + reduced privileges (no SOS, no reports) for demo accounts. Client: exclude the demo card from production builds (__DEV__ gate or EAS env flag).",
+      "verification": "self-verified (component read; backend controls out of this repo's scope)"
+    }
+  ],
+  "excluded_by_policy": [
+    "Deep-link screens without client-side auth guard — precedent #5: client-side JS does not need auth, the server is the boundary (kept as a /review UX finding, not a security finding)",
+    "JWT payload decoded without signature verification — UI-routing only; admin screen is static; server enforces authz; no exploit path",
+    "12 moderate npm advisories (uuid via xcode/@expo/config-plugins chain, postcss) — build-time toolchain, not shipped code, no runtime path"
+  ],
+  "supply_chain_summary": { "direct_deps": 23, "transitive_deps": 0, "critical_cves": 0, "high_cves": 0, "moderate_cves": 12, "install_scripts": 0, "lockfile_present": true, "lockfile_tracked": true, "tools_skipped": [] },
+  "filter_stats": { "candidates_scanned": 9, "hard_exclusion_filtered": 3, "confidence_gate_filtered": 2, "verification_filtered": 2, "reported": 2 },
+  "totals": { "critical": 0, "high": 1, "medium": 1, "tentative": 0 },
+  "trend": { "prior_report_date": null, "resolved": 0, "persistent": 0, "new": 2, "direction": "first_run" }
+}

@@ -52,7 +52,7 @@ function ThemedShell() {
           contentStyle: { backgroundColor: t.surface },
         }}
       />
-    </>
+    </PaperProvider>
   );
 }
 
