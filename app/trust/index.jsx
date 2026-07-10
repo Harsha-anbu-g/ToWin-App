@@ -108,8 +108,7 @@ export default function TrustScreen() {
       showToast(err?.response?.data?.message || 'Could not confirm right now. Please try again.', 'error'),
   });
 
-  const confirmStep = (card) => {
-    const c = connOf(card.connectionId);
+  const confirmStep = (card) =>
     Alert.alert(
       'Take the next step?',
       `Trust grows only when BOTH of you agree. Confirm your side of the next step with ${card.customerName}?`,
@@ -118,8 +117,6 @@ export default function TrustScreen() {
         { text: 'Confirm my side', onPress: () => confirm.mutate(card.connectionId) },
       ]
     );
-    void c;
-  };
 
   return (
     <Screen title="Trust">
