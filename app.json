@@ -14,7 +14,8 @@
       "resizeMode": "contain"
     },
     "extra": {
-      "apiBaseUrl": "http://192.168.0.13:8080/api"
+      "apiBaseUrl": "https://backend-production-cef3.up.railway.app/api",
+      "apiBaseUrlLocal": "http://192.168.0.13:8080/api"
     },
     "ios": {
       "supportsTablet": true,
