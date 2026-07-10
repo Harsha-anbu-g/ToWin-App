@@ -19,6 +19,16 @@ test('alias tokens are ported (spot checks)', () => {
   expect(light.infoLine).toBe('#bfdbfe');
 });
 
+test('tokens added on the website 2026-07-09 sync are ported', () => {
+  expect(light.skyBarFrom).toBe('#7FC0E0'); // trust-ladder bar gradient start (user-locked)
+  expect(light.actionFill).toBe(light.blue); // web: var(--blue)
+  expect(light.actionInk).toBe('#ffffff');
+  expect(light.logoGreen).toBe('#025E32');
+  // dark block does not override these — brand fill stays sky-blue at night
+  expect(dark.actionFill).toBe(light.blue);
+  expect(dark.logoGreen).toBe('#025E32');
+});
+
 test('type scale never below 13, body 18', () => {
   expect(text.base).toBe(18);
   expect(text.xs).toBe(13);

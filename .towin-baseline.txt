@@ -1,12 +1,11 @@
- M .gitignore
- M frontend/public/apple-touch-icon.png
- M frontend/public/favicon-64.png
- M frontend/public/favicon.svg
- M frontend/public/logo.png
- M frontend/public/tortoise-logo.png
-?? docs/mermaid/architecture/
-?? docs/mermaid/paste/10-project-structure.mmd
-?? docs/mermaid/paste/11-backend-code.mmd
-?? docs/mermaid/paste/12-backend-code-flowchart.mmd
-?? "docs/mermaid/paste/FRONTEND FULL.png"
-?? docs/mermaid/viewer.html
+?? docs/FRONTEND-AUDIT-REPORT.md
+?? docs/SECURITY-AUDIT.md
+?? docs/SECURITY-REPORT.md
+?? docs/ToWin-Video-1-Script.docx
+?? docs/ToWin-Video-1-Script.pre-fix-backup.docx
+?? docs/ToWin-Video-2-Technical-Script.docx
+?? docs/ToWin-Video-2-Technical-Script.pre-fix-backup.docx
+?? docs/ToWin-Video-Read-Script.docx
+?? docs/mermaid/
+?? docs/video-scripts/
+?? frontend/public/walking.jpg
