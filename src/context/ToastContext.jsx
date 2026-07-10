@@ -1,6 +1,6 @@
 // Calm toast — bottom card on the parchment, auto-dismiss (4s), announced politely
 // to screen readers. One toast at a time; new replaces old (elders: one idea at a time).
-import { createContext, useCallback, useContext, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -15,6 +15,11 @@ export function ToastProvider({ children }) {
     if (timer.current) clearTimeout(timer.current);
     setToast({ message, type });
     timer.current = setTimeout(() => setToast(null), 4000);
+  }, []);
+
+  // Clear the pending timer on unmount — otherwise it fires setState on a dead tree
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
   }, []);
 
   const colors = {

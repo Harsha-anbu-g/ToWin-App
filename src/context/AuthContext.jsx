@@ -27,6 +27,9 @@ export function userFromToken(token) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [booted, setBooted] = useState(false); // don't route until restore finishes
+  // Set when a 401 bounced the user out (expired session) — Login explains why
+  // they're back there instead of leaving them guessing (web: sessionStorage flag).
+  const [sessionExpired, setSessionExpired] = useState(false);
   const userRef = useRef(null);
   userRef.current = user;
 
@@ -42,6 +45,7 @@ export function AuthProvider({ children }) {
   const login = useCallback(async (token) => {
     const next = userFromToken(token);
     if (!next) return false;
+    setSessionExpired(false);
     setUser(next);
     try {
       await SecureStore.setItemAsync(KEY, token);
@@ -54,6 +58,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     setTokenGetter(() => userRef.current?.token ?? null);
     setOnSessionExpired(() => {
+      setSessionExpired(true);
       logout();
     });
     (async () => {
@@ -72,7 +77,7 @@ export function AuthProvider({ children }) {
   }, [logout]);
 
   return (
-    <AuthContext.Provider value={{ user, booted, login, logout }}>
+    <AuthContext.Provider value={{ user, booted, login, logout, sessionExpired }}>
       {children}
     </AuthContext.Provider>
   );

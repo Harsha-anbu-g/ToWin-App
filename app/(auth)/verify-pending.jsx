@@ -1,6 +1,7 @@
 // Placeholder verify-pending gate — US-006 ports the full VerifyPending.jsx
 // (resend + "I've verified — log in again"). Present now so the unverified
 // redirect resolves instead of hitting an unmatched route.
+import { useRouter } from 'expo-router';
 import { Text } from 'react-native';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
@@ -11,6 +12,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 export default function VerifyPending() {
   const { t, spacing, text, fontFamily } = useTheme();
   const { logout } = useAuth();
+  const router = useRouter();
 
   return (
     <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
@@ -34,7 +36,10 @@ export default function VerifyPending() {
         <Button
           title="Back to log in"
           variant="primary"
-          onPress={logout}
+          onPress={async () => {
+            await logout();
+            router.replace('/(auth)/welcome'); // this screen has no auth guard — navigate explicitly
+          }}
           style={{ marginTop: spacing[6] }}
         />
       </Card>

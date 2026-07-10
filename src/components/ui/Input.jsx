@@ -13,6 +13,7 @@ export default function Input({
   helper,
   style,
   inputStyle,
+  rightSlot,
   ...rest
 }) {
   const { t, spacing, radius, text } = useTheme();
@@ -32,29 +33,45 @@ export default function Input({
           {label}
         </Text>
       ) : null}
-      <TextInput
-        accessibilityLabel={label}
-        value={value}
-        onChangeText={onChangeText}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        placeholderTextColor={t.ink4}
-        style={[
-          {
-            minHeight: 48,
-            backgroundColor: t.surface,
-            borderWidth: focused ? 2 : 1,
-            borderColor: error ? t.redError : focused ? t.blue : t.border,
-            borderRadius: radius.md,
-            paddingHorizontal: spacing[4],
-            paddingVertical: spacing[3],
-            fontSize: text.base,
-            color: t.ink,
-          },
-          inputStyle,
-        ]}
-        {...rest}
-      />
+      <View>
+        <TextInput
+          accessibilityLabel={label}
+          value={value}
+          onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholderTextColor={t.ink4}
+          style={[
+            {
+              minHeight: 48,
+              backgroundColor: t.surface,
+              borderWidth: focused ? 2 : 1,
+              borderColor: error ? t.redError : focused ? t.blue : t.border,
+              borderRadius: radius.md,
+              paddingHorizontal: spacing[4],
+              paddingVertical: spacing[3],
+              fontSize: text.base,
+              color: t.ink,
+            },
+            rightSlot ? { paddingRight: 52 } : null,
+            inputStyle,
+          ]}
+          {...rest}
+        />
+        {rightSlot ? (
+          <View
+            style={{
+              position: 'absolute',
+              right: 2,
+              top: 0,
+              bottom: 0,
+              justifyContent: 'center',
+            }}
+          >
+            {rightSlot}
+          </View>
+        ) : null}
+      </View>
       {error ? (
         <Text
           accessibilityRole="alert"
