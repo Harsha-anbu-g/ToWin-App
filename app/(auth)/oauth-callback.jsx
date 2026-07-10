@@ -1,7 +1,11 @@
 // OAuth callback — port of OAuthCallback.jsx. Handles the Google redirect
-// (towin://oauth-callback?code=…): exchanges the code, then either logs in
-// (READY) or continues to finish-setup (NEEDS_ONBOARDING). The Google button
+// (towin://oauth-callback?code=…&state=…): exchanges the code, then either logs
+// in (READY) or continues to finish-setup (NEEDS_ONBOARDING). The Google button
 // itself ships in the release phase; this landing is ready for it.
+// SECURITY: the exchange runs ONLY when the deep link's `state` matches a flow
+// this app started (consumeOAuthFlow) — an unsolicited or replayed link is
+// refused, closing OAuth login-CSRF. The PKCE code_verifier is sent so the
+// server can bind the code to this client.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text } from 'react-native';
@@ -10,11 +14,12 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
+import { consumeOAuthFlow } from '../../src/lib/oauthFlow';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function OAuthCallback() {
   const { t, spacing, text, fontFamily } = useTheme();
-  const { code, error: oauthError } = useLocalSearchParams();
+  const { code, state, error: oauthError } = useLocalSearchParams();
   const { login } = useAuth();
   const router = useRouter();
   const [error, setError] = useState('');
@@ -24,14 +29,22 @@ export default function OAuthCallback() {
     if (ran.current) return;
     ran.current = true;
 
-    if (oauthError || !code) {
-      setError('Could not connect with Google. Please try again.');
-      return;
-    }
+    (async () => {
+      if (oauthError || !code) {
+        setError('Could not connect with Google. Please try again.');
+        return;
+      }
 
-    api
-      .post('/auth/oauth/exchange', { code })
-      .then(async ({ data }) => {
+      const codeVerifier = await consumeOAuthFlow(state);
+      if (!codeVerifier) {
+        // No pending sign-in from THIS app (or state mismatch) — refuse.
+        setError('Could not verify this sign-in attempt. Please start again from the log in screen.');
+        return;
+      }
+
+      api
+        .post('/auth/oauth/exchange', { code, state, codeVerifier })
+        .then(async ({ data }) => {
         if (data.status === 'READY') {
           await login(data.token);
           router.replace('/'); // index routes by role/verification state
@@ -43,9 +56,10 @@ export default function OAuthCallback() {
         } else {
           setError('Something went wrong. Please try again.');
         }
-      })
-      .catch(() => setError('Something went wrong. Please try again.'));
-  }, [code, oauthError, login, router]);
+        })
+        .catch(() => setError('Something went wrong. Please try again.'));
+    })();
+  }, [code, state, oauthError, login, router]);
 
   return (
     <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
