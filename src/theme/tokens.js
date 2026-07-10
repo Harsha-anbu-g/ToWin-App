@@ -1,7 +1,8 @@
 // ToWin design tokens — 1:1 port of ToWin/frontend/src/index.css (user-approved 2026-07-05).
-// Light block: index.css :root (lines 19–169). Dark: the [data-theme="dark"] overrides
-// (lines 177–280) layered over light, mirroring the CSS cascade. Values are verbatim;
-// do not "improve" them — the palette is locked (see ToWin/DESIGN.md).
+// Light block: the index.css :root tokens. Dark: the [data-theme="dark"] overrides
+// layered over light, mirroring the CSS cascade. Values are verbatim; do not
+// "improve" them — the palette is locked (see ToWin/DESIGN.md). Last synced to
+// website commit 6acfd51 (impeccable audit greys: ink3/ink4/slate/greyText/steelText/footerText).
 
 export const light = {
   // Brand blue — sky-blue scale
@@ -31,14 +32,14 @@ export const light = {
   // Typography colors
   ink: '#1d1d1f',
   ink2: '#333333',
-  ink3: '#7a7a7a',
-  ink4: '#a0a0a5',
-  inkFaint: '#c8c8cd', // faintest hints / disabled text
+  ink3: '#676767', // ≥4.5:1 on white AND the parchment surface
+  ink4: '#707070', // muted text + placeholders — still ≥4.5:1 on --surface
+  inkFaint: '#c8c8cd', // disabled text ONLY (contrast-exempt) — never running text
   inkDeep: '#2d3748', // heavy slate headings
   inkSlate: '#5a6470', // common secondary text
   inkSlate2: '#5a6b75',
   inkSlateDark: '#3a4450',
-  slate: '#718096',
+  slate: '#5d6b7e',
   leaf: '#3d8b5a', // success text accent
   redMild: '#cf6a66', // soft error text
 
@@ -101,7 +102,7 @@ export const light = {
   skyLine4: '#dbe7ef',
   skyHairline: '#e2eef5',
   greyLine2: '#d1d5db',
-  greyText: '#9ca3af',
+  greyText: '#646b76', // chip/label text — ≥4.5:1 on its grey fills
   greyText2: '#c0c0c8',
   hairline3: '#f0f0f2',
   greyFill4: '#ededf0',
@@ -116,12 +117,12 @@ export const light = {
   greenVerified: '#1a7a3a',
   inkSoft: '#3a3a3c',
   inkMid: '#5a5a5a',
-  steelText: '#8a8d94',
+  steelText: '#666a72', // greeting subtext — ≥4.5:1
   lineIdle: '#e6e8ec',
   hoverWash: '#fafbfc',
   steel2: '#6b7280',
   steel3: '#7a8490',
-  footerText: '#8e8e93',
+  footerText: '#6c6c71', // footer links/text — ≥4.5:1
   railLine: '#ececef', // segmented-tab rail
   lineIdle2: '#d8d8d8',
   infoWash: '#f0f7ff', // linked-account panel
