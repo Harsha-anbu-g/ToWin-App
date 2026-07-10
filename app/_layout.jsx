@@ -28,14 +28,16 @@ function ThemedShell() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Newsreader_400Regular,
     Newsreader_400Regular_Italic,
   });
 
   // Hold on the splash background until the serif is ready — headings must never
-  // flash in a fallback face (Newsreader 400 is the brand voice).
-  if (!fontsLoaded) return null;
+  // flash in a fallback face (Newsreader 400 is the brand voice). BUT if font
+  // loading errors, render anyway with the system fallback: a stuck splash is
+  // worse than a fallback face (the app looked "frozen on downloading" without this).
+  if (!fontsLoaded && !fontError) return null;
 
   return (
     <ThemeProvider>
