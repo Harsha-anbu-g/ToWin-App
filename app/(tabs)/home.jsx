@@ -18,12 +18,13 @@ export default function HomeScreen() {
       headerLeft={
         <Text
           accessibilityRole="header"
+          // Wordmark is the UI sans at 600 (web: SF Pro Display) — the serif
+          // is reserved for headings at weight 400 only.
           style={{
-            fontFamily: fontFamily.display,
             fontSize: text.lg,
             color: t.blueTeal,
             fontWeight: '600',
-            letterSpacing: -0.3,
+            letterSpacing: -0.37,
           }}
         >
           ToWin
