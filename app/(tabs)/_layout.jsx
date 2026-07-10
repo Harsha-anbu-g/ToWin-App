@@ -8,6 +8,7 @@ import { Home, MessageCircle, Plus, Search, UserRound } from 'lucide-react-nativ
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
+import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
 import { centerActionFor } from '../../src/lib/roles';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -74,6 +75,7 @@ export default function TabsLayout() {
   const ActionIcon = action.key === 'find' ? Search : Plus;
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -134,5 +136,8 @@ export default function TabsLayout() {
         }}
       />
     </Tabs>
+    {/* Ask-AI floating helper — tabs only; chat thread + feedback pin their own bottom UI */}
+    <AskAiAssistant />
+    </View>
   );
 }
