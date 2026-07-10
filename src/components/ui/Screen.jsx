@@ -1,6 +1,6 @@
 // Screen shell — parchment page canvas + safe areas + optional header row
 // (wordmark/title left, actions right). One idea per screen; 64px section rhythm.
-import { ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -10,6 +10,7 @@ export default function Screen({
   headerLeft,
   headerRight,
   scroll = true,
+  keyboard = false,
   style,
   contentStyle,
 }) {
@@ -62,7 +63,16 @@ export default function Screen({
   return (
     <SafeAreaView edges={['top']} style={[{ flex: 1, backgroundColor: t.surface }, style]}>
       {header}
-      {body}
+      {keyboard ? (
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={{ flex: 1 }}
+        >
+          {body}
+        </KeyboardAvoidingView>
+      ) : (
+        body
+      )}
     </SafeAreaView>
   );
 }

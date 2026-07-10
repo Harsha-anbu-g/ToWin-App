@@ -4,12 +4,10 @@ import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
-import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function Welcome() {
   const { t, spacing, text, fontFamily } = useTheme();
-  const { showToast } = useToast();
   const router = useRouter();
 
   return (
@@ -61,12 +59,12 @@ export default function Welcome() {
         <Button
           title="Log in"
           variant="primary"
-          onPress={() => showToast('Login opens in the next build step')}
+          onPress={() => router.push('/(auth)/login')}
         />
         <Button
           title="Join ToWin"
           variant="secondary"
-          onPress={() => showToast('Registration opens in the next build step')}
+          onPress={() => router.push('/(auth)/register')}
         />
       </View>
     </Screen>
