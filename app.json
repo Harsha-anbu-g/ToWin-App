@@ -16,9 +16,11 @@
       "apiBaseUrl": "http://192.168.0.13:8080/api"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.towin.app"
     },
     "android": {
+      "package": "com.towin.app",
       "adaptiveIcon": {
         "backgroundColor": "#f6f4ef",
         "foregroundImage": "./assets/android-icon-foreground.png",
