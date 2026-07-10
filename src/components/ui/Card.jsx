@@ -1,5 +1,6 @@
-// Card — Material surface (MD3 elevated look) with the app's spacing. Keeps
-// the same API (children, style, testID) as before.
+// Card — Material component (react-native-paper) in OUTLINED mode: the ToWin
+// brand does hairlines over shadows (DESIGN.md), and MD3's outlined card is
+// exactly that. Same API as always (children, style, contentStyle, testID).
 import { Card as PaperCard } from 'react-native-paper';
 import { View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
@@ -9,18 +10,18 @@ export default function Card({ children, style, contentStyle, testID, ...rest })
   return (
     <PaperCard
       testID={testID}
-      mode="elevated"
-      elevation={1}
+      mode="outlined"
       style={[
         {
           backgroundColor: t.canvas,
-          borderRadius: radius.lg,
+          borderColor: t.border,
+          borderRadius: radius.xl,
         },
         style,
       ]}
       {...rest}
     >
-      <View style={[{ padding: spacing[5] }, contentStyle]}>{children}</View>
+      <View style={[{ padding: spacing[6] }, contentStyle]}>{children}</View>
     </PaperCard>
   );
 }
