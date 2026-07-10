@@ -7,6 +7,7 @@ import { Alert, Text, View } from 'react-native';
 import api from '../../api/client';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import SkeletonCard from '../ui/Skeleton';
 import { useToast } from '../../context/ToastContext';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
@@ -118,7 +119,7 @@ export default function OpenRequestsCard() {
       </Text>
 
       {isLoading ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Looking around…</Text>
+        <SkeletonCard />
       ) : needs.length === 0 ? (
         <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           No open requests right now. Check back soon — elders post new ones every day.

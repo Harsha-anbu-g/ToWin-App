@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import api from '../../api/client';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import SkeletonCard from '../ui/Skeleton';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -13,7 +14,7 @@ export default function CheckinCard() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: streak } = useQuery({
+  const { data: streak, isLoading } = useQuery({
     queryKey: ['streak-me'],
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
@@ -38,7 +39,9 @@ export default function CheckinCard() {
       >
         Daily check-in
       </Text>
-      {done ? (
+      {isLoading ? (
+        <SkeletonCard lines={1} />
+      ) : done ? (
         <View
           style={{
             backgroundColor: t.greenTint,

@@ -7,6 +7,7 @@ import api from '../../api/client';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import SkeletonCard from '../ui/Skeleton';
 import { useToast } from '../../context/ToastContext';
 import { catLabel, NEED_STATUS, sortNeeds } from '../../lib/needs';
 import { applicantsLabel } from '../../lib/copy';
@@ -98,7 +99,7 @@ export default function MyRequestsCard() {
       </Text>
 
       {isLoading ? (
-        <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Loading…</Text>
+        <SkeletonCard />
       ) : needs.length === 0 ? (
         <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           No requests yet. Tap the blue "Ask for help" button below to post your first one.
