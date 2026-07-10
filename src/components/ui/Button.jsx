@@ -18,9 +18,9 @@ export default function Button({
 
   const palette = {
     primary: {
-      backgroundColor: disabled ? t.btnDisabled : t.blue,
+      backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
-      color: '#ffffff',
+      color: t.actionInk,
     },
     secondary: {
       backgroundColor: 'transparent',

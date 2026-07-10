@@ -14,6 +14,7 @@ import Input from '../../src/components/ui/Input';
 import LegalModal from '../../src/components/LegalModal';
 import Screen from '../../src/components/ui/Screen';
 import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
+import { MATCH_GREEN, STRENGTH_FAIR, STRENGTH_WEAK } from '../../src/theme/parity';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -87,7 +88,7 @@ export default function Register() {
   };
 
   const strength = pwdStrength(form.password);
-  const strengthColors = ['#ff3b30', '#ff9500', t.blue, t.blue];
+  const strengthColors = [STRENGTH_WEAK, STRENGTH_FAIR, t.blue, t.blue];
 
   return (
     <Screen keyboard>
@@ -230,7 +231,7 @@ export default function Register() {
           style={{ marginTop: spacing[4] }}
         />
         {form.confirmPassword && form.password && form.confirmPassword === form.password ? (
-          <Text style={{ fontSize: text.xs, color: '#5FA670', marginTop: 4 }}>Passwords match</Text>
+          <Text style={{ fontSize: text.xs, color: MATCH_GREEN, marginTop: 4 }}>Passwords match</Text>
         ) : null}
 
         {/* Terms agreement — submit stays disabled until checked (HCI rule 5) */}
@@ -254,7 +255,7 @@ export default function Register() {
               marginTop: 2,
             }}
           >
-            {agreed ? <Text style={{ color: '#fff', fontSize: 14, fontWeight: '700', lineHeight: 17 }}>✓</Text> : null}
+            {agreed ? <Text style={{ color: t.actionInk, fontSize: 14, fontWeight: '700', lineHeight: 17 }}>✓</Text> : null}
           </View>
           <Text style={{ flex: 1, fontSize: 14, color: t.ink3, lineHeight: 21 }}>
             I agree to the{' '}
