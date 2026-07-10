@@ -5,12 +5,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
+import SkeletonCard from '../../src/components/ui/Skeleton';
 import { RequestRow, useApplyMutations } from '../../src/components/home/OpenRequestsCard';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -200,31 +201,43 @@ function BrowseRequests() {
     setRefreshing(false);
   };
 
+  // Virtualized (50+ items rule): each request is its own card in a FlatList.
   return (
-    <ScrollView
+    <FlatList
+      data={isLoading ? [] : needs}
+      keyExtractor={(need) => need.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-      contentContainerStyle={{ paddingBottom: spacing[12] }}
-    >
-      <Card>
+      contentContainerStyle={{ paddingBottom: spacing[12], gap: spacing[3] }}
+      ListHeaderComponent={
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
+          style={{
+            fontFamily: fontFamily.display,
+            fontSize: text.lg,
+            color: t.ink,
+            marginBottom: spacing[2],
+          }}
         >
           Open requests
         </Text>
-        {isLoading ? (
-          <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Looking around…</Text>
-        ) : needs.length === 0 ? (
-          <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-            No open requests right now. Pull down to refresh, or check back soon.
-          </Text>
-        ) : (
-          needs.map((need, i) => (
-            <RequestRow key={need.id} need={need} apply={apply} withdraw={withdraw} divider={i > 0} />
-          ))
-        )}
-      </Card>
-    </ScrollView>
+      }
+      ListEmptyComponent={
+        <Card>
+          {isLoading ? (
+            <SkeletonCard />
+          ) : (
+            <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
+              No open requests right now. Pull down to refresh, or check back soon.
+            </Text>
+          )}
+        </Card>
+      }
+      renderItem={({ item }) => (
+        <Card style={{ paddingTop: spacing[2] }}>
+          <RequestRow need={item} apply={apply} withdraw={withdraw} divider={false} />
+        </Card>
+      )}
+    />
   );
 }
 
