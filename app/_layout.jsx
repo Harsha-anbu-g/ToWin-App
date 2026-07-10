@@ -3,6 +3,7 @@ import { useFonts, Newsreader_400Regular, Newsreader_400Regular_Italic } from '@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
+import { AuthProvider } from '../src/context/AuthContext';
 import { ToastProvider } from '../src/context/ToastContext';
 
 const queryClient = new QueryClient({
@@ -39,9 +40,11 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <ThemedShell />
-        </ToastProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <ThemedShell />
+          </ToastProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
