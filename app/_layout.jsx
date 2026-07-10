@@ -19,8 +19,8 @@ const queryClient = new QueryClient({
 function ThemedShell() {
   const { mode, t } = useTheme();
 
-  // Material (react-native-paper) theme fed by OUR tokens — Claude palette,
-  // Material components. One source of truth for both systems.
+  // Material (react-native-paper) theme fed by OUR tokens — the website's
+  // ToWin palette, Material components. One source of truth for both systems.
   const paperTheme = useMemo(() => {
     const base = mode === 'dark' ? MD3DarkTheme : MD3LightTheme;
     return {
