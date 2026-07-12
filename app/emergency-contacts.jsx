@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
-import api from '../src/api/client';
+import api, { friendlyWriteError } from '../src/api/client';
 import SosCard from '../src/components/home/SosCard';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
@@ -37,7 +37,10 @@ export default function EmergencyContacts() {
       refresh();
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not add the contact. Please try again.', 'error'),
+      showToast(
+        friendlyWriteError(err, err?.response?.data?.message || 'Could not add the contact. Please try again.'),
+        'error'
+      ),
   });
 
   const remove = useMutation({
@@ -46,7 +49,8 @@ export default function EmergencyContacts() {
       showToast('Contact removed.', 'info');
       refresh();
     },
-    onError: () => showToast('Could not remove the contact. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not remove the contact. Please try again.'), 'error'),
   });
 
   const submit = () => {

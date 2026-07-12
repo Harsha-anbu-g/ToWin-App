@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Alert, Text, View } from 'react-native';
-import api from '../../api/client';
+import api, { friendlyWriteError } from '../../api/client';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import SkeletonCard from '../ui/Skeleton';
@@ -27,7 +27,10 @@ export function useApplyMutations() {
       refresh();
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not send your offer. Please try again.', 'error'),
+      showToast(
+        friendlyWriteError(err, err?.response?.data?.message || 'Could not send your offer. Please try again.'),
+        'error'
+      ),
   });
 
   const withdraw = useMutation({
@@ -36,7 +39,8 @@ export function useApplyMutations() {
       showToast('Offer withdrawn.', 'success');
       refresh();
     },
-    onError: () => showToast('Could not withdraw right now. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not withdraw right now. Please try again.'), 'error'),
   });
 
   return { apply, withdraw };

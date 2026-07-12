@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import api from '../../api/client';
+import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel, NEED_STATUS } from '../../lib/needs';
 import { useToast } from '../../context/ToastContext';
@@ -138,7 +138,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast('Helper accepted — they can now message you.', 'success');
       refresh();
     },
-    onError: () => showToast('Could not accept right now. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not accept right now. Please try again.'), 'error'),
   });
   const complete = useMutation({
     mutationFn: (needId) => api.post(`/needs/${needId}/complete`),
@@ -146,7 +147,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast('Marked as completed. Well done!', 'success');
       refresh();
     },
-    onError: () => showToast('Could not mark completed. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not mark completed. Please try again.'), 'error'),
   });
   const remove = useMutation({
     mutationFn: (needId) => api.delete(`/needs/${needId}`),
@@ -154,7 +156,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast('Request removed.', 'success');
       refresh();
     },
-    onError: () => showToast('Could not remove it. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not remove it. Please try again.'), 'error'),
   });
 
   const confirmAccept = (need, app) =>

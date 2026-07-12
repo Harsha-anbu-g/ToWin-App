@@ -1,4 +1,4 @@
-import api, { setTokenGetter, setOnSessionExpired } from '../src/api/client';
+import api, { friendlyWriteError, setTokenGetter, setOnSessionExpired } from '../src/api/client';
 
 const requestHandler = () => api.interceptors.request.handlers[0].fulfilled;
 const responseReject = () => api.interceptors.response.handlers[0].rejected;
@@ -42,4 +42,18 @@ test('403 (authenticated but not allowed) does NOT log out', async () => {
   const err = { response: { status: 403 }, config: { headers: { Authorization: 'Bearer x' } } };
   await expect(responseReject()(err)).rejects.toBe(err);
   expect(expired).not.toHaveBeenCalled();
+});
+
+test('friendlyWriteError names the verify-email fix on 403', () => {
+  const err = { response: { status: 403 } };
+  expect(friendlyWriteError(err, 'Could not post right now.')).toMatch(/verify your email/i);
+});
+
+test('friendlyWriteError keeps the fallback for other failures', () => {
+  expect(friendlyWriteError({ response: { status: 500 } }, 'Could not post right now.')).toBe(
+    'Could not post right now.'
+  );
+  expect(friendlyWriteError(new Error('network down'), 'Could not post right now.')).toBe(
+    'Could not post right now.'
+  );
 });

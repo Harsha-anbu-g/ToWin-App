@@ -42,4 +42,13 @@ api.interceptors.response.use(
   }
 );
 
+// A gated write refused with 403 means the account isn't verified yet (e.g.
+// unverified email hitting a gated endpoint). "Please try again" sends the
+// user in circles — name the actual fix. Use in mutation onError handlers:
+//   onError: (err) => showToast(friendlyWriteError(err, 'Could not …'), 'error')
+export const friendlyWriteError = (error, fallback) =>
+  error?.response?.status === 403
+    ? 'Please verify your email first — check your inbox for the link, then try again.'
+    : fallback;
+
 export default api;
