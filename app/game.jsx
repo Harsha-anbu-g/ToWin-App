@@ -148,27 +148,30 @@ export default function GameScreen() {
   const [locked, setLocked] = useState(false);
   const [timeLeft, setTimeLeft] = useState(TIME);
   const [phase, setPhase] = useState('playing'); // playing | won | lost
+  // WCAG 2.2.1 Timing Adjustable: elders with slower reactions must be able
+  // to stop the clock — losing purely to the timer is the opposite of calm.
+  const [paused, setPaused] = useState(false);
   // The 1.2s flip-back timer must not outlive the screen (or a restart) — a
   // dangling timer would setState after unmount / corrupt a fresh board.
   const flipBackTimer = useRef(null);
   useEffect(() => () => clearTimeout(flipBackTimer.current), []);
 
   useEffect(() => {
-    if (phase !== 'playing') return;
+    if (phase !== 'playing' || paused) return;
     if (timeLeft <= 0) {
       setPhase('lost');
       return;
     }
     const timer = setTimeout(() => setTimeLeft((n) => n - 1), 1000);
     return () => clearTimeout(timer);
-  }, [timeLeft, phase]);
+  }, [timeLeft, phase, paused]);
 
   useEffect(() => {
     if (phase === 'playing' && won(cards)) setPhase('won');
   }, [cards, phase]);
 
   const flip = (idx) => {
-    if (locked || phase !== 'playing') return;
+    if (locked || phase !== 'playing' || paused) return;
     const card = cards[idx];
     if (card.flipped || card.matched || selected.length >= 2) return;
     const next = [...selected, idx];
@@ -191,6 +194,7 @@ export default function GameScreen() {
     setSelected([]);
     setLocked(false);
     setTimeLeft(TIME);
+    setPaused(false);
     setPhase('playing');
   };
 
@@ -212,7 +216,30 @@ export default function GameScreen() {
             Match all {PAIRS} pairs to win
           </Text>
         </View>
-        <TimerRing timeLeft={timeLeft} />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {phase === 'playing' ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={paused ? 'Resume the game' : 'Pause the game'}
+              onPress={() => setPaused((p) => !p)}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                paddingHorizontal: 14,
+                borderRadius: radius.pill,
+                borderWidth: 1,
+                borderColor: t.border,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
+                {paused ? 'Resume' : 'Pause'}
+              </Text>
+            </Pressable>
+          ) : null}
+          <TimerRing timeLeft={timeLeft} />
+        </View>
       </View>
 
       {/* Sky progress bar + n/6 */}
@@ -233,7 +260,9 @@ export default function GameScreen() {
       </View>
 
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 21, marginTop: 12 }}>
-        Tap two cells on the shell. A pair that matches stays open — slow and steady.
+        {paused
+          ? 'Paused — take all the time you need. Tap Resume when ready.'
+          : 'Tap two cells on the shell. A pair that matches stays open — slow and steady.'}
       </Text>
 
       <View style={{ alignItems: 'center', marginTop: 8 }}>
