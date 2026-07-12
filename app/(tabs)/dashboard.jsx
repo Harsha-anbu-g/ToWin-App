@@ -70,7 +70,7 @@ function HelperCard({ card, waitingForOther, onConfirm }) {
           style={({ pressed }) => ({
             height: 38,
             borderRadius: radius.pill,
-            backgroundColor: t.blueWash,
+            backgroundColor: 'transparent',
             borderWidth: 1,
             borderColor: t.blueSoft,
             alignItems: 'center',

@@ -42,7 +42,7 @@ function ActionChip({ label, onPress, tonal = false, destructive = false }) {
         height: 36,
         paddingHorizontal: 14,
         borderRadius: radius.pill,
-        backgroundColor: tonal ? t.blueWash : t.canvas,
+        backgroundColor: 'transparent',
         borderWidth: 1,
         borderColor: tonal ? t.blueSoft : destructive ? t.redLine : t.border,
         alignItems: 'center',
@@ -138,7 +138,7 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
           style={({ pressed }) => ({
             height: 38,
             borderRadius: radius.pill,
-            backgroundColor: t.blueWash,
+            backgroundColor: 'transparent',
             borderWidth: 1,
             borderColor: t.blueSoft,
             alignItems: 'center',

@@ -21,14 +21,14 @@ function StatusPill({ status }) {
   const { t, radius } = useTheme();
   const pill = NEED_STATUS[status] ?? NEED_STATUS.OPEN;
   return (
+    // A label, not a button: soft fill, no border, so it can't be mistaken
+    // for something tappable next to the real View action.
     <View
       style={{
         backgroundColor: status === 'OPEN' ? t.surfaceFill : t[pill.bg],
-        borderWidth: 1,
-        borderColor: t.border,
         borderRadius: radius.pill,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
+        paddingHorizontal: 9,
+        paddingVertical: 4,
         alignSelf: 'flex-start',
       }}
     >
@@ -69,7 +69,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove }) {
               height: 34,
               paddingHorizontal: 16,
               borderRadius: radius.pill,
-              backgroundColor: t.blueWash,
+              backgroundColor: 'transparent',
               borderWidth: 1,
               borderColor: t.blueSoft,
               alignItems: 'center',

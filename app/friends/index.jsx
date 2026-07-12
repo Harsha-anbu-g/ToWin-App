@@ -35,7 +35,7 @@ function TonalChip({ label, onPress, neutral = false }) {
         height: 34,
         paddingHorizontal: 16,
         borderRadius: radius.pill,
-        backgroundColor: neutral ? t.surfaceFill : t.blueWash,
+        backgroundColor: neutral ? t.surfaceFill : 'transparent',
         borderWidth: 1,
         borderColor: neutral ? t.border : t.blueSoft,
         alignItems: 'center',
