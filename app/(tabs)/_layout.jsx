@@ -131,6 +131,8 @@ export default function TabsLayout() {
           href: second.name === 'my-elders' ? undefined : null,
         }}
       />
+      {/* Dashboard (3d) — check-in destination; not a tab, but keeps the tab bar */}
+      <Tabs.Screen name="dashboard" options={{ href: null }} />
       <Tabs.Screen
         name="action"
         options={{

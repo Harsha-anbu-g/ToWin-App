@@ -71,7 +71,7 @@ export default function CheckinCard() {
     onSuccess: (data) => {
       queryClient.setQueryData(['streak-me'], data);
       showToast('Checked in — see you tomorrow!', 'success');
-      router.push('/trust'); // Dashboard destination lands with US-208
+      router.push('/(tabs)/dashboard'); // 3d: My Helpers, tab bar stays under it
     },
     onError: () => showToast('Could not check in right now. Please try again.', 'error'),
   });
