@@ -14,9 +14,9 @@ import {
   Moon,
   PhoneCall,
   ShieldCheck,
-  UserPen,
 } from 'lucide-react-native';
 import api from '../../src/api/client';
+import TortoiseMark from '../../src/components/TortoiseMark';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
@@ -26,12 +26,12 @@ import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 function Stat({ value, label, gold }) {
-  const { t, text } = useTheme();
+  const { t } = useTheme();
   return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
+    <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
       <Text
         style={{
-          fontSize: text.xl,
+          fontSize: 19,
           fontWeight: '600',
           fontVariant: ['tabular-nums'],
           color: gold ? t.trustGold : t.ink,
@@ -39,31 +39,51 @@ function Stat({ value, label, gold }) {
       >
         {value ?? '—'}
       </Text>
-      <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 2 }}>{label}</Text>
+      <Text style={{ fontSize: 12, color: gold ? t.trustGold : t.inkSlate }}>{label}</Text>
     </View>
   );
 }
 
-function Row({ icon: Icon, label, onPress, right, destructive }) {
-  const { t, spacing, text } = useTheme();
+// 3h list row: 18px leading slot (icon, score, or custom), 15px label,
+// chevron or a passed control. `icon` may be a component or a render fn.
+function Row({ icon: Icon, label, onPress, right, destructive, divider }) {
+  const { t, spacing } = useTheme();
+  // Plain arrow fns render the custom leading slot; lucide icons (forwardRef
+  // objects, $$typeof set) get the standard 18px treatment.
+  const leading =
+    typeof Icon === 'function' && !Icon.$$typeof ? (
+      <Icon />
+    ) : (
+      <Icon size={18} color={destructive ? t.red : t.inkSlate} strokeWidth={1.8} />
+    );
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={typeof label === 'string' ? label : undefined}
       onPress={onPress}
       disabled={!onPress}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing[3],
-        minHeight: 52,
-        paddingVertical: spacing[2],
+        minHeight: 48,
+        borderBottomWidth: divider ? 1 : 0,
+        borderBottomColor: t.hairline,
         opacity: pressed ? 0.7 : 1,
       })}
     >
-      <Icon size={22} color={destructive ? t.redDeep : t.inkSlate} />
-      <Text style={{ flex: 1, fontSize: text.base, color: destructive ? t.redDeep : t.ink }}>{label}</Text>
-      {right ?? <ChevronRight size={20} color={t.ink4} />}
+      <View style={{ width: 22, alignItems: 'center' }}>{leading}</View>
+      <Text
+        style={{
+          flex: 1,
+          fontSize: 15,
+          fontWeight: destructive ? '600' : '400',
+          color: destructive ? t.red : t.ink,
+        }}
+      >
+        {label}
+      </Text>
+      {right ?? <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />}
     </Pressable>
   );
 }
@@ -96,7 +116,6 @@ export default function ProfileScreen() {
   });
 
   const friendsCount = (connections ?? []).filter((c) => c.status === 'ACTIVE').length;
-  const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
 
   const deleteAccount = useMutation({
     mutationFn: () => api.delete('/account'),
@@ -135,26 +154,52 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen title="Profile">
-      {/* Identity + stats (Instagram-profile shaped) */}
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4] }}>
-          <Avatar name={profile?.name} uri={profile?.photoUrl} size={64} />
+    <Screen>
+      <Text
+        accessibilityRole="header"
+        style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
+      >
+        Profile
+      </Text>
+
+      {/* Identity card (3h): 56px avatar, serif name, city, hairline Edit pill */}
+      <Card style={{ marginTop: spacing[3] }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13 }}>
+          <Avatar name={profile?.name} uri={profile?.photoUrl} size={56} />
           <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink }}>
+            <Text style={{ fontFamily: fontFamily.display, fontSize: 21, color: t.ink }}>
               {profile?.name ?? '…'}
             </Text>
-            <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 2 }}>
-              {user?.role === 'BOTH' ? 'Elder & Helper' : user?.role === 'HELPER' ? 'Helper' : 'Elder'}
-              {profile?.city ? ` · ${profile.city}` : ''}
+            <Text style={{ fontSize: 13, color: t.inkSlate, marginTop: 1 }}>
+              {profile?.city ??
+                (user?.role === 'BOTH' ? 'Elder & Helper' : user?.role === 'HELPER' ? 'Helper' : 'Elder')}
             </Text>
           </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Edit profile"
+            onPress={() => router.push('/profile-edit')}
+            hitSlop={{ top: 6, bottom: 6 }}
+            style={({ pressed }) => ({
+              height: 36,
+              paddingHorizontal: 15,
+              borderRadius: 18,
+              backgroundColor: t.canvas,
+              borderWidth: 1,
+              borderColor: t.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '600', color: t.ink }}>Edit</Text>
+          </Pressable>
         </View>
         <View
           style={{
             flexDirection: 'row',
-            marginTop: spacing[5],
-            paddingTop: spacing[4],
+            marginTop: spacing[4],
+            paddingTop: spacing[3],
             borderTopWidth: 1,
             borderTopColor: t.hairline,
           }}
@@ -165,9 +210,56 @@ export default function ProfileScreen() {
         </View>
       </Card>
 
-      {/* Reviews about me */}
+      {/* The 3h list: Trust Score · Peekaboo · Guide · Night mode · SOS */}
+      <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
+        <Row
+          icon={() => (
+            <Text style={{ fontSize: 14, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
+              {trust ? Math.round(trust.totalScore) : '—'}
+            </Text>
+          )}
+          label={
+            <Text>
+              <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> Score
+            </Text>
+          }
+          onPress={() => router.push('/trust')}
+          divider
+        />
+        <Row icon={() => <TortoiseMark size={18} />} label="Peekaboo" onPress={() => router.push('/game')} divider />
+        <Row icon={BookOpen} label="Guide" onPress={() => router.push('/guide')} divider />
+        <Row
+          icon={Moon}
+          label="Night mode"
+          onPress={toggle}
+          divider
+          right={
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={toggle}
+              trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
+              accessibilityLabel="Night mode"
+            />
+          }
+        />
+        <Row
+          icon={PhoneCall}
+          label="SOS — emergency contacts"
+          onPress={() => router.push('/emergency-contacts')}
+          destructive
+        />
+      </Card>
+
+      {/* Everything quieter lives below the fold */}
+      <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
+        <Row icon={KeyRound} label="Change password" onPress={() => router.push('/change-password')} divider />
+        <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} divider />
+        <Row icon={ShieldCheck} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
+        <Row icon={FileText} label="Terms of service" onPress={() => router.push('/terms')} />
+      </Card>
+
       {(myReviews ?? []).length > 0 ? (
-        <Card style={{ marginTop: spacing[4] }}>
+        <Card style={{ marginTop: spacing[3] }}>
           <Text
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
@@ -196,32 +288,6 @@ export default function ProfileScreen() {
           ))}
         </Card>
       ) : null}
-
-      {/* Settings */}
-      <Card style={{ marginTop: spacing[4] }}>
-        <Row icon={UserPen} label="Edit my profile" onPress={() => router.push('/profile-edit')} />
-        <Row icon={KeyRound} label="Change password" onPress={() => router.push('/change-password')} />
-        {isElder ? (
-          <Row icon={PhoneCall} label="Emergency contacts" onPress={() => router.push('/emergency-contacts')} />
-        ) : null}
-        <Row
-          icon={Moon}
-          label="Night mode"
-          onPress={toggle}
-          right={
-            <Switch
-              value={mode === 'dark'}
-              onValueChange={toggle}
-              trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
-              accessibilityLabel="Night mode"
-            />
-          }
-        />
-        <Row icon={BookOpen} label="How ToWin works" onPress={() => router.push('/guide')} />
-        <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} />
-        <Row icon={ShieldCheck} label="Privacy policy" onPress={() => router.push('/privacy')} />
-        <Row icon={FileText} label="Terms of service" onPress={() => router.push('/terms')} />
-      </Card>
 
       <Button title="Log out" variant="secondary" onPress={logout} style={{ marginTop: spacing[5] }} />
 
