@@ -15,7 +15,7 @@ export default function Card({ children, style, contentStyle, testID, ...rest })
         {
           backgroundColor: t.canvas,
           borderColor: t.border,
-          borderRadius: radius.xl,
+          borderRadius: radius.card,
         },
         style,
       ]}

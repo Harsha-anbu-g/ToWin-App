@@ -8,8 +8,18 @@ import { useTheme } from '../../theme/ThemeContext';
 
 export default function TrustLadder({ stageIndex, style }) {
   const { t } = useTheme();
+  // One spoken summary for the whole ladder — without it, screen readers hear
+  // nothing at all from the app's "shows where you ARE, numbered, always" feature.
+  const label =
+    stageIndex >= 6
+      ? 'Trust ladder: all 6 steps done — full trust reached'
+      : `Trust ladder: ${stageIndex} of 6 steps done`;
   return (
-    <View style={[{ flexDirection: 'row', alignItems: 'center' }, style]}>
+    <View
+      accessible
+      accessibilityLabel={label}
+      style={[{ flexDirection: 'row', alignItems: 'center' }, style]}
+    >
       {[0, 1, 2, 3, 4, 5, 6].map((i) => {
         const isGoal = i === 6;
         const done = i < stageIndex || (stageIndex >= 6 && isGoal);

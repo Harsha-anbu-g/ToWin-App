@@ -47,10 +47,13 @@ export const light = {
   redMild: '#cf6a66', // soft error text
 
   // Surfaces
-  canvas: '#ffffff', // cards — elevation via surface contrast, not shadow
+  // Cards/boxes are warm parchment on the white page (user decision
+  // 2026-07-12: "the colour used in daily check-in — all boxes use it").
+  // Elevation stays surface contrast + hairline, never shadow.
+  canvas: '#f6f4ef',
   surface: '#ffffff', // page canvas — plain white (2026-07-11 redesign, user decision)
   surfaceFill: '#f2f2f5', // segmented tracks, neutral chips, search fields
-  heroParchment: '#f6f4ef', // check-in hero card — the ONLY warm surface kept
+  heroParchment: '#f6f4ef', // check-in hero card — same warm family as canvas
   surface2: '#f1eee8',
   surfacePearl: '#fbfaf6',
   surfaceDark: '#272729',

@@ -1,5 +1,6 @@
-// Demo accounts card — shown first on Login AND Register so visitors never
-// miss the no-signup path (mirrors web). Demo logins bypass the rate limiter.
+// Demo accounts — a QUIET footer affordance under the auth forms (a hairline
+// "or" divider + two soft buttons), not a promo banner above them. Demo
+// logins bypass the rate limiter; one tap, no signup (elder-first trial).
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -15,7 +16,7 @@ const DEMO = {
 };
 
 export default function DemoAccountsCard({ onError }) {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius, type } = useTheme();
   const { login } = useAuth();
   const router = useRouter();
   const [guestLoading, setGuestLoading] = useState('');
@@ -40,55 +41,46 @@ export default function DemoAccountsCard({ onError }) {
   };
 
   return (
-    <View
-      style={{
-        backgroundColor: t.blueWash,
-        borderWidth: 1.5,
-        borderColor: t.blue,
-        borderRadius: radius.lg,
-        padding: spacing[4],
-        marginBottom: spacing[5],
-      }}
-    >
-      <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.ink, textAlign: 'center' }}>
-        Just want to see how it works?
+    <View style={{ marginTop: spacing[6] }}>
+      {/* hairline "or" divider */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
+        <Text style={{ fontSize: type.caption, color: t.inkFaint2, letterSpacing: 1, textTransform: 'uppercase' }}>
+          or
+        </Text>
+        <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
+      </View>
+
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, textAlign: 'center', marginTop: spacing[4], marginBottom: spacing[3] }}>
+        Just want to see how it works? Look around with a sample account.
       </Text>
-      <Text
-        style={{
-          fontSize: text.xs,
-          color: t.inkSlate,
-          textAlign: 'center',
-          marginTop: 2,
-          marginBottom: spacing[3],
-        }}
-      >
-        Look around with a sample account, no account needed.
-      </Text>
+
       <View style={{ flexDirection: 'row', gap: spacing[2] }}>
         {['ELDER', 'HELPER'].map((role) => (
           <Pressable
             key={role}
             accessibilityRole="button"
             accessibilityLabel={DEMO[role].label}
+            accessibilityState={{ disabled: !!guestLoading, busy: guestLoading === role }}
             disabled={!!guestLoading}
             onPress={() => handleGuest(role)}
             style={({ pressed }) => ({
               flex: 1,
-              minHeight: 56,
+              minHeight: 54,
               backgroundColor: t.canvas,
-              borderWidth: 1.5,
-              borderColor: pressed ? t.blue : t.blueSoft,
-              borderRadius: radius.md,
+              borderWidth: 1,
+              borderColor: t.border,
+              borderRadius: radius.input,
               alignItems: 'center',
               justifyContent: 'center',
-              paddingVertical: spacing[3],
-              opacity: guestLoading && guestLoading !== role ? 0.5 : 1,
+              paddingVertical: spacing[2],
+              opacity: pressed || (guestLoading && guestLoading !== role) ? 0.6 : 1,
             })}
           >
-            <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.blueTeal }}>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>
               {guestLoading === role ? 'Opening…' : DEMO[role].label}
             </Text>
-            <Text style={{ fontSize: 12, color: t.ink3, marginTop: 2 }}>{DEMO[role].sub}</Text>
+            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{DEMO[role].sub}</Text>
           </Pressable>
         ))}
       </View>

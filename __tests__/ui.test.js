@@ -81,7 +81,8 @@ test('card renders its children on a testable surface', async () => {
 
 test('avatar falls back to initials with a name label', async () => {
   const { getByText, getByLabelText } = await wrap(<Avatar name="Margaret Hall" />);
-  expect(getByText('MH')).toBeOnTheScreen();
+  // Initials are visual-only — screen readers get the full name label instead
+  expect(getByText('MH', { includeHiddenElements: true })).toBeOnTheScreen();
   expect(getByLabelText('Margaret Hall')).toBeOnTheScreen();
 });
 

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   FlatList,
   KeyboardAvoidingView,
   Platform,
@@ -50,7 +51,10 @@ export default function ChatThread() {
 
   const [input, setInput] = useState(drafts.get(connectionId) ?? '');
   useEffect(() => {
-    drafts.set(connectionId, input);
+    // Empty drafts are deleted (not stored as '') so the Map doesn't grow
+    // one stale entry per conversation for the life of the app session.
+    if (input) drafts.set(connectionId, input);
+    else drafts.delete(connectionId);
   }, [connectionId, input]);
 
   // Only poll while this thread is the focused screen — pushing the friend's
@@ -76,13 +80,18 @@ export default function ChatThread() {
     refetchInterval: isFocused ? 5000 : false, // web Messages.jsx polls every 5s — only while focused
     enabled: !!connectionId,
   });
-  const messages = useMemo(
-    () =>
-      [...(data?.content ?? (Array.isArray(data) ? data : []))].sort(
-        (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // newest first (inverted list)
-      ),
-    [data]
-  );
+  const messages = useMemo(() => {
+    const sorted = [...(data?.content ?? (Array.isArray(data) ? data : []))].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt) // newest first (inverted list)
+    );
+    // Precompute the day-separator here so renderItem doesn't need to read
+    // sibling messages — keeping its identity stable means FlatList only
+    // redraws rows when the data actually changes, not on every poll tick.
+    return sorted.map((m, i) => {
+      const prev = sorted[i + 1]; // inverted list: previous in time is the NEXT index
+      return { ...m, showDay: !prev || dayLabel(prev.createdAt) !== dayLabel(m.createdAt) };
+    });
+  }, [data]);
 
   // Mark seen when the thread is open and new messages arrive
   const seenOnce = useRef('');
@@ -90,11 +99,23 @@ export default function ChatThread() {
     if (!isFocused) return;
     const newestIncoming = messages.find((m) => m.senderId !== user?.userId);
     if (newestIncoming && seenOnce.current !== newestIncoming.id) {
+      const isFirstLoad = seenOnce.current === '';
       seenOnce.current = newestIncoming.id;
-      api.post(`/messages/${connectionId}/seen`).catch(() => {});
+      // Best-effort, but not invisible: a consistently failing mark-seen is
+      // the only lead when "unread badges never clear" bug reports come in.
+      api.post(`/messages/${connectionId}/seen`).catch((e) => {
+        if (__DEV__) console.warn(`mark-seen failed for ${connectionId}:`, e?.message);
+      });
       queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+      // Screen-reader users sitting in an open thread get no visual cue that
+      // a reply landed — announce it (skip the announcement on first open).
+      if (!isFirstLoad) {
+        AccessibilityInfo.announceForAccessibility(
+          `New message from ${conn?.otherUserName ?? 'your friend'}`
+        );
+      }
     }
-  }, [messages, connectionId, user?.userId, queryClient, isFocused]);
+  }, [messages, connectionId, user?.userId, queryClient, isFocused, conn?.otherUserName]);
 
   const send = useMutation({
     mutationFn: (content) => api.post(`/messages/${connectionId}/send`, { content }),

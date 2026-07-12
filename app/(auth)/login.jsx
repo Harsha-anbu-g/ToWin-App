@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
+import TortoiseMark from '../../src/components/TortoiseMark';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
@@ -53,7 +54,13 @@ export default function Login() {
 
   return (
     <Screen keyboard>
-      <DemoAccountsCard onError={setError} />
+      {/* App-shaped opening: quiet brand lockup with breathing room */}
+      <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[6] }}>
+        <TortoiseMark size={52} />
+        <Text style={{ fontSize: 22, fontWeight: '600', color: t.blueTeal, letterSpacing: -0.5, marginTop: spacing[2] }}>
+          ToWin
+        </Text>
+      </View>
 
       {/* 3p: the form sits flat on the white page — no card chrome */}
       <View>
@@ -160,6 +167,9 @@ export default function Login() {
             <Text style={{ fontSize: 14, color: t.blueDeep, fontWeight: '600' }}>Create Account</Text>
           </Pressable>
         </View>
+
+        {/* Demo accounts live quietly under the form, not above it */}
+        <DemoAccountsCard onError={setError} />
       </View>
     </Screen>
   );

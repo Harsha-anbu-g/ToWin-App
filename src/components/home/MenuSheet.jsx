@@ -1,7 +1,10 @@
-// The ☰ menu — an iOS-style grouped sheet. One feature per row, one feature
-// per screen (the app pattern, not the website's everything-stacked feed).
+// The ☰ menu — a drawer that slides in from the LEFT (where the button
+// lives), grouped rows inside. One feature per row, one feature per screen.
+// Motion: 240ms ease-out on transform only; reduced motion renders in place.
 import { useRouter } from 'expo-router';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookOpen,
   CalendarCheck,
@@ -10,8 +13,8 @@ import {
   HandHelping,
   PhoneCall,
   Puzzle,
-  Search,
   Turtle,
+  Search,
   UsersRound,
   X,
 } from 'lucide-react-native';
@@ -72,6 +75,39 @@ export default function MenuSheet({ visible, onClose }) {
   const { user } = useAuth();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+
+  const drawerW = Math.min(width * 0.82, 320);
+  const slide = useRef(new Animated.Value(-drawerW)).current;
+  const scrim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!visible) return;
+    if (reducedMotion) {
+      slide.setValue(0);
+      scrim.setValue(1);
+      return;
+    }
+    slide.setValue(-drawerW);
+    scrim.setValue(0);
+    Animated.parallel([
+      Animated.timing(slide, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(scrim, { toValue: 1, duration: 240, useNativeDriver: true }),
+    ]).start();
+  }, [visible, reducedMotion, drawerW, slide, scrim]);
+
+  // Slide back out, then let the parent unmount the modal.
+  const close = () => {
+    if (reducedMotion) {
+      onClose();
+      return;
+    }
+    Animated.parallel([
+      Animated.timing(slide, { toValue: -drawerW, duration: 200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      Animated.timing(scrim, { toValue: 0, duration: 200, useNativeDriver: true }),
+    ]).start(() => onClose());
+  };
 
   const isHelper = user?.role === 'HELPER';
   const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
@@ -82,13 +118,26 @@ export default function MenuSheet({ visible, onClose }) {
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType={reducedMotion ? 'none' : 'slide'}
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View style={{ flex: 1, backgroundColor: t.surface }}>
+    <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
+      {/* Scrim — tap anywhere outside the drawer to close */}
+      <Animated.View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
+        <Pressable accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
+      </Animated.View>
+
+      <Animated.View
+        style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: drawerW,
+          backgroundColor: t.surface,
+          borderRightWidth: 1,
+          borderRightColor: t.border,
+          transform: [{ translateX: slide }],
+          paddingTop: insets.top,
+        }}
+      >
         <View
           style={{
             flexDirection: 'row',
@@ -107,7 +156,7 @@ export default function MenuSheet({ visible, onClose }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close menu"
-            onPress={onClose}
+            onPress={close}
             hitSlop={8}
             style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
           >
@@ -115,7 +164,7 @@ export default function MenuSheet({ visible, onClose }) {
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[5], paddingBottom: spacing[12] }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[12] }}>
           <Group>
             {isHelper ? (
               <>

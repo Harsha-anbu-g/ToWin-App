@@ -91,10 +91,8 @@ export default function Register() {
 
   return (
     <Screen keyboard>
-      <DemoAccountsCard onError={setError} />
-
       {/* 3q: the form sits flat on the white page — no card chrome */}
-      <View>
+      <View style={{ marginTop: spacing[4] }}>
         <Text
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
@@ -282,6 +280,9 @@ export default function Register() {
             <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600' }}>Log in</Text>
           </Pressable>
         </View>
+
+        {/* Demo accounts live quietly under the form, not above it */}
+        <DemoAccountsCard onError={setError} />
       </View>
 
       <LegalModal
