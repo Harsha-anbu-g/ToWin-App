@@ -132,18 +132,15 @@ export default function ChatThread() {
     const content = input.trim();
     if (!content || send.isPending) return;
     setInput('');
-    drafts.set(connectionId, '');
+    drafts.delete(connectionId);
     send.mutate(content);
   };
 
-  const renderItem = useCallback(({ item, index }) => {
+  const renderItem = useCallback(({ item }) => {
     const mine = item.senderId === user?.userId;
-    // Inverted list: the "previous" message in time is the NEXT index
-    const prev = messages[index + 1];
-    const showDay = !prev || dayLabel(prev.createdAt) !== dayLabel(item.createdAt);
     return (
       <View>
-        {showDay ? (
+        {item.showDay ? (
           <Text
             style={{
               alignSelf: 'center',
@@ -182,7 +179,7 @@ export default function ChatThread() {
         </View>
       </View>
     );
-  }, [messages, user?.userId, t, spacing, radius, text]);
+  }, [user?.userId, t, spacing, radius, text]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: t.surface }}>

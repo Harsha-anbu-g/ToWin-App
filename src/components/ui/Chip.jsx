@@ -23,7 +23,8 @@ export default function Chip({ label, selected = false, neutral = false, onPress
       hitSlop={{ top: 4, bottom: 4 }}
       style={[
         {
-          height: 36,
+          minHeight: 36, // min, not fixed — grows with the OS large-text setting
+          paddingVertical: 6,
           paddingHorizontal: selected ? 14 : 15,
           borderRadius: radius.pill,
           backgroundColor,

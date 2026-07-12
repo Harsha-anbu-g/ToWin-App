@@ -10,6 +10,7 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
 
   return (
     <View
+      accessibilityRole="tablist"
       style={[
         {
           flexDirection: 'row',
@@ -34,7 +35,8 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             hitSlop={{ top: 5, bottom: 5 }}
             style={{
               flex: 1,
-              height: 34,
+              minHeight: 34, // min, not fixed — grows with the OS large-text setting
+              paddingVertical: 4,
               borderRadius: radius.pill,
               backgroundColor: active ? t.segActive : 'transparent',
               flexDirection: 'row',
