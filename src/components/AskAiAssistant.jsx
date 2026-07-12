@@ -4,9 +4,9 @@
 // Entry point is a wash pill FAB (tortoise + "Ask AI", 2px blue border).
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
 // fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
-import { useState } from 'react';
+import * as Speech from 'expo-speech';
+import { useRef, useState } from 'react';
 import {
-  AccessibilityInfo,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -45,6 +45,26 @@ export default function AskAiAssistant() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
+  const inputRef = useRef(null);
+
+  // Read a message out loud (web parity: speechSynthesis → expo-speech).
+  // A fresh tap always restarts from the top.
+  const speak = (content) => {
+    Speech.stop();
+    Speech.speak(content, { rate: 0.95 });
+  };
+
+  const close = () => {
+    Speech.stop();
+    setOpen(false);
+  };
+
+  // No speech-to-text lives inside Expo Go — but the iPhone keyboard's own
+  // dictation mic does the job today, so the mic hands the user over to it.
+  const startVoice = () => {
+    inputRef.current?.focus();
+    showToast('Tap the microphone on your keyboard to speak your question.', 'info');
+  };
 
   const send = async (question) => {
     const q = question.trim();
@@ -94,7 +114,7 @@ export default function AskAiAssistant() {
         visible={open}
         transparent
         animationType={reducedMotion ? 'none' : 'slide'}
-        onRequestClose={() => setOpen(false)}
+        onRequestClose={close}
       >
         <View style={{ flex: 1, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
           <View
@@ -128,7 +148,7 @@ export default function AskAiAssistant() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close"
-                onPress={() => setOpen(false)}
+                onPress={close}
                 hitSlop={8}
                 style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
               >
@@ -167,7 +187,7 @@ export default function AskAiAssistant() {
                     <Pressable
                       accessibilityRole="button"
                       accessibilityLabel="Read the greeting aloud"
-                      onPress={() => AccessibilityInfo.announceForAccessibility(GREETING)}
+                      onPress={() => speak(GREETING)}
                       hitSlop={{ top: 6, bottom: 6 }}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
@@ -228,6 +248,27 @@ export default function AskAiAssistant() {
                     }}
                   >
                     <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
+                    {item.role === 'assistant' ? (
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Read this answer aloud"
+                        onPress={() => speak(item.content)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        style={({ pressed }) => ({
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 5,
+                          alignSelf: 'flex-start',
+                          marginTop: 6,
+                          opacity: pressed ? 0.6 : 1,
+                        })}
+                      >
+                        <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
+                        <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
+                          Read aloud
+                        </Text>
+                      </Pressable>
+                    ) : null}
                   </View>
                 )}
                 ListFooterComponent={
@@ -251,8 +292,8 @@ export default function AskAiAssistant() {
               >
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Voice input"
-                  onPress={() => showToast('Voice input arrives in a later update.', 'info')}
+                  accessibilityLabel="Speak your question"
+                  onPress={startVoice}
                   style={({ pressed }) => ({
                     width: 44,
                     height: 44,
@@ -268,6 +309,7 @@ export default function AskAiAssistant() {
                   <Mic size={19} color={t.blueDeep} strokeWidth={1.8} />
                 </Pressable>
                 <TextInput
+                  ref={inputRef}
                   accessibilityLabel="Your question"
                   value={input}
                   onChangeText={setInput}

@@ -3,6 +3,7 @@
 // arrive prefilled (recognition over recall, HCI rule 6).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import api from '../src/api/client';
@@ -88,19 +89,59 @@ export default function ProfileEdit() {
 
   const set = (key) => (v) => setForm((f) => ({ ...f, [key]: v }));
 
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // Pick a square photo and PUT it as multipart `file` — exactly what the
+  // website's uploadPhoto() sends; response carries the new photoUrl.
+  const changePhoto = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      showToast('ToWin needs photo access — you can allow it in Settings.', 'error');
+      return;
+    }
+    const picked = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (picked.canceled || !picked.assets?.length) return;
+    const asset = picked.assets[0];
+    setUploadingPhoto(true);
+    try {
+      const data = new FormData();
+      data.append('file', {
+        uri: asset.uri,
+        name: asset.fileName ?? 'photo.jpg',
+        type: asset.mimeType ?? 'image/jpeg',
+      });
+      await api.put('/profile/photo', data, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      queryClient.invalidateQueries({ queryKey: ['profile-me'] });
+      showToast('Photo updated.', 'success');
+    } catch (err) {
+      showToast(err?.response?.data?.message || 'Could not upload the photo. Please try again.', 'error');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   return (
     <Screen back title="Edit Profile" scroll={false} keyboard contentStyle={{ padding: 0 }}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}
       >
-        {/* 3i: 72px avatar + tonal Change photo */}
+        {/* 3i: 72px avatar + tonal Change photo (PUT /profile/photo, web parity) */}
         <View style={{ alignItems: 'center', marginTop: spacing[2], marginBottom: spacing[5] }}>
           <Avatar name={me?.name} uri={me?.photoUrl} size={72} />
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Change photo"
-            onPress={() => showToast('Adding a photo arrives in a later update.', 'info')}
+            accessibilityState={{ busy: uploadingPhoto }}
+            onPress={changePhoto}
+            disabled={uploadingPhoto}
             hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
               height: 34,
@@ -112,10 +153,12 @@ export default function ProfileEdit() {
               alignItems: 'center',
               justifyContent: 'center',
               marginTop: spacing[3],
-              opacity: pressed ? 0.7 : 1,
+              opacity: pressed || uploadingPhoto ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>Change photo</Text>
+            <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>
+              {uploadingPhoto ? 'Uploading…' : 'Change photo'}
+            </Text>
           </Pressable>
         </View>
 
