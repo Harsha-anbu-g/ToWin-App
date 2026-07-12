@@ -1,8 +1,10 @@
-// ToWin design tokens — 1:1 port of ToWin/frontend/src/index.css (user-approved 2026-07-05).
-// Light block: the index.css :root tokens. Dark: the [data-theme="dark"] overrides
-// layered over light, mirroring the CSS cascade. Values are verbatim; do not
-// "improve" them — the palette is locked (see ToWin/DESIGN.md). Last synced to
-// website commit 6acfd51 (impeccable audit greys: ink3/ink4/slate/greyText/steelText/footerText).
+// ToWin design tokens — 1:1 port of ToWin/frontend/src/index.css (user-approved 2026-07-05),
+// updated 2026-07-11 to the Claude Design mobile redesign handoff
+// (towin-app-mobile-redesign/project/design_handoff_towin_mobile/README.md), which
+// supersedes website parity where they conflict: pages are WHITE (user decision),
+// parchment survives only on the check-in hero card, and the SF type ramp + shape
+// scale below are locked. Dark block mirrors the CSS cascade; palette otherwise
+// unchanged. Last website sync: commit 494fa79 (dark --sky-bar-from added).
 
 export const light = {
   // Brand blue — sky-blue scale
@@ -35,6 +37,7 @@ export const light = {
   ink3: '#676767', // ≥4.5:1 on white AND the parchment surface
   ink4: '#707070', // muted text + placeholders — still ≥4.5:1 on --surface
   inkFaint: '#c8c8cd', // disabled text ONLY (contrast-exempt) — never running text
+  inkFaint2: '#8a919c', // faint meta text (redesign handoff)
   inkDeep: '#2d3748', // heavy slate headings
   inkSlate: '#5a6470', // common secondary text
   inkSlate2: '#5a6b75',
@@ -45,7 +48,9 @@ export const light = {
 
   // Surfaces
   canvas: '#ffffff', // cards — elevation via surface contrast, not shadow
-  surface: '#f6f4ef', // warm off-white — the page canvas + input fills
+  surface: '#ffffff', // page canvas — plain white (2026-07-11 redesign, user decision)
+  surfaceFill: '#f2f2f5', // segmented tracks, neutral chips, search fields
+  heroParchment: '#f6f4ef', // check-in hero card — the ONLY warm surface kept
   surface2: '#f1eee8',
   surfacePearl: '#fbfaf6',
   surfaceDark: '#272729',
@@ -142,6 +147,9 @@ export const dark = {
   blueSoft: 'rgba(79, 163, 206, 0.42)',
   blueTint: 'rgba(79, 163, 206, 0.16)',
   blueWash: 'rgba(79, 163, 206, 0.10)',
+  // Ladder waiting-half (website 494fa79): earned fill is the BRIGHT blue at night,
+  // so the pending half dims instead of lightens (light value collides with #7ec0e4).
+  skyBarFrom: 'rgba(126, 192, 228, 0.55)',
 
   slateTint: '#33363b',
   slateSoft: '#4a4e55',
@@ -151,6 +159,7 @@ export const dark = {
   ink3: '#a8a49c',
   ink4: '#949089',
   inkFaint: '#6f6c66',
+  inkFaint2: '#8f8b84',
   inkDeep: '#ccd3da',
   inkSlate: '#aeb6bf',
   inkSlate2: '#a7b1b9',
@@ -161,6 +170,8 @@ export const dark = {
 
   canvas: '#2a2927', // cards — lighter than the page (elevation)
   surface: '#201f1d', // page canvas — warm charcoal
+  surfaceFill: '#2e2d2b', // tracks/chips — lighter than the page (elevation grammar)
+  heroParchment: '#2a2927', // hero card sits lighter than the page, like every card
   surface2: '#262523',
   surfacePearl: '#232220',
 
@@ -239,10 +250,31 @@ export const dark = {
 // 8px spacing scale — adopt instead of raw px
 export const spacing = { 1: 4, 2: 8, 3: 12, 4: 16, 5: 20, 6: 24, 8: 32, 12: 48, 16: 64 };
 
-export const radius = { sm: 8, md: 11, lg: 14, xl: 18, '2xl': 20, pill: 9999 };
+// Shape scale — redesign handoff adds role-named radii (12 inputs · 16 cards ·
+// 18 hero cards · 999 pills); legacy size keys stay until every screen is re-skinned.
+export const radius = {
+  sm: 8, md: 11, lg: 14, xl: 18, '2xl': 20, pill: 9999,
+  input: 12, card: 16, hero: 18,
+};
 
-// Base body is 18 for elderly readability; never below 16 for content
+// Legacy web-parity scale — superseded per-screen by `type` as the redesign lands
 export const text = { xs: 13, sm: 15, base: 18, lg: 22, xl: 28, '2xl': 34, '3xl': 40 };
+
+// Redesign SF type ramp (handoff, locked): body/UI on the system stack; scores,
+// streaks, and times ALWAYS render with tabular numerals (fontVariant:
+// ['tabular-nums']). Display sizes stay Newsreader 400 via fontFamily.display —
+// titles 27–30, card titles 17–21, big numbers 42–56; these are the midpoints.
+export const type = {
+  title: 28, // screen titles (Newsreader)
+  cardTitle: 19, // card titles (Newsreader)
+  bigNumber: 48, // serif streaks/scores
+  body: 15,
+  meta: 13,
+  caption: 12,
+  segCount: 11, // segmented-control counts
+  tabLabel: 10, // tab bar labels
+  wordmark: 19, // 'ToWin' SF 600, color blueTeal
+};
 
 export const fontFamily = {
   display: 'Newsreader_400Regular', // headings + tagline — weight 400 ONLY

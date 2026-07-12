@@ -1,14 +1,43 @@
-import { light, dark, spacing, radius, text, fontFamily } from '../src/theme/tokens';
+import { light, dark, spacing, radius, text, type, fontFamily } from '../src/theme/tokens';
 
 test('core brand tokens match index.css exactly', () => {
   expect(light.blue).toBe('#4FA3CE');
   expect(light.blueDeep).toBe('#2E7DA6');
   expect(light.trustGold).toBe('#9C7A3C');
   expect(light.greenDeep).toBe('#1a5c2e');
-  expect(light.surface).toBe('#f6f4ef');
   expect(light.canvas).toBe('#ffffff');
   expect(light.border).toBe('#e5e1d9');
   expect(light.ink).toBe('#1d1d1f');
+});
+
+// 2026-07-11 redesign (Claude Design handoff) — locked surface + shape + type values.
+test('redesign: pages are white, parchment survives only on the check-in hero', () => {
+  expect(light.surface).toBe('#ffffff'); // surface.page — user decision, NOT parchment
+  expect(light.surfaceFill).toBe('#f2f2f5'); // segmented tracks, neutral chips, search fields
+  expect(light.heroParchment).toBe('#f6f4ef'); // the ONLY warm surface kept
+  expect(light.inkFaint2).toBe('#8a919c'); // faint meta text
+  // night mode keeps the warm-charcoal grammar: hero card sits lighter than the page
+  expect(dark.surface).toBe('#201f1d');
+  expect(dark.heroParchment).toBe(dark.canvas);
+  expect(dark.surfaceFill).not.toBe(dark.surface);
+});
+
+test('redesign: shape scale — 12 inputs, 16 cards, 18 hero, pills round', () => {
+  expect(radius.input).toBe(12);
+  expect(radius.card).toBe(16);
+  expect(radius.hero).toBe(18);
+  expect(radius.pill).toBe(9999);
+});
+
+test('redesign: SF type ramp per handoff', () => {
+  expect(type.title).toBe(28);
+  expect(type.cardTitle).toBe(19);
+  expect(type.body).toBe(15);
+  expect(type.meta).toBe(13);
+  expect(type.caption).toBe(12);
+  expect(type.segCount).toBe(11);
+  expect(type.tabLabel).toBe(10);
+  expect(type.bigNumber).toBe(48);
 });
 
 test('alias tokens are ported (spot checks)', () => {
