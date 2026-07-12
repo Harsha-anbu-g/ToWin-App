@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import Card from '../ui/Card';
+import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
@@ -17,7 +18,7 @@ const MY_STATUS = {
 export default function MyJobsCard() {
   const { t, spacing, radius, text, fontFamily } = useTheme();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['needs-applications'],
     queryFn: async () => (await api.get('/needs/applications')).data,
   });
@@ -34,6 +35,8 @@ export default function MyJobsCard() {
 
       {isLoading ? (
         <SkeletonCard />
+      ) : isError ? (
+        <LoadError bare what="your jobs" onRetry={refetch} style={{ marginTop: spacing[3] }} />
       ) : jobs.length === 0 ? (
         <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
           Nothing yet. Offer to help with a request and it will show up here.

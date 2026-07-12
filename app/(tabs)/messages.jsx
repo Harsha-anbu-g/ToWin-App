@@ -9,6 +9,7 @@ import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
+import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -18,7 +19,7 @@ export default function MessagesInbox() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
@@ -47,6 +48,9 @@ export default function MessagesInbox() {
           <Card>
             <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading your conversations…</Text>
           </Card>
+        ) : isError ? (
+          // Never dress a network failure up as "no conversations yet"
+          <LoadError what="your conversations" onRetry={refetch} />
         ) : conversations.length === 0 ? (
           <Card>
             <Text

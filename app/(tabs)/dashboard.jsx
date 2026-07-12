@@ -11,6 +11,7 @@ import api from '../../src/api/client';
 import TrustLadder from '../../src/components/trust/TrustLadder';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
+import MenuSheet from '../../src/components/home/MenuSheet';
 import NavRow from '../../src/components/ui/NavRow';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
@@ -92,6 +93,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState('building');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: breakdown, isLoading } = useQuery({
     queryKey: ['trust-my-score'],
@@ -139,7 +141,7 @@ export default function Dashboard() {
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
       <NavRow
         trustScore={breakdown ? Math.round(breakdown.totalScore) : undefined}
-        onMenu={() => router.push('/(tabs)/home')}
+        onMenu={() => setMenuOpen(true)}
         onAddFriends={() => router.push('/friends')}
       />
       <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[12] }}>
@@ -185,6 +187,7 @@ export default function Dashboard() {
           })
         )}
       </ScrollView>
+      <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </Screen>
   );
 }

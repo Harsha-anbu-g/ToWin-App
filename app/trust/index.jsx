@@ -8,6 +8,7 @@ import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Card from '../../src/components/ui/Card';
+import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -123,7 +124,7 @@ function HelperPointsCard({ card }) {
 export default function TrustScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
 
-  const { data: breakdown, isLoading } = useQuery({
+  const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
@@ -147,6 +148,8 @@ export default function TrustScreen() {
 
       {isLoading ? (
         <SkeletonCard lines={3} />
+      ) : isError ? (
+        <LoadError what="your trust score" onRetry={refetch} style={{ marginTop: spacing[4] }} />
       ) : (
         <>
           {/* Summary card */}
