@@ -5,8 +5,9 @@
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
 // fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
 import * as Speech from 'expo-speech';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -47,6 +48,13 @@ export default function AskAiAssistant() {
   const [thinking, setThinking] = useState(false);
   const inputRef = useRef(null);
 
+  // A session expiry mid-request unmounts the tabs tree (and this sheet with
+  // it) — the resolved fetch must not setState on the dead component.
+  const mounted = useRef(true);
+  useEffect(() => () => {
+    mounted.current = false;
+  }, []);
+
   // Read a message out loud (web parity: speechSynthesis → expo-speech).
   // A fresh tap always restarts from the top.
   const speak = (content) => {
@@ -73,13 +81,19 @@ export default function AskAiAssistant() {
     const history = messages.slice(-6);
     setMessages((prev) => [...prev, { role: 'user', content: q }]);
     setThinking(true);
+    // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
+    AccessibilityInfo.announceForAccessibility('Thinking…');
     try {
       const { data } = await api.post('/assistant/chat', { message: q, history });
+      if (!mounted.current) return;
       setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
+      AccessibilityInfo.announceForAccessibility(data.reply);
     } catch {
+      if (!mounted.current) return;
       setMessages((prev) => [...prev, { role: 'assistant', content: FALLBACK }]);
+      AccessibilityInfo.announceForAccessibility(FALLBACK);
     } finally {
-      setThinking(false);
+      if (mounted.current) setThinking(false);
     }
   };
 

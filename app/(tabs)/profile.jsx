@@ -46,7 +46,7 @@ function Stat({ value, label, gold }) {
 
 // 3h list row: 18px leading slot (icon, score, or custom), 15px label,
 // chevron or a passed control. `icon` may be a component or a render fn.
-function Row({ icon: Icon, label, onPress, right, destructive, divider }) {
+function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole, a11yState }) {
   const { t, spacing } = useTheme();
   // Plain arrow fns render the custom leading slot; lucide icons (forwardRef
   // objects, $$typeof set) get the standard 18px treatment.
@@ -58,7 +58,8 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider }) {
     );
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={a11yRole ?? 'button'}
+      accessibilityState={a11yState}
       accessibilityLabel={typeof label === 'string' ? label : undefined}
       onPress={onPress}
       disabled={!onPress}
@@ -233,13 +234,17 @@ export default function ProfileScreen() {
           label="Night mode"
           onPress={toggle}
           divider
+          a11yRole="switch"
+          a11yState={{ checked: mode === 'dark' }}
           right={
-            <Switch
-              value={mode === 'dark'}
-              onValueChange={toggle}
-              trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
-              accessibilityLabel="Night mode"
-            />
+            // Visual-only: the row is the single control. A touchable inside a
+            // touchable gives screen readers two overlapping "Night mode" stops.
+            <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Switch
+                value={mode === 'dark'}
+                trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
+              />
+            </View>
           }
         />
         <Row
@@ -276,7 +281,10 @@ export default function ProfileScreen() {
                 borderTopColor: t.hairline,
               }}
             >
-              <Text style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}>
+              <Text
+                accessibilityLabel={`${Math.round(r.rating ?? 0)} out of 5 stars`}
+                style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}
+              >
                 {'★'.repeat(Math.round(r.rating ?? 0))}
               </Text>
               {r.comment ? (
