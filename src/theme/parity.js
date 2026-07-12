@@ -8,3 +8,13 @@ export const MATCH_GREEN = '#5FA670'; // web "Passwords match" text
 // (tortoise-logo-alpha.png) — the cells sit lighter than the outline, so the
 // shell doesn't read darker than the web mark (user feedback 2026-07-10).
 export const TORTOISE_CELL_GREEN = '#306F50';
+
+// Peekaboo board artwork (redesign canvas 3j) — the game tortoise is an
+// illustration, not themed UI: its colors stay literal in night mode too,
+// exactly like the brand mark. Values are verbatim from the canvas SVG.
+export const PEEKABOO_BODY = '#1a5c2e'; // body + hidden cells
+export const PEEKABOO_SHELL = '#3D8B5A'; // shell + cell strokes
+export const PEEKABOO_CELL_FLIPPED = '#ebf6ee'; // flipped cell fill + eye whites
+export const PEEKABOO_EYE = '#1d1d1f'; // pupils
+export const PEEKABOO_MATCHED = '#4FA3CE'; // matched cells (brand blue)
+export const PEEKABOO_WHITE = '#ffffff'; // matched check + shell sheen
