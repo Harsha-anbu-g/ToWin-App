@@ -1,248 +1,263 @@
-// Trust — the heart of ToWin (port of Trust.jsx + TrustJourney.jsx):
-// score breakdown (profile +3 / ladder +7 / reviews +5, max 15 per friend) and
-// the 7-step ladder per friendship with mutual-consent climbing. Gold speaks
-// trust; the turtle marks the goal.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { Alert, Text, View } from 'react-native';
-import { Turtle } from 'lucide-react-native';
+// Trust Score (3k) — informational breakdown: summary card (serif 42 score,
+// tier chip, next-tier line, avatar stack) and per-helper point cards with a
+// two-tone bar + three meters (stages /7 dots, review /5 stars, profile /3).
+// Climbing the ladder lives on the Dashboard (3d); this screen explains.
+import { useQuery } from '@tanstack/react-query';
+import { Star } from 'lucide-react-native';
+import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
-import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
-import { useToast } from '../../src/context/ToastContext';
+import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useTheme } from '../../src/theme/ThemeContext';
 
-function Ladder({ stageIndex }) {
-  const { t, spacing } = useTheme();
-  // 7 numbered nodes; the last carries the turtle (the goal). Filled = climbed.
+// Tier ladder (web parity): name + points needed to enter it.
+const TIERS = [
+  ['New Member', 0],
+  ['Getting Started', 1],
+  ['Reliable', 15],
+  ['Highly Trusted', 45],
+  ['Community Champion', 90],
+];
+
+function nextTier(score) {
+  for (const [name, min] of TIERS) {
+    if (score < min) return { name, missing: min - score };
+  }
+  return null; // already at the top
+}
+
+function Dots({ earned, max, size = 9 }) {
+  const { t } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[1], marginTop: spacing[3] }}>
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-        const reached = i <= stageIndex;
-        const isGoal = i === 6;
-        return (
-          <View key={i} style={{ flex: 1, alignItems: 'center' }}>
-            <View
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: reached ? t.goldWash : t.trackEmpty,
-                borderWidth: 1,
-                borderColor: reached ? t.goldLine : t.trackEmpty,
-              }}
-            >
-              {isGoal ? (
-                <Turtle size={16} color={reached ? t.logoGreen : t.steelText} />
-              ) : (
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: '600',
-                    fontVariant: ['tabular-nums'],
-                    color: reached ? t.goldDeep : t.steelText,
-                  }}
-                >
-                  {i + 1}
-                </Text>
-              )}
-            </View>
-          </View>
-        );
-      })}
+    <View style={{ flexDirection: 'row', gap: 4 }}>
+      {Array.from({ length: max }).map((_, i) => (
+        <View
+          key={i}
+          style={{
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            backgroundColor: i < earned ? t.blueDeep : t.dotIdle,
+          }}
+        />
+      ))}
     </View>
   );
 }
 
-function PointRow({ label, earned, max }) {
-  const { t, spacing, text } = useTheme();
+function Meter({ label, right, children }) {
+  const { t, type } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing[2] }}>
-      <Text style={{ fontSize: text.sm, color: t.inkSlate }}>{label}</Text>
-      <Text style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600', fontVariant: ['tabular-nums'] }}>
-        +{earned} of {max}
-      </Text>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: 10,
+      }}
+    >
+      <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        {children}
+        <Text
+          style={{
+            fontSize: type.caption,
+            color: t.inkSlate,
+            fontVariant: ['tabular-nums'],
+            width: 34,
+            textAlign: 'right',
+          }}
+        >
+          {right}
+        </Text>
+      </View>
     </View>
+  );
+}
+
+function HelperPointsCard({ card }) {
+  const { t, radius, type } = useTheme();
+  const pct = card.totalMax > 0 ? card.total / card.totalMax : 0;
+  return (
+    <Card style={{ marginTop: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+        <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={40} />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{card.currentStageLabel}</Text>
+        </View>
+        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
+          {card.total} <Text style={{ fontWeight: '400', fontSize: type.caption }}>/ {card.totalMax} points</Text>
+        </Text>
+      </View>
+
+      {/* Two-tone bar: earned deep blue over the light sky track */}
+      <View style={{ height: 8, backgroundColor: t.blueSoft, borderRadius: radius.pill, overflow: 'hidden', marginTop: 12 }}>
+        <View style={{ width: `${pct * 100}%`, height: '100%', backgroundColor: t.blueDeep, borderRadius: radius.pill }} />
+      </View>
+
+      <Meter label="Trust stages" right={`${card.rooting}/${card.rootingMax}`}>
+        <Dots earned={card.rooting} max={card.rootingMax} />
+      </Meter>
+      <Meter label="Their review" right={`${card.review}/${card.reviewMax}`}>
+        <View style={{ flexDirection: 'row', gap: 3 }}>
+          {Array.from({ length: card.reviewMax }).map((_, i) => (
+            <Star
+              key={i}
+              size={11}
+              color={i < card.review ? t.blueDeep : t.dotIdle}
+              fill={i < card.review ? t.blueDeep : t.dotIdle}
+            />
+          ))}
+        </View>
+      </Meter>
+      <Meter label="Your profile" right={`${card.profile}/${card.profileMax}`}>
+        <Dots earned={card.profile} max={card.profileMax} />
+      </Meter>
+    </Card>
   );
 }
 
 export default function TrustScreen() {
-  const { t, spacing, text, fontFamily } = useTheme();
-  const { showToast } = useToast();
-  const queryClient = useQueryClient();
-  const router = useRouter();
+  const { t, spacing, radius, type, fontFamily } = useTheme();
 
   const { data: breakdown, isLoading } = useQuery({
     queryKey: ['trust-my-score'],
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
 
-  const { data: connections } = useQuery({
-    queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
-  });
-  const connOf = (id) => (connections ?? []).find((c) => c.id === id);
-
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
-    queryClient.invalidateQueries({ queryKey: ['connections'] });
-  };
-
-  const confirm = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),
-    onSuccess: (_r, connectionId) => {
-      const c = connOf(connectionId);
-      showToast(
-        c && !c.confirmedByOther
-          ? `Step confirmed — waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed — one step up the ladder!',
-        'success'
-      );
-      refresh();
-    },
-    onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not confirm right now. Please try again.', 'error'),
-  });
-
-  const confirmStep = (card) =>
-    Alert.alert(
-      'Take the next step?',
-      `Trust grows only when BOTH of you agree. Confirm your side of the next step with ${card.customerName}?`,
-      [
-        { text: 'Not yet', style: 'cancel' },
-        { text: 'Confirm my side', onPress: () => confirm.mutate(card.connectionId) },
-      ]
-    );
+  const score = breakdown ? Math.round(breakdown.totalScore) : 0;
+  const customers = breakdown?.customers ?? [];
+  const next = nextTier(score);
 
   return (
-    <Screen back title="Trust">
-      {/* Score header */}
-      <Card>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <View style={{ flex: 1 }}>
-            <Text
-              accessibilityRole="header"
-              style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink }}
-            >
-              My <Text style={{ color: t.trustGold }}>trust</Text> score
-            </Text>
-            {breakdown?.tier ? (
-              <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 2 }}>{breakdown.tier}</Text>
-            ) : null}
-          </View>
-          <Text
-            style={{
-              fontSize: text['3xl'],
-              color: t.trustGold,
-              fontWeight: '600',
-              fontVariant: ['tabular-nums'],
-            }}
-          >
-            {breakdown ? Math.round(breakdown.totalScore) : '—'}
-          </Text>
-        </View>
-        <Text style={{ fontSize: text.sm, lineHeight: 21, color: t.inkSlate, marginTop: spacing[3] }}>
-          Trust grows slowly, like roots: up to {breakdown?.maxPerCustomer ?? 15} points with each
-          friend — your profile (+3), the seven-step ladder (+7), and a review (+5).
-        </Text>
-        {breakdown?.profile ? (
-          <PointRow label="My profile is filled in" earned={breakdown.profile.earned} max={breakdown.profile.max} />
-        ) : null}
-      </Card>
+    <Screen back>
+      <Text
+        accessibilityRole="header"
+        style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}
+      >
+        Your <Text style={{ color: t.trustGold }}>Trust</Text> Score
+      </Text>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
+        Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from
+        their review, and 3 for your profile.
+      </Text>
 
       {isLoading ? (
-        <Card style={{ marginTop: spacing[4] }}>
-          <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading your ladder…</Text>
-        </Card>
-      ) : (breakdown?.customers ?? []).length === 0 ? (
-        <Card style={{ marginTop: spacing[4] }}>
-          <Text
-            accessibilityRole="header"
-            style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
-          >
-            No friendships yet
-          </Text>
-          <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-            Trust starts with a friend. Add someone, and the ladder appears here.
-          </Text>
-          <Button
-            title="Find friends"
-            variant="primary"
-            onPress={() => router.push('/friends')}
-            style={{ marginTop: spacing[5] }}
-          />
-        </Card>
+        <SkeletonCard lines={3} />
       ) : (
-        breakdown.customers.map((card) => {
-          const c = connOf(card.connectionId);
-          const waitingForOther = c?.confirmedByMe && !c?.confirmedByOther;
-          const atTop = card.stageIndex >= 6;
-          return (
-            <Card key={card.connectionId} style={{ marginTop: spacing[4] }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
-                <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={44} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
-                    {card.customerName}
-                  </Text>
-                  <Text style={{ fontSize: text.sm, color: t.goldDeep, marginTop: 1 }}>
-                    {card.currentStageLabel}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: text.lg, color: t.trustGold, fontWeight: '600', fontVariant: ['tabular-nums'] }}>
-                  {card.total}/{card.totalMax}
-                </Text>
-              </View>
-
-              <Ladder stageIndex={card.stageIndex} />
-
-              <PointRow label="Ladder steps together" earned={card.rooting} max={card.rootingMax} />
-              <PointRow label="Review from them" earned={card.review} max={card.reviewMax} />
-              <PointRow label="Profile points" earned={card.profile} max={card.profileMax} />
-
-              {!atTop ? (
-                waitingForOther ? (
-                  <View
-                    style={{
-                      backgroundColor: t.goldWash,
-                      borderRadius: 11,
-                      padding: spacing[3],
-                      marginTop: spacing[4],
-                    }}
-                  >
-                    <Text style={{ fontSize: text.sm, color: t.goldDeep, lineHeight: 20 }}>
-                      You've confirmed — waiting for {card.customerName} to agree to the next step.
-                    </Text>
-                  </View>
-                ) : (
-                  <Button
-                    title="Take the next step together"
-                    variant="secondary"
-                    onPress={() => confirmStep(card)}
-                    style={{ marginTop: spacing[4] }}
-                  />
-                )
-              ) : (
+        <>
+          {/* Summary card */}
+          <Card style={{ marginTop: spacing[4] }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <Text
+                style={{
+                  fontFamily: fontFamily.display,
+                  fontSize: 42,
+                  lineHeight: 46,
+                  color: t.ink,
+                  fontVariant: ['tabular-nums'],
+                }}
+              >
+                {score}
+              </Text>
+              {breakdown?.tier ? (
                 <View
                   style={{
-                    backgroundColor: t.greenTint,
-                    borderRadius: 11,
-                    padding: spacing[3],
-                    marginTop: spacing[4],
+                    backgroundColor: t.blueWash,
+                    borderWidth: 1,
+                    borderColor: t.blueSoft,
+                    borderRadius: radius.pill,
+                    paddingVertical: 4,
+                    paddingHorizontal: 12,
                   }}
                 >
-                  <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.greenDeep }}>
-                    Fully trusted — the ladder is complete.
+                  <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
+                    {breakdown.tier}
                   </Text>
                 </View>
-              )}
+              ) : null}
+            </View>
+            {next ? (
+              <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
+                {next.missing} more point{next.missing === 1 ? '' : 's'} to {next.name}.
+              </Text>
+            ) : (
+              <Text style={{ fontSize: type.meta, color: t.trustGold, marginTop: 8 }}>
+                Community Champion — the top of the ladder.
+              </Text>
+            )}
+            {customers.length > 0 ? (
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+                <View style={{ flexDirection: 'row' }}>
+                  {customers.slice(0, 3).map((c, i) => (
+                    <View key={c.connectionId} style={{ marginLeft: i === 0 ? 0 : -8 }}>
+                      <Avatar name={c.customerName} uri={c.customerPhotoUrl} size={26} />
+                    </View>
+                  ))}
+                </View>
+                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
+                  {customers.length} {customers.length === 1 ? 'person' : 'people'} helped you reach this
+                </Text>
+              </View>
+            ) : null}
+          </Card>
+
+          {/* Per-helper point meters */}
+          {customers.length > 0 ? (
+            <>
+              <Text
+                accessibilityRole="header"
+                style={{
+                  fontFamily: fontFamily.display,
+                  fontSize: 20,
+                  color: t.ink,
+                  marginTop: spacing[5],
+                }}
+              >
+                Your helpers
+              </Text>
+              {customers.map((card) => (
+                <HelperPointsCard key={card.connectionId} card={card} />
+              ))}
+            </>
+          ) : (
+            <Card style={{ marginTop: spacing[4] }}>
+              <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
+                Trust starts with a friend. Add someone, and your points appear here.
+              </Text>
             </Card>
-          );
-        })
+          )}
+
+          {/* Tier ladder, for the curious */}
+          <Card style={{ marginTop: spacing[4] }}>
+            {TIERS.map(([name, min], i) => (
+              <View
+                key={name}
+                style={{
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  paddingVertical: 8,
+                  borderTopWidth: i === 0 ? 0 : 1,
+                  borderTopColor: t.hairline,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: type.meta,
+                    fontWeight: name === breakdown?.tier ? '600' : '400',
+                    color: name === breakdown?.tier ? t.trustGold : t.ink,
+                  }}
+                >
+                  {name}
+                </Text>
+                <Text style={{ fontSize: type.meta, color: t.inkSlate, fontVariant: ['tabular-nums'] }}>{min}</Text>
+              </View>
+            ))}
+          </Card>
+        </>
       )}
     </Screen>
   );
