@@ -48,7 +48,7 @@ export default function StreaksScreen() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: streak } = useQuery({
+  const { data: streak, isError, refetch } = useQuery({
     queryKey: ['streak-me'],
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
@@ -78,6 +78,11 @@ export default function StreaksScreen() {
           One tap a day tells your people you're okay — slow and steady, like the tortoise.
         </Text>
 
+        {isError ? (
+          // A failed fetch must not render an unchecked week + "0 days" streak
+          <LoadError bare what="your check-in" onRetry={refetch} style={{ marginTop: spacing[4] }} />
+        ) : (
+          <>
         <WeekStrip week={week} />
 
         {done ? (

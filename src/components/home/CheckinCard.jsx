@@ -12,6 +12,7 @@ import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
+import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 
 function WeekStrip({ week }) {
@@ -61,7 +62,7 @@ export default function CheckinCard() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const { data: streak, isLoading } = useQuery({
+  const { data: streak, isLoading, isError, refetch } = useQuery({
     queryKey: ['streak-me'],
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
@@ -153,6 +154,9 @@ export default function CheckinCard() {
 
       {isLoading ? (
         <SkeletonCard lines={3} />
+      ) : isError ? (
+        // A failed fetch must not show "0 days in a row" — that reads as a broken streak
+        <LoadError bare what="your check-in" onRetry={refetch} />
       ) : (
         <>
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 9 }}>
