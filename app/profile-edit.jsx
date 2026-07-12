@@ -147,7 +147,7 @@ export default function ProfileEdit() {
               height: 34,
               paddingHorizontal: 16,
               borderRadius: 17,
-              backgroundColor: t.blueWash,
+              backgroundColor: 'transparent',
               borderWidth: 1,
               borderColor: t.blueSoft,
               alignItems: 'center',

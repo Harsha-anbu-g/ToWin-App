@@ -25,14 +25,13 @@ function Pill({ label, tone = 'neutral' }) {
       ? { backgroundColor: t.greenTint, borderColor: t.greenLine, color: t.greenDeep }
       : { backgroundColor: t.surfaceFill, borderColor: t.border, color: t.inkSlate };
   return (
+    // A label, not a button: soft fill, no border (status pills never tap).
     <View
       style={{
         backgroundColor: styles.backgroundColor,
-        borderWidth: 1,
-        borderColor: styles.borderColor,
         borderRadius: radius.pill,
-        paddingHorizontal: 10,
-        paddingVertical: 3,
+        paddingHorizontal: 9,
+        paddingVertical: 4,
         alignSelf: 'flex-start',
       }}
     >
@@ -146,7 +145,7 @@ function NeedCard({ need, apply, withdraw, completed = false }) {
           style={({ pressed }) => ({
             height: 40,
             borderRadius: radius.pill,
-            backgroundColor: t.blueWash,
+            backgroundColor: 'transparent',
             borderWidth: 1,
             borderColor: t.blueSoft,
             alignItems: 'center',

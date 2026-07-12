@@ -40,7 +40,7 @@ export default function PeekabooRow() {
           height: 34,
           paddingHorizontal: 16,
           borderRadius: radius.pill,
-          backgroundColor: t.blueWash,
+          backgroundColor: 'transparent',
           borderWidth: 1,
           borderColor: t.blueSoft,
           alignItems: 'center',

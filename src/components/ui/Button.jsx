@@ -26,9 +26,11 @@ export default function Button({
       backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
     },
+    // Ghost, like the website's .ghost-btn — no fill, hairline sky border.
+    // A wash-filled pill reads "generated"; a printed hairline reads designed.
     secondary: {
       height: 44,
-      backgroundColor: t.blueWash,
+      backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: t.blueSoft,
     },
@@ -37,11 +39,12 @@ export default function Button({
       backgroundColor: 'transparent',
       borderWidth: 0,
     },
+    // Plain red text, iOS-style — destructive must not share the pill shape
+    // of ordinary actions (it reads as "just another button" otherwise).
     destructive: {
       height: 44,
-      backgroundColor: t.canvas,
-      borderWidth: 1,
-      borderColor: t.redLine,
+      backgroundColor: 'transparent',
+      borderWidth: 0,
     },
   }[variant];
 
