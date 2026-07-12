@@ -1,11 +1,14 @@
 // Input — Material outlined text field (react-native-paper) under the app's
 // own API: label, error (announced), helper, and an optional rightSlot overlay
 // (used for the password eye toggles). Elder rules: >=48pt, 18px text.
+// memo'd: Paper inputs animate a floating label, so sibling fields skipping
+// re-renders per keystroke is what keeps slow typists free of keyboard lag.
+import { memo } from 'react';
 import { Text, View } from 'react-native';
 import { TextInput as PaperInput } from 'react-native-paper';
 import { useTheme } from '../../theme/ThemeContext';
 
-export default function Input({
+export default memo(function Input({
   label,
   value,
   onChangeText,
@@ -64,4 +67,4 @@ export default function Input({
       ) : null}
     </View>
   );
-}
+});

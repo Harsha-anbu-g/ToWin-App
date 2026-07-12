@@ -6,7 +6,7 @@
 // accepted: green "You're helping"; completed cards sit at 65% opacity.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin } from 'lucide-react-native';
-import { useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import api from '../../api/client';
 import { timeAgo } from '../../lib/copy';
@@ -41,14 +41,16 @@ function Pill({ label, tone = 'neutral' }) {
   );
 }
 
-function NeedCard({ need, apply, withdraw, completed = false }) {
+// memo + stable onApply/onWithdraw (mutate fns, not mutation objects): a
+// refetch or radius toggle re-renders only rows whose data actually changed.
+const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = false, completed = false }) {
   const { t, radius, type, fontFamily } = useTheme();
   const mine = need.myApplicationStatus;
 
   const confirmWithdraw = () =>
     Alert.alert('Withdraw your offer?', `You'll stop offering to help with "${need.title}".`, [
       { text: 'Keep offering', style: 'cancel' },
-      { text: 'Withdraw', style: 'destructive', onPress: () => withdraw.mutate(need.id) },
+      { text: 'Withdraw', style: 'destructive', onPress: () => onWithdraw(need.id) },
     ]);
 
   const distance =
@@ -141,8 +143,8 @@ function NeedCard({ need, apply, withdraw, completed = false }) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Offer to Help"
-          onPress={() => apply.mutate(need.id)}
-          disabled={apply.isPending}
+          onPress={() => onApply(need.id)}
+          disabled={applying}
           style={({ pressed }) => ({
             height: 40,
             borderRadius: radius.pill,
@@ -152,7 +154,7 @@ function NeedCard({ need, apply, withdraw, completed = false }) {
             alignItems: 'center',
             justifyContent: 'center',
             marginTop: 12,
-            opacity: pressed || apply.isPending ? 0.7 : 1,
+            opacity: pressed || applying ? 0.7 : 1,
           })}
         >
           <Text style={{ fontSize: type.meta, fontWeight: '700', color: t.blueDeep }}>Offer to Help</Text>
@@ -160,7 +162,7 @@ function NeedCard({ need, apply, withdraw, completed = false }) {
       )}
     </View>
   );
-}
+});
 
 export default function OfferHelpList() {
   const { t, spacing, type, fontFamily } = useTheme();
@@ -196,6 +198,21 @@ export default function OfferHelpList() {
     await queryClient.invalidateQueries({ queryKey: ['needs-applications'] });
     setRefreshing(false);
   };
+
+  // Stable renderItem + memoized NeedCard: mutate fns are stable in
+  // TanStack v5, so rows skip re-rendering unless their need changed.
+  const renderItem = useCallback(
+    ({ item }) => (
+      <NeedCard
+        need={item}
+        onApply={apply.mutate}
+        onWithdraw={withdraw.mutate}
+        applying={apply.isPending}
+        completed={seg === 'done'}
+      />
+    ),
+    [apply.mutate, apply.isPending, withdraw.mutate, seg]
+  );
 
   return (
     <FlatList
@@ -279,14 +296,7 @@ export default function OfferHelpList() {
           )}
         </View>
       }
-      renderItem={({ item }) => (
-        <NeedCard
-          need={item}
-          apply={apply}
-          withdraw={withdraw}
-          completed={seg === 'done'}
-        />
-      )}
+      renderItem={renderItem}
     />
   );
 }
