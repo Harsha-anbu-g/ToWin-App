@@ -15,6 +15,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import SegmentedControl from '../ui/SegmentedControl';
+import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 
 function StatusPill({ status }) {
@@ -118,7 +119,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const [seg, setSeg] = useState(initialSegment);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['needs-mine'],
     queryFn: async () => (await api.get('/needs/mine')).data,
   });
@@ -195,6 +196,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
 
       {isLoading ? (
         <SkeletonCard />
+      ) : isError ? (
+        <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
       ) : shown.length === 0 ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>

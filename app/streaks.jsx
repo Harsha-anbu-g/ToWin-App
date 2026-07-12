@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import api from '../src/api/client';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
+import LoadError from '../src/components/ui/LoadError';
 import Screen from '../src/components/ui/Screen';
 import { useToast } from '../src/context/ToastContext';
 import { buildWeek, greeting } from '../src/lib/streaks';
@@ -107,8 +108,11 @@ export default function StreaksScreen() {
             style={{ marginTop: spacing[5] }}
           />
         )}
+          </>
+        )}
       </Card>
 
+      {isError ? null : (
       <Card style={{ marginTop: spacing[4] }}>
         <View style={{ flexDirection: 'row' }}>
           <View style={{ flex: 1, alignItems: 'center' }}>
@@ -126,6 +130,7 @@ export default function StreaksScreen() {
           </View>
         </View>
       </Card>
+      )}
     </Screen>
   );
 }
