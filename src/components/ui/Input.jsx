@@ -33,7 +33,7 @@ export default function Input({
             rightSlot ? { paddingRight: 40 } : null,
             inputStyle,
           ]}
-          outlineStyle={{ borderRadius: radius.md }}
+          outlineStyle={{ borderRadius: radius.input }}
           {...rest}
         />
         {rightSlot ? (
