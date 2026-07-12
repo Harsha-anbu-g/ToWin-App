@@ -1,0 +1,221 @@
+// Posted Help (3f) — the elder's requests in three segments: Looking for
+// Help / In Progress / Completed. Card: title + neutral status pill, plain
+// meta line ("Shopping · Normal · posted yesterday"), then "N helpers want
+// to help" with a tonal View that expands the applicant rows. Accept,
+// complete, and remove keep their confirm dialogs (HCI rule 5). Shared by
+// the elder's second tab and the pushed My requests screen (one source).
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import api from '../../api/client';
+import { applicantsLabel, timeAgo } from '../../lib/copy';
+import { catLabel, NEED_STATUS } from '../../lib/needs';
+import { useToast } from '../../context/ToastContext';
+import { useTheme } from '../../theme/ThemeContext';
+import Avatar from '../ui/Avatar';
+import Button from '../ui/Button';
+import SegmentedControl from '../ui/SegmentedControl';
+import SkeletonCard from '../ui/Skeleton';
+
+function StatusPill({ status }) {
+  const { t, radius } = useTheme();
+  const pill = NEED_STATUS[status] ?? NEED_STATUS.OPEN;
+  return (
+    <View
+      style={{
+        backgroundColor: status === 'OPEN' ? t.surfaceFill : t[pill.bg],
+        borderWidth: 1,
+        borderColor: t.border,
+        borderRadius: radius.pill,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        alignSelf: 'flex-start',
+      }}
+    >
+      <Text style={{ fontSize: 11, fontWeight: '600', color: t[pill.color] }}>{pill.label}</Text>
+    </View>
+  );
+}
+
+function NeedCard({ need, onAccept, onComplete, onRemove }) {
+  const { t, radius, type } = useTheme();
+  const [open, setOpen] = useState(false);
+  const applicants = need.applications ?? [];
+  const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
+    need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null].filter(Boolean).join(' · ');
+
+  return (
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+        <Text style={{ fontSize: 15.5, fontWeight: '600', lineHeight: 20, flex: 1, color: t.ink }}>
+          {need.title}
+        </Text>
+        <StatusPill status={need.status} />
+      </View>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 6 }}>{meta}</Text>
+
+      {need.status === 'OPEN' && applicants.length > 0 ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flex: 1 }}>
+            {applicantsLabel(applicants.length)}
+          </Text>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={open ? 'Hide helpers' : 'View helpers'}
+            accessibilityState={{ expanded: open }}
+            onPress={() => setOpen((v) => !v)}
+            hitSlop={{ top: 6, bottom: 6 }}
+            style={({ pressed }) => ({
+              height: 34,
+              paddingHorizontal: 16,
+              borderRadius: radius.pill,
+              backgroundColor: t.blueWash,
+              borderWidth: 1,
+              borderColor: t.blueSoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
+              {open ? 'Hide' : 'View'}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      {open && need.status === 'OPEN'
+        ? applicants.map((app) => (
+            <View key={app.helperId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
+              <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: type.body, color: t.ink }}>{app.helperName}</Text>
+                {app.message ? (
+                  <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate }}>
+                    {app.message}
+                  </Text>
+                ) : null}
+              </View>
+              <Button title="Accept" variant="secondary" onPress={() => onAccept(need, app)} />
+            </View>
+          ))
+        : null}
+
+      {need.status === 'ASSIGNED' ? (
+        <Button title="Mark completed" variant="secondary" onPress={() => onComplete(need)} style={{ marginTop: 12 }} />
+      ) : null}
+      {open && need.status === 'OPEN' ? (
+        <Button title="Remove" variant="destructive" onPress={() => onRemove(need)} style={{ marginTop: 12 }} />
+      ) : null}
+    </View>
+  );
+}
+
+export default function PostedHelpList({ initialSegment = 'open' }) {
+  const { t, type } = useTheme();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
+  const [seg, setSeg] = useState(initialSegment);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['needs-mine'],
+    queryFn: async () => (await api.get('/needs/mine')).data,
+  });
+  const needs = data?.content ?? [];
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['needs-mine'] });
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await refresh();
+    setRefreshing(false);
+  };
+
+  const accept = useMutation({
+    mutationFn: ({ needId, helperId }) => api.post(`/needs/${needId}/accept/${helperId}`),
+    onSuccess: () => {
+      showToast('Helper accepted — they can now message you.', 'success');
+      refresh();
+    },
+    onError: () => showToast('Could not accept right now. Please try again.', 'error'),
+  });
+  const complete = useMutation({
+    mutationFn: (needId) => api.post(`/needs/${needId}/complete`),
+    onSuccess: () => {
+      showToast('Marked as completed. Well done!', 'success');
+      refresh();
+    },
+    onError: () => showToast('Could not mark completed. Please try again.', 'error'),
+  });
+  const remove = useMutation({
+    mutationFn: (needId) => api.delete(`/needs/${needId}`),
+    onSuccess: () => {
+      showToast('Request removed.', 'success');
+      refresh();
+    },
+    onError: () => showToast('Could not remove it. Please try again.', 'error'),
+  });
+
+  const confirmAccept = (need, app) =>
+    Alert.alert('Accept this helper?', `${app.helperName} will be your helper for "${need.title}".`, [
+      { text: 'Not now', style: 'cancel' },
+      { text: 'Accept', onPress: () => accept.mutate({ needId: need.id, helperId: app.helperId }) },
+    ]);
+  const confirmComplete = (need) =>
+    Alert.alert('Mark as completed?', `"${need.title}" will move to your finished requests.`, [
+      { text: 'Not yet', style: 'cancel' },
+      { text: 'Completed', onPress: () => complete.mutate(need.id) },
+    ]);
+  const confirmRemove = (need) =>
+    Alert.alert('Remove this request?', `"${need.title}" will be taken down. This cannot be undone.`, [
+      { text: 'Keep it', style: 'cancel' },
+      { text: 'Remove', style: 'destructive', onPress: () => remove.mutate(need.id) },
+    ]);
+
+  const looking = needs.filter((n) => n.status === 'OPEN');
+  const inProgress = needs.filter((n) => n.status === 'ASSIGNED');
+  const finished = needs.filter((n) => n.status === 'COMPLETED' || n.status === 'CANCELLED');
+  const shown = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
+
+  return (
+    <ScrollView
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+      contentContainerStyle={{ paddingBottom: 64 }}
+    >
+      <SegmentedControl
+        segments={[
+          { key: 'open', label: 'Looking for Help', count: looking.length },
+          { key: 'progress', label: 'In Progress', count: inProgress.length },
+          { key: 'done', label: 'Completed', count: finished.length },
+        ]}
+        value={seg}
+        onChange={setSeg}
+        style={{ marginTop: 14 }}
+      />
+
+      {isLoading ? (
+        <SkeletonCard />
+      ) : shown.length === 0 ? (
+        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
+          <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
+            {seg === 'open'
+              ? 'Nothing here yet. Tap the blue Post Help button below to ask your neighbors.'
+              : seg === 'progress'
+                ? 'No requests in progress. When you accept a helper, it moves here.'
+                : 'No completed requests yet.'}
+          </Text>
+        </View>
+      ) : (
+        shown.map((need) => (
+          <NeedCard
+            key={need.id}
+            need={need}
+            onAccept={confirmAccept}
+            onComplete={confirmComplete}
+            onRemove={confirmRemove}
+          />
+        ))
+      )}
+    </ScrollView>
+  );
+}
