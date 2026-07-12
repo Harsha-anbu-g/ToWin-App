@@ -195,7 +195,7 @@ export default function MenuSheet({ visible, onClose }) {
             <Row first={!isElder} icon={BookOpen} label="How ToWin works" onPress={() => go('/guide')} />
           </Group>
         </ScrollView>
-      </View>
+      </Animated.View>
     </Modal>
   );
 }

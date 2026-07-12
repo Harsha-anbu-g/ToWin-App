@@ -7,7 +7,7 @@ import { useTheme } from '../theme/ThemeContext';
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius } = useTheme();
   const [toast, setToast] = useState(null); // { message, type: 'info' | 'success' | 'error' }
   const timer = useRef(null);
 
