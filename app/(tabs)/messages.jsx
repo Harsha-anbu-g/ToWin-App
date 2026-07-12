@@ -11,6 +11,7 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
+import { filterBlocked, getBlocked } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function MessagesInbox() {
@@ -23,7 +24,13 @@ export default function MessagesInbox() {
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
-  const conversations = (data ?? []).filter((c) => c.status === 'ACTIVE');
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  // Blocked people never resurface in the inbox (UGC 1.2)
+  const conversations = filterBlocked(
+    (data ?? []).filter((c) => c.status === 'ACTIVE'),
+    blocked,
+    (c) => c.otherUserId
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

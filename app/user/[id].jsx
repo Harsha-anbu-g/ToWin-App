@@ -11,6 +11,7 @@ import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import TrustBadge from '../../src/components/ui/TrustBadge';
 import { useToast } from '../../src/context/ToastContext';
+import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 function ChipRow({ items }) {
@@ -64,6 +65,9 @@ export default function UserProfile() {
   });
   const conn = (connections ?? []).find((c) => c.otherUserId === id);
 
+  const { data: blockedList } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const userIsBlocked = isBlocked(blockedList, id);
+
   const request = useMutation({
     mutationFn: () => api.post('/connections/request', { targetUserId: id }),
     onSuccess: () => {
@@ -109,6 +113,32 @@ export default function UserProfile() {
       { text: 'Cancel', style: 'cancel' },
     ]);
 
+  // Device-side block (UGC 1.2): their content disappears everywhere for you,
+  // and an active friendship ends so messages stop server-side too.
+  const doBlock = async () => {
+    await blockUser({ id, name: profile?.name ?? '' });
+    if (conn?.status === 'ACTIVE') endFriendship.mutate();
+    queryClient.invalidateQueries({ queryKey: ['block-list'] });
+    showToast("Blocked. You won't see this person anymore.", 'info');
+  };
+
+  const confirmBlock = () =>
+    Alert.alert(
+      `Block ${profile?.name ?? 'this person'}?`,
+      "You won't see their help requests or messages anymore, and any friendship ends. " +
+        'You can change your mind later in Profile → Blocked people.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Block', style: 'destructive', onPress: doBlock },
+      ]
+    );
+
+  const doUnblock = async () => {
+    await unblockUser(id);
+    queryClient.invalidateQueries({ queryKey: ['block-list'] });
+    showToast('Unblocked.', 'info');
+  };
+
   return (
     <Screen back title={profile?.name ?? 'Profile'}>
       {isLoading ? (
@@ -121,6 +151,16 @@ export default function UserProfile() {
             We couldn't load this profile. Pull down to try again, or go back.
           </Text>
           <Button title="Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing[5] }} />
+        </Card>
+      ) : userIsBlocked ? (
+        <Card>
+          <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}>
+            You've blocked {profile.name}
+          </Text>
+          <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate, marginTop: spacing[2] }}>
+            You won't see their help requests or messages. If this was a mistake, you can undo it.
+          </Text>
+          <Button title="Unblock" variant="secondary" onPress={doUnblock} style={{ marginTop: spacing[5] }} />
         </Card>
       ) : (
         <>
@@ -210,6 +250,7 @@ export default function UserProfile() {
               <Button title="End friendship" variant="destructive" onPress={confirmEnd} />
             ) : null}
             <Button title="Report this person" variant="text" onPress={pickReportReason} />
+            <Button title="Block this person" variant="destructive" onPress={confirmBlock} />
           </View>
         </>
       )}

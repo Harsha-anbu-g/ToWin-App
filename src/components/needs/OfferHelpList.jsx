@@ -9,6 +9,7 @@ import { MapPin } from 'lucide-react-native';
 import { memo, useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import api from '../../api/client';
+import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
@@ -181,10 +182,16 @@ export default function OfferHelpList() {
     queryFn: async () => (await api.get('/needs/applications')).data,
   });
 
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+
   const radiusKm = RADIUS_STEPS[radiusIdx];
-  const open = (Array.isArray(openData) ? openData : openData?.content ?? []).filter(
-    (n) => !Number.isFinite(n.distanceKm) || n.distanceKm <= radiusKm
-  );
+  // Blocked elders' requests never show in Available (UGC 1.2); Applied and
+  // Completed stay visible — they're the helper's own commitments to unwind.
+  const open = filterBlocked(
+    Array.isArray(openData) ? openData : openData?.content ?? [],
+    blocked,
+    (n) => n.elderId
+  ).filter((n) => !Number.isFinite(n.distanceKm) || n.distanceKm <= radiusKm);
   const applications = Array.isArray(appsData) ? appsData : appsData?.content ?? [];
 
   const available = open.filter((n) => !n.myApplicationStatus);

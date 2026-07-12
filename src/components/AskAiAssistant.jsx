@@ -4,10 +4,13 @@
 // Entry point is a wash pill FAB (tortoise + "Ask AI", 2px blue border).
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
 // fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
+// The very first question is gated by a one-time plain-words consent note
+// naming Groq, the outside AI service (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -21,6 +24,7 @@ import {
 import { Mic, Send, Volume2, X } from 'lucide-react-native';
 import api from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -55,6 +59,43 @@ export default function AskAiAssistant() {
     mounted.current = false;
   }, []);
 
+  const headerRef = useRef(null); // screen-reader focus lands here on open
+
+  const [aiConsented, setAiConsented] = useState(false);
+  useEffect(() => {
+    hasAiConsent().then((ok) => {
+      if (mounted.current && ok) setAiConsented(true);
+    });
+  }, []);
+
+  // One-time disclosure naming the AI provider before anything is sent
+  // (App Store AI-consent rule). Resolves true to continue the send, false to
+  // cancel — the typed question stays in the composer either way.
+  const ensureAiConsent = () => {
+    if (aiConsented) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      Alert.alert(
+        'Before your first question',
+        "ToWin's helper uses Groq, an outside AI service, to write its answers. " +
+          'Your question, this chat, and a short summary of your own ToWin activity ' +
+          '(like your first name and trust score) are shared with Groq — never your ' +
+          'contact details. Is that okay?',
+        [
+          { text: 'Not now', style: 'cancel', onPress: () => resolve(false) },
+          {
+            text: "Yes, that's okay",
+            onPress: () => {
+              setAiConsented(true);
+              grantAiConsent();
+              resolve(true);
+            },
+          },
+        ],
+        { cancelable: true, onDismiss: () => resolve(false) }
+      );
+    });
+  };
+
   // Read a message out loud (web parity: speechSynthesis → expo-speech).
   // A fresh tap always restarts from the top.
   const speak = (content) => {
@@ -77,6 +118,7 @@ export default function AskAiAssistant() {
   const send = async (question) => {
     const q = question.trim();
     if (!q || thinking) return;
+    if (!(await ensureAiConsent())) return;
     setInput('');
     const history = messages.slice(-6);
     setMessages((prev) => [...prev, { role: 'user', content: q }]);

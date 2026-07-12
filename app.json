@@ -18,7 +18,7 @@
       "apiBaseUrlLocal": "http://192.168.0.13:8080/api"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.towin.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -43,7 +43,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ToWin uses your photo library so you can choose a profile picture."
+          "photosPermission": "ToWin uses your photo library so you can choose a profile picture.",
+          "cameraPermission": "ToWin uses your camera only if you choose to take a new profile picture.",
+          "microphonePermission": "ToWin uses the microphone only if you record a video for your profile picture."
         }
       ]
     ]
