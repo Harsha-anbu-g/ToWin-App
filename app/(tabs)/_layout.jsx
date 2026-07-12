@@ -1,21 +1,37 @@
-// The Instagram-shaped tab shell (spec): Home · big center action · Messages ·
-// Profile. Role-aware center button — elder: "Ask for help" (post a request),
-// helper: "Find requests". Labels always visible (elder-first); tab bar is a
-// white surface with a warm top hairline; targets >=44pt.
+// Redesign tab shell (handoff §Navigation): 5 slots, role-aware.
+// Elder (and BOTH): Home · Posted Help · [Post Help FAB] · Messages · Profile
+// Helper:           Home · My Elders  · [Offer Help FAB] · Messages · Profile
+// Active tab = blueDeep at 2px stroke; inactive = inkSlate at 1.8px; icons 22,
+// labels 10/600 always visible (elder-first). The center FAB is a 54pt raised
+// circle with a 3px page-colored ring; it turns blueDeep while its own screen
+// is open. Tab bar is a white surface with a hairline top border — no shadows.
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, Tabs } from 'expo-router';
-import { Home, MessageCircle, Plus, Search, UserRound } from 'lucide-react-native';
+import {
+  FileText,
+  Home,
+  MessageCircle,
+  Plus,
+  Search,
+  UserRound,
+  UsersRound,
+} from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
-import { centerActionFor } from '../../src/lib/roles';
+import { centerActionFor, secondTabFor } from '../../src/lib/roles';
 import { useTheme } from '../../src/theme/ThemeContext';
 
+const tabIcon = (Icon) =>
+  function TabIcon({ color, focused }) {
+    return <Icon size={22} color={color} strokeWidth={focused ? 2 : 1.8} />;
+  };
+
 function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
-  // A raised sky-blue circle in the reserved center slot — the ONE filled
-  // primary of the shell. The whole slot is the target (>=44pt everywhere).
+  // The ONE filled primary of the shell. The whole slot is the target (>=44pt).
+  const active = !!accessibilityState?.selected;
   return (
     <Pressable
       accessibilityRole="button"
@@ -31,22 +47,22 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
     >
       <View
         style={{
-          width: 56,
-          height: 56,
-          borderRadius: 28,
-          marginTop: -18, // raised above the bar, Instagram-style
-          backgroundColor: t.actionFill,
+          width: 54,
+          height: 54,
+          borderRadius: 27,
+          marginTop: -18, // raised above the bar
+          backgroundColor: active ? t.blueDeep : t.actionFill,
           alignItems: 'center',
           justifyContent: 'center',
           borderWidth: 3,
           borderColor: t.canvas,
         }}
       >
-        <Icon size={26} color={t.actionInk} strokeWidth={2.2} />
+        <Icon size={24} color={t.actionInk} strokeWidth={2.2} />
       </View>
       <Text
         numberOfLines={1}
-        style={{ fontSize: 11, fontWeight: '600', color: t.blueDeep, marginTop: 3 }}
+        style={{ fontSize: 10, fontWeight: '600', color: t.blueDeep, marginTop: 3 }}
       >
         {label}
       </Text>
@@ -72,6 +88,7 @@ export default function TabsLayout() {
   if (booted && !user) return <Redirect href="/(auth)/welcome" />;
 
   const action = centerActionFor(user?.role);
+  const second = secondTabFor(user?.role);
   const ActionIcon = action.key === 'find' ? Search : Plus;
 
   return (
@@ -81,7 +98,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,
         tabBarInactiveTintColor: t.inkSlate,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
         tabBarStyle: {
           backgroundColor: t.canvas,
           borderTopWidth: 1,
@@ -95,9 +112,22 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="home"
+        options={{ title: 'Home', tabBarIcon: tabIcon(Home) }}
+      />
+      <Tabs.Screen
+        name="posted-help"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+          title: 'Posted Help',
+          tabBarIcon: tabIcon(FileText),
+          href: second.name === 'posted-help' ? undefined : null,
+        }}
+      />
+      <Tabs.Screen
+        name="my-elders"
+        options={{
+          title: 'My Elders',
+          tabBarIcon: tabIcon(UsersRound),
+          href: second.name === 'my-elders' ? undefined : null,
         }}
       />
       <Tabs.Screen
@@ -119,7 +149,7 @@ export default function TabsLayout() {
         name="messages"
         options={{
           title: 'Messages',
-          tabBarIcon: ({ color, size }) => <MessageCircle color={color} size={size} />,
+          tabBarIcon: tabIcon(MessageCircle),
           tabBarBadge: unread > 0 ? unread : undefined,
           tabBarBadgeStyle: {
             backgroundColor: t.blue, // gentle, not a red storm (HCI-RULES)
@@ -130,10 +160,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color, size }) => <UserRound color={color} size={size} />,
-        }}
+        options={{ title: 'Profile', tabBarIcon: tabIcon(UserRound) }}
       />
     </Tabs>
     {/* Ask-AI floating helper — tabs only; chat thread + feedback pin their own bottom UI */}
