@@ -3,10 +3,12 @@
 // blueSoft border, blueDeep label with a leading check. `neutral` renders the
 // quiet surfaceFill status pill (3f). 36pt visual, hitSlop tops up to >=44pt.
 import { Check } from 'lucide-react-native';
+import { memo } from 'react';
 import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
-export default function Chip({ label, selected = false, neutral = false, onPress, style }) {
+// memo'd so a keystroke elsewhere in a form doesn't re-render every chip row.
+export default memo(function Chip({ label, selected = false, neutral = false, onPress, style }) {
   const { t, radius, type } = useTheme();
 
   const backgroundColor = selected ? t.blueWash : neutral ? t.surfaceFill : t.canvas;
@@ -42,4 +44,4 @@ export default function Chip({ label, selected = false, neutral = false, onPress
       <Text style={{ fontSize: type.meta, fontWeight: '600', color }}>{label}</Text>
     </Pressable>
   );
-}
+});

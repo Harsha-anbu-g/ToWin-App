@@ -4,7 +4,7 @@
 // Helper: browse ALL open requests with one-tap apply.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import OfferHelpList from '../../src/components/needs/OfferHelpList';
@@ -60,6 +60,27 @@ function PostNeedForm() {
       ),
   });
 
+  // Stable per-field handlers: Input and Chip are memo'd, so with these a
+  // keystroke in one field no longer re-renders every sibling Paper input
+  // (each animates a floating label — the source of typing lag on slow phones).
+  const setTitle = useCallback((v) => {
+    setForm((f) => ({ ...f, title: v }));
+    setFieldErrors((f) => ({ ...f, title: '' }));
+  }, []);
+  const setCategoryOther = useCallback((v) => {
+    setForm((f) => ({ ...f, categoryOther: v }));
+    setFieldErrors((f) => ({ ...f, categoryOther: '' }));
+  }, []);
+  const setDescription = useCallback((v) => setForm((f) => ({ ...f, description: v })), []);
+  const setCategory = useCallback((value) => setForm((f) => ({ ...f, category: value })), []);
+  const setUrgencyNormal = useCallback(() => setForm((f) => ({ ...f, urgency: 'NORMAL' })), []);
+  const setUrgencyUrgent = useCallback(() => setForm((f) => ({ ...f, urgency: 'URGENT' })), []);
+  // One stable handler per category chip (CATEGORY is a static map)
+  const categoryHandlers = useMemo(
+    () => Object.fromEntries(Object.keys(CATEGORY).map((value) => [value, () => setCategory(value)])),
+    [setCategory]
+  );
+
   const submit = () => {
     const errs = {};
     if (!form.title.trim()) errs.title = 'Please give your request a short title.';
@@ -95,10 +116,7 @@ function PostNeedForm() {
         <Input
           label="Title"
           value={form.title}
-          onChangeText={(v) => {
-            setForm((f) => ({ ...f, title: v }));
-            setFieldErrors((f) => ({ ...f, title: '' }));
-          }}
+          onChangeText={setTitle}
           error={fieldErrors.title}
           helper='Short and clear, like "A ride to the clinic on Thursday".'
           style={{ marginBottom: spacing[4] }}
@@ -111,7 +129,7 @@ function PostNeedForm() {
               key={value}
               label={label}
               selected={form.category === value}
-              onPress={() => setForm((f) => ({ ...f, category: value }))}
+              onPress={categoryHandlers[value]}
             />
           ))}
         </View>
@@ -120,10 +138,7 @@ function PostNeedForm() {
           <Input
             label="What kind of help?"
             value={form.categoryOther}
-            onChangeText={(v) => {
-              setForm((f) => ({ ...f, categoryOther: v }));
-              setFieldErrors((f) => ({ ...f, categoryOther: '' }));
-            }}
+            onChangeText={setCategoryOther}
             error={fieldErrors.categoryOther}
             style={{ marginBottom: spacing[4] }}
           />
@@ -131,22 +146,14 @@ function PostNeedForm() {
 
         <FieldLabel>How soon?</FieldLabel>
         <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}>
-          <Chip
-            label="Normal"
-            selected={form.urgency === 'NORMAL'}
-            onPress={() => setForm((f) => ({ ...f, urgency: 'NORMAL' }))}
-          />
-          <Chip
-            label="Urgent"
-            selected={form.urgency === 'URGENT'}
-            onPress={() => setForm((f) => ({ ...f, urgency: 'URGENT' }))}
-          />
+          <Chip label="Normal" selected={form.urgency === 'NORMAL'} onPress={setUrgencyNormal} />
+          <Chip label="Urgent" selected={form.urgency === 'URGENT'} onPress={setUrgencyUrgent} />
         </View>
 
         <Input
           label="Details (optional)"
           value={form.description}
-          onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
+          onChangeText={setDescription}
           multiline
           numberOfLines={4}
           inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
