@@ -234,32 +234,6 @@ export default function TrustScreen() {
             </Card>
           )}
 
-          {/* Tier ladder, for the curious */}
-          <Card style={{ marginTop: spacing[4] }}>
-            {TIERS.map(([name, min], i) => (
-              <View
-                key={name}
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 8,
-                  borderTopWidth: i === 0 ? 0 : 1,
-                  borderTopColor: t.hairline,
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: type.meta,
-                    fontWeight: name === breakdown?.tier ? '600' : '400',
-                    color: name === breakdown?.tier ? t.trustGold : t.ink,
-                  }}
-                >
-                  {name}
-                </Text>
-                <Text style={{ fontSize: type.meta, color: t.inkSlate, fontVariant: ['tabular-nums'] }}>{min}</Text>
-              </View>
-            ))}
-          </Card>
         </>
       )}
     </Screen>

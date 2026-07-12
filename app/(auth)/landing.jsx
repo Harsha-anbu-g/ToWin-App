@@ -324,7 +324,7 @@ export default function Landing() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <TortoiseMark size={24} />
-          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.blueTeal, letterSpacing: -0.4 }}>ToWin</Text>
+          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>ToWin</Text>
         </View>
         <Pressable
           accessibilityRole="button"
