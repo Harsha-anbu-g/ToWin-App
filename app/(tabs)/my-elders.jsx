@@ -8,6 +8,7 @@ import { Phone } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api from '../../src/api/client';
+import MenuSheet from '../../src/components/home/MenuSheet';
 import TrustLadder from '../../src/components/trust/TrustLadder';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -161,6 +162,7 @@ export default function MyElders() {
   const router = useRouter();
   const [seg, setSeg] = useState('building');
   const [refreshing, setRefreshing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { data: connections, isLoading } = useQuery({
     queryKey: ['connections'],
@@ -238,7 +240,7 @@ export default function MyElders() {
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
       <NavRow
         trustScore={breakdown ? Math.round(breakdown.totalScore) : undefined}
-        onMenu={() => router.push('/(tabs)/home')}
+        onMenu={() => setMenuOpen(true)}
         onAddFriends={() => router.push('/friends')}
       />
       <ScrollView
@@ -288,6 +290,7 @@ export default function MyElders() {
           ))
         )}
       </ScrollView>
+      <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </Screen>
   );
 }
