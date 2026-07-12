@@ -129,14 +129,12 @@ export default function Guide() {
                   width: 26,
                   height: 26,
                   borderRadius: 13,
-                  backgroundColor: t.goldWash,
-                  borderWidth: 1,
-                  borderColor: t.goldLine,
+                  backgroundColor: t.surfaceFill,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Text style={{ fontSize: 12, fontWeight: '600', color: t.goldDeep, fontVariant: ['tabular-nums'] }}>
+                <Text style={{ fontSize: 12, fontWeight: '600', color: t.inkSlate, fontVariant: ['tabular-nums'] }}>
                   {i + 1}
                 </Text>
               </View>

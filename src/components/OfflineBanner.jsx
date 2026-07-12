@@ -34,12 +34,14 @@ export default function OfflineBanner() {
       accessibilityLiveRegion="polite"
       accessibilityRole="alert"
       style={{
-        backgroundColor: t.amberWash,
+        backgroundColor: t.surfaceFill,
+        borderBottomWidth: 1,
+        borderBottomColor: t.border,
         paddingVertical: spacing[2],
         paddingHorizontal: spacing[4],
       }}
     >
-      <Text style={{ fontSize: text.sm, color: t.amberDeep, textAlign: 'center' }}>
+      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>
         You're offline — we'll retry as soon as you're back.
       </Text>
     </View>
