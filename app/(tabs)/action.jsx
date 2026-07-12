@@ -2,18 +2,16 @@
 // Elder (and BOTH): post a request (web ElderDashboard form: title, category,
 // urgency, description; OTHER folds its detail into the description).
 // Helper: browse ALL open requests with one-tap apply.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { FlatList, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import api from '../../src/api/client';
+import OfferHelpList from '../../src/components/needs/OfferHelpList';
 import Button from '../../src/components/ui/Button';
-import Card from '../../src/components/ui/Card';
 import Chip from '../../src/components/ui/Chip';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
-import SkeletonCard from '../../src/components/ui/Skeleton';
-import { RequestRow, useApplyMutations } from '../../src/components/home/OpenRequestsCard';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { CATEGORY } from '../../src/lib/needs';
@@ -164,71 +162,14 @@ function PostNeedForm() {
   );
 }
 
-function BrowseRequests() {
-  const { t, spacing, text, fontFamily } = useTheme();
-  const { apply, withdraw } = useApplyMutations();
-  const queryClient = useQueryClient();
-  const [refreshing, setRefreshing] = useState(false);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ['needs-open'],
-    queryFn: async () => (await api.get('/needs/open')).data,
-  });
-  const needs = Array.isArray(data) ? data : data?.content ?? [];
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['needs-open'] });
-    setRefreshing(false);
-  };
-
-  // Virtualized (50+ items rule): each request is its own card in a FlatList.
-  return (
-    <FlatList
-      data={isLoading ? [] : needs}
-      keyExtractor={(need) => need.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-      contentContainerStyle={{ paddingBottom: spacing[12], gap: spacing[3] }}
-      ListHeaderComponent={
-        <Text
-          accessibilityRole="header"
-          style={{
-            fontFamily: fontFamily.display,
-            fontSize: text.lg,
-            color: t.ink,
-            marginBottom: spacing[2],
-          }}
-        >
-          Open requests
-        </Text>
-      }
-      ListEmptyComponent={
-        <Card>
-          {isLoading ? (
-            <SkeletonCard />
-          ) : (
-            <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-              No open requests right now. Pull down to refresh, or check back soon.
-            </Text>
-          )}
-        </Card>
-      }
-      renderItem={({ item }) => (
-        <Card style={{ paddingTop: spacing[2] }}>
-          <RequestRow need={item} apply={apply} withdraw={withdraw} divider={false} />
-        </Card>
-      )}
-    />
-  );
-}
-
 export default function ActionScreen() {
   const { user } = useAuth();
   const action = centerActionFor(user?.role);
 
   return action.key === 'find' ? (
-    <Screen title={action.label} scroll={false}>
-      <BrowseRequests />
+    // 4b/4c: Offer Help owns its header + segments + radius row
+    <Screen scroll={false} contentStyle={{ padding: 0, paddingTop: 12 }}>
+      <OfferHelpList />
     </Screen>
   ) : (
     // 3e owns its header (serif title + subtitle) and pins its primary
