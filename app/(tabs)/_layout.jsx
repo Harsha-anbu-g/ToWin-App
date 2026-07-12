@@ -84,8 +84,9 @@ export default function TabsLayout() {
   });
 
   // Auth guard: after logout or a dead session (401), leaving the user inside
-  // the tabs would render silently empty screens — bounce to welcome instead.
-  if (booted && !user) return <Redirect href="/(auth)/welcome" />;
+  // the tabs would render silently empty screens — bounce to Log In instead
+  // (the landing story is first-launch-only; returning users skip it).
+  if (booted && !user) return <Redirect href="/(auth)/login" />;
 
   const action = centerActionFor(user?.role);
   const second = secondTabFor(user?.role);
