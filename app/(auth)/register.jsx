@@ -8,7 +8,6 @@ import { Pressable, Text, View } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
-import Card from '../../src/components/ui/Card';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
 import Input from '../../src/components/ui/Input';
 import LegalModal from '../../src/components/LegalModal';
@@ -94,7 +93,8 @@ export default function Register() {
     <Screen keyboard>
       <DemoAccountsCard onError={setError} />
 
-      <Card>
+      {/* 3q: the form sits flat on the white page — no card chrome */}
+      <View>
         <Text
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
@@ -105,50 +105,39 @@ export default function Register() {
           Create your free account in minutes.
         </Text>
 
-        {/* Role selector — the first decision, mirrors web wording */}
-        <View
-          style={{
-            backgroundColor: t.skyGhost,
-            borderWidth: 1.5,
-            borderColor: t.skyLine2,
-            borderRadius: radius.lg,
-            padding: spacing[4],
-            marginBottom: spacing[5],
-          }}
-        >
-          <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink }}>
-            First, who are you joining as?
-          </Text>
-          <View style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[3] }}>
-            {ROLES.map(({ value, label, desc }) => {
-              const active = form.role === value;
-              return (
-                <Pressable
-                  key={value}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${label}. ${desc}`}
-                  onPress={() => setField('role', value)}
-                  style={{
-                    flex: 1,
-                    minHeight: 64,
-                    padding: spacing[3],
-                    borderRadius: radius.md,
-                    borderWidth: active ? 2 : 1.5,
-                    borderColor: active ? t.blue : t.border,
-                    backgroundColor: active ? t.blueWash : t.canvas,
-                  }}
-                >
-                  <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
-                    {label}
-                  </Text>
-                  <Text style={{ fontSize: text.xs, color: active ? t.blueTeal : t.ink4, marginTop: 4, lineHeight: 17 }}>
-                    {desc}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+        {/* Role cards — the first decision (3q): selected = 2px blue + wash */}
+        <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
+          First, who are you joining as?
+        </Text>
+        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[5] }}>
+          {ROLES.map(({ value, label, desc }) => {
+            const active = form.role === value;
+            return (
+              <Pressable
+                key={value}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`${label}. ${desc}`}
+                onPress={() => setField('role', value)}
+                style={{
+                  flex: 1,
+                  minHeight: 64,
+                  padding: spacing[3],
+                  borderRadius: radius.input,
+                  borderWidth: active ? 2 : 1.5,
+                  borderColor: active ? t.blue : t.border,
+                  backgroundColor: active ? t.blueWash : t.canvas,
+                }}
+              >
+                <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
+                  {label}
+                </Text>
+                <Text style={{ fontSize: text.xs, color: active ? t.blueTeal : t.ink4, marginTop: 4, lineHeight: 17 }}>
+                  {desc}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
 
         {error ? (
@@ -293,7 +282,7 @@ export default function Register() {
             <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600' }}>Log in</Text>
           </Pressable>
         </View>
-      </Card>
+      </View>
 
       <LegalModal
         title="Terms of Service"

@@ -7,7 +7,6 @@ import { Pressable, Text, View } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
-import Card from '../../src/components/ui/Card';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
@@ -56,7 +55,8 @@ export default function Login() {
     <Screen keyboard>
       <DemoAccountsCard onError={setError} />
 
-      <Card>
+      {/* 3p: the form sits flat on the white page — no card chrome */}
+      <View>
         <Text
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
@@ -160,7 +160,7 @@ export default function Login() {
             <Text style={{ fontSize: 14, color: t.blueDeep, fontWeight: '600' }}>Create Account</Text>
           </Pressable>
         </View>
-      </Card>
+      </View>
     </Screen>
   );
 }
