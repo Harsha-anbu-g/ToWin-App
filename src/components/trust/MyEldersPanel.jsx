@@ -118,18 +118,16 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
         <Text style={{ fontSize: 11, color: t.trustGold }}>Trusted</Text>
       </View>
 
+      {/* Backend rule (website ea03935): the elder starts each step — the
+          helper only ever ACCEPTS, and never sees a dead start button. */}
       {atTop ? (
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 14 }}>
           Fully trusted — the ladder is complete.
         </Text>
-      ) : waiting ? (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
-          Waiting for {conn.otherUserName} to confirm the next step — they'll get a tap on their side.
-        </Text>
-      ) : (
+      ) : conn.confirmedByOther && !conn.confirmedByMe ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Take the next step"
+          accessibilityLabel="Accept the next step"
           onPress={() => onConfirm(conn)}
           style={({ pressed }) => ({
             height: 38,
@@ -143,8 +141,18 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Take the next step</Text>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
+            Accept the next step
+          </Text>
         </Pressable>
+      ) : waiting ? (
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
+          Waiting for {conn.otherUserName} to accept the next step — they'll get a tap on their side.
+        </Text>
+      ) : (
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
+          {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
+        </Text>
       )}
     </View>
   );
@@ -206,11 +214,11 @@ export default function MyEldersPanel() {
 
   const confirmStep = (conn) =>
     Alert.alert(
-      'Take the next step?',
-      `Trust grows only when BOTH of you agree. Confirm your side of the next step with ${conn.otherUserName}?`,
+      'Accept the next step?',
+      `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`,
       [
         { text: 'Not yet', style: 'cancel' },
-        { text: 'Confirm my side', onPress: () => confirm.mutate(conn.id) },
+        { text: 'Accept', onPress: () => confirm.mutate(conn.id) },
       ]
     );
 

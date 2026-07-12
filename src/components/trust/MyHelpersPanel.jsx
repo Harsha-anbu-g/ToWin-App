@@ -19,10 +19,13 @@ import TrustLadder from './TrustLadder';
 // Short stage names for the ladder footer (handoff §Interactions).
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
-function HelperCard({ card, waitingForOther, onConfirm }) {
+function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm }) {
   const { t, radius, type } = useTheme();
   const atTop = card.stageIndex >= 6;
   const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
+  // Backend rule (website ea03935): the elder STARTS a step; if the other
+  // side already confirmed, this tap accepts and the step climbs.
+  const ctaLabel = confirmedByOther ? 'Accept the next step' : 'Start the next step';
 
   return (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
@@ -54,14 +57,14 @@ function HelperCard({ card, waitingForOther, onConfirm }) {
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 14 }}>
           Fully trusted — the ladder is complete.
         </Text>
-      ) : waitingForOther ? (
+      ) : confirmedByMe && !confirmedByOther ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
-          You've confirmed — waiting for {card.customerName} to agree to the next step.
+          You've started the next step — waiting for {card.customerName} to accept.
         </Text>
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Take the next step"
+          accessibilityLabel={ctaLabel}
           onPress={onConfirm}
           style={({ pressed }) => ({
             height: 38,
@@ -75,7 +78,7 @@ function HelperCard({ card, waitingForOther, onConfirm }) {
             opacity: pressed ? 0.7 : 1,
           })}
         >
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Take the next step</Text>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{ctaLabel}</Text>
         </Pressable>
       )}
     </View>
@@ -116,15 +119,19 @@ export default function MyHelpersPanel() {
       showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
   });
 
-  const confirmStep = (card) =>
+  const confirmStep = (card) => {
+    const accepting = !!connOf(card.connectionId)?.confirmedByOther;
     Alert.alert(
-      'Take the next step?',
-      `Trust grows only when BOTH of you agree. Confirm your side of the next step with ${card.customerName}?`,
+      accepting ? 'Accept the next step?' : 'Start the next step?',
+      accepting
+        ? `${card.customerName} has asked to move one step up. Accepting climbs the ladder for both of you.`
+        : `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
       [
         { text: 'Not yet', style: 'cancel' },
-        { text: 'Confirm my side', onPress: () => confirm.mutate(card.connectionId) },
+        { text: accepting ? 'Accept' : 'Start', onPress: () => confirm.mutate(card.connectionId) },
       ]
     );
+  };
 
   const customers = breakdown?.customers ?? [];
   const trusted = customers.filter((c) => c.stageIndex >= 6);
@@ -173,7 +180,8 @@ export default function MyHelpersPanel() {
             <HelperCard
               key={card.connectionId}
               card={card}
-              waitingForOther={c?.confirmedByMe && !c?.confirmedByOther}
+              confirmedByMe={!!c?.confirmedByMe}
+              confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}
             />
           );
