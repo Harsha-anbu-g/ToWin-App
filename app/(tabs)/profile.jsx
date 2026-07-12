@@ -14,6 +14,7 @@ import {
   Moon,
   PhoneCall,
   ShieldCheck,
+  UserX,
 } from 'lucide-react-native';
 import api from '../../src/api/client';
 import TortoiseMark from '../../src/components/TortoiseMark';
@@ -265,6 +266,7 @@ export default function ProfileScreen() {
       <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
         <Row icon={KeyRound} label="Change password" onPress={() => router.push('/change-password')} divider />
         <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} divider />
+        <Row icon={UserX} label="Blocked people" onPress={() => router.push('/blocked')} divider />
         <Row icon={ShieldCheck} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
         <Row icon={FileText} label="Terms of service" onPress={() => router.push('/terms')} />
       </Card>

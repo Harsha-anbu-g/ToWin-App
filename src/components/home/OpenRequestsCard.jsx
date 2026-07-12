@@ -9,6 +9,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import SkeletonCard from '../ui/Skeleton';
 import { useToast } from '../../context/ToastContext';
+import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -117,7 +118,13 @@ export default function OpenRequestsCard() {
     queryKey: ['needs-open'],
     queryFn: async () => (await api.get('/needs/open')).data,
   });
-  const needs = (Array.isArray(data) ? data : data?.content ?? []).slice(0, 4);
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  // Blocked people's requests never resurface (UGC 1.2)
+  const needs = filterBlocked(
+    Array.isArray(data) ? data : data?.content ?? [],
+    blocked,
+    (n) => n.elderId
+  ).slice(0, 4);
 
   return (
     <Card>

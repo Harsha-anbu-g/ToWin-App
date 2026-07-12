@@ -17,6 +17,7 @@ import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
+import { filterBlocked, getBlocked } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // The km control cycles through the web's radius steps; people are filtered
@@ -122,7 +123,10 @@ export default function FriendsScreen() {
     queryFn: async () => (await api.get('/connections')).data,
   });
 
-  const conns = connections ?? [];
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+
+  // Blocked people never appear — not in Find, and their invites vanish (UGC 1.2)
+  const conns = filterBlocked(connections ?? [], blocked, (c) => c.otherUserId);
   const invites = conns.filter((c) => c.status === 'PENDING' && !c.initiatedByMe);
   const requested = conns.filter((c) => c.status === 'PENDING' && c.initiatedByMe);
   const statusOf = (userId) => {
@@ -134,7 +138,7 @@ export default function FriendsScreen() {
   };
 
   const radiusKm = RADIUS_STEPS[radiusIdx];
-  const people = (discovered ?? []).filter(
+  const people = filterBlocked(discovered ?? [], blocked, (p) => p.userId).filter(
     (p) => !Number.isFinite(p.distanceKm) || p.distanceKm <= radiusKm
   );
 

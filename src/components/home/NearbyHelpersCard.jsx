@@ -10,6 +10,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import SkeletonCard from '../ui/Skeleton';
 import TrustBadge from '../ui/TrustBadge';
+import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function NearbyHelpersCard() {
@@ -20,8 +21,10 @@ export default function NearbyHelpersCard() {
     queryKey: ['discover-helpers'],
     queryFn: async () => (await api.get('/discover/helpers')).data,
   });
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
 
-  const preview = (helpers ?? []).slice(0, 3);
+  // Blocked helpers never resurface in discovery (UGC 1.2)
+  const preview = filterBlocked(helpers ?? [], blocked, (h) => h.userId).slice(0, 3);
 
   return (
     <Card>
