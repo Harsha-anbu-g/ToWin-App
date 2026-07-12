@@ -20,6 +20,7 @@ import TortoiseMark from '../../src/components/TortoiseMark';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
+import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -95,7 +96,7 @@ export default function ProfileScreen() {
   const { showToast } = useToast();
   const router = useRouter();
 
-  const { data: profile } = useQuery({
+  const { data: profile, isError: profileFailed, refetch: refetchProfile } = useQuery({
     queryKey: ['profile-me'],
     queryFn: async () => (await api.get('/profile/me')).data,
   });
@@ -162,6 +163,11 @@ export default function ProfileScreen() {
       >
         Profile
       </Text>
+
+      {profileFailed ? (
+        // Without this, a dropped network leaves the name on "…" forever
+        <LoadError what="your profile" onRetry={refetchProfile} style={{ marginTop: spacing[3] }} />
+      ) : null}
 
       {/* Identity card (3h): 56px avatar, serif name, city, hairline Edit pill */}
       <Card style={{ marginTop: spacing[3] }}>

@@ -13,6 +13,7 @@ import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -112,11 +113,11 @@ export default function FriendsScreen() {
   const path = isHelper ? '/discover/elders' : '/discover/helpers';
   const who = isHelper ? 'elders' : 'helpers';
 
-  const { data: discovered, isLoading } = useQuery({
+  const { data: discovered, isLoading, isError: discoverFailed, refetch: refetchDiscover } = useQuery({
     queryKey: ['discover', path],
     queryFn: async () => (await api.get(path)).data,
   });
-  const { data: connections } = useQuery({
+  const { data: connections, isError: connsFailed, refetch: refetchConns } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
@@ -167,10 +168,14 @@ export default function FriendsScreen() {
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />
   );
 
-  const emptyCard = (message) => (
+  // failed/retry: a dropped network must read as "couldn't load", never as
+  // an encouraging-but-false "nobody new right now" (silent-failure audit).
+  const emptyCard = (message, { failed, what, retry } = {}) => (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16 }}>
       {isLoading && seg === 'find' ? (
         <SkeletonCard />
+      ) : failed ? (
+        <LoadError bare what={what} onRetry={retry} />
       ) : (
         <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>{message}</Text>
       )}
@@ -220,7 +225,8 @@ export default function FriendsScreen() {
               </View>
             }
             ListEmptyComponent={emptyCard(
-              `Nobody new within ${radiusKm} km right now. Try a wider distance, or check back soon.`
+              `Nobody new within ${radiusKm} km right now. Try a wider distance, or check back soon.`,
+              { failed: discoverFailed, what: 'people near you', retry: refetchDiscover }
             )}
             renderItem={({ item: p }) => {
               const status = statusOf(p.userId);
@@ -245,7 +251,11 @@ export default function FriendsScreen() {
           <ScrollView refreshControl={refreshControl} contentContainerStyle={{ paddingBottom: 64, gap: 10 }}>
             {seg === 'invites'
               ? invites.length === 0
-                ? emptyCard('No new invites. When someone asks to connect, they appear here.')
+                ? emptyCard('No new invites. When someone asks to connect, they appear here.', {
+                    failed: connsFailed,
+                    what: 'your invites',
+                    retry: refetchConns,
+                  })
                 : invites.map((conn) => (
                     <View key={conn.id} style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
                       <PersonRow
@@ -281,7 +291,11 @@ export default function FriendsScreen() {
                     </View>
                   ))
               : requested.length === 0
-                ? emptyCard('No requests waiting. People you ask to connect with appear here.')
+                ? emptyCard('No requests waiting. People you ask to connect with appear here.', {
+                    failed: connsFailed,
+                    what: 'your requests',
+                    retry: refetchConns,
+                  })
                 : requested.map((conn) => (
                     <PersonRow
                       key={conn.id}

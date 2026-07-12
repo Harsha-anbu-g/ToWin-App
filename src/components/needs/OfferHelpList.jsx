@@ -13,6 +13,7 @@ import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
 import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
+import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import { useApplyMutations } from '../home/OpenRequestsCard';
 
@@ -169,11 +170,11 @@ export default function OfferHelpList() {
   const [radiusIdx, setRadiusIdx] = useState(2); // 25 km, like the web
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: openData, isLoading } = useQuery({
+  const { data: openData, isLoading, isError: openFailed, refetch: refetchOpen } = useQuery({
     queryKey: ['needs-open'],
     queryFn: async () => (await api.get('/needs/open')).data,
   });
-  const { data: appsData } = useQuery({
+  const { data: appsData, isError: appsFailed, refetch: refetchApps } = useQuery({
     queryKey: ['needs-applications'],
     queryFn: async () => (await api.get('/needs/applications')).data,
   });
@@ -259,6 +260,14 @@ export default function OfferHelpList() {
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16 }}>
           {isLoading ? (
             <SkeletonCard />
+          ) : (seg === 'available' ? openFailed : appsFailed) ? (
+            // "Check back soon" copy on a failed fetch discourages the retry
+            // that would actually fix it — name the failure instead.
+            <LoadError
+              bare
+              what={seg === 'available' ? 'open requests near you' : 'your offers'}
+              onRetry={seg === 'available' ? refetchOpen : refetchApps}
+            />
           ) : (
             <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
               {seg === 'available'
