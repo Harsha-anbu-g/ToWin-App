@@ -8,7 +8,7 @@ import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { useState } from 'react';
 import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import api from '../../src/api/client';
+import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
@@ -145,7 +145,10 @@ export default function FriendsScreen() {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not send the request. Please try again.', 'error'),
+      showToast(
+        friendlyWriteError(err, err?.response?.data?.message || 'Could not send the request. Please try again.'),
+        'error'
+      ),
   });
 
   const respond = useMutation({
@@ -154,7 +157,8 @@ export default function FriendsScreen() {
       showToast(accept ? 'You are now friends!' : 'Request declined.', accept ? 'success' : 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
-    onError: () => showToast('Could not respond right now. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not respond right now. Please try again.'), 'error'),
   });
 
   const onRefresh = async () => {

@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../api/client';
+import api, { friendlyWriteError } from '../../api/client';
 import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -74,7 +74,8 @@ export default function CheckinCard() {
       showToast('Checked in — see you tomorrow!', 'success');
       router.push('/(tabs)/dashboard'); // 3d: My Helpers, tab bar stays under it
     },
-    onError: () => showToast('Could not check in right now. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not check in right now. Please try again.'), 'error'),
   });
 
   const done = streak?.alreadyCheckedIn;

@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Send } from 'lucide-react-native';
-import api from '../../src/api/client';
+import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -122,9 +122,9 @@ export default function ChatThread() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages', connectionId] });
     },
-    onError: (_err, content) => {
+    onError: (err, content) => {
       setInput(content); // restore the text — never silently drop it (HCI rule 9)
-      showToast("Message didn't send. Tap send to try again.", 'error');
+      showToast(friendlyWriteError(err, "Message didn't send. Tap send to try again."), 'error');
     },
   });
 

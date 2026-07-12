@@ -2,7 +2,7 @@
 // current + longest streak. Check-in state flips instantly (HCI rule 1).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
-import api from '../src/api/client';
+import api, { friendlyWriteError } from '../src/api/client';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import LoadError from '../src/components/ui/LoadError';
@@ -60,7 +60,8 @@ export default function StreaksScreen() {
       queryClient.setQueryData(['streak-me'], data);
       showToast('Checked in — see you tomorrow!', 'success');
     },
-    onError: () => showToast('Could not check in right now. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not check in right now. Please try again.'), 'error'),
   });
 
   const week = buildWeek(streak);

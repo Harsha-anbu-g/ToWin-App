@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Alert, Text, View } from 'react-native';
-import api from '../../src/api/client';
+import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
@@ -71,7 +71,10 @@ export default function UserProfile() {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not send the request. Please try again.', 'error'),
+      showToast(
+        friendlyWriteError(err, err?.response?.data?.message || 'Could not send the request. Please try again.'),
+        'error'
+      ),
   });
 
   const endFriendship = useMutation({
@@ -86,7 +89,8 @@ export default function UserProfile() {
   const report = useMutation({
     mutationFn: (reason) => api.post('/reports', { reportedUserId: id, reason, description: reason }),
     onSuccess: () => showToast('Report sent. Thank you for keeping ToWin safe.', 'success'),
-    onError: () => showToast('Could not send the report. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not send the report. Please try again.'), 'error'),
   });
 
   const confirmEnd = () =>

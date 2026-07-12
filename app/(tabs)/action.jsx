@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
-import api from '../../src/api/client';
+import api, { friendlyWriteError } from '../../src/api/client';
 import OfferHelpList from '../../src/components/needs/OfferHelpList';
 import Button from '../../src/components/ui/Button';
 import Chip from '../../src/components/ui/Chip';
@@ -53,7 +53,11 @@ function PostNeedForm() {
       showToast('Help posted!', 'success');
       router.push('/(tabs)/posted-help'); // lands in "Looking for Help"
     },
-    onError: (err) => showToast(err?.response?.data?.message || 'Failed to post. Please try again.', 'error'),
+    onError: (err) =>
+      showToast(
+        friendlyWriteError(err, err?.response?.data?.message || 'Failed to post. Please try again.'),
+        'error'
+      ),
   });
 
   const submit = () => {
