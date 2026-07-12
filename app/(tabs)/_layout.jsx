@@ -9,7 +9,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, Tabs } from 'expo-router';
 import {
   FileText,
-  Home,
   MessageCircle,
   Plus,
   Search,
@@ -21,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
-import { centerActionFor, secondTabFor } from '../../src/lib/roles';
+import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 const tabIcon = (Icon) =>
@@ -90,6 +89,7 @@ export default function TabsLayout() {
 
   const action = centerActionFor(user?.role);
   const second = secondTabFor(user?.role);
+  const homeTab = homeTabFor(user?.role);
   const ActionIcon = action.key === 'find' ? Search : Plus;
 
   return (
@@ -111,26 +111,21 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: t.surface },
       }}
     >
+      {/* First tab IS the relationship hub — My Helpers / My Elders by role */}
       <Tabs.Screen
         name="home"
-        options={{ title: 'Home', tabBarIcon: tabIcon(Home) }}
+        options={{ title: homeTab.label, tabBarIcon: tabIcon(UsersRound) }}
       />
       <Tabs.Screen
         name="posted-help"
         options={{
           title: 'Posted Help',
           tabBarIcon: tabIcon(FileText),
-          href: second.name === 'posted-help' ? undefined : null,
+          href: second?.name === 'posted-help' ? undefined : null,
         }}
       />
-      <Tabs.Screen
-        name="my-elders"
-        options={{
-          title: 'My Elders',
-          tabBarIcon: tabIcon(UsersRound),
-          href: second.name === 'my-elders' ? undefined : null,
-        }}
-      />
+      {/* Old helper second tab — the hub moved to slot one; route redirects */}
+      <Tabs.Screen name="my-elders" options={{ href: null }} />
       {/* Dashboard (3d) — check-in destination; not a tab, but keeps the tab bar */}
       <Tabs.Screen name="dashboard" options={{ href: null }} />
       <Tabs.Screen

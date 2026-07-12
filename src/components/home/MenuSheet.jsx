@@ -205,7 +205,7 @@ export default function MenuSheet({ visible, onClose }) {
             {isHelper ? (
               <>
                 <Row first icon={Search} label="Offer Help" sublabel="Needs from elders near you" onPress={() => go('/(tabs)/action')} />
-                <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/my-elders')} />
+                <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/home')} />
               </>
             ) : (
               <>

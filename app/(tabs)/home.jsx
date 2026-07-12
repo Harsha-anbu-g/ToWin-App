@@ -4,49 +4,18 @@
 // Helpers see their quiet doorways (their ladders live on the My Elders tab).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ChevronRight, Search, UsersRound } from 'lucide-react-native';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView } from 'react-native';
 import api from '../../src/api/client';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
 import MenuSheet from '../../src/components/home/MenuSheet';
+import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPromptedDay, markPromptedToday, shouldPromptCheckin } from '../../src/lib/checkinGate';
 import { useTheme } from '../../src/theme/ThemeContext';
-
-// A quiet doorway row (helper home): icon · label · sub · chevron.
-function QuietLink({ icon: Icon, label, sublabel, onPress }) {
-  const { t, radius, type } = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={({ pressed }) => ({
-        backgroundColor: t.canvas,
-        borderWidth: 1,
-        borderColor: t.border,
-        borderRadius: radius.card,
-        paddingVertical: 14,
-        paddingHorizontal: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      <Icon size={22} color={t.blueDeep} strokeWidth={1.8} />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{label}</Text>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 1 }}>{sublabel}</Text>
-      </View>
-      <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
-    </Pressable>
-  );
-}
 
 export default function HomeScreen() {
   const { t, spacing } = useTheme();
@@ -101,24 +70,7 @@ export default function HomeScreen() {
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[12], gap: spacing[4] }}
       >
         <GreetingHeader />
-        {isHelper ? (
-          <View style={{ gap: spacing[3] }}>
-            <QuietLink
-              icon={Search}
-              label="Offer Help"
-              sublabel="Needs from elders near you"
-              onPress={() => router.push('/(tabs)/action')}
-            />
-            <QuietLink
-              icon={UsersRound}
-              label="My Elders"
-              sublabel="The elders you help, and your trust ladders"
-              onPress={() => router.push('/(tabs)/my-elders')}
-            />
-          </View>
-        ) : (
-          <MyHelpersPanel />
-        )}
+        {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
       </ScrollView>
 
       <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
