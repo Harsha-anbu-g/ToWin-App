@@ -3,7 +3,7 @@
 // and the OS appearance is never followed (elder predictability).
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { light, dark, spacing, radius, text, fontFamily } from './tokens';
+import { light, dark, spacing, radius, text, type, fontFamily } from './tokens';
 
 const ThemeContext = createContext(null);
 const KEY = 'towin-theme';
@@ -35,7 +35,7 @@ export function ThemeProvider({ children }) {
   // Stable value: useTheme() is consumed by nearly every component, so a fresh
   // object here would re-render the whole tree on every provider render.
   const value = useMemo(
-    () => ({ mode, toggle, t: mode === 'dark' ? dark : light, spacing, radius, text, fontFamily }),
+    () => ({ mode, toggle, t: mode === 'dark' ? dark : light, spacing, radius, text, type, fontFamily }),
     [mode, toggle]
   );
 
