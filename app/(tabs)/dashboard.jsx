@@ -5,11 +5,10 @@
 // Lives inside (tabs) with href:null so the tab bar stays under it (canvas 3d).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Check } from 'lucide-react-native';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import api from '../../src/api/client';
-import TortoiseMark from '../../src/components/TortoiseMark';
+import TrustLadder from '../../src/components/trust/TrustLadder';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import NavRow from '../../src/components/ui/NavRow';
@@ -21,57 +20,6 @@ import { useTheme } from '../../src/theme/ThemeContext';
 
 // Short stage names for the ladder footer (handoff §Interactions).
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
-
-function Ladder({ stageIndex }) {
-  const { t } = useTheme();
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 16 }}>
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-        const isGoal = i === 6;
-        const done = i < stageIndex || (stageIndex >= 6 && isGoal);
-        const current = i === stageIndex && !done;
-        return (
-          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', flex: i === 0 ? 0 : 1 }}>
-            {i > 0 ? (
-              <View style={{ flex: 1, height: 2, backgroundColor: i <= stageIndex ? t.blue : t.avatarGrey }} />
-            ) : null}
-            {isGoal ? (
-              <View
-                style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
-                  backgroundColor: t.blueWash,
-                  borderWidth: 1,
-                  borderColor: t.blueSoft,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <TortoiseMark size={16} />
-              </View>
-            ) : (
-              <View
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
-                  backgroundColor: done ? t.blue : current ? t.canvas : t.greyFill3,
-                  borderWidth: current ? 2 : 0,
-                  borderColor: t.blue,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {done ? <Check size={12} color={t.actionInk} strokeWidth={2.5} /> : null}
-              </View>
-            )}
-          </View>
-        );
-      })}
-    </View>
-  );
-}
 
 function HelperCard({ card, waitingForOther, onConfirm }) {
   const { t, radius, type } = useTheme();
@@ -94,7 +42,7 @@ function HelperCard({ card, waitingForOther, onConfirm }) {
         </Text>
       </View>
 
-      <Ladder stageIndex={card.stageIndex} />
+      <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 16 }} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
         <Text style={{ fontSize: 11, color: t.inkSlate }}>Connected</Text>
