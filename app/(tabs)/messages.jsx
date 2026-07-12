@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -30,11 +31,18 @@ export default function MessagesInbox() {
   };
 
   return (
-    <Screen title="Messages" scroll={false} contentStyle={{ padding: 0 }}>
+    <Screen scroll={false} contentStyle={{ padding: 0 }}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-        contentContainerStyle={{ padding: spacing[5], paddingBottom: spacing[12] }}
+        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: spacing[12] }}
       >
+        <Text
+          accessibilityRole="header"
+          style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
+        >
+          Messages
+        </Text>
+
         {isLoading ? (
           <Card>
             <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading your conversations…</Text>
@@ -58,33 +66,37 @@ export default function MessagesInbox() {
             />
           </Card>
         ) : (
-          <Card>
+          <Card contentStyle={{ paddingVertical: 4, paddingHorizontal: 16 }}>
             {conversations.map((conn, i) => (
-              <Pressable
-                key={conn.id}
-                accessibilityRole="button"
-                accessibilityLabel={`Chat with ${conn.otherUserName}`}
-                onPress={() => router.push(`/chat/${conn.id}`)}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: spacing[3],
-                  paddingVertical: spacing[3],
-                  borderTopWidth: i === 0 ? 0 : 1,
-                  borderTopColor: t.hairline,
-                  opacity: pressed ? 0.8 : 1,
-                })}
-              >
-                <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={52} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
-                    {conn.otherUserName}
-                  </Text>
-                  <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 1 }}>
-                    Tap to open the chat
-                  </Text>
-                </View>
-              </Pressable>
+              <View key={conn.id}>
+                {i > 0 ? (
+                  // Inset separator aligned with the text column, not full-bleed
+                  <View style={{ height: 1, backgroundColor: t.hairline, marginLeft: 62 }} />
+                ) : null}
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`Chat with ${conn.otherUserName}`}
+                  onPress={() => router.push(`/chat/${conn.id}`)}
+                  style={({ pressed }) => ({
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 14,
+                    paddingVertical: 14,
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={48} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>
+                      {conn.otherUserName}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: t.inkSlate, marginTop: 2 }}>
+                      Tap to open the chat
+                    </Text>
+                  </View>
+                  <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
+                </Pressable>
+              </View>
             ))}
           </Card>
         )}

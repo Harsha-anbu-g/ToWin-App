@@ -3,7 +3,7 @@
 import NetInfo from '@react-native-community/netinfo';
 import { onlineManager } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function OfflineBanner() {
@@ -18,6 +18,14 @@ export default function OfflineBanner() {
     });
     return unsub;
   }, []);
+
+  // accessibilityLiveRegion is Android-only; VoiceOver needs an explicit
+  // announcement so iOS elders hear that the network dropped.
+  useEffect(() => {
+    if (offline && Platform.OS === 'ios') {
+      AccessibilityInfo.announceForAccessibility("You're offline — we'll retry as soon as you're back.");
+    }
+  }, [offline]);
 
   if (!offline) return null;
 

@@ -5,7 +5,7 @@ test('core brand tokens match index.css exactly', () => {
   expect(light.blueDeep).toBe('#2E7DA6');
   expect(light.trustGold).toBe('#9C7A3C');
   expect(light.greenDeep).toBe('#1a5c2e');
-  expect(light.canvas).toBe('#ffffff');
+  expect(light.canvas).toBe('#f6f4ef'); // all boxes warm parchment (user 2026-07-12)
   expect(light.border).toBe('#e5e1d9');
   expect(light.ink).toBe('#1d1d1f');
 });
