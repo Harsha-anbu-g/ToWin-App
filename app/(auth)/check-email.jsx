@@ -74,13 +74,15 @@ export default function CheckEmail() {
 
         <View
           style={{
-            backgroundColor: t.goldWash,
-            borderRadius: radius.md,
+            backgroundColor: t.canvas,
+            borderWidth: 1,
+            borderColor: t.border,
+            borderRadius: radius.card,
             padding: spacing[4],
             marginTop: spacing[5],
           }}
         >
-          <Text style={{ fontSize: text.sm, color: t.goldDeep, lineHeight: 21 }}>
+          <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
             <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
             <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
             folder — the ToWin email often lands there. If you find it, mark it "Not spam" so future
