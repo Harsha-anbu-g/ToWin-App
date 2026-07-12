@@ -262,16 +262,18 @@ export default function FriendsScreen() {
                           “{conn.requestMessage}”
                         </Text>
                       ) : null}
+                      {/* Tonal, not filled — several invites would mean several
+                          "primaries" on one screen (HCI rule 8) */}
                       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
                         <Button
                           title="Accept"
-                          variant="primary"
+                          variant="secondary"
                           onPress={() => respond.mutate({ id: conn.id, accept: true })}
                           style={{ flex: 1 }}
                         />
                         <Button
                           title="Not now"
-                          variant="secondary"
+                          variant="text"
                           onPress={() => respond.mutate({ id: conn.id, accept: false })}
                           style={{ flex: 1 }}
                         />
