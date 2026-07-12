@@ -1,10 +1,14 @@
-// Ask-AI assistant — port of AskAiAssistant.jsx: a floating button opening a
-// simple question sheet (POST /assistant/chat {message, history} → {reply}).
-// Friendly fallback on any failure; mounted in the tabs layout, hidden on the
-// chat-thread and feedback screens (they pin their own bottom UI, HCI rule 8).
+// Ask AI (3l) — the tortoise helper as a sheet: blueWash header with the
+// ai-tortoise avatar ("Ask AI / Your ToWin helper"), a greeting bubble with a
+// Read-aloud chip, three suggestion buttons, and a mic · pill · send composer.
+// Entry point is a wash pill FAB (tortoise + "Ask AI", 2px blue border).
+// Same API: POST /assistant/chat {message, history} → {reply}; friendly
+// fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
 import { useState } from 'react';
 import {
+  AccessibilityInfo,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -13,31 +17,44 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { MessageCircleQuestionMark, Send, X } from 'lucide-react-native';
+import { Mic, Send, Volume2, X } from 'lucide-react-native';
 import api from '../api/client';
+import { useToast } from '../context/ToastContext';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
 const FALLBACK =
   "I couldn't answer just now. Please try again in a moment — or ask a real person through Share feedback in your Profile.";
 
+const GREETING =
+  "Hi! I'm your ToWin helper. Ask me anything in plain words — how trust works, what to do today, or where to find things.";
+
+const SUGGESTIONS = [
+  'What should I do today?',
+  'How does the Trust Journey work?',
+  'What is my trust score?',
+];
+
+const mascot = require('../../assets/ai-tortoise-small.png');
+
 export default function AskAiAssistant() {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius, type, text } = useTheme();
+  const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
 
-  const ask = async () => {
-    const question = input.trim();
-    if (!question || thinking) return;
+  const send = async (question) => {
+    const q = question.trim();
+    if (!q || thinking) return;
     setInput('');
     const history = messages.slice(-6);
-    setMessages((prev) => [...prev, { role: 'user', content: question }]);
+    setMessages((prev) => [...prev, { role: 'user', content: q }]);
     setThinking(true);
     try {
-      const { data } = await api.post('/assistant/chat', { message: question, history });
+      const { data } = await api.post('/assistant/chat', { message: q, history });
       setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
     } catch {
       setMessages((prev) => [...prev, { role: 'assistant', content: FALLBACK }]);
@@ -48,27 +65,29 @@ export default function AskAiAssistant() {
 
   return (
     <>
-      {/* Floating button — sits above the tab bar, clear of the center action */}
+      {/* Wash pill FAB — tortoise + label, above the tab bar */}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Ask ToWin a question"
+        accessibilityLabel="Ask AI, your ToWin helper"
         onPress={() => setOpen(true)}
         style={({ pressed }) => ({
           position: 'absolute',
           right: 16,
           bottom: 92,
-          width: 52,
-          height: 52,
-          borderRadius: 26,
-          backgroundColor: t.canvas,
-          borderWidth: 1.5,
-          borderColor: t.blueSoft,
+          height: 44,
+          paddingHorizontal: 14,
+          borderRadius: 22,
+          backgroundColor: t.blueWash,
+          borderWidth: 2,
+          borderColor: t.blue,
+          flexDirection: 'row',
           alignItems: 'center',
-          justifyContent: 'center',
-          opacity: pressed ? 0.8 : 1,
+          gap: 7,
+          opacity: pressed ? 0.85 : 1,
         })}
       >
-        <MessageCircleQuestionMark size={24} color={t.blueDeep} />
+        <Image source={mascot} style={{ width: 24, height: 24 }} resizeMode="contain" />
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Ask AI</Text>
       </Pressable>
 
       <Modal
@@ -85,22 +104,27 @@ export default function AskAiAssistant() {
               borderTopRightRadius: radius['2xl'],
               maxHeight: '80%',
               minHeight: '55%',
+              overflow: 'hidden',
             }}
           >
+            {/* Wash header: mascot + Ask AI / Your ToWin helper */}
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                gap: 11,
                 paddingHorizontal: spacing[5],
-                paddingVertical: spacing[4],
+                paddingVertical: spacing[3],
+                backgroundColor: t.blueWash,
                 borderBottomWidth: 1,
-                borderBottomColor: t.border,
+                borderBottomColor: t.blueSoft,
               }}
             >
-              <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
-                Ask ToWin anything
-              </Text>
+              <Image source={mascot} style={{ width: 34, height: 34 }} resizeMode="contain" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>Ask AI</Text>
+                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your ToWin helper</Text>
+              </View>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel="Close"
@@ -121,10 +145,74 @@ export default function AskAiAssistant() {
                 keyExtractor={(_, i) => String(i)}
                 contentContainerStyle={{ padding: spacing[4], gap: spacing[2] }}
                 ListEmptyComponent={
-                  <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate, textAlign: 'center', marginTop: spacing[6] }}>
-                    Ask in plain words — like "How do I add a friend?" or "What is the trust
-                    ladder?"
-                  </Text>
+                  <View>
+                    {/* Greeting bubble (16/16/16/4) + Read aloud chip */}
+                    <View
+                      style={{
+                        alignSelf: 'flex-start',
+                        maxWidth: '90%',
+                        backgroundColor: t.blueWash,
+                        borderWidth: 1,
+                        borderColor: t.blueSoft,
+                        borderTopLeftRadius: 16,
+                        borderTopRightRadius: 16,
+                        borderBottomRightRadius: 16,
+                        borderBottomLeftRadius: 4,
+                        paddingHorizontal: spacing[4],
+                        paddingVertical: spacing[3],
+                      }}
+                    >
+                      <Text style={{ fontSize: type.body, lineHeight: 22, color: t.ink }}>{GREETING}</Text>
+                    </View>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel="Read the greeting aloud"
+                      onPress={() => AccessibilityInfo.announceForAccessibility(GREETING)}
+                      hitSlop={{ top: 6, bottom: 6 }}
+                      style={({ pressed }) => ({
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 5,
+                        alignSelf: 'flex-start',
+                        height: 30,
+                        paddingHorizontal: 12,
+                        borderRadius: radius.pill,
+                        backgroundColor: t.surfaceFill,
+                        borderWidth: 1,
+                        borderColor: t.border,
+                        marginTop: 8,
+                        opacity: pressed ? 0.7 : 1,
+                      })}
+                    >
+                      <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
+                      <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
+                        Read aloud
+                      </Text>
+                    </Pressable>
+
+                    {/* Three suggested questions */}
+                    <View style={{ gap: 8, marginTop: spacing[5] }}>
+                      {SUGGESTIONS.map((s) => (
+                        <Pressable
+                          key={s}
+                          accessibilityRole="button"
+                          accessibilityLabel={s}
+                          onPress={() => send(s)}
+                          style={({ pressed }) => ({
+                            backgroundColor: t.canvas,
+                            borderWidth: 1,
+                            borderColor: t.border,
+                            borderRadius: radius.input,
+                            paddingHorizontal: spacing[4],
+                            paddingVertical: 12,
+                            opacity: pressed ? 0.7 : 1,
+                          })}
+                        >
+                          <Text style={{ fontSize: type.body, color: t.blueDeep, fontWeight: '500' }}>{s}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </View>
                 }
                 renderItem={({ item }) => (
                   <View
@@ -134,7 +222,7 @@ export default function AskAiAssistant() {
                       backgroundColor: item.role === 'user' ? t.blueTint : t.canvas,
                       borderWidth: item.role === 'user' ? 0 : 1,
                       borderColor: t.border,
-                      borderRadius: radius.lg,
+                      borderRadius: radius.card,
                       paddingHorizontal: spacing[4],
                       paddingVertical: spacing[3],
                     }}
@@ -149,6 +237,7 @@ export default function AskAiAssistant() {
                 }
               />
 
+              {/* Composer: mic circle · pill input · send circle */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -160,6 +249,24 @@ export default function AskAiAssistant() {
                   backgroundColor: t.canvas,
                 }}
               >
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Voice input"
+                  onPress={() => showToast('Voice input arrives in a later update.', 'info')}
+                  style={({ pressed }) => ({
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: t.blueWash,
+                    borderWidth: 1,
+                    borderColor: t.blueSoft,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    opacity: pressed ? 0.7 : 1,
+                  })}
+                >
+                  <Mic size={19} color={t.blueDeep} strokeWidth={1.8} />
+                </Pressable>
                 <TextInput
                   accessibilityLabel="Your question"
                   value={input}
@@ -171,13 +278,11 @@ export default function AskAiAssistant() {
                     flex: 1,
                     minHeight: 44,
                     maxHeight: 100,
-                    backgroundColor: t.surface,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    borderRadius: radius.md,
+                    backgroundColor: t.surfaceFill,
+                    borderRadius: 22,
                     paddingHorizontal: spacing[4],
                     paddingVertical: spacing[3],
-                    fontSize: text.base,
+                    fontSize: type.body,
                     color: t.ink,
                   }}
                 />
@@ -186,7 +291,7 @@ export default function AskAiAssistant() {
                   accessibilityLabel="Send question"
                   accessibilityState={{ disabled: !input.trim() || thinking }}
                   disabled={!input.trim() || thinking}
-                  onPress={ask}
+                  onPress={() => send(input)}
                   style={({ pressed }) => ({
                     width: 44,
                     height: 44,
