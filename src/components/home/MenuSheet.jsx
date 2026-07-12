@@ -3,7 +3,18 @@
 // Motion: 240ms ease-out on transform only; reduced motion renders in place.
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
-import { Animated, Easing, Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  Easing,
+  findNodeHandle,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookOpen,
@@ -81,6 +92,7 @@ export default function MenuSheet({ visible, onClose }) {
   const drawerW = Math.min(width * 0.82, 320);
   const slide = useRef(new Animated.Value(-drawerW)).current;
   const scrim = useRef(new Animated.Value(0)).current;
+  const headerRef = useRef(null); // screen-reader focus lands here on open
 
   useEffect(() => {
     if (!visible) return;
@@ -118,7 +130,18 @@ export default function MenuSheet({ visible, onClose }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="none"
+      onRequestClose={close}
+      // Android Modal doesn't relocate TalkBack focus on its own — without
+      // this, focus stays "stuck" on the hidden screen behind the drawer.
+      onShow={() => {
+        const node = findNodeHandle(headerRef.current);
+        if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      }}
+    >
       {/* Scrim — tap anywhere outside the drawer to close */}
       <Animated.View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
         <Pressable accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
@@ -148,6 +171,7 @@ export default function MenuSheet({ visible, onClose }) {
           }}
         >
           <Text
+            ref={headerRef}
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
           >

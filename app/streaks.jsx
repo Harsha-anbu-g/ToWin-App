@@ -16,7 +16,14 @@ function WeekStrip({ week }) {
   return (
     <View style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[4] }}>
       {week.map((day, i) => (
-        <View key={i} style={{ flex: 1, alignItems: 'center', gap: 6 }}>
+        <View
+          key={i}
+          accessible
+          accessibilityLabel={`${day.label}: ${
+            day.done ? 'checked in' : day.today ? 'today' : day.future ? 'upcoming' : 'missed'
+          }`}
+          style={{ flex: 1, alignItems: 'center', gap: 6 }}
+        >
           <View
             style={{
               width: 34,
