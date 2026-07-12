@@ -4,10 +4,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import api from '../src/api/client';
+import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
-import Card from '../src/components/ui/Card';
 import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
 import { useAuth } from '../src/context/AuthContext';
@@ -89,20 +89,61 @@ export default function ProfileEdit() {
   const set = (key) => (v) => setForm((f) => ({ ...f, [key]: v }));
 
   return (
-    <Screen back title="Edit my profile" keyboard>
-      <Card>
-        <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}>
-          About me
-        </Text>
+    <Screen back title="Edit Profile" scroll={false} keyboard contentStyle={{ padding: 0 }}>
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}
+      >
+        {/* 3i: 72px avatar + tonal Change photo */}
+        <View style={{ alignItems: 'center', marginTop: spacing[2], marginBottom: spacing[5] }}>
+          <Avatar name={me?.name} uri={me?.photoUrl} size={72} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Change photo"
+            onPress={() => showToast('Adding a photo arrives in a later update.', 'info')}
+            hitSlop={{ top: 6, bottom: 6 }}
+            style={({ pressed }) => ({
+              height: 34,
+              paddingHorizontal: 16,
+              borderRadius: 17,
+              backgroundColor: t.blueWash,
+              borderWidth: 1,
+              borderColor: t.blueSoft,
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginTop: spacing[3],
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>Change photo</Text>
+          </Pressable>
+        </View>
+
         <Input label="Name" value={form.name} onChangeText={set('name')} style={{ marginBottom: spacing[4] }} />
         <Input
-          label="A few words about me"
+          label="My town or city"
+          value={form.city}
+          onChangeText={set('city')}
+          helper="Used only to match you with people nearby."
+          style={{ marginBottom: spacing[4] }}
+        />
+        <Input
+          label="Phone number"
+          value={form.phone}
+          onChangeText={set('phone')}
+          keyboardType="phone-pad"
+          textContentType="telephoneNumber"
+          helper="Only shared after both people reach the Phone Ready trust stage."
+          style={{ marginBottom: spacing[4] }}
+        />
+        <Input
+          label="About you"
           value={form.bio}
           onChangeText={set('bio')}
           multiline
           numberOfLines={4}
           inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
-          helper="What you enjoy, what you're looking for — plain words are perfect."
+          helper="Shown to helpers before you connect."
           style={{ marginBottom: spacing[4] }}
         />
         <Input
@@ -117,36 +158,18 @@ export default function ProfileEdit() {
           value={form.languages}
           onChangeText={set('languages')}
           helper="Separate with commas."
-          style={{ marginBottom: spacing[4] }}
         />
-        <Input
-          label="Phone number"
-          value={form.phone}
-          onChangeText={set('phone')}
-          keyboardType="phone-pad"
-          textContentType="telephoneNumber"
-          helper="Only shared after both people reach the Phone Ready trust stage."
-          style={{ marginBottom: spacing[4] }}
-        />
-        <Input
-          label="My town or city"
-          value={form.city}
-          onChangeText={set('city')}
-          helper="Used only to match you with people nearby."
-          style={{ marginBottom: spacing[5] }}
-        />
+      </ScrollView>
+
+      {/* Pinned Save Changes + hairline Cancel (3i) */}
+      <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[3], gap: spacing[2] }}>
         <Button
-          title={save.isPending ? 'Saving…' : 'Save changes'}
+          title={save.isPending ? 'Saving…' : 'Save Changes'}
           variant="primary"
           onPress={() => save.mutate()}
           loading={save.isPending}
         />
-      </Card>
-
-      <View style={{ marginTop: spacing[4] }}>
-        <Text style={{ fontSize: text.sm, color: t.ink4, textAlign: 'center', lineHeight: 20 }}>
-          Adding a photo arrives in a later update.
-        </Text>
+        <Button title="Cancel" variant="secondary" onPress={() => router.back()} />
       </View>
     </Screen>
   );
