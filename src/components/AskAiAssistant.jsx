@@ -149,7 +149,7 @@ export default function AskAiAssistant() {
         style={({ pressed }) => ({
           position: 'absolute',
           right: 16,
-          bottom: 92,
+          bottom: 118, // clear of the tab bar and the raised center button
           height: 44,
           paddingHorizontal: 14,
           borderRadius: 22,

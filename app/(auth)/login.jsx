@@ -57,7 +57,7 @@ export default function Login() {
       {/* App-shaped opening: quiet brand lockup with breathing room */}
       <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[6] }}>
         <TortoiseMark size={52} />
-        <Text style={{ fontSize: 22, fontWeight: '600', color: t.blueTeal, letterSpacing: -0.5, marginTop: spacing[2] }}>
+        <Text style={{ fontSize: 22, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.5, marginTop: spacing[2] }}>
           ToWin
         </Text>
       </View>

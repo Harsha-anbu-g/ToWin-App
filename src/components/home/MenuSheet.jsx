@@ -23,18 +23,28 @@ import {
   ClipboardList,
   HandHelping,
   PhoneCall,
+  Plus,
   Puzzle,
-  Turtle,
   Search,
+  UserRoundPlus,
   UsersRound,
   X,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
+import TortoiseMark from '../TortoiseMark';
 
 function Row({ icon: Icon, label, sublabel, onPress, first }) {
   const { t, spacing, text } = useTheme();
+  // Plain arrow fns render a custom leading slot (the brand tortoise);
+  // lucide icons (forwardRef objects, $$typeof set) get the standard look.
+  const leading =
+    typeof Icon === 'function' && !Icon.$$typeof ? (
+      <Icon />
+    ) : (
+      <Icon size={24} color={t.blueDeep} strokeWidth={2} />
+    );
   return (
     <Pressable
       accessibilityRole="button"
@@ -51,7 +61,7 @@ function Row({ icon: Icon, label, sublabel, onPress, first }) {
         backgroundColor: pressed ? t.hoverWash : 'transparent',
       })}
     >
-      <Icon size={24} color={t.blueDeep} strokeWidth={2} />
+      <View style={{ width: 24, alignItems: 'center' }}>{leading}</View>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: text.base, color: t.ink }}>{label}</Text>
         {sublabel ? (
@@ -188,35 +198,39 @@ export default function MenuSheet({ visible, onClose }) {
           </Pressable>
         </View>
 
+        {/* Rows speak the redesign's names — the same words as the tabs and
+            screen titles (Posted Help, Offer Help, My Helpers, Add Friends). */}
         <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[12] }}>
           <Group>
             {isHelper ? (
               <>
-                <Row first icon={Search} label="Requests near me" sublabel="Elders who could use a hand" onPress={() => go('/(tabs)/action')} />
-                <Row icon={ClipboardList} label="My offers & jobs" sublabel="What I've offered to help with" onPress={() => go('/my-jobs')} />
+                <Row first icon={Search} label="Offer Help" sublabel="Needs from elders near you" onPress={() => go('/(tabs)/action')} />
+                <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/my-elders')} />
               </>
             ) : (
               <>
-                <Row first icon={HandHelping} label="My requests" sublabel="Help I've asked for" onPress={() => go('/my-requests')} />
+                <Row first icon={Plus} label="Post Help" sublabel="Ask your neighbors for help" onPress={() => go('/(tabs)/action')} />
+                <Row icon={HandHelping} label="Posted Help" sublabel="Help you've asked for" onPress={() => go('/(tabs)/posted-help')} />
+                <Row icon={UsersRound} label="My Helpers" sublabel="Trust ladders with your helpers" onPress={() => go('/(tabs)/home')} />
                 {user?.role === 'BOTH' ? (
-                  <Row icon={ClipboardList} label="My offers & jobs" onPress={() => go('/my-jobs')} />
+                  <Row icon={ClipboardList} label="My offers" sublabel="Jobs you've offered to help with" onPress={() => go('/my-jobs')} />
                 ) : null}
               </>
             )}
-            <Row icon={UsersRound} label="People near you" sublabel="Find and add new friends" onPress={() => go('/friends')} />
+            <Row icon={UserRoundPlus} label="Add Friends" sublabel="Find people near you" onPress={() => go('/friends')} />
           </Group>
 
           <Group>
-            <Row first icon={Turtle} label="My trust" sublabel="Your score and the ladder" onPress={() => go('/trust')} />
-            <Row icon={CalendarCheck} label="Daily check-in" sublabel="Your streak, day by day" onPress={() => go('/streaks')} />
-            <Row icon={Puzzle} label="Peekaboo game" sublabel="A quiet minute" onPress={() => go('/game')} />
+            <Row first icon={() => <TortoiseMark size={24} />} label="Trust Score" sublabel="Your points and tier" onPress={() => go('/trust')} />
+            <Row icon={CalendarCheck} label="Daily check-in" sublabel="Your streak, day by day" onPress={() => go('/checkin')} />
+            <Row icon={Puzzle} label="Peekaboo" sublabel="A quiet minute with the tortoise" onPress={() => go('/game')} />
           </Group>
 
           <Group>
             {isElder ? (
-              <Row first icon={PhoneCall} label="Emergency" sublabel="SOS and your emergency contacts" onPress={() => go('/emergency-contacts')} />
+              <Row first icon={PhoneCall} label="SOS — emergency contacts" sublabel="Help in an emergency" onPress={() => go('/emergency-contacts')} />
             ) : null}
-            <Row first={!isElder} icon={BookOpen} label="How ToWin works" onPress={() => go('/guide')} />
+            <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How ToWin works" onPress={() => go('/guide')} />
           </Group>
         </ScrollView>
       </Animated.View>

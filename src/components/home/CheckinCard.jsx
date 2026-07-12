@@ -35,10 +35,11 @@ function WeekStrip({ week }) {
               borderRadius: radius.pill,
               alignItems: 'center',
               justifyContent: 'center',
+              // Green lives only in the check mark itself — washes read minty
               ...(d.done
-                ? { backgroundColor: t.greenTint, borderWidth: 1, borderColor: t.greenLine }
+                ? { backgroundColor: 'transparent', borderWidth: 1, borderColor: t.border }
                 : d.today
-                  ? { backgroundColor: t.canvas, borderWidth: 2, borderColor: t.blue }
+                  ? { backgroundColor: t.surface, borderWidth: 2, borderColor: t.blue }
                   : { backgroundColor: t.greyFill3 }),
             }}
           >
@@ -79,7 +80,7 @@ export default function CheckinCard() {
     onSuccess: (data) => {
       queryClient.setQueryData(['streak-me'], data);
       showToast('Checked in — see you tomorrow!', 'success');
-      router.push('/(tabs)/dashboard'); // 3d: My Helpers, tab bar stays under it
+      router.replace('/(tabs)/home'); // Home = My Helpers
     },
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not check in right now. Please try again.'), 'error'),
@@ -88,53 +89,6 @@ export default function CheckinCard() {
   const done = streak?.alreadyCheckedIn;
   const current = streak?.currentStreak ?? 0;
   const week = buildWeek(streak);
-
-  // Already checked in: the big hero steps aside for the rest of the day —
-  // one quiet confirmation row (tap for streak details), no repeated ask.
-  if (!isLoading && done) {
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`Checked in for today — ${current} ${current === 1 ? 'day' : 'days'} in a row. See your streak`}
-        onPress={() => router.push('/streaks')}
-        style={({ pressed }) => ({
-          backgroundColor: t.heroParchment,
-          borderWidth: 1,
-          borderColor: t.border,
-          borderRadius: radius.card,
-          paddingVertical: 14,
-          paddingHorizontal: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 12,
-          opacity: pressed ? 0.8 : 1,
-        })}
-      >
-        <View
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: radius.pill,
-            backgroundColor: t.greenTint,
-            borderWidth: 1,
-            borderColor: t.greenLine,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <Check size={15} color={t.greenDeep} strokeWidth={2.5} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-            Checked in for today
-          </Text>
-          <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 1, fontVariant: ['tabular-nums'] }}>
-            {current} {current === 1 ? 'day' : 'days'} in a row — see you tomorrow
-          </Text>
-        </View>
-      </Pressable>
-    );
-  }
 
   return (
     <View
@@ -187,12 +141,29 @@ export default function CheckinCard() {
           <WeekStrip week={week} />
 
           <View>
-            <Button
-              title={checkin.isPending ? 'Checking in…' : "I'm here today"}
-              variant="primary"
-              onPress={() => checkin.mutate()}
-              loading={checkin.isPending}
-            />
+            {done ? (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  minHeight: 44,
+                }}
+              >
+                <Check size={16} color={t.greenDeep} strokeWidth={2.5} />
+                <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
+                  Checked in for today
+                </Text>
+              </View>
+            ) : (
+              <Button
+                title={checkin.isPending ? 'Checking in…' : "I'm here today"}
+                variant="primary"
+                onPress={() => checkin.mutate()}
+                loading={checkin.isPending}
+              />
+            )}
             <Text style={{ fontSize: type.caption, color: t.inkSlate, textAlign: 'center', marginTop: 10 }}>
               One tap tells your people you're okay.
             </Text>

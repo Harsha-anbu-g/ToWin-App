@@ -51,7 +51,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
           style={{
             fontSize: type.wordmark,
             fontWeight: '600',
-            color: t.blueTeal,
+            color: t.greenDeep, // website navbar wordmark green (--green-deep)
             letterSpacing: -0.4,
           }}
         >
