@@ -12,6 +12,7 @@ import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
+import LoadError from '../ui/LoadError';
 import SegmentedControl from '../ui/SegmentedControl';
 import SkeletonCard from '../ui/Skeleton';
 import TrustLadder from './TrustLadder';
@@ -111,11 +112,11 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
 
       <TrustLadder stageIndex={stageIndex} style={{ marginTop: 16 }} />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-        <Text style={{ fontSize: 11, color: t.inkSlate }}>Connected</Text>
+        <Text style={{ fontSize: 13, color: t.inkSlate }}>Connected</Text>
         {!atTop ? (
-          <Text style={{ fontSize: 11, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
         ) : null}
-        <Text style={{ fontSize: 11, color: t.trustGold }}>Trusted</Text>
+        <Text style={{ fontSize: 13, color: t.trustGold }}>Trusted</Text>
       </View>
 
       {/* Backend rule (website ea03935): the elder starts each step — the
@@ -165,7 +166,7 @@ export default function MyEldersPanel() {
   const router = useRouter();
   const [seg, setSeg] = useState('building');
 
-  const { data: connections, isLoading } = useQuery({
+  const { data: connections, isLoading, isError, refetch } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
@@ -256,6 +257,8 @@ export default function MyEldersPanel() {
 
       {isLoading ? (
         <SkeletonCard lines={4} />
+      ) : isError ? (
+        <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 14 }} />
       ) : shown.length === 0 ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>

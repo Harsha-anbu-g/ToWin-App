@@ -8,6 +8,7 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
+import { showDemoAccounts } from '../../src/lib/appEnv';
 import TortoiseMark from '../../src/components/TortoiseMark';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
@@ -168,8 +169,9 @@ export default function Login() {
           </Pressable>
         </View>
 
-        {/* Demo accounts live quietly under the form, not above it */}
-        <DemoAccountsCard onError={setError} />
+        {/* Demo accounts live quietly under the form, not above it — hidden in
+            store builds so the shared credentials never ship (audit). */}
+        {showDemoAccounts() ? <DemoAccountsCard onError={setError} /> : null}
       </View>
     </Screen>
   );
