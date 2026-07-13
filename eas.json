@@ -11,7 +11,8 @@
     "preview": {
       "distribution": "internal",
       "env": {
-        "APP_ENV": "preview"
+        "APP_ENV": "preview",
+        "EXPO_PUBLIC_SHOW_DEMO": "1"
       }
     },
     "production": {

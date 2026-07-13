@@ -166,7 +166,7 @@ export default function ChatThread() {
           <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
           <Text
             style={{
-              fontSize: 11,
+              fontSize: 13,
               color: t.ink4,
               marginTop: 3,
               alignSelf: 'flex-end',

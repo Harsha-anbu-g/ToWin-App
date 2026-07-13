@@ -46,11 +46,11 @@ function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm }) {
       <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 16 }} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-        <Text style={{ fontSize: 11, color: t.inkSlate }}>Connected</Text>
+        <Text style={{ fontSize: 13, color: t.inkSlate }}>Connected</Text>
         {!atTop ? (
-          <Text style={{ fontSize: 11, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
         ) : null}
-        <Text style={{ fontSize: 11, color: t.trustGold }}>Trusted</Text>
+        <Text style={{ fontSize: 13, color: t.trustGold }}>Trusted</Text>
       </View>
 
       {atTop ? (

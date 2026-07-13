@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   Alert,
+  findNodeHandle,
   FlatList,
   Image,
   KeyboardAvoidingView,
@@ -171,6 +172,12 @@ export default function AskAiAssistant() {
         transparent
         animationType={reducedMotion ? 'none' : 'slide'}
         onRequestClose={close}
+        // Android Modal doesn't relocate TalkBack focus on its own — hand it to
+        // the sheet header so focus isn't stuck on the hidden screen behind it.
+        onShow={() => {
+          const node = findNodeHandle(headerRef.current);
+          if (node) AccessibilityInfo.setAccessibilityFocus(node);
+        }}
       >
         <View style={{ flex: 1, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
           <View
@@ -198,7 +205,9 @@ export default function AskAiAssistant() {
             >
               <Image source={mascot} style={{ width: 34, height: 34 }} resizeMode="contain" />
               <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>Ask AI</Text>
+                <Text ref={headerRef} accessibilityRole="header" style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
+                  Ask AI
+                </Text>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your ToWin helper</Text>
               </View>
               <Pressable
