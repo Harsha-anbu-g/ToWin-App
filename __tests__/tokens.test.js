@@ -3,11 +3,22 @@ import { light, dark, spacing, radius, text, type, fontFamily } from '../src/the
 test('core brand tokens match index.css exactly', () => {
   expect(light.blue).toBe('#4FA3CE');
   expect(light.blueDeep).toBe('#2E7DA6');
-  expect(light.trustGold).toBe('#9C7A3C');
   expect(light.greenDeep).toBe('#1a5c2e');
   expect(light.canvas).toBe('#f6f4ef'); // all boxes warm parchment (user 2026-07-12)
   expect(light.border).toBe('#e5e1d9');
   expect(light.ink).toBe('#1d1d1f');
+});
+
+// The one deliberate website deviation: the gold family clashed with the white
+// mobile pages (user call 2026-07-12), so the trust accent is the brand deep
+// green and every saffron/amber token is retired.
+test('trust accent is deep green; saffron/amber family is retired', () => {
+  expect(light.trustGold).toBe('#1a5c2e');
+  expect(dark.trustGold).toBe('#7cc28f');
+  for (const key of ['amber', 'amberWash', 'amberDeep', 'goldWash', 'goldLine', 'goldDeep', 'goldWash2', 'starGold']) {
+    expect(light[key]).toBeUndefined();
+    expect(dark[key]).toBeUndefined();
+  }
 });
 
 // 2026-07-11 redesign (Claude Design handoff) — locked surface + shape + type values.
@@ -42,9 +53,7 @@ test('redesign: SF type ramp per handoff', () => {
 
 test('alias tokens are ported (spot checks)', () => {
   expect(light.bubbleIn).toBe('#f0f0f5');
-  expect(light.starGold).toBe('#f5b400');
   expect(light.btnDisabled).toBe('#94a3b8');
-  expect(light.goldWash).toBe('#fbeed9');
   expect(light.infoLine).toBe('#bfdbfe');
 });
 
@@ -77,7 +86,7 @@ test('night cards lighter than night page (elevation grammar)', () => {
 test('night keeps action blue, lightens text roles in-family', () => {
   expect(dark.blue).toBe('#4FA3CE'); // brand action unchanged
   expect(dark.blueDeep).toBe('#7ec0e4');
-  expect(dark.trustGold).toBe('#c9a468');
+  expect(dark.trustGold).toBe('#7cc28f'); // trust accent lightens in the green family
   expect(dark.ink).toBe('#f2f0ec');
 });
 

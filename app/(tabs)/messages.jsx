@@ -8,7 +8,6 @@ import { ChevronRight } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
-import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
@@ -52,14 +51,14 @@ export default function MessagesInbox() {
         </Text>
 
         {isLoading ? (
-          <Card>
+          <View style={{ paddingVertical: spacing[6] }}>
             <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading your conversations…</Text>
-          </Card>
+          </View>
         ) : isError ? (
           // Never dress a network failure up as "no conversations yet"
           <LoadError what="your conversations" onRetry={refetch} />
         ) : conversations.length === 0 ? (
-          <Card>
+          <View style={{ paddingVertical: spacing[6] }}>
             <Text
               accessibilityRole="header"
               style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
@@ -75,9 +74,11 @@ export default function MessagesInbox() {
               onPress={() => router.push('/friends')}
               style={{ marginTop: spacing[5] }}
             />
-          </Card>
+          </View>
         ) : (
-          <Card contentStyle={{ paddingVertical: 4, paddingHorizontal: 16 }}>
+          // Inbox rows sit straight on the page — no box around the list
+          // (user call 2026-07-12: outlined list boxes read as a website).
+          <View>
             {conversations.map((conn, i) => (
               <View key={conn.id}>
                 {i > 0 ? (
@@ -93,7 +94,10 @@ export default function MessagesInbox() {
                     alignItems: 'center',
                     gap: 14,
                     paddingVertical: 14,
-                    opacity: pressed ? 0.7 : 1,
+                    // Full-bleed press highlight; text stays column-aligned
+                    marginHorizontal: -spacing[4],
+                    paddingHorizontal: spacing[4],
+                    backgroundColor: pressed ? t.surfaceFill : 'transparent',
                   })}
                 >
                   <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={48} />
@@ -109,7 +113,7 @@ export default function MessagesInbox() {
                 </Pressable>
               </View>
             ))}
-          </Card>
+          </View>
         )}
       </ScrollView>
     </Screen>

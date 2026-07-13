@@ -1,9 +1,11 @@
 // Posted Help (3f) — the elder's requests in three segments: Looking for
-// Help / In Progress / Completed. Card: title + neutral status pill, plain
-// meta line ("Shopping · Normal · posted yesterday"), then "N helpers want
-// to help" with a tonal View that expands the applicant rows. Accept,
-// complete, and remove keep their confirm dialogs (HCI rule 5). Shared by
-// the elder's second tab and the pushed My requests screen (one source).
+// Help / In Progress / Completed. Each request is a row straight on the page,
+// hairline-separated (user call 2026-07-12: outlined boxes read as a website):
+// title + neutral status pill, plain meta line ("Shopping · Normal · posted
+// yesterday"), then "N helpers want to help" with a tonal View that expands
+// the applicant rows. Accept, complete, and remove keep their confirm dialogs
+// (HCI rule 5). Shared by the elder's second tab and the pushed My requests
+// screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
@@ -46,7 +48,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove }) {
     need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null].filter(Boolean).join(' · ');
 
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
+    <View style={{ paddingVertical: 18 }}>
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
         <Text style={{ fontSize: 15.5, fontWeight: '600', lineHeight: 20, flex: 1, color: t.ink }}>
           {need.title}
@@ -202,7 +204,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       ) : isError ? (
         <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
       ) : shown.length === 0 ? (
-        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
+        <View style={{ paddingVertical: 24 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'open'
               ? 'Nothing here yet. Tap the blue Post Help button below to ask your neighbors.'
@@ -212,15 +214,19 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
           </Text>
         </View>
       ) : (
-        shown.map((need) => (
-          <NeedCard
-            key={need.id}
-            need={need}
-            onAccept={confirmAccept}
-            onComplete={confirmComplete}
-            onRemove={confirmRemove}
-          />
-        ))
+        <View style={{ marginTop: 4 }}>
+          {shown.map((need, i) => (
+            <View key={need.id}>
+              {i > 0 ? <View style={{ height: 1, backgroundColor: t.hairline }} /> : null}
+              <NeedCard
+                need={need}
+                onAccept={confirmAccept}
+                onComplete={confirmComplete}
+                onRemove={confirmRemove}
+              />
+            </View>
+          ))}
+        </View>
       )}
     </ScrollView>
   );

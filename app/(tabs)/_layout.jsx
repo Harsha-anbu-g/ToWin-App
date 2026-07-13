@@ -1,10 +1,12 @@
 // Redesign tab shell (handoff §Navigation): 5 slots, role-aware.
 // Elder (and BOTH): Home · Posted Help · [Post Help FAB] · Messages · Profile
 // Helper:           Home · My Elders  · [Offer Help FAB] · Messages · Profile
-// Active tab = blueDeep at 2px stroke; inactive = inkSlate at 1.8px; icons 22,
-// labels 10/600 always visible (elder-first). The center FAB is a 54pt raised
-// circle with a 3px page-colored ring; it turns blueDeep while its own screen
-// is open. Tab bar is a white surface with a hairline top border — no shadows.
+// Active tab = blueDeep icon inside a sky-tint pill (user call 2026-07-12:
+// stroke-weight alone was too subtle — "highlight more"); inactive = inkSlate
+// at 1.8px; icons 22, labels 10/600 always visible (elder-first). The center
+// FAB is a 54pt raised circle with a 3px page-colored ring; it turns blueDeep
+// while its own screen is open. Tab bar is a white surface with a hairline
+// top border — no shadows.
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, Tabs } from 'expo-router';
 import {
@@ -25,7 +27,19 @@ import { useTheme } from '../../src/theme/ThemeContext';
 
 const tabIcon = (Icon) =>
   function TabIcon({ color, focused }) {
-    return <Icon size={22} color={color} strokeWidth={focused ? 2 : 1.8} />;
+    const { t } = useTheme();
+    return (
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 3,
+          borderRadius: 999,
+          backgroundColor: focused ? t.blueTint : 'transparent',
+        }}
+      >
+        <Icon size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />
+      </View>
+    );
   };
 
 function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {

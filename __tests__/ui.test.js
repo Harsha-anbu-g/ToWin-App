@@ -86,9 +86,9 @@ test('avatar falls back to initials with a name label', async () => {
   expect(getByLabelText('Margaret Hall')).toBeOnTheScreen();
 });
 
-test('trust badge stays gold through any reskin', async () => {
+test('trust badge stays the trust accent (deep green) through any reskin', async () => {
   const { getByText } = await wrap(<TrustBadge score={12} />);
-  expect(getByText(/12/)).toHaveStyle({ color: '#9C7A3C' });
+  expect(getByText(/12/)).toHaveStyle({ color: '#1a5c2e' });
 });
 
 // --- 2026-07-11 redesign kit (Claude Design handoff) ---
@@ -139,5 +139,5 @@ test('nav row: menu and add-friends targets fire, trust pill reads score', async
   expect(onMenu).toHaveBeenCalled();
   expect(onAddFriends).toHaveBeenCalled();
   expect(getByText('24')).toBeOnTheScreen();
-  expect(getByText('trust')).toHaveStyle({ color: '#9C7A3C' });
+  expect(getByText('trust')).toHaveStyle({ color: '#1a5c2e' });
 });
