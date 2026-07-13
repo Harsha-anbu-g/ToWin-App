@@ -92,7 +92,7 @@ function MiniCard({ title, badge, stars, Icon, children }) {
         </View>
         {badge ? (
           <View style={{ backgroundColor: t.blueWash, borderWidth: 1, borderColor: t.blueSoft, borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 10 }}>
-            <Text style={{ fontSize: type.caption, fontWeight: '700', color: t.goldDeep }}>{badge}</Text>
+            <Text style={{ fontSize: type.caption, fontWeight: '700', color: t.blueDeep }}>{badge}</Text>
           </View>
         ) : null}
       </View>
@@ -228,7 +228,7 @@ function Slide({ index }) {
                       {s}
                     </Text>
                     <View style={{ flexDirection: 'row', backgroundColor: t.blueWash, borderWidth: 1, borderColor: t.blueSoft, borderRadius: radius.pill, paddingVertical: 1, paddingHorizontal: 8 }}>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: t.goldDeep }}>+1</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: t.blueDeep }}>+1</Text>
                       <Text style={{ fontSize: 11, fontWeight: '700', color: t.inkSlate }}> trust score</Text>
                     </View>
                   </View>

@@ -69,10 +69,12 @@ export const light = {
   redTint: '#fef2f2', // error background
   redSoft: '#fca5a5', // error border
   redDeep: '#9b3535', // destructive (end connection)
-  amber: '#b05000',
   greenDeep: '#1a5c2e', // trusted / success text
   greenTint: '#ebf6ee', // success background
-  trustGold: '#9C7A3C', // ALWAYS used for "trust" text
+  // Trust accent — deep green (user call 2026-07-12: the gold family clashed
+  // with the white pages). Token name kept so in-flight screens don't churn;
+  // rename to trustAccent once the redesign wave settles.
+  trustGold: '#1a5c2e',
 
   // Alias tokens — role names, not hues
   hairline: '#f0f0f0', // menu/list row separators
@@ -83,14 +85,10 @@ export const light = {
   greenWash: '#f0fdf4',
   greenLine: '#bfe0c9',
   redLine: '#fecaca',
-  goldWash: '#fbeed9', // trust wash
-  goldLine: '#fde68a',
-  goldDeep: '#7a5b1e', // trust text on gold wash
   greyFill: '#f5f5f7',
   greyFill2: '#f3f4f6',
   greyFill3: '#f0f0f3', // segmented-control track
   greyLine: '#e5e7eb',
-  starGold: '#f5b400', // rating stars — stays lit in both themes
   tortoiseBed: '#ffffff', // light circle behind the tortoise — light in BOTH themes
   logoGreen: '#025E32', // the mark's own stroke, sampled from the artwork — NOT greenDeep
   segActive: '#ffffff', // active chip on a segmented-control track
@@ -105,7 +103,6 @@ export const light = {
   ringIdle: '#c8ccd2',
   idleGrey: '#d0d0d5', // empty stars / idle dots
   trackEmpty: '#d8d8de', // trust-ladder empty segments
-  goldWash2: '#fff7e6', // champion badge fill
   skyLine3: '#a8d4ec',
   skyLine4: '#dbe7ef',
   skyHairline: '#e2eef5',
@@ -120,8 +117,6 @@ export const light = {
   redMid: '#cc3333',
   avatarGrey: '#e8e8ed',
   bubbleIn: '#f0f0f5', // incoming chat bubble
-  amberWash: '#fef3c7',
-  amberDeep: '#92400e',
   greenVerified: '#1a7a3a',
   inkSoft: '#3a3a3c',
   inkMid: '#5a5a5a',
@@ -186,10 +181,9 @@ export const dark = {
   redTint: 'rgba(220, 38, 38, 0.16)',
   redSoft: 'rgba(248, 113, 113, 0.45)',
   redDeep: '#b45050',
-  amber: '#e0954e',
   greenDeep: '#7cc28f',
   greenTint: 'rgba(61, 139, 90, 0.18)',
-  trustGold: '#c9a468',
+  trustGold: '#7cc28f', // trust accent at night — same green family as greenDeep
 
   hairline: '#33312d',
   hairline2: '#3a3833',
@@ -199,9 +193,6 @@ export const dark = {
   greenWash: 'rgba(61, 139, 90, 0.12)',
   greenLine: 'rgba(124, 194, 143, 0.38)',
   redLine: 'rgba(248, 113, 113, 0.35)',
-  goldWash: 'rgba(201, 164, 104, 0.14)',
-  goldLine: 'rgba(201, 164, 104, 0.40)',
-  goldDeep: '#d4b478',
   greyFill: '#2e2d2b',
   greyFill2: '#2e2d2b',
   greyFill3: '#2e2d2b',
@@ -218,7 +209,6 @@ export const dark = {
   ringIdle: '#5a5751',
   idleGrey: '#55534f',
   trackEmpty: '#3a3833',
-  goldWash2: 'rgba(201, 164, 104, 0.16)',
   skyLine3: 'rgba(79, 163, 206, 0.45)',
   skyLine4: 'rgba(79, 163, 206, 0.30)',
   skyHairline: 'rgba(79, 163, 206, 0.22)',
@@ -233,8 +223,6 @@ export const dark = {
   redMid: '#ef8080',
   avatarGrey: '#33322f',
   bubbleIn: '#333230',
-  amberWash: 'rgba(224, 149, 78, 0.15)',
-  amberDeep: '#e5b083',
   greenVerified: '#7cc28f',
   inkSoft: '#ddd9d2',
   inkMid: '#b5b1a9',
