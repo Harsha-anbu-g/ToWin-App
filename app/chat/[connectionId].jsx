@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Send } from 'lucide-react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
+import LoadError from '../../src/components/ui/LoadError';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -74,7 +75,7 @@ export default function ChatThread() {
   });
   const conn = (connections ?? []).find((c) => c.id === connectionId);
 
-  const { data } = useQuery({
+  const { data, isError, refetch } = useQuery({
     queryKey: ['messages', connectionId],
     queryFn: async () => (await api.get(`/messages/${connectionId}?size=50`)).data,
     refetchInterval: isFocused ? 5000 : false, // web Messages.jsx polls every 5s — only while focused
@@ -123,7 +124,8 @@ export default function ChatThread() {
       queryClient.invalidateQueries({ queryKey: ['messages', connectionId] });
     },
     onError: (err, content) => {
-      setInput(content); // restore the text — never silently drop it (HCI rule 9)
+      // Restore the failed text without eating anything typed since (HCI rule 9)
+      setInput((cur) => (cur ? `${content} ${cur}` : content));
       showToast(friendlyWriteError(err, "Message didn't send. Tap send to try again."), 'error');
     },
   });
@@ -229,17 +231,26 @@ export default function ChatThread() {
           renderItem={renderItem}
           contentContainerStyle={{ padding: spacing[4] }}
           ListEmptyComponent={
-            <Text
-              style={{
-                fontSize: text.base,
-                color: t.inkSlate,
-                textAlign: 'center',
-                transform: [{ scaleY: -1 }], // un-flip inside the inverted list
-                lineHeight: 26,
-              }}
-            >
-              Say hello — every friendship starts with one message.
-            </Text>
+            isError ? (
+              // A failed load must never masquerade as an empty chat (HCI rule 9)
+              <LoadError
+                what="your messages"
+                onRetry={refetch}
+                style={{ transform: [{ scaleY: -1 }] }} // un-flip inside the inverted list
+              />
+            ) : (
+              <Text
+                style={{
+                  fontSize: text.base,
+                  color: t.inkSlate,
+                  textAlign: 'center',
+                  transform: [{ scaleY: -1 }], // un-flip inside the inverted list
+                  lineHeight: 26,
+                }}
+              >
+                Say hello — every friendship starts with one message.
+              </Text>
+            )
           }
         />
 
