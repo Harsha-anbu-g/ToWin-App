@@ -74,7 +74,7 @@ export default function HomeScreen() {
       />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[12], gap: spacing[4] }}
+        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
       >
         <GreetingHeader />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}

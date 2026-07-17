@@ -7,6 +7,7 @@
 // The very first question is gated by a one-time plain-words consent note
 // naming Groq, the outside AI service (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
+import { usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -47,6 +48,7 @@ export default function AskAiAssistant() {
   const { t, spacing, radius, type, text } = useTheme();
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -146,6 +148,10 @@ export default function AskAiAssistant() {
       if (mounted.current) setThinking(false);
     }
   };
+
+  // The action screen pins its own bottom UI (elder: the one filled Post Help
+  // primary) in the exact band the FAB floats in — never cover it (HCI rule 8).
+  if (pathname === '/action') return null;
 
   return (
     <>
