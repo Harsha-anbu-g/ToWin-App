@@ -43,13 +43,20 @@ export default function HomeScreen() {
   useEffect(() => {
     if (gated.current || !streak) return;
     gated.current = true;
+    // alive guard: getPromptedDay may resolve after logout/unmount — don't
+    // navigate to the check-in walk from a screen that no longer exists.
+    let alive = true;
     (async () => {
       const prompted = await getPromptedDay();
+      if (!alive) return;
       if (shouldPromptCheckin(streak, prompted)) {
         await markPromptedToday();
-        router.push('/checkin');
+        if (alive) router.push('/checkin');
       }
     })();
+    return () => {
+      alive = false;
+    };
   }, [streak, router]);
 
   const onRefresh = useCallback(async () => {

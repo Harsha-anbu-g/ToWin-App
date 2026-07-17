@@ -201,9 +201,13 @@ export default function OfferHelpList() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['needs-open'] });
-    await queryClient.invalidateQueries({ queryKey: ['needs-applications'] });
-    setRefreshing(false);
+    // finally: the spinner must stop even when refresh fails on poor WiFi
+    try {
+      await queryClient.invalidateQueries({ queryKey: ['needs-open'] });
+      await queryClient.invalidateQueries({ queryKey: ['needs-applications'] });
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Stable renderItem + memoized NeedCard: mutate fns are stable in
