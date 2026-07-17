@@ -52,6 +52,9 @@ export default function AskAiAssistant() {
   const [input, setInput] = useState('');
   const [thinking, setThinking] = useState(false);
   const inputRef = useRef(null);
+  // Stable per-message ids: index keys shift on every append, forcing every
+  // bubble to re-render — visible lag on older phones after a few exchanges.
+  const msgSeq = useRef(0);
 
   // A session expiry mid-request unmounts the tabs tree (and this sheet with
   // it) — the resolved fetch must not setState on the dead component.
@@ -121,19 +124,20 @@ export default function AskAiAssistant() {
     if (!q || thinking) return;
     if (!(await ensureAiConsent())) return;
     setInput('');
-    const history = messages.slice(-6);
-    setMessages((prev) => [...prev, { role: 'user', content: q }]);
+    // History keeps the API contract: {role, content} only, no local ids.
+    const history = messages.slice(-6).map(({ role, content }) => ({ role, content }));
+    setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'user', content: q }]);
     setThinking(true);
     // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
     AccessibilityInfo.announceForAccessibility('Thinking…');
     try {
       const { data } = await api.post('/assistant/chat', { message: q, history });
       if (!mounted.current) return;
-      setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
+      setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: data.reply }]);
       AccessibilityInfo.announceForAccessibility(data.reply);
     } catch {
       if (!mounted.current) return;
-      setMessages((prev) => [...prev, { role: 'assistant', content: FALLBACK }]);
+      setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: FALLBACK }]);
       AccessibilityInfo.announceForAccessibility(FALLBACK);
     } finally {
       if (mounted.current) setThinking(false);
@@ -227,7 +231,7 @@ export default function AskAiAssistant() {
             >
               <FlatList
                 data={messages}
-                keyExtractor={(_, i) => String(i)}
+                keyExtractor={(m) => String(m.id)}
                 contentContainerStyle={{ padding: spacing[4], gap: spacing[2] }}
                 ListEmptyComponent={
                   <View>
