@@ -9,12 +9,14 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SegmentedControl from '../ui/SegmentedControl';
 import SkeletonCard from '../ui/Skeleton';
+import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
 // Backend trust-level enum, in ladder order (index = stage climbed).
@@ -63,7 +65,7 @@ function ActionChip({ label, onPress, tonal = false, destructive = false }) {
   );
 }
 
-function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
+function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
   const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
   const stageIndex = scoreCard?.stageIndex ?? Math.max(0, LEVEL_ORDER.indexOf(conn.currentTrustLevel));
@@ -155,6 +157,15 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm }) {
           {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
         </Text>
       )}
+
+      {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
+      <Button
+        title="Take a break"
+        variant="text"
+        onPress={() => onPause(conn)}
+        accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
+        style={{ marginTop: 2 }}
+      />
     </View>
   );
 }
@@ -175,12 +186,26 @@ export default function MyEldersPanel() {
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
 
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+
   const scoreOf = (connId) => (breakdown?.customers ?? []).find((c) => c.connectionId === connId);
-  const active = (connections ?? []).filter((c) => c.status === 'ACTIVE');
+  // Blocked people never appear in the relationship hub (UGC 1.2)
+  const active = filterBlocked(
+    (connections ?? []).filter((c) => c.status === 'ACTIVE'),
+    blocked,
+    (c) => c.otherUserId
+  );
   const stageOf = (c) => scoreOf(c.id)?.stageIndex ?? Math.max(0, LEVEL_ORDER.indexOf(c.currentTrustLevel));
   const trusted = active.filter((c) => stageOf(c) >= 6);
   const building = active.filter((c) => stageOf(c) < 6);
   const shown = seg === 'trusted' ? trusted : building;
+  // A paused friendship leaves the ACTIVE list — surface it here so the way
+  // back (Resume) stays visible (HCI rule 3).
+  const paused = filterBlocked(
+    (connections ?? []).filter((c) => c.status === 'PAUSED'),
+    blocked,
+    (c) => c.otherUserId
+  );
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['connections'] });
@@ -212,6 +237,35 @@ export default function MyEldersPanel() {
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not end it right now. Please try again.'), 'error'),
   });
+
+  const pause = useMutation({
+    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
+    onSuccess: () => {
+      showToast('Taking a break — trust steps and messages are paused until one of you resumes.', 'info');
+      refresh();
+    },
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
+  });
+  const resume = useMutation({
+    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
+    onSuccess: () => {
+      showToast('Welcome back — trust steps and messages are on again.', 'success');
+      refresh();
+    },
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
+  });
+
+  const confirmPause = (conn) =>
+    Alert.alert(
+      'Take a break?',
+      `Trust steps and messages with ${conn.otherUserName} pause until either of you resumes. Nothing is lost.`,
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Pause', onPress: () => pause.mutate(conn.id) },
+      ]
+    );
 
   const confirmStep = (conn) =>
     Alert.alert(
@@ -259,7 +313,7 @@ export default function MyEldersPanel() {
         <SkeletonCard lines={4} />
       ) : isError ? (
         <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 14 }} />
-      ) : shown.length === 0 ? (
+      ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
@@ -276,9 +330,20 @@ export default function MyEldersPanel() {
             scoreCard={scoreOf(conn.id)}
             onEnd={confirmEnd}
             onConfirm={confirmStep}
+            onPause={confirmPause}
           />
         ))
       )}
+      {!isLoading && !isError && seg === 'building'
+        ? paused.map((c) => (
+            <PausedCard
+              key={c.id}
+              conn={c}
+              resuming={resume.isPending && resume.variables === c.id}
+              onResume={() => resume.mutate(c.id)}
+            />
+          ))
+        : null}
     </View>
   );
 }

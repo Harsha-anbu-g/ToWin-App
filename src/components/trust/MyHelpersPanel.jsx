@@ -8,18 +8,20 @@ import { useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import SegmentedControl from '../ui/SegmentedControl';
+import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
 // Short stage names for the ladder footer (handoff §Interactions).
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
-function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm }) {
+function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
   const { t, radius, type } = useTheme();
   const atTop = card.stageIndex >= 6;
   const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
@@ -81,6 +83,15 @@ function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm }) {
           <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{ctaLabel}</Text>
         </Pressable>
       )}
+
+      {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
+      <Button
+        title="Take a break"
+        variant="text"
+        onPress={onPause}
+        accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
+        style={{ marginTop: 2 }}
+      />
     </View>
   );
 }
@@ -101,6 +112,7 @@ export default function MyHelpersPanel() {
     queryFn: async () => (await api.get('/connections')).data,
   });
   const connOf = (id) => (connections ?? []).find((c) => c.id === id);
+  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
 
   const confirm = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),
@@ -119,6 +131,37 @@ export default function MyHelpersPanel() {
       showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
   });
 
+  const pause = useMutation({
+    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
+    onSuccess: () => {
+      showToast('Taking a break — trust steps and messages are paused until one of you resumes.', 'info');
+      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
+  });
+  const resume = useMutation({
+    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
+    onSuccess: () => {
+      showToast('Welcome back — trust steps and messages are on again.', 'success');
+      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
+  });
+
+  const confirmPause = (card) =>
+    Alert.alert(
+      'Take a break?',
+      `Trust steps and messages with ${card.customerName} pause until either of you resumes. Nothing is lost.`,
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Pause', onPress: () => pause.mutate(card.connectionId) },
+      ]
+    );
+
   const confirmStep = (card) => {
     const accepting = !!connOf(card.connectionId)?.confirmedByOther;
     Alert.alert(
@@ -133,10 +176,23 @@ export default function MyHelpersPanel() {
     );
   };
 
-  const customers = breakdown?.customers ?? [];
+  // Blocked people never appear in the relationship hub (UGC 1.2); score
+  // cards map back to their connection for the other person's id.
+  const customers = filterBlocked(
+    breakdown?.customers ?? [],
+    blocked,
+    (card) => connOf(card.connectionId)?.otherUserId
+  );
   const trusted = customers.filter((c) => c.stageIndex >= 6);
   const building = customers.filter((c) => c.stageIndex < 6);
   const shown = seg === 'trusted' ? trusted : building;
+  // A paused friendship vanishes from the score breakdown (backend counts
+  // ACTIVE only) — surface it from the connections list so Resume stays visible.
+  const paused = filterBlocked(
+    (connections ?? []).filter((c) => c.status === 'PAUSED'),
+    blocked,
+    (c) => c.otherUserId
+  );
 
   return (
     <View>
@@ -164,7 +220,7 @@ export default function MyHelpersPanel() {
         <SkeletonCard lines={4} />
       ) : isError ? (
         <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 14 }} />
-      ) : shown.length === 0 ? (
+      ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
@@ -183,10 +239,21 @@ export default function MyHelpersPanel() {
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}
+              onPause={() => confirmPause(card)}
             />
           );
         })
       )}
+      {!isLoading && !isError && seg === 'building'
+        ? paused.map((c) => (
+            <PausedCard
+              key={c.id}
+              conn={c}
+              resuming={resume.isPending && resume.variables === c.id}
+              onResume={() => resume.mutate(c.id)}
+            />
+          ))
+        : null}
     </View>
   );
 }

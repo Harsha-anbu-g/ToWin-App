@@ -254,7 +254,22 @@ export default function ChatThread() {
           }
         />
 
-        {/* Composer pinned above the keyboard */}
+        {/* Paused friendships block sending server-side — say so plainly
+            instead of letting a send fail (HCI rules 3 + 9) */}
+        {conn?.status === 'PAUSED' ? (
+          <View
+            style={{
+              padding: spacing[4],
+              borderTopWidth: 1,
+              borderTopColor: t.border,
+              backgroundColor: t.canvas,
+            }}
+          >
+            <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
+              You two are on a break — messages are paused. Resume from your Home screen to keep chatting.
+            </Text>
+          </View>
+        ) : (
         <View
           style={{
             flexDirection: 'row',
@@ -306,6 +321,7 @@ export default function ChatThread() {
             <Send size={20} color={t.actionInk} />
           </Pressable>
         </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
