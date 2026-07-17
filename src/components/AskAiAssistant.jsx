@@ -137,6 +137,9 @@ export default function AskAiAssistant() {
       AccessibilityInfo.announceForAccessibility(data.reply);
     } catch {
       if (!mounted.current) return;
+      // "Please try again" must not mean retyping — put the question back
+      // unless the user already started typing a new one (HCI rule 9).
+      setInput((cur) => cur || q);
       setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: FALLBACK }]);
       AccessibilityInfo.announceForAccessibility(FALLBACK);
     } finally {
