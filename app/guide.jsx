@@ -18,7 +18,7 @@ const ELDER_CAN = [
 
 const HELPER_CAN = [
   'See help requests from elders near you and apply to the ones you can do.',
-  'Find elders looking for friendship and send a connection request.',
+  'Find elders looking for friendship and send a friend request.',
   'Message the elders you connect with, safely and simply.',
   'Grow your Trust Score and earn reviews each time you help.',
 ];

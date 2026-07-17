@@ -17,11 +17,11 @@ import { useTheme } from '../src/theme/ThemeContext';
 // Verbatim from the website's Feedback.jsx
 const RATINGS = [
   { key: 'ratingIdea', label: 'Idea' },
-  { key: 'ratingUi', label: 'UI Design' },
+  { key: 'ratingUi', label: 'How it looks' },
   { key: 'ratingTheme', label: 'Theme' },
-  { key: 'ratingSecurity', label: 'Security' },
+  { key: 'ratingSecurity', label: 'Feeling safe' },
   { key: 'ratingEaseOfUse', label: 'Ease of Use' },
-  { key: 'ratingPerformance', label: 'Performance' },
+  { key: 'ratingPerformance', label: 'How fast it feels' },
   { key: 'ratingOverall', label: 'Overall' },
 ];
 
@@ -54,8 +54,8 @@ function RatingRow({ label, value, onChange }) {
           >
             <Star
               size={20}
-              color={value >= n ? t.blue : t.idleGrey}
-              fill={value >= n ? t.blue : 'transparent'}
+              color={value >= n ? t.trustGold : t.idleGrey}
+              fill={value >= n ? t.trustGold : 'transparent'}
             />
           </Pressable>
         ))}
@@ -70,7 +70,7 @@ function CreatorCard() {
   return (
     <>
       <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 18, padding: 20, marginTop: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Image
             source={founder}
             accessibilityLabel="Portrait of Harshavardhan"
@@ -83,21 +83,21 @@ function CreatorCard() {
             <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Harsha</Text>
           </View>
         </View>
-        <Text style={{ fontSize: 13.5, color: t.blueDeep, fontWeight: '600', marginTop: 14, lineHeight: 19 }}>
+        <Text style={{ fontSize: 13.5, color: t.blueDeep, fontWeight: '600', marginTop: 16, lineHeight: 19 }}>
           Full-Stack Engineer · Aspiring Entrepreneur · AI-Driven Developer
         </Text>
         <Text style={{ fontSize: 12.5, color: t.inkSlate, marginTop: 2 }}>
           Master's in Applied Computer Science · Concordia University, Montreal
         </Text>
-        <View style={{ height: 1, backgroundColor: t.border, marginVertical: 14 }} />
+        <View style={{ height: 1, backgroundColor: t.border, marginVertical: 16 }} />
         <Text style={{ fontSize: 14, fontWeight: '600', lineHeight: 21, color: t.ink }}>
           This isn't a university project. ToWin is my future startup.
         </Text>
-        <Text style={{ fontSize: 13.5, color: t.inkSlate, lineHeight: 21, marginTop: 6 }}>
+        <Text style={{ fontSize: 13.5, color: t.inkSlate, lineHeight: 21, marginTop: 8 }}>
           I'm building something real, and your feedback is what shapes it. Love the idea? Want to
           connect? Let's talk!
         </Text>
-        <View style={{ gap: 10, marginTop: 16 }}>
+        <View style={{ gap: 12, marginTop: 16 }}>
           {CONTACTS.map(({ icon: Icon, label, href }) => (
             <Pressable
               key={label}
@@ -109,7 +109,7 @@ function CreatorCard() {
               style={({ pressed }) => ({
                 flexDirection: 'row',
                 alignItems: 'center',
-                gap: 10,
+                gap: 12,
                 opacity: pressed ? 0.6 : 1,
               })}
             >
@@ -154,19 +154,23 @@ function CreatorCard() {
             Visit my portfolio
           </Text>
         </View>
+        {/* Neutral ghost pill — the trust color never fills an action (HCI rule 4),
+            and Submit stays this screen's only filled button (rule 8) */}
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 6,
-            backgroundColor: t.trustGold,
-            paddingVertical: 9,
+            gap: 8,
+            backgroundColor: 'transparent',
+            borderWidth: 1,
+            borderColor: t.border,
+            paddingVertical: 8,
             paddingHorizontal: 16,
             borderRadius: 999,
           }}
         >
-          <Globe size={13} color={t.actionInk} strokeWidth={2} />
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.actionInk }}>My Portfolio</Text>
+          <Globe size={13} color={t.inkSlate} strokeWidth={2} />
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>My Portfolio</Text>
         </View>
       </Pressable>
     </>
@@ -222,7 +226,7 @@ export default function Feedback() {
             borderWidth: 1,
             borderColor: t.blueSoft,
             borderRadius: 14,
-            padding: 14,
+            padding: 16,
           }}
         >
           <Text style={{ fontSize: type.meta, color: t.ink2, lineHeight: 20 }}>
@@ -233,7 +237,7 @@ export default function Feedback() {
 
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5, marginTop: 18 }}
+          style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5, marginTop: 20 }}
         >
           Share Your Feedback
         </Text>
@@ -242,7 +246,7 @@ export default function Feedback() {
         </Text>
 
         {/* Name / Email side by side */}
-        <View style={{ flexDirection: 'row', gap: 10, marginBottom: spacing[4] }}>
+        <View style={{ flexDirection: 'row', gap: 12, marginBottom: spacing[4] }}>
           <Input
             label="Name"
             value={form.name}
@@ -277,7 +281,7 @@ export default function Feedback() {
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 4 }}>
           Rate the app (optional)
         </Text>
-        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, paddingHorizontal: 14, paddingVertical: 4 }}>
+        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 4 }}>
           {RATINGS.map(({ key, label }, i) => (
             <View key={key} style={{ borderTopWidth: i === 0 ? 0 : 1, borderTopColor: t.hairline }}>
               <RatingRow label={label} value={ratings[key] ?? 0} onChange={setRating(key)} />

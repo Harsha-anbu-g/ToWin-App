@@ -169,15 +169,17 @@ export default function TrustScreen() {
               {breakdown?.tier ? (
                 <View
                   style={{
-                    backgroundColor: t.blueWash,
+                    // Trust semantics wear the trust color, never action-blue
+                    // (HCI rule 4 — same rule TrustBadge documents).
+                    backgroundColor: t.surfaceFill,
                     borderWidth: 1,
-                    borderColor: t.blueSoft,
+                    borderColor: t.border,
                     borderRadius: radius.pill,
                     paddingVertical: 4,
                     paddingHorizontal: 12,
                   }}
                 >
-                  <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
+                  <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>
                     {breakdown.tier}
                   </Text>
                 </View>
