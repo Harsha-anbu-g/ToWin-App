@@ -4,6 +4,7 @@
 // clearly separated (HCI: destructive-nav-separation).
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Platform, Pressable, Switch, Text, View } from 'react-native';
 import {
   BookOpen,
@@ -147,12 +148,17 @@ export default function ProfileScreen() {
       ]
     );
 
+  const [exporting, setExporting] = useState(false);
   const exportData = async () => {
+    if (exporting) return; // double-taps must not fire double exports (HCI rule 1)
+    setExporting(true);
     try {
       await api.get('/account/export');
       showToast('Your data export is ready — check your email.', 'success');
     } catch {
       showToast('Could not start the export. Please try again.', 'error');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -312,7 +318,7 @@ export default function ProfileScreen() {
         <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.inkSlate, marginBottom: spacing[2] }}>
           My data
         </Text>
-        <Button title="Send me a copy of my data" variant="text" onPress={exportData} />
+        <Button title="Send me a copy of my data" variant="text" loading={exporting} onPress={exportData} />
         <Button
           title={deleteAccount.isPending ? 'Deleting…' : 'Delete my account'}
           variant="destructive"
