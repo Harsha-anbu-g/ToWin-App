@@ -5,11 +5,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
+import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
@@ -21,8 +22,9 @@ import TrustLadder from './TrustLadder';
 // Short stage names for the ladder footer (handoff §Interactions).
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
-function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
+function HelperCard({ card, conn, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
   const { t, radius, type } = useTheme();
+  const router = useRouter();
   const atTop = card.stageIndex >= 6;
   const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
   // Backend rule (website ea03935): the elder STARTS a step; if the other
@@ -30,8 +32,8 @@ function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm, onPause 
   const ctaLabel = confirmedByOther ? 'Accept the next step' : 'Start the next step';
 
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={44} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
@@ -45,6 +47,15 @@ function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm, onPause 
         </Text>
       </View>
 
+      {/* Actions — parity with the helper's ElderCard: the elder can message or
+          view a helper right from their own Home, not hunt the Messages tab */}
+      {conn ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
+          <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${card.connectionId}`)} />
+          <ActionChip label="View Profile" onPress={() => router.push(`/user/${conn.otherUserId}`)} />
+        </View>
+      ) : null}
+
       <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 16 }} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
@@ -56,32 +67,21 @@ function HelperCard({ card, confirmedByMe, confirmedByOther, onConfirm, onPause 
       </View>
 
       {atTop ? (
-        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 14 }}>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 16 }}>
           Fully trusted — the ladder is complete.
         </Text>
       ) : confirmedByMe && !confirmedByOther ? (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
           You've started the next step — waiting for {card.customerName} to accept.
         </Text>
       ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={ctaLabel}
+        <Button
+          title={ctaLabel}
+          variant="secondary"
+          size="small"
           onPress={onConfirm}
-          style={({ pressed }) => ({
-            height: 38,
-            borderRadius: radius.pill,
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            borderColor: t.blueSoft,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: 14,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{ctaLabel}</Text>
-        </Pressable>
+          style={{ marginTop: 16 }}
+        />
       )}
 
       {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
@@ -202,7 +202,7 @@ export default function MyHelpersPanel() {
       >
         My Helpers
       </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 3 }}>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 4 }}>
         <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> grows step by step, like roots.
       </Text>
 
@@ -213,21 +213,21 @@ export default function MyHelpersPanel() {
         ]}
         value={seg}
         onChange={setSeg}
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 16 }}
       />
 
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (
-        <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 14 }} />
+        <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 16 }} />
       ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
-        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
+        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
               ? 'No fully trusted friends yet — every ladder ends here.'
               : 'No ladders in progress. Add a friend and trust starts growing.'}
           </Text>
-          <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 14 }} />
+          <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />
         </View>
       ) : (
         shown.map((card) => {
@@ -236,6 +236,7 @@ export default function MyHelpersPanel() {
             <HelperCard
               key={card.connectionId}
               card={card}
+              conn={c}
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}

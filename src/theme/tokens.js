@@ -37,7 +37,7 @@ export const light = {
   ink3: '#676767', // ≥4.5:1 on white AND the parchment surface
   ink4: '#707070', // muted text + placeholders — still ≥4.5:1 on --surface
   inkFaint: '#c8c8cd', // disabled text ONLY (contrast-exempt) — never running text
-  inkFaint2: '#8a919c', // faint meta text (redesign handoff)
+  inkFaint2: '#646b76', // faint meta text — ≥4.5:1 on white, parchment, and tracks (handoff's #8a919c failed AA)
   inkDeep: '#2d3748', // heavy slate headings
   inkSlate: '#5a6470', // common secondary text
   inkSlate2: '#5a6b75',
@@ -259,7 +259,7 @@ export const type = {
   title: 28, // screen titles (Newsreader)
   cardTitle: 19, // card titles (Newsreader)
   bigNumber: 48, // serif streaks/scores
-  body: 15,
+  body: 16, // elder rule: running text never below 16 (handoff's 15 was under the floor)
   meta: 13,
   caption: 12,
   segCount: 11, // segmented-control counts

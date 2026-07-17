@@ -26,7 +26,9 @@ test('redesign: pages are white, parchment survives only on the check-in hero', 
   expect(light.surface).toBe('#ffffff'); // surface.page — user decision, NOT parchment
   expect(light.surfaceFill).toBe('#f2f2f5'); // segmented tracks, neutral chips, search fields
   expect(light.heroParchment).toBe('#f6f4ef'); // the ONLY warm surface kept
-  expect(light.inkFaint2).toBe('#8a919c'); // faint meta text
+  // audit 2026-07-17: handoff's #8a919c was ~3:1 on its fills (fails AA);
+  // darkened to the greyText value, which clears 4.5:1 on white/parchment/tracks
+  expect(light.inkFaint2).toBe('#646b76'); // faint meta text
   // night mode keeps the warm-charcoal grammar: hero card sits lighter than the page
   expect(dark.surface).toBe('#201f1d');
   expect(dark.heroParchment).toBe(dark.canvas);
@@ -43,7 +45,7 @@ test('redesign: shape scale — 12 inputs, 16 cards, 18 hero, pills round', () =
 test('redesign: SF type ramp per handoff', () => {
   expect(type.title).toBe(28);
   expect(type.cardTitle).toBe(19);
-  expect(type.body).toBe(15);
+  expect(type.body).toBe(16); // audit 2026-07-17: elder rule — running text never below 16 (handoff said 15)
   expect(type.meta).toBe(13);
   expect(type.caption).toBe(12);
   expect(type.segCount).toBe(11);
