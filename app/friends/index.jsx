@@ -248,7 +248,10 @@ export default function FriendsScreen() {
                     ) : status === 'requested' ? (
                       <TonalChip label="Requested" neutral />
                     ) : (
-                      <TonalChip label="Connect" onPress={() => request.mutate(p.userId)} />
+                      <TonalChip
+                        label={request.isPending && request.variables === p.userId ? 'Sending…' : 'Connect'}
+                        onPress={request.isPending ? undefined : () => request.mutate(p.userId)}
+                      />
                     )
                   }
                 />
@@ -286,12 +289,16 @@ export default function FriendsScreen() {
                         <Button
                           title="Accept"
                           variant="secondary"
+                          loading={respond.isPending && respond.variables?.id === conn.id && respond.variables?.accept}
+                          disabled={respond.isPending}
                           onPress={() => respond.mutate({ id: conn.id, accept: true })}
                           style={{ flex: 1 }}
                         />
                         <Button
                           title="Not now"
                           variant="text"
+                          loading={respond.isPending && respond.variables?.id === conn.id && !respond.variables?.accept}
+                          disabled={respond.isPending}
                           onPress={() => respond.mutate({ id: conn.id, accept: false })}
                           style={{ flex: 1 }}
                         />
