@@ -35,7 +35,11 @@ import ChatThread from '../app/chat/[connectionId]';
 const wrap = (ui) =>
   render(
     <ThemeProvider>
-      <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      {/* gcTime: Infinity — the default 5-min gc timer is scheduled at unmount
+          and keeps the Jest worker alive until force-exit (the teardown warning) */}
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })}
+      >
         <AuthProvider>
           <ToastProvider>{ui}</ToastProvider>
         </AuthProvider>
