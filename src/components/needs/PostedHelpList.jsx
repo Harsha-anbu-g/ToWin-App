@@ -205,7 +205,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   return (
     <ScrollView
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-      contentContainerStyle={{ paddingBottom: 64 }}
+      contentContainerStyle={{ paddingBottom: 120 }} // clears the Ask-AI FAB band on the posted-help tab
     >
       <SegmentedControl
         segments={[
