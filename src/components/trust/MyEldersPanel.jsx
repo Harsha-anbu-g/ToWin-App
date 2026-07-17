@@ -6,11 +6,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Phone } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
+import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
@@ -31,40 +32,6 @@ const LEVEL_ORDER = [
 ];
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met in person', 'Trusted'];
 
-function ActionChip({ label, onPress, tonal = false, destructive = false }) {
-  const { t, radius, type } = useTheme();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      hitSlop={{ top: 6, bottom: 6 }}
-      style={({ pressed }) => ({
-        height: 36,
-        paddingHorizontal: 14,
-        borderRadius: radius.pill,
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: tonal ? t.blueSoft : destructive ? t.redLine : t.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      <Text
-        numberOfLines={1}
-        style={{
-          fontSize: type.meta,
-          fontWeight: '600',
-          color: tonal ? t.blueDeep : destructive ? t.redDeep : t.ink,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
 function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
   const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
@@ -74,8 +41,8 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
   const next = SHORT_STAGES[Math.min(stageIndex + 1, 6)];
 
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 16 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={44} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.ink }}>
@@ -96,7 +63,7 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
       </View>
 
       {conn.otherUserPhone ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 10 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
           <Phone size={14} color={t.blueDeep} strokeWidth={1.8} />
           <Text style={{ fontSize: type.meta, color: t.blueDeep, fontVariant: ['tabular-nums'] }}>
             {conn.otherUserPhone}
@@ -105,7 +72,7 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
       ) : null}
 
       {/* Actions: tonal Message · hairline View Profile · hairline End */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
         <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${conn.id}`)} />
         <ActionChip label="View Profile" onPress={() => router.push(`/user/${conn.otherUserId}`)} />
         <View style={{ flex: 1 }} />
@@ -124,36 +91,23 @@ function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
       {/* Backend rule (website ea03935): the elder starts each step — the
           helper only ever ACCEPTS, and never sees a dead start button. */}
       {atTop ? (
-        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 14 }}>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 16 }}>
           Fully trusted — the ladder is complete.
         </Text>
       ) : conn.confirmedByOther && !conn.confirmedByMe ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Accept the next step"
+        <Button
+          title="Accept the next step"
+          variant="secondary"
+          size="small"
           onPress={() => onConfirm(conn)}
-          style={({ pressed }) => ({
-            height: 38,
-            borderRadius: radius.pill,
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            borderColor: t.blueSoft,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: 14,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-            Accept the next step
-          </Text>
-        </Pressable>
+          style={{ marginTop: 16 }}
+        />
       ) : waiting ? (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
           Waiting for {conn.otherUserName} to accept the next step — they'll get a tap on their side.
         </Text>
       ) : (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 14 }}>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
           {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
         </Text>
       )}
@@ -295,7 +249,7 @@ export default function MyEldersPanel() {
       >
         My Elders
       </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 3 }}>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 4 }}>
         <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> grows step by step, like roots.
       </Text>
 
@@ -306,21 +260,21 @@ export default function MyEldersPanel() {
         ]}
         value={seg}
         onChange={setSeg}
-        style={{ marginTop: 14 }}
+        style={{ marginTop: 16 }}
       />
 
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (
-        <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 14 }} />
+        <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 16 }} />
       ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
-        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 14 }}>
+        <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
               ? 'No fully trusted elders yet — every ladder ends here.'
               : 'No connections yet. Find an elder nearby and say hello.'}
           </Text>
-          <Button title="Find elders" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 14 }} />
+          <Button title="Find elders" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />
         </View>
       ) : (
         shown.map((conn) => (

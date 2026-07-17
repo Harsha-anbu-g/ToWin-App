@@ -42,7 +42,7 @@ const STAGE_ICONS = {
 function Chapter({ n, label }) {
   const { t, type } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 13, justifyContent: 'center', marginBottom: 18 }}>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 20 }}>
       <Text style={{ fontSize: 14, fontWeight: '700', color: t.inkSlate, fontVariant: ['tabular-nums'], letterSpacing: 0.5 }}>
         {String(n).padStart(2, '0')}
       </Text>
@@ -66,7 +66,7 @@ function Title({ children }) {
 function Lead({ children, size = 16 }) {
   const { t } = useTheme();
   return (
-    <Text style={{ fontSize: size, color: t.inkSlate, lineHeight: size * 1.55, textAlign: 'center', marginBottom: 14 }}>
+    <Text style={{ fontSize: size, color: t.inkSlate, lineHeight: size * 1.55, textAlign: 'center', marginBottom: 16 }}>
       {children}
     </Text>
   );
@@ -75,7 +75,7 @@ function Lead({ children, size = 16 }) {
 function NoteBox({ children }) {
   const { t, type } = useTheme();
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 14, padding: 14 }}>
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 14, padding: 16 }}>
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 21 }}>{children}</Text>
     </View>
   );
@@ -86,18 +86,18 @@ function MiniCard({ title, badge, stars, Icon, children }) {
   return (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 14, padding: 12, width: '100%' }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, flexShrink: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 }}>
           {Icon ? <Icon size={15} strokeWidth={2.2} color={t.inkSlate} /> : null}
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, letterSpacing: -0.2 }}>{title}</Text>
         </View>
         {badge ? (
-          <View style={{ backgroundColor: t.blueWash, borderWidth: 1, borderColor: t.blueSoft, borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 10 }}>
+          <View style={{ backgroundColor: t.blueWash, borderWidth: 1, borderColor: t.blueSoft, borderRadius: radius.pill, paddingVertical: 2, paddingHorizontal: 12 }}>
             <Text style={{ fontSize: type.caption, fontWeight: '700', color: t.blueDeep }}>{badge}</Text>
           </View>
         ) : null}
       </View>
       {stars ? (
-        <View accessibilityLabel="five stars" style={{ flexDirection: 'row', gap: 3, marginBottom: 5 }}>
+        <View accessibilityLabel="five stars" style={{ flexDirection: 'row', gap: 3, marginBottom: 4 }}>
           {Array.from({ length: 5 }).map((_, i) => (
             <Star key={i} size={12} color={t.trustGold} fill={t.trustGold} />
           ))}
@@ -120,7 +120,7 @@ function Slide({ index }) {
       {index === 0 && (
         <View style={{ alignItems: 'center' }}>
           <IntroBrandLockup size={58} wordStyle={{ fontSize: 26, fontWeight: '600', color: t.ink, letterSpacing: -0.6 }} />
-          <Text style={{ fontFamily: fontFamily.display, fontSize: 34, color: t.ink, letterSpacing: -0.7, lineHeight: 38, textAlign: 'center', marginTop: 22, marginBottom: 14 }}>
+          <Text style={{ fontFamily: fontFamily.display, fontSize: 34, color: t.ink, letterSpacing: -0.7, lineHeight: 38, textAlign: 'center', marginTop: 24, marginBottom: 16 }}>
             It takes <Text style={{ fontFamily: fontFamily.displayItalic }}>two</Text> To Win.
           </Text>
           <Text style={{ fontSize: 16, fontWeight: '500', color: t.inkSlate, textAlign: 'center', marginBottom: 12 }}>
@@ -134,7 +134,7 @@ function Slide({ index }) {
         <View>
           <Title>{COPY.people.title}</Title>
           <Lead>{COPY.people.lead}</Lead>
-          <View style={{ gap: 10 }}>
+          <View style={{ gap: 12 }}>
             {COPY.people.cards.map((card, i) => (
               <MiniCard key={card.title} title={card.title} Icon={i === 0 ? Armchair : HandHeart}>
                 {card.body}
@@ -148,11 +148,11 @@ function Slide({ index }) {
         <View>
           <Title>{COPY.solves.title}</Title>
           <Lead>{COPY.solves.lead}</Lead>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 14 }}>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
             {COPY.solves.chips.map((label, i) => {
               const Icon = [ShoppingBag, Car, MessageCircle][i];
               return (
-                <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 7, backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 14 }}>
+                <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16 }}>
                   <Icon size={15} strokeWidth={2} color={t.blueTeal} />
                   <Text style={{ fontSize: type.body, fontWeight: '500', color: t.inkSlate }}>{label}</Text>
                 </View>
@@ -169,7 +169,7 @@ function Slide({ index }) {
             <Text style={{ color: t.trustGold }}>Trust</Text> is earned, not given
           </Title>
           <Lead size={15}>{COPY.trust.lead}</Lead>
-          <View style={{ gap: 7, marginBottom: 10 }}>
+          <View style={{ gap: 8, marginBottom: 12 }}>
             <MiniCard title={COPY.trust.cards[0].title} badge={COPY.trust.cards[0].badge} Icon={BadgeCheck}>
               {COPY.trust.cards[0].body}
             </MiniCard>
@@ -180,7 +180,7 @@ function Slide({ index }) {
               {COPY.trust.cards[2].body}
             </MiniCard>
           </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.input, paddingVertical: 9 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.input, paddingVertical: 8 }}>
             <Text style={{ fontSize: type.meta, fontWeight: '500', color: t.inkSlate }}>{COPY.trust.total.formula}</Text>
             <Text style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.trustGold }}>{COPY.trust.total.score}</Text>
             <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{COPY.trust.total.caption}</Text>
@@ -244,7 +244,7 @@ function Slide({ index }) {
         <View>
           <Title>{COPY.why.title}</Title>
           <Lead size={14}>{COPY.why.lead}</Lead>
-          <View style={{ borderWidth: 1, borderColor: t.border, borderRadius: 14, overflow: 'hidden', marginBottom: 14 }}>
+          <View style={{ borderWidth: 1, borderColor: t.border, borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
             {COPY.why.exchange.map(({ role, have, need }, i) => {
               const Icon = i === 0 ? Armchair : HandHeart;
               return (
@@ -257,7 +257,7 @@ function Slide({ index }) {
                     ['HAVE', have],
                     ['NEED', need],
                   ].map(([label, textValue]) => (
-                    <View key={label} style={{ flexDirection: 'row', gap: 10, paddingVertical: 8, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.canvas }}>
+                    <View key={label} style={{ flexDirection: 'row', gap: 12, paddingVertical: 8, paddingHorizontal: 16, borderTopWidth: 1, borderTopColor: t.border, backgroundColor: t.canvas }}>
                       <Text style={{ fontSize: 11, fontWeight: '700', color: t.inkSlate, letterSpacing: 1.2, width: 44, paddingTop: 2 }}>{label}</Text>
                       <Text style={{ fontSize: type.meta, color: t.ink2, lineHeight: 19, flex: 1 }}>{textValue}</Text>
                     </View>
@@ -322,7 +322,7 @@ export default function Landing() {
           paddingHorizontal: 16,
         }}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TortoiseMark size={24} />
           <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>ToWin</Text>
         </View>

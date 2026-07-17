@@ -5,6 +5,7 @@
 // "Offer to Help". Applied: "Waiting to hear back" + underlined Withdraw;
 // accepted: green "You're helping"; completed cards sit at 65% opacity.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { memo, useCallback, useState } from 'react';
 import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
@@ -17,7 +18,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
-import { useApplyMutations } from '../home/OpenRequestsCard';
+import { useApplyMutations } from '../../lib/useApplyMutations';
 
 const RADIUS_STEPS = [5, 10, 25, 50, 100];
 
@@ -33,7 +34,7 @@ function Pill({ label, tone = 'neutral' }) {
       style={{
         backgroundColor: styles.backgroundColor,
         borderRadius: radius.pill,
-        paddingHorizontal: 9,
+        paddingHorizontal: 8,
         paddingVertical: 4,
         alignSelf: 'flex-start',
       }}
@@ -45,8 +46,10 @@ function Pill({ label, tone = 'neutral' }) {
 
 // memo + stable onApply/onWithdraw (mutate fns, not mutation objects): a
 // refetch or radius toggle re-renders only rows whose data actually changed.
-const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = false, completed = false }) {
+const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId = null, completed = false }) {
+  const applying = applyingId === need.id; // only the tapped card shows progress (HCI rule 1)
   const { t, radius, type, fontFamily } = useTheme();
+  const router = useRouter();
   const mine = need.myApplicationStatus;
 
   const confirmWithdraw = () =>
@@ -79,20 +82,20 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = 
         </Text>
       ) : null}
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
         <Pill label={catLabel(need.category)} />
         {need.urgency === 'URGENT' ? (
           <View
             style={{
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 5,
+              gap: 4,
               backgroundColor: t.redWash2,
               borderWidth: 1,
               borderColor: t.redLineSoft,
               borderRadius: radius.pill,
-              paddingHorizontal: 10,
-              paddingVertical: 3,
+              paddingHorizontal: 8,
+              paddingVertical: 4,
             }}
           >
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
@@ -102,12 +105,24 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = 
         {completed ? <Pill label="Completed" tone="green" /> : null}
       </View>
 
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 10 }}>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 12 }}>
         {distance ? `${distance} · ` : ''}
         {need.elderName ? (
           <>
             Posted by{' '}
-            <Text style={{ color: t.blueDeep, textDecorationLine: 'underline' }}>{need.elderName}</Text>
+            {need.elderId ? (
+              <Text
+                accessibilityRole="link"
+                suppressHighlighting
+                onPress={() => router.push(`/user/${need.elderId}`)}
+                style={{ color: t.blueDeep, textDecorationLine: 'underline' }}
+              >
+                {need.elderName}
+              </Text>
+            ) : (
+              // no profile to open — never dress a name as a link it isn't
+              <Text style={{ fontWeight: '600' }}>{need.elderName}</Text>
+            )}
           </>
         ) : (
           'Posted'
@@ -147,7 +162,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = 
           variant="secondary"
           size="small"
           onPress={() => onApply(need.id)}
-          disabled={applying}
+          loading={applying}
           style={{ marginTop: 12 }}
         />
       )}
@@ -208,11 +223,11 @@ export default function OfferHelpList() {
         need={item}
         onApply={apply.mutate}
         onWithdraw={withdraw.mutate}
-        applying={apply.isPending}
+        applyingId={apply.isPending ? apply.variables : null}
         completed={seg === 'done'}
       />
     ),
-    [apply.mutate, apply.isPending, withdraw.mutate, seg]
+    [apply.mutate, apply.isPending, apply.variables, withdraw.mutate, seg]
   );
 
   return (
@@ -220,7 +235,7 @@ export default function OfferHelpList() {
       data={isLoading && seg === 'available' ? [] : shown}
       keyExtractor={(n) => n.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
-      contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: 64, gap: 10 }}
+      contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: 64, gap: 12 }}
       ListHeaderComponent={
         <View>
           <Text
@@ -237,11 +252,11 @@ export default function OfferHelpList() {
             ]}
             value={seg}
             onChange={setSeg}
-            style={{ marginTop: 14 }}
+            style={{ marginTop: 16 }}
           />
           {seg === 'available' ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <MapPin size={14} color={t.inkSlate} strokeWidth={1.8} />
                 <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
                   Showing needs within {radiusKm} km of you
@@ -251,7 +266,7 @@ export default function OfferHelpList() {
                 accessibilityRole="button"
                 accessibilityLabel={`Distance ${radiusKm} kilometres — tap to change`}
                 onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
-                hitSlop={{ top: 6, bottom: 6 }}
+                hitSlop={{ top: 7, bottom: 7 }}
                 style={({ pressed }) => ({
                   height: 30,
                   paddingHorizontal: 12,
@@ -270,7 +285,7 @@ export default function OfferHelpList() {
               </Pressable>
             </View>
           ) : (
-            <View style={{ height: 10 }} />
+            <View style={{ height: 12 }} />
           )}
         </View>
       }

@@ -9,6 +9,7 @@ import { RefreshControl, ScrollView } from 'react-native';
 import api from '../../src/api/client';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
 import MenuSheet from '../../src/components/home/MenuSheet';
+import SosCard from '../../src/components/home/SosCard';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
@@ -61,7 +62,18 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries();
+    // Refresh what Home actually shows — a blanket invalidateQueries() would
+    // stampede every mounted screen's queries at once.
+    const homeKeys = [
+      ['connections'],
+      ['trust-my-score'],
+      ['streak-me'],
+      ['profile-me'],
+      ['needs-open'],
+      ['needs-applications'],
+      ['block-list'],
+    ];
+    await Promise.all(homeKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
     setRefreshing(false);
   }, [queryClient]);
 
@@ -78,6 +90,9 @@ export default function HomeScreen() {
       >
         <GreetingHeader />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
+        {/* SOS stays on the elder's Home (audit 2026-07-17: it was swept behind
+            the menu in the redesign; the website keeps it one tap away). */}
+        {!isHelper && <SosCard />}
       </ScrollView>
 
       <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />

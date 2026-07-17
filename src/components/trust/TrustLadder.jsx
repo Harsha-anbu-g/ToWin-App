@@ -8,12 +8,13 @@ import { useTheme } from '../../theme/ThemeContext';
 
 export default function TrustLadder({ stageIndex, style }) {
   const { t } = useTheme();
-  // One spoken summary for the whole ladder — without it, screen readers hear
-  // nothing at all from the app's "shows where you ARE, numbered, always" feature.
+  // One spoken summary for the whole ladder — and it must count the SAME way
+  // as the visible "Stage N of 7" captions, or VoiceOver users are told a
+  // different position than sighted users (HCI rule 6).
   const label =
     stageIndex >= 6
-      ? 'Trust ladder: all 6 steps done — full trust reached'
-      : `Trust ladder: ${stageIndex} of 6 steps done`;
+      ? 'Trust ladder: Stage 7 of 7 — full trust reached'
+      : `Trust ladder: Stage ${Math.min(stageIndex + 1, 7)} of 7`;
   return (
     <View
       accessible
