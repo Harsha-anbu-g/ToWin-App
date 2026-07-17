@@ -40,7 +40,7 @@ function StatusPill({ status }) {
   );
 }
 
-function NeedCard({ need, onAccept, onComplete, onRemove }) {
+function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
   const { t, radius, type } = useTheme();
   const [open, setOpen] = useState(false);
   const applicants = need.applications ?? [];
@@ -99,16 +99,35 @@ function NeedCard({ need, onAccept, onComplete, onRemove }) {
                   </Text>
                 ) : null}
               </View>
-              <Button title="Accept" variant="secondary" onPress={() => onAccept(need, app)} />
+              <Button
+                title="Accept"
+                variant="secondary"
+                loading={pending.acceptingHelperId === app.helperId}
+                onPress={() => onAccept(need, app)}
+              />
             </View>
           ))
         : null}
 
       {need.status === 'ASSIGNED' ? (
-        <Button title="Mark completed" variant="secondary" onPress={() => onComplete(need)} style={{ marginTop: 12 }} />
+        <Button
+          title="Mark completed"
+          variant="secondary"
+          loading={pending.completing}
+          onPress={() => onComplete(need)}
+          style={{ marginTop: 12 }}
+        />
       ) : null}
-      {open && need.status === 'OPEN' ? (
-        <Button title="Remove" variant="destructive" onPress={() => onRemove(need)} style={{ marginTop: 12 }} />
+      {need.status === 'OPEN' ? (
+        // Remove must not live inside the applicant expansion — a request with
+        // zero applicants has no expansion, yet still has to be deletable (HCI rule 3).
+        <Button
+          title="Remove"
+          variant="destructive"
+          loading={pending.removing}
+          onPress={() => onRemove(need)}
+          style={{ marginTop: 12 }}
+        />
       ) : null}
     </View>
   );
@@ -223,6 +242,14 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
                 onAccept={confirmAccept}
                 onComplete={confirmComplete}
                 onRemove={confirmRemove}
+                pending={{
+                  acceptingHelperId:
+                    accept.isPending && accept.variables?.needId === need.id
+                      ? accept.variables.helperId
+                      : null,
+                  completing: complete.isPending && complete.variables === need.id,
+                  removing: remove.isPending && remove.variables === need.id,
+                }}
               />
             </View>
           ))}
