@@ -138,6 +138,18 @@ export default function ChatThread() {
     send.mutate(content);
   };
 
+  // The just-sent message must exist SOMEWHERE on screen while the server
+  // works — a local bubble with a "Sending…" caption (HCI rules 1 + 9). It
+  // resolves into the real message on success and vanishes on error (the
+  // text goes back into the composer).
+  const listData = useMemo(() => {
+    if (!send.isPending || typeof send.variables !== 'string') return messages;
+    return [
+      { id: '__sending__', senderId: user?.userId, content: send.variables, sending: true, showDay: false },
+      ...messages,
+    ];
+  }, [messages, send.isPending, send.variables, user?.userId]);
+
   const renderItem = useCallback(({ item }) => {
     const mine = item.senderId === user?.userId;
     return (
@@ -175,8 +187,9 @@ export default function ChatThread() {
               fontVariant: ['tabular-nums'],
             }}
           >
-            {timeLabel(item.createdAt)}
-            {mine ? (item.seenAt ? ' · Seen' : ' · Sent') : ''}
+            {item.sending
+              ? 'Sending…'
+              : `${timeLabel(item.createdAt)}${mine ? (item.seenAt ? ' · Seen' : ' · Sent') : ''}`}
           </Text>
         </View>
       </View>
@@ -226,7 +239,7 @@ export default function ChatThread() {
       >
         <FlatList
           inverted
-          data={messages}
+          data={listData}
           keyExtractor={(m) => m.id}
           renderItem={renderItem}
           contentContainerStyle={{ padding: spacing[4] }}
