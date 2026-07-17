@@ -9,24 +9,38 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
+import { EMAIL_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function ForgotPassword() {
   const { t, spacing, text, fontFamily } = useTheme();
   const router = useRouter();
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
+    if (!EMAIL_RE.test(email.trim())) {
+      setError('Enter a valid email address');
+      return;
+    }
+    setError('');
     setLoading(true);
     try {
       await api.post('/auth/forgot-password', { email });
-    } catch {
-      // Intentionally ignore — we never reveal whether the email exists.
+      setSent(true);
+    } catch (err) {
+      if (err?.response) {
+        // The server answered — never reveal whether the email exists.
+        setSent(true);
+      } else {
+        // No reply at all: an offline elder must not wait for an email
+        // that was never requested (HCI rule 9).
+        setError('Check your connection and try again.');
+      }
     } finally {
       setLoading(false);
-      setSent(true);
     }
   };
 
@@ -83,7 +97,12 @@ export default function ForgotPassword() {
         <Input
           label="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(v) => {
+            setEmail(v);
+            if (error) setError('');
+          }}
+          error={error}
+          helper={email.trim() ? undefined : 'Enter your email first — then the button below wakes up.'}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
@@ -96,6 +115,7 @@ export default function ForgotPassword() {
           onPress={submit}
           loading={loading}
           disabled={!email.trim()}
+          accessibilityHint={email.trim() ? undefined : 'Enter your email first'}
         />
         {backLink}
       </Card>
