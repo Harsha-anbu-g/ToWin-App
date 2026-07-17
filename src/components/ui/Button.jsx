@@ -11,6 +11,9 @@ export default function Button({
   title,
   onPress,
   variant = 'primary',
+  // size="small" is the ONE sanctioned compact pill (38pt visual) for inside
+  // cards — hitSlop keeps the effective target ≥44pt. No hand-rolled pills.
+  size = 'regular',
   disabled = false,
   loading = false,
   style,
@@ -19,6 +22,7 @@ export default function Button({
 }) {
   const { t, radius } = useTheme();
   const blocked = disabled || loading;
+  const small = size === 'small';
 
   const shell = {
     primary: {
@@ -63,6 +67,7 @@ export default function Button({
       accessibilityState={{ disabled: blocked, busy: loading }}
       disabled={blocked}
       onPress={onPress}
+      hitSlop={small ? { top: 4, bottom: 4 } : undefined}
       style={({ pressed }) => [
         {
           borderRadius: radius.pill,
@@ -74,6 +79,7 @@ export default function Button({
           opacity: pressed ? 0.85 : disabled && variant !== 'primary' ? 0.5 : 1,
         },
         shell,
+        small ? { height: 38, paddingHorizontal: 16 } : null,
         style,
       ]}
     >

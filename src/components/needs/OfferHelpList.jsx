@@ -12,6 +12,7 @@ import api from '../../api/client';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
+import Button from '../ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
 import LoadError from '../ui/LoadError';
@@ -141,25 +142,14 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applying = 
           <Pill label="Not this time" />
         </View>
       ) : (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Offer to Help"
+        <Button
+          title="Offer to Help"
+          variant="secondary"
+          size="small"
           onPress={() => onApply(need.id)}
           disabled={applying}
-          style={({ pressed }) => ({
-            height: 40,
-            borderRadius: radius.pill,
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            borderColor: t.blueSoft,
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginTop: 12,
-            opacity: pressed || applying ? 0.7 : 1,
-          })}
-        >
-          <Text style={{ fontSize: type.meta, fontWeight: '700', color: t.blueDeep }}>Offer to Help</Text>
-        </Pressable>
+          style={{ marginTop: 12 }}
+        />
       )}
     </View>
   );
