@@ -1,6 +1,8 @@
 // Trust Score (3k) — informational breakdown: summary card (serif 42 score,
 // tier chip, next-tier line, avatar stack) and per-helper point cards with a
 // two-tone bar + three meters (stages /7 dots, review /5 stars, profile /3).
+// Elders trade the third profile point for the flat family point (7+5+2+1,
+// FAM-405) — FamilyCard + a per-customer Family row render from the data.
 // Climbing the ladder lives on the Dashboard (3d); this screen explains.
 import { useQuery } from '@tanstack/react-query';
 import { Star } from 'lucide-react-native';
@@ -34,8 +36,11 @@ function nextTier(score) {
   return null; // already at the top
 }
 
-function Dots({ earned, max, size = 9 }) {
+function Dots({ earned, max, size = 9, color }) {
   const { t } = useTheme();
+  // Default stays action-family blue (the meter rows); the FamilyCard passes
+  // the trust token — trust semantics never wear action colors (FAM-405).
+  const fill = color ?? t.blueDeep;
   return (
     <View style={{ flexDirection: 'row', gap: 4 }}>
       {Array.from({ length: max }).map((_, i) => (
@@ -45,7 +50,7 @@ function Dots({ earned, max, size = 9 }) {
             width: size,
             height: size,
             borderRadius: size / 2,
-            backgroundColor: i < earned ? t.blueDeep : t.dotIdle,
+            backgroundColor: i < earned ? fill : t.dotIdle,
           }}
         />
       ))}
@@ -80,6 +85,44 @@ function Meter({ label, right, children }) {
         </Text>
       </View>
     </View>
+  );
+}
+
+// Family connected (FAM-405, 2026-07-19): one flat point once any family
+// member is linked. Elders only — the backend sends `family` for role ELDER
+// alone, so the data's presence is the render condition (no role check).
+// Dots are data-driven (earned of max, really 0|1 of 1) — the web tests'
+// {2, 5} mock is stale; never hardcode five dots.
+function FamilyCard({ family }) {
+  const { t, spacing, type } = useTheme();
+  if (!family) return null;
+  const { earned, max } = family;
+  return (
+    <Card style={{ marginTop: spacing[3] }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold }}>
+            Family connected
+          </Text>
+          <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 3 }}>
+            One point for having your family connected — however many family members you add.
+          </Text>
+        </View>
+        <Dots earned={earned} max={max} color={t.trustGold} />
+        <Text
+          accessibilityLabel={`+${earned} of ${max}`}
+          style={{
+            fontSize: type.meta,
+            fontWeight: '600',
+            color: earned > 0 ? t.trustGold : t.inkFaint2,
+            fontVariant: ['tabular-nums'],
+          }}
+        >
+          +{earned}
+          <Text style={{ fontWeight: '400', color: t.inkFaint2 }}> of {max}</Text>
+        </Text>
+      </View>
+    </Card>
   );
 }
 
@@ -122,6 +165,13 @@ function HelperPointsCard({ card }) {
       <Meter label="Your profile" right={`${card.profile}/${card.profileMax}`}>
         <Dots earned={card.profile} max={card.profileMax} />
       </Meter>
+      {/* Elders' per-customer 15 is 7+5+2+1 — familyMax is 0 for everyone
+          else, so the row hides itself (web parity: sky dots like the rest). */}
+      {card.familyMax > 0 ? (
+        <Meter label="Family" right={`${card.family}/${card.familyMax}`}>
+          <Dots earned={card.family} max={card.familyMax} />
+        </Meter>
+      ) : null}
     </Card>
   );
 }
@@ -153,7 +203,9 @@ export default function TrustScreen() {
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
         {helping
           ? 'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
-          : 'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'}
+          : // Elder split (FAM-405): elders score 7+5+2+1 — the family point
+            // replaces the third profile point, so the total stays 15.
+            'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.'}
       </Text>
 
       {isLoading ? (
@@ -219,6 +271,8 @@ export default function TrustScreen() {
               </View>
             ) : null}
           </Card>
+
+          <FamilyCard family={breakdown?.family} />
 
           {/* Per-helper point meters */}
           {customers.length > 0 ? (
