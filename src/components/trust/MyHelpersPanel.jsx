@@ -10,6 +10,7 @@ import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
+import FamilyShareToggle from '../family/FamilyShareToggle';
 import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
@@ -94,6 +95,13 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           style={{ marginTop: 16 }}
         />
       )}
+
+      {/* Family visibility (FAM-404): the elder's per-friendship choice —
+          helpers' MyEldersPanel never renders this. Waits for ['connections']
+          to resolve: sharedWithFamily lives on the connection object. */}
+      {conn ? (
+        <FamilyShareToggle connectionId={conn.id} shared={conn.sharedWithFamily} />
+      ) : null}
 
       {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
       <Button
