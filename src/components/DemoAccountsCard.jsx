@@ -9,10 +9,13 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import { yearsOld } from '../lib/copy';
 
-// Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as web.
+// Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as
+// web. Sarah (FAM-406, 2026-07-19) is the seeded FAMILY seat: fixed sub line,
+// no computed age (web parity — she's introduced by relationship, not age).
 const DEMO = {
   ELDER: { identifier: 'elder', password: '12345678', label: 'Try as an Elder', sub: `Margaret, ${yearsOld('1953-05-14')}` },
   HELPER: { identifier: 'helper', password: '123456789', label: 'Try as a Helper', sub: `Harsha, ${yearsOld('2003-03-14')}` },
+  FAMILY: { identifier: 'demo.sarah@towin.app', password: 'DemoSarah!2026', label: 'Try as Family', sub: "Sarah, Margaret's daughter" },
 };
 
 export default function DemoAccountsCard({ onError }) {
@@ -40,6 +43,36 @@ export default function DemoAccountsCard({ onError }) {
     }
   };
 
+  // One chip recipe for all three seats — layout (half column vs full row)
+  // is the only thing that varies, so it's the only argument.
+  const renderChip = (role, layout) => (
+    <Pressable
+      key={role}
+      accessibilityRole="button"
+      accessibilityLabel={DEMO[role].label}
+      accessibilityState={{ disabled: !!guestLoading, busy: guestLoading === role }}
+      disabled={!!guestLoading}
+      onPress={() => handleGuest(role)}
+      style={({ pressed }) => ({
+        ...layout,
+        minHeight: 54,
+        backgroundColor: t.canvas,
+        borderWidth: 1,
+        borderColor: t.border,
+        borderRadius: radius.input,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: spacing[2],
+        opacity: pressed || (guestLoading && guestLoading !== role) ? 0.6 : 1,
+      })}
+    >
+      <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>
+        {guestLoading === role ? 'Opening…' : DEMO[role].label}
+      </Text>
+      <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{DEMO[role].sub}</Text>
+    </Pressable>
+  );
+
   return (
     <View style={{ marginTop: spacing[6] }}>
       {/* hairline "or" divider */}
@@ -56,34 +89,13 @@ export default function DemoAccountsCard({ onError }) {
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing[2] }}>
-        {['ELDER', 'HELPER'].map((role) => (
-          <Pressable
-            key={role}
-            accessibilityRole="button"
-            accessibilityLabel={DEMO[role].label}
-            accessibilityState={{ disabled: !!guestLoading, busy: guestLoading === role }}
-            disabled={!!guestLoading}
-            onPress={() => handleGuest(role)}
-            style={({ pressed }) => ({
-              flex: 1,
-              minHeight: 54,
-              backgroundColor: t.canvas,
-              borderWidth: 1,
-              borderColor: t.border,
-              borderRadius: radius.input,
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingVertical: spacing[2],
-              opacity: pressed || (guestLoading && guestLoading !== role) ? 0.6 : 1,
-            })}
-          >
-            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>
-              {guestLoading === role ? 'Opening…' : DEMO[role].label}
-            </Text>
-            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{DEMO[role].sub}</Text>
-          </Pressable>
-        ))}
+        {renderChip('ELDER', { flex: 1 })}
+        {renderChip('HELPER', { flex: 1 })}
       </View>
+      {/* FAM-406 (2026-07-19): the family chip's label + sub don't fit a half
+          column, so it takes the full row below the pair (mirrors the
+          register role cards). */}
+      {renderChip('FAMILY', { marginTop: spacing[2] })}
     </View>
   );
 }
