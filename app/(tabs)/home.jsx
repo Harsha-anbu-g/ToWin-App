@@ -9,7 +9,6 @@ import { RefreshControl, ScrollView } from 'react-native';
 import api from '../../src/api/client';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
 import MenuSheet from '../../src/components/home/MenuSheet';
-import SosCard from '../../src/components/home/SosCard';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
@@ -90,9 +89,8 @@ export default function HomeScreen() {
       >
         <GreetingHeader />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
-        {/* SOS stays on the elder's Home (audit 2026-07-17: it was swept behind
-            the menu in the redesign; the website keeps it one tap away). */}
-        {!isHelper && <SosCard />}
+        {/* SOS hidden for now (user call 2026-07-17) — SosCard stays in the
+            codebase for when it returns. */}
       </ScrollView>
 
       <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />

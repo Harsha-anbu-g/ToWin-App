@@ -20,22 +20,25 @@ import SkeletonCard from '../ui/Skeleton';
 import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
-// Backend trust-level enum, in ladder order (index = stage climbed).
-const LEVEL_ORDER = [
-  'JUST_CONNECTED',
-  'CHATTING',
-  'FRIENDLY',
-  'PHONE_READY',
-  'MET_IN_PERSON',
-  'HELPING_HAND',
-  'FULLY_TRUSTED',
-];
+// Backend TrustLevel enum name → ladder index (source of truth: backend
+// common/enums/TrustLevel.java, mirrored by website TrustJourney.jsx). Used
+// as the fallback when /trust/my-score hasn't resolved yet — wrong names
+// here silently pin every elder to stage 0.
+const LEVEL_INDEX = {
+  DISCOVERED: 0,
+  MESSAGING: 1,
+  PHONE_CALL: 2,
+  VIDEO_CALL: 3,
+  VERIFIED: 4,
+  FIRST_MEET: 5,
+  TRUSTED: 6,
+};
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met in person', 'Trusted'];
 
 function ElderCard({ conn, scoreCard, onEnd, onConfirm, onPause }) {
   const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
-  const stageIndex = scoreCard?.stageIndex ?? Math.max(0, LEVEL_ORDER.indexOf(conn.currentTrustLevel));
+  const stageIndex = scoreCard?.stageIndex ?? LEVEL_INDEX[conn.currentTrustLevel] ?? 0;
   const atTop = stageIndex >= 6;
   const waiting = conn.confirmedByMe && !conn.confirmedByOther;
   const next = SHORT_STAGES[Math.min(stageIndex + 1, 6)];
@@ -149,7 +152,7 @@ export default function MyEldersPanel() {
     blocked,
     (c) => c.otherUserId
   );
-  const stageOf = (c) => scoreOf(c.id)?.stageIndex ?? Math.max(0, LEVEL_ORDER.indexOf(c.currentTrustLevel));
+  const stageOf = (c) => scoreOf(c.id)?.stageIndex ?? LEVEL_INDEX[c.currentTrustLevel] ?? 0;
   const trusted = active.filter((c) => stageOf(c) >= 6);
   const building = active.filter((c) => stageOf(c) < 6);
   const shown = seg === 'trusted' ? trusted : building;

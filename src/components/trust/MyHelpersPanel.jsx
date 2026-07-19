@@ -5,7 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
@@ -22,7 +22,7 @@ import TrustLadder from './TrustLadder';
 // Short stage names for the ladder footer (handoff §Interactions).
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
-function HelperCard({ card, conn, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
+function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
   const { t, radius, type } = useTheme();
   const router = useRouter();
   const atTop = card.stageIndex >= 6;
@@ -38,13 +38,20 @@ function HelperCard({ card, conn, confirmedByMe, confirmedByOther, onConfirm, on
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
           <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
-            Stage {Math.min(card.stageIndex + 1, 7)} of 7 · {card.currentStageLabel}
+            Stage {Math.min(card.stageIndex + 1, 7)} of 7 · {SHORT_STAGES[Math.min(card.stageIndex, 6)]}
           </Text>
         </View>
-        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-          {card.total}
-          <Text style={{ fontWeight: '400', fontSize: type.caption }}>/{card.totalMax}</Text>
-        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Trust score ${card.total} of ${card.totalMax}. Open your Trust Score page`}
+          onPress={() => router.push('/trust')}
+          hitSlop={10}
+        >
+          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
+            {card.total}
+            <Text style={{ fontWeight: '400', fontSize: type.caption }}>/{card.totalMax}</Text>
+          </Text>
+        </Pressable>
       </View>
 
       {/* Actions — parity with the helper's ElderCard: the elder can message or
@@ -74,6 +81,10 @@ function HelperCard({ card, conn, confirmedByMe, confirmedByOther, onConfirm, on
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
           You've started the next step — waiting for {card.customerName} to accept.
         </Text>
+      ) : !connReady ? (
+        // Confirmed flags are unknown until ['connections'] resolves — a
+        // premature "Start the next step" would 400 as already-confirmed.
+        null
       ) : (
         <Button
           title={ctaLabel}
@@ -187,12 +198,18 @@ export default function MyHelpersPanel() {
   const building = customers.filter((c) => c.stageIndex < 6);
   const shown = seg === 'trusted' ? trusted : building;
   // A paused friendship vanishes from the score breakdown (backend counts
-  // ACTIVE only) — surface it from the connections list so Resume stays visible.
-  const paused = filterBlocked(
+  // ACTIVE only) — surface it from the connections list so Resume stays
+  // visible, in the SAME segment the person was in when paused: the pause
+  // dialog promises "Nothing is lost", so a trusted friend must not vanish
+  // from Trusted Friends into the other tab.
+  const pausedAll = filterBlocked(
     (connections ?? []).filter((c) => c.status === 'PAUSED'),
     blocked,
     (c) => c.otherUserId
   );
+  const pausedTrusted = pausedAll.filter((c) => c.currentTrustLevel === 'TRUSTED');
+  const pausedBuilding = pausedAll.filter((c) => c.currentTrustLevel !== 'TRUSTED');
+  const paused = seg === 'trusted' ? pausedTrusted : pausedBuilding;
 
   return (
     <View>
@@ -208,8 +225,8 @@ export default function MyHelpersPanel() {
 
       <SegmentedControl
         segments={[
-          { key: 'trusted', label: 'Trusted Friends', count: trusted.length },
-          { key: 'building', label: 'Building Trust', count: building.length },
+          { key: 'trusted', label: 'Trusted Friends', count: trusted.length + pausedTrusted.length },
+          { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
         ]}
         value={seg}
         onChange={setSeg}
@@ -220,7 +237,7 @@ export default function MyHelpersPanel() {
         <SkeletonCard lines={4} />
       ) : isError ? (
         <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 16 }} />
-      ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
+      ) : shown.length === 0 && paused.length === 0 ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
@@ -237,6 +254,7 @@ export default function MyHelpersPanel() {
               key={card.connectionId}
               card={card}
               conn={c}
+              connReady={!!connections}
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}
@@ -245,7 +263,7 @@ export default function MyHelpersPanel() {
           );
         })
       )}
-      {!isLoading && !isError && seg === 'building'
+      {!isLoading && !isError
         ? paused.map((c) => (
             <PausedCard
               key={c.id}

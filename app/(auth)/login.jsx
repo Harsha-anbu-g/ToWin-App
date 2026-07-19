@@ -2,7 +2,7 @@
 // demo accounts first (they bypass the login rate limiter), then the form card.
 // Login body field is `identifier` (username/email/phone), NOT `email`.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -14,9 +14,13 @@ import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { spacing } from '../../src/theme/tokens';
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FIELD_GAP = { marginBottom: spacing[4] };
 
 export default function Login() {
-  const { t, spacing, radius, text, fontFamily } = useTheme();
+  const { t, radius, text, fontFamily } = useTheme();
   const { login, sessionExpired } = useAuth();
   const router = useRouter();
 
@@ -25,6 +29,34 @@ export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+
+  // Stable per-field handlers + memo'd eye slot (the action.jsx pattern):
+  // Input is memo'd (floating-label Paper fields), so a keystroke in one
+  // field must not hand every sibling fresh props — the source of typing
+  // lag on slow phones.
+  const setIdentifier = useCallback((v) => {
+    setForm((f) => ({ ...f, identifier: v }));
+    setFieldErrors((f) => ({ ...f, identifier: '' }));
+  }, []);
+  const setPassword = useCallback((v) => {
+    setForm((f) => ({ ...f, password: v }));
+    setFieldErrors((f) => ({ ...f, password: '' }));
+  }, []);
+  const togglePwd = useCallback(() => setShowPwd((v) => !v), []);
+  const pwdEye = useMemo(
+    () => (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={showPwd ? 'Hide password' : 'Show password'}
+        onPress={togglePwd}
+        hitSlop={8}
+        style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+      >
+        {showPwd ? <EyeOff size={18} color={t.ink3} /> : <Eye size={18} color={t.ink3} />}
+      </Pressable>
+    ),
+    [showPwd, togglePwd, t.ink3]
+  );
 
   const finishLogin = async (token) => {
     await login(token);
@@ -111,38 +143,22 @@ export default function Login() {
         <Input
           label="Username, Gmail, or phone"
           value={form.identifier}
-          onChangeText={(v) => {
-            setForm((f) => ({ ...f, identifier: v }));
-            setFieldErrors((f) => ({ ...f, identifier: '' }));
-          }}
+          onChangeText={setIdentifier}
           error={fieldErrors.identifier}
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="username"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <Input
           label="Password"
           value={form.password}
-          onChangeText={(v) => {
-            setForm((f) => ({ ...f, password: v }));
-            setFieldErrors((f) => ({ ...f, password: '' }));
-          }}
+          onChangeText={setPassword}
           error={fieldErrors.password}
           secureTextEntry={!showPwd}
           textContentType="password"
-          rightSlot={
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={showPwd ? 'Hide password' : 'Show password'}
-              onPress={() => setShowPwd((v) => !v)}
-              hitSlop={8}
-              style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-            >
-              {showPwd ? <EyeOff size={18} color={t.ink3} /> : <Eye size={18} color={t.ink3} />}
-            </Pressable>
-          }
+          rightSlot={pwdEye}
         />
 
         <Pressable

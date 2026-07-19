@@ -4,7 +4,7 @@
 // state changes resolve instantly (reduced-motion safe). The tortoise is an
 // illustration — its colors stay literal in night mode, like the brand mark.
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Polygon, Text as SvgText } from 'react-native-svg';
 import Button from '../src/components/ui/Button';
@@ -61,8 +61,10 @@ function TimerRing({ timeLeft }) {
   );
 }
 
-// The full canvas tortoise with the 12 tappable shell cells.
-function TortoiseBoard({ cards, onFlip, disabled }) {
+// The full canvas tortoise with the 12 tappable shell cells. memo'd: the 1s
+// countdown tick re-renders GameScreen every second, and this ~45-node SVG
+// must not repaint with it — only when a card actually flips.
+const TortoiseBoard = memo(function TortoiseBoard({ cards, onFlip, disabled }) {
   const { width } = useWindowDimensions();
   const boardW = Math.min(width - 32, 360);
 
@@ -138,7 +140,7 @@ function TortoiseBoard({ cards, onFlip, disabled }) {
       })}
     </Svg>
   );
-}
+});
 
 export default function GameScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
@@ -170,7 +172,8 @@ export default function GameScreen() {
     if (phase === 'playing' && won(cards)) setPhase('won');
   }, [cards, phase]);
 
-  const flip = (idx) => {
+  // Stable across timer ticks so the memo'd board skips the 1s re-render.
+  const flip = useCallback((idx) => {
     if (locked || phase !== 'playing' || paused) return;
     const card = cards[idx];
     if (card.flipped || card.matched || selected.length >= 2) return;
@@ -186,7 +189,7 @@ export default function GameScreen() {
         setLocked(false);
       }, 1200);
     }
-  };
+  }, [locked, phase, paused, cards, selected]);
 
   const restart = () => {
     clearTimeout(flipBackTimer.current);

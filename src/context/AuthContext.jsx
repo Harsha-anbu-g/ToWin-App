@@ -5,8 +5,10 @@
 // so pages never render broken and silently empty. Absent `ev` claim
 // (old/grandfathered tokens) = verified.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import * as SecureStore from 'expo-secure-store';
 import { setOnSessionExpired, setTokenGetter } from '../api/client';
+import { clearDrafts } from '../lib/chatDrafts';
 import { parseJwtPayload } from '../lib/jwt';
 
 const KEY = 'towin-token';
@@ -32,15 +34,21 @@ export function AuthProvider({ children }) {
   const [sessionExpired, setSessionExpired] = useState(false);
   const userRef = useRef(null);
   userRef.current = user;
+  const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
     setUser(null);
+    // The next account on this phone must not see this account's cached
+    // private data (chats, connections, profile) — wipe the query cache and
+    // any unsent chat drafts.
+    queryClient.clear();
+    clearDrafts();
     try {
       await SecureStore.deleteItemAsync(KEY);
     } catch {
       // storage unavailable — in-memory logout still holds for this session
     }
-  }, []);
+  }, [queryClient]);
 
   const login = useCallback(async (token) => {
     const next = userFromToken(token);

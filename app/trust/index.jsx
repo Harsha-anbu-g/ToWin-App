@@ -11,7 +11,12 @@ import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
+import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
+
+// Redesign stage vocabulary (mirrors the trust ladder / SHORT_STAGES) — the
+// backend's pre-redesign labels ("Verified") must not leak into the UI.
+const STAGE_LABELS = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met in person', 'Trusted'];
 
 // Tier ladder (web parity): name + points needed to enter it.
 const TIERS = [
@@ -87,7 +92,7 @@ function HelperPointsCard({ card }) {
         <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{card.currentStageLabel}</Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{STAGE_LABELS[Math.min(card.stageIndex, 6)]}</Text>
         </View>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
           {card.total} <Text style={{ fontWeight: '400', fontSize: type.caption }}>/ {card.totalMax} points</Text>
@@ -123,6 +128,10 @@ function HelperPointsCard({ card }) {
 
 export default function TrustScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
+  const { user } = useAuth();
+  // One screen, two perspectives: the score cards are simply the other party
+  // of each connection, so every line of copy must match who is looking.
+  const helping = user?.role === 'HELPER' || user?.role === 'BOTH';
 
   const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
@@ -142,8 +151,9 @@ export default function TrustScreen() {
         Your <Text style={{ color: t.trustGold }}>Trust</Text> Score
       </Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
-        Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from
-        their review, and 3 for your profile.
+        {helping
+          ? 'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
+          : 'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'}
       </Text>
 
       {isLoading ? (
@@ -222,7 +232,7 @@ export default function TrustScreen() {
                   marginTop: spacing[5],
                 }}
               >
-                Your helpers
+                {helping ? 'The people you help' : 'Your helpers'}
               </Text>
               {customers.map((card) => (
                 <HelperPointsCard key={card.connectionId} card={card} />

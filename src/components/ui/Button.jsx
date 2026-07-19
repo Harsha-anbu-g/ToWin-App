@@ -3,7 +3,9 @@
 //   secondary   tonal wash chip — blueWash fill, blueSoft border, blueDeep text
 //   text        quiet blueDeep label, no chrome
 //   destructive parchment card fill, red hairline, redDeep text
-// Same API as before so every screen keeps working. >=44pt targets.
+// Same API as before so every screen keeps working. >=44pt targets; heights
+// are MINIMUMS so large OS text (elder-first) wraps to 2 lines instead of
+// clipping inside a fixed pill.
 import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -26,27 +28,27 @@ export default function Button({
 
   const shell = {
     primary: {
-      height: 50,
+      minHeight: 50,
       backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
     },
     // Ghost, like the website's .ghost-btn — no fill, hairline sky border.
     // A wash-filled pill reads "generated"; a printed hairline reads designed.
     secondary: {
-      height: 44,
+      minHeight: 44,
       backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: t.blueSoft,
     },
     text: {
-      height: 44,
+      minHeight: 44,
       backgroundColor: 'transparent',
       borderWidth: 0,
     },
     // Plain red text, iOS-style — destructive must not share the pill shape
     // of ordinary actions (it reads as "just another button" otherwise).
     destructive: {
-      height: 44,
+      minHeight: 44,
       backgroundColor: 'transparent',
       borderWidth: 0,
     },
@@ -76,15 +78,20 @@ export default function Button({
           flexDirection: 'row',
           gap: 8,
           paddingHorizontal: 20,
+          paddingVertical: small ? 6 : 8,
           opacity: pressed ? 0.85 : disabled && variant !== 'primary' ? 0.5 : 1,
         },
         shell,
-        small ? { height: 38, paddingHorizontal: 16 } : null,
+        small ? { minHeight: 38, paddingHorizontal: 16 } : null,
         style,
       ]}
     >
       {loading ? <ActivityIndicator size="small" color={label.color} /> : null}
-      <Text numberOfLines={1} style={{ fontSize: label.fontSize, fontWeight: '600', letterSpacing: 0.1, color: label.color }}>
+      <Text
+        numberOfLines={2}
+        maxFontSizeMultiplier={2}
+        style={{ fontSize: label.fontSize, fontWeight: '600', letterSpacing: 0.1, color: label.color, textAlign: 'center' }}
+      >
         {title}
       </Text>
     </Pressable>

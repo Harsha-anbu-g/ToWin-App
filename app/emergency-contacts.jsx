@@ -1,11 +1,11 @@
 // Emergency contacts — port of EmergencyContacts.jsx: list, add, remove
-// (create/read/delete only — no edit endpoint exists). SOS lives on Home.
+// (create/read/delete only — no edit endpoint exists). The SOS button is
+// hidden app-wide for now (user call 2026-07-17); contacts remain manageable.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import api, { friendlyWriteError } from '../src/api/client';
-import SosCard from '../src/components/home/SosCard';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
@@ -13,9 +13,14 @@ import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
+import { spacing } from '../src/theme/tokens';
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FIELD_GAP = { marginBottom: spacing[4] };
+const FIELD_GAP_LG = { marginBottom: spacing[5] };
 
 export default function EmergencyContacts() {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, text, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
@@ -26,6 +31,17 @@ export default function EmergencyContacts() {
 
   const [form, setForm] = useState({ name: '', phone: '', relationship: '' });
   const [formError, setFormError] = useState('');
+
+  // Stable per-field handlers (the action.jsx pattern): Input is memo'd
+  // (floating-label Paper fields), so a keystroke in one field must not
+  // re-render its siblings.
+  const fieldHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        ['name', 'phone', 'relationship'].map((key) => [key, (v) => setForm((f) => ({ ...f, [key]: v }))])
+      ),
+    []
+  );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] });
 
@@ -68,18 +84,17 @@ export default function EmergencyContacts() {
   };
 
   const confirmRemove = (contact) =>
-    Alert.alert('Remove this contact?', `${contact.name} will no longer receive your SOS alerts.`, [
+    Alert.alert('Remove this contact?', `${contact.name} will be removed from your emergency contacts.`, [
       { text: 'Keep them', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => remove.mutate(contact.id) },
     ]);
 
   return (
     <Screen back title="Emergency" keyboard>
-      <SosCard />
 
       <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-          These people get an alert the moment you press the SOS button above.
+          These are the people to reach quickly if something ever happens.
         </Text>
       </Card>
 
@@ -156,22 +171,22 @@ export default function EmergencyContacts() {
         <Input
           label="Name"
           value={form.name}
-          onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-          style={{ marginBottom: spacing[4] }}
+          onChangeText={fieldHandlers.name}
+          style={FIELD_GAP}
         />
         <Input
           label="Phone number"
           value={form.phone}
-          onChangeText={(v) => setForm((f) => ({ ...f, phone: v }))}
+          onChangeText={fieldHandlers.phone}
           keyboardType="phone-pad"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Who they are to you"
           value={form.relationship}
-          onChangeText={(v) => setForm((f) => ({ ...f, relationship: v }))}
+          onChangeText={fieldHandlers.relationship}
           helper='Like "daughter", "neighbor", or "family friend".'
-          style={{ marginBottom: spacing[5] }}
+          style={FIELD_GAP_LG}
         />
         <Button
           title={add.isPending ? 'Adding…' : 'Add contact'}

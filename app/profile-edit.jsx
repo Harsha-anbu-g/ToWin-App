@@ -5,7 +5,7 @@
 // (recognition over recall); pinned Save Changes + Cancel (3i).
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
@@ -18,6 +18,7 @@ import { useToast } from '../src/context/ToastContext';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { yearsOld } from '../src/lib/copy';
 import { useTheme } from '../src/theme/ThemeContext';
+import { spacing } from '../src/theme/tokens';
 
 const toList = (s) =>
   s
@@ -26,6 +27,25 @@ const toList = (s) =>
     .filter(Boolean);
 
 const GENDERS = ['Male', 'Female', 'Other'];
+
+const EMPTY_FORM = {
+  name: '',
+  bio: '',
+  tags: '', // interests (elder) / skillsOffered (helper)
+  extraTags: '', // lookingFor (elder) / hobbies (helper)
+  languages: '',
+  phone: '',
+  city: '',
+  dateOfBirth: '',
+  occupation: '',
+  gender: '',
+  facebookUrl: '',
+  instagramUrl: '',
+};
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FIELD_GAP = { marginBottom: spacing[4] };
+const BIO_INPUT_STYLE = { minHeight: 100, textAlignVertical: 'top' };
 
 function SectionTitle({ children }) {
   const { t, fontFamily } = useTheme();
@@ -40,7 +60,7 @@ function SectionTitle({ children }) {
 }
 
 export default function ProfileEdit() {
-  const { t, spacing, type } = useTheme();
+  const { t, type } = useTheme();
   const { user } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -53,27 +73,17 @@ export default function ProfileEdit() {
     queryFn: async () => (await api.get('/profile/me')).data,
   });
 
-  const [form, setForm] = useState({
-    name: '',
-    bio: '',
-    tags: '', // interests (elder) / skillsOffered (helper)
-    extraTags: '', // lookingFor (elder) / hobbies (helper)
-    languages: '',
-    phone: '',
-    city: '',
-    dateOfBirth: '',
-    occupation: '',
-    gender: '',
-    facebookUrl: '',
-    instagramUrl: '',
-  });
-  const [loadedFrom, setLoadedFrom] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [prefilled, setPrefilled] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
 
-  // Prefill once when the profile arrives (don't clobber in-progress edits)
+  // Prefill exactly ONCE. An object-identity guard is not enough here: photo
+  // and ID uploads invalidate ['profile-me'] and the refetched object is
+  // always a new reference (presigned photoUrl differs per fetch), which
+  // would re-run the prefill and wipe typed-but-unsaved fields.
   useEffect(() => {
-    if (me && loadedFrom !== me) {
+    if (me && !prefilled) {
       setForm({
         name: me.name ?? '',
         bio: me.bio ?? '',
@@ -88,9 +98,9 @@ export default function ProfileEdit() {
         facebookUrl: me.facebookUrl ?? '',
         instagramUrl: me.instagramUrl ?? '',
       });
-      setLoadedFrom(me);
+      setPrefilled(true);
     }
-  }, [me, isHelper, loadedFrom]);
+  }, [me, isHelper, prefilled]);
 
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -199,7 +209,25 @@ export default function ProfileEdit() {
       showToast(friendlyWriteError(err, 'Could not save right now. Please try again.'), 'error'),
   });
 
-  const set = (key) => (v) => setForm((f) => ({ ...f, [key]: v }));
+  // Stable per-field handlers (the action.jsx pattern): Input and Chip are
+  // memo'd, so a keystroke in one field must not hand every sibling Paper
+  // input fresh props (each animates a floating label — the source of typing
+  // lag on slow phones).
+  const fieldHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.keys(EMPTY_FORM).map((key) => [key, (v) => setForm((f) => ({ ...f, [key]: v }))])
+      ),
+    []
+  );
+  const set = (key) => fieldHandlers[key];
+  const genderHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        GENDERS.map((g) => [g, () => setForm((f) => ({ ...f, gender: f.gender === g ? '' : g }))])
+      ),
+    []
+  );
 
   return (
     <Screen back title="Edit Profile" scroll={false} keyboard contentStyle={{ padding: 0 }}>
@@ -237,7 +265,7 @@ export default function ProfileEdit() {
         </View>
 
         <SectionTitle>About you</SectionTitle>
-        <Input label="Full name" value={form.name} onChangeText={set('name')} style={{ marginBottom: spacing[4] }} />
+        <Input label="Full name" value={form.name} onChangeText={set('name')} style={FIELD_GAP} />
         <Input
           label="Date of birth"
           value={form.dateOfBirth}
@@ -245,7 +273,7 @@ export default function ProfileEdit() {
           helper="Like 1953-05-14 — only your age shows to others, never the date."
           autoCapitalize="none"
           keyboardType="numbers-and-punctuation"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="About you"
@@ -253,16 +281,16 @@ export default function ProfileEdit() {
           onChangeText={set('bio')}
           multiline
           numberOfLines={4}
-          inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
+          inputStyle={BIO_INPUT_STYLE}
           helper="Shown to helpers before you connect."
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Occupation"
           value={form.occupation}
           onChangeText={set('occupation')}
           helper={isHelper ? 'What you do or study.' : 'What you did or still do.'}
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 8 }}>
           Sex (optional)
@@ -273,7 +301,7 @@ export default function ProfileEdit() {
               key={g}
               label={g}
               selected={form.gender === g}
-              onPress={() => setForm((f) => ({ ...f, gender: f.gender === g ? '' : g }))}
+              onPress={genderHandlers[g]}
             />
           ))}
         </View>
@@ -284,7 +312,7 @@ export default function ProfileEdit() {
           value={form.tags}
           onChangeText={set('tags')}
           helper='Separate with commas, like "gardening, chess, cooking".'
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label={isHelper ? 'My hobbies' : "What I'm looking for"}
@@ -295,14 +323,14 @@ export default function ProfileEdit() {
               ? 'Separate with commas — things you love doing.'
               : 'Separate with commas, like "company, rides, a walking friend".'
           }
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Languages I speak"
           value={form.languages}
           onChangeText={set('languages')}
           helper="Separate with commas."
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <SectionTitle>How to reach you</SectionTitle>
@@ -311,7 +339,7 @@ export default function ProfileEdit() {
           value={form.city}
           onChangeText={set('city')}
           helper="Used only to match you with people nearby."
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Phone number"
@@ -320,7 +348,7 @@ export default function ProfileEdit() {
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
           helper="Only shared after both people reach the Phone Ready trust stage."
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Facebook link (optional)"
@@ -328,7 +356,7 @@ export default function ProfileEdit() {
           onChangeText={set('facebookUrl')}
           autoCapitalize="none"
           keyboardType="url"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
         <Input
           label="Instagram link (optional)"
@@ -336,7 +364,7 @@ export default function ProfileEdit() {
           onChangeText={set('instagramUrl')}
           autoCapitalize="none"
           keyboardType="url"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <SectionTitle>ID verification</SectionTitle>

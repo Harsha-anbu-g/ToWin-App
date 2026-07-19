@@ -22,10 +22,8 @@ import Avatar from '../../src/components/ui/Avatar';
 import LoadError from '../../src/components/ui/LoadError';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
+import { getDraft, setDraft } from '../../src/lib/chatDrafts';
 import { useTheme } from '../../src/theme/ThemeContext';
-
-// Drafts survive navigation for the session (keyed per conversation).
-const drafts = new Map();
 
 const dayLabel = (iso) => {
   const d = new Date(iso);
@@ -50,12 +48,9 @@ export default function ChatThread() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [input, setInput] = useState(drafts.get(connectionId) ?? '');
+  const [input, setInput] = useState(getDraft(connectionId) ?? '');
   useEffect(() => {
-    // Empty drafts are deleted (not stored as '') so the Map doesn't grow
-    // one stale entry per conversation for the life of the app session.
-    if (input) drafts.set(connectionId, input);
-    else drafts.delete(connectionId);
+    setDraft(connectionId, input);
   }, [connectionId, input]);
 
   // Only poll while this thread is the focused screen — pushing the friend's
@@ -104,10 +99,14 @@ export default function ChatThread() {
       seenOnce.current = newestIncoming.id;
       // Best-effort, but not invisible: a consistently failing mark-seen is
       // the only lead when "unread badges never clear" bug reports come in.
-      api.post(`/messages/${connectionId}/seen`).catch((e) => {
-        if (__DEV__) console.warn(`mark-seen failed for ${connectionId}:`, e?.message);
-      });
-      queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+      api
+        .post(`/messages/${connectionId}/seen`)
+        // Refresh the badge only AFTER the seen-write commits — invalidating
+        // first races the server and the refetch returns the stale count.
+        .then(() => queryClient.invalidateQueries({ queryKey: ['unread-count'] }))
+        .catch((e) => {
+          if (__DEV__) console.warn(`mark-seen failed for ${connectionId}:`, e?.message);
+        });
       // Screen-reader users sitting in an open thread get no visual cue that
       // a reply landed — announce it (skip the announcement on first open).
       if (!isFirstLoad) {
@@ -120,9 +119,10 @@ export default function ChatThread() {
 
   const send = useMutation({
     mutationFn: (content) => api.post(`/messages/${connectionId}/send`, { content }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['messages', connectionId] });
-    },
+    // Return the promise: the mutation then stays pending until the list
+    // refetch lands, so the 'Sending…' bubble survives until the real message
+    // is on screen (the just-sent message must exist SOMEWHERE at all times).
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', connectionId] }),
     onError: (err, content) => {
       // Restore the failed text without eating anything typed since (HCI rule 9)
       setInput((cur) => (cur ? `${content} ${cur}` : content));
@@ -134,7 +134,7 @@ export default function ChatThread() {
     const content = input.trim();
     if (!content || send.isPending) return;
     setInput('');
-    drafts.delete(connectionId);
+    setDraft(connectionId, '');
     send.mutate(content);
   };
 

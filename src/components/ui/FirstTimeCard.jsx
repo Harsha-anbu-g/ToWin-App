@@ -13,9 +13,15 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
 
   useEffect(() => {
     let alive = true;
-    SecureStore.getItemAsync(flag).then((seen) => {
-      if (alive && !seen) setShow(true);
-    });
+    SecureStore.getItemAsync(flag)
+      .then((seen) => {
+        if (alive && !seen) setShow(true);
+      })
+      // Unreadable flag → show the note (worst case it shows twice) — the
+      // same best-effort convention as every other SecureStore consumer.
+      .catch(() => {
+        if (alive) setShow(true);
+      });
     return () => {
       alive = false;
     };
@@ -23,7 +29,7 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
 
   const dismiss = () => {
     setShow(false);
-    SecureStore.setItemAsync(flag, '1');
+    SecureStore.setItemAsync(flag, '1').catch(() => {}); // best-effort — worst case the note shows again
     AccessibilityInfo.announceForAccessibility('Got it — this note will not show again.');
   };
 

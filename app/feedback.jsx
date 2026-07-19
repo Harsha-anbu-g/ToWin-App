@@ -4,7 +4,7 @@
 // pinned Submit, then the founder card with contact rows and portfolio.
 // POST /feedback carries the same keys the website sends.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone, Star } from 'lucide-react-native';
 import api from '../src/api/client';
@@ -13,6 +13,12 @@ import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
+import { spacing } from '../src/theme/tokens';
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FLEX_1 = { flex: 1 };
+const FIELD_GAP = { marginBottom: spacing[4] };
+const MESSAGE_INPUT_STYLE = { minHeight: 110, textAlignVertical: 'top' };
 
 // Verbatim from the website's Feedback.jsx
 const RATINGS = [
@@ -178,7 +184,7 @@ function CreatorCard() {
 }
 
 export default function Feedback() {
-  const { t, spacing, type, fontFamily } = useTheme();
+  const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -188,6 +194,16 @@ export default function Feedback() {
   const [loading, setLoading] = useState(false);
 
   const setRating = (key) => (v) => setRatings((r) => ({ ...r, [key]: v }));
+
+  // Stable per-field handlers (the action.jsx pattern): Input is memo'd
+  // (floating-label Paper fields), so a keystroke in one field must not
+  // re-render its siblings.
+  const setName = useCallback((v) => setForm((f) => ({ ...f, name: v })), []);
+  const setEmail = useCallback((v) => setForm((f) => ({ ...f, email: v })), []);
+  const setMessage = useCallback((v) => {
+    setForm((f) => ({ ...f, message: v }));
+    setFieldError('');
+  }, []);
 
   const submit = async () => {
     if (!form.message.trim()) {
@@ -250,32 +266,29 @@ export default function Feedback() {
           <Input
             label="Name"
             value={form.name}
-            onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-            style={{ flex: 1 }}
+            onChangeText={setName}
+            style={FLEX_1}
           />
           <Input
             label="Email"
             value={form.email}
-            onChangeText={(v) => setForm((f) => ({ ...f, email: v }))}
+            onChangeText={setEmail}
             autoCapitalize="none"
             keyboardType="email-address"
-            style={{ flex: 1 }}
+            style={FLEX_1}
           />
         </View>
 
         <Input
           label="Message"
           value={form.message}
-          onChangeText={(v) => {
-            setForm((f) => ({ ...f, message: v }));
-            setFieldError('');
-          }}
+          onChangeText={setMessage}
           error={fieldError}
           multiline
           numberOfLines={5}
-          inputStyle={{ minHeight: 110, textAlignVertical: 'top' }}
+          inputStyle={MESSAGE_INPUT_STYLE}
           helper="Be honest! Include at least one thing you didn't like."
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 4 }}>

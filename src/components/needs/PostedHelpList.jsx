@@ -7,6 +7,7 @@
 // (HCI rule 5). Shared by the elder's second tab and the pushed My requests
 // screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
@@ -42,6 +43,7 @@ function StatusPill({ status }) {
 
 function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
   const { t, radius, type } = useTheme();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const applicants = need.applications ?? [];
   const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
@@ -90,15 +92,26 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
       {open && need.status === 'OPEN'
         ? applicants.map((app) => (
             <View key={app.helperId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
-              <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontSize: type.body, color: t.ink }}>{app.helperName}</Text>
-                {app.message ? (
-                  <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate }}>
-                    {app.message}
-                  </Text>
-                ) : null}
-              </View>
+              {/* The elder is making the platform's core trust decision here —
+                  tapping the person opens their full profile (bio, trust,
+                  reviews), the same link helpers get to elders. */}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`View ${app.helperName}'s profile`}
+                onPress={() => router.push(`/user/${app.helperId}`)}
+                hitSlop={6}
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}
+              >
+                <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: type.body, color: t.ink }}>{app.helperName}</Text>
+                  {app.message ? (
+                    <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate }}>
+                      {app.message}
+                    </Text>
+                  ) : null}
+                </View>
+              </Pressable>
               <Button
                 title="Accept"
                 variant="secondary"
@@ -181,11 +194,18 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast(friendlyWriteError(err, 'Could not remove it. Please try again.'), 'error'),
   });
 
+  // The row clamps long applications to 2 lines — the confirm dialog carries
+  // the FULL message so the elder reads it all before deciding.
   const confirmAccept = (need, app) =>
-    Alert.alert('Accept this helper?', `${app.helperName} will be your helper for "${need.title}".`, [
-      { text: 'Not now', style: 'cancel' },
-      { text: 'Accept', onPress: () => accept.mutate({ needId: need.id, helperId: app.helperId }) },
-    ]);
+    Alert.alert(
+      'Accept this helper?',
+      `${app.helperName} will be your helper for "${need.title}".` +
+        (app.message ? `\n\nTheir message:\n“${app.message}”` : ''),
+      [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Accept', onPress: () => accept.mutate({ needId: need.id, helperId: app.helperId }) },
+      ]
+    );
   const confirmComplete = (need) =>
     Alert.alert('Mark as completed?', `"${need.title}" will move to your finished requests.`, [
       { text: 'Not yet', style: 'cancel' },

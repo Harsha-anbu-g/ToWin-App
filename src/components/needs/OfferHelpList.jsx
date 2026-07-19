@@ -51,6 +51,10 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
   const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
   const mine = need.myApplicationStatus;
+  // Descriptions run up to 2000 chars and the website shows them in full —
+  // the helper must be able to read the whole request before offering.
+  const [descExpanded, setDescExpanded] = useState(false);
+  const descLong = (need.description?.length ?? 0) > 120;
 
   const confirmWithdraw = () =>
     Alert.alert('Withdraw your offer?', `You'll stop offering to help with "${need.title}".`, [
@@ -77,9 +81,26 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
         {need.title}
       </Text>
       {need.description ? (
-        <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
-          {need.description}
-        </Text>
+        <>
+          <Text
+            numberOfLines={descExpanded ? undefined : 2}
+            style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}
+          >
+            {need.description}
+          </Text>
+          {descLong ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={descExpanded ? 'Show less of the request' : 'Read the full request'}
+              onPress={() => setDescExpanded((v) => !v)}
+              hitSlop={8}
+            >
+              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, marginTop: 4 }}>
+                {descExpanded ? 'Show less' : 'Read more'}
+              </Text>
+            </Pressable>
+          ) : null}
+        </>
       ) : null}
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
