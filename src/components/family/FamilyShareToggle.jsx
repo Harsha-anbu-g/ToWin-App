@@ -26,17 +26,23 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
   const queryClient = useQueryClient();
   const reducedMotion = useReducedMotion();
   // Optimistic local state, like the web control: flip now, roll back on
-  // failure. Server truth re-seeds on remount; a successful POST means the
-  // cache and this state already agree.
+  // failure. A successful POST means the cache and this state already agree.
   const [shared, setShared] = useState(!!initialShared);
   const slide = useRef(new Animated.Value(initialShared ? 1 : 0)).current;
 
   // Knob motion: transform only, ease-out, well under 300ms (Emil rule).
-  // Reduce-motion gets gentler (60ms) — not zero — matching the web control.
+  // Reduce-motion SNAPS (setValue) — the app convention (MenuSheet,
+  // TortoiseMark) and the web's real behavior: index.css clamps every
+  // transition to 0.01ms under prefers-reduced-motion (FAM-407 2026-07-19).
   useEffect(() => {
+    const dest = shared ? 1 : 0;
+    if (reducedMotion) {
+      slide.setValue(dest);
+      return;
+    }
     Animated.timing(slide, {
-      toValue: shared ? 1 : 0,
-      duration: reducedMotion ? 60 : 160,
+      toValue: dest,
+      duration: 160,
       easing: Easing.bezier(0.23, 1, 0.32, 1),
       useNativeDriver: true,
     }).start();
@@ -58,6 +64,20 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
       showToast("Couldn't save that change. Please try again.", 'error');
     },
   });
+
+  // Server-truth re-sync (FAM-407 2026-07-19): ['connections'] refetches
+  // while the card stays MOUNTED (Home pull-to-refresh, MyHelpersPanel
+  // invalidations), so the prop can change without a remount — adopt a
+  // CHANGED prop unless our own mutation is in flight (the optimistic flip
+  // owns the state until it settles or rolls back). The ref keeps an
+  // unchanged-but-stale prop from clobbering a just-saved flip.
+  const lastSyncedProp = useRef(!!initialShared);
+  useEffect(() => {
+    if (save.isPending) return;
+    if (lastSyncedProp.current === !!initialShared) return;
+    lastSyncedProp.current = !!initialShared;
+    setShared(!!initialShared);
+  }, [initialShared, save.isPending]);
 
   const flip = () => {
     if (save.isPending) return;

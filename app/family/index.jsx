@@ -4,6 +4,7 @@
 // a BOTH user's own family-side links live on Family Home instead). The seat
 // cap is 5 counting OPEN REQUESTS, the web rule — never just active links.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import api from '../../src/api/client';
@@ -14,6 +15,7 @@ import Button from '../../src/components/ui/Button';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
+import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -30,6 +32,7 @@ const PROMISES = [
 
 export default function MyFamilyScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
+  const { user, booted } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -115,8 +118,18 @@ export default function MyFamilyScreen() {
   const removing = remove.isPending ? remove.variables : null;
   const promoting = makePrimary.isPending ? makePrimary.variables : null;
 
+  // Elder-seat guard (web ElderOnly parity, FAM-407 2026-07-19): entry points
+  // are elder-gated, but deep links and imperative pushes reach the route for
+  // anyone — HELPER/FAMILY must bounce to Home, not see the elder management
+  // surface. After all hooks so the rules of hooks hold on every render.
+  const isElderSeat = user?.role === 'ELDER' || user?.role === 'BOTH';
+  if (booted && !isElderSeat) return <Redirect href="/(tabs)/home" />;
+
   return (
-    <Screen back>
+    // `keyboard` because AddParentForm opens mid-page, below the promises
+    // card — without it the keyboard covers the identifier field on small
+    // phones (same reason as the FAMILY home branch, FAM-407 2026-07-19).
+    <Screen back keyboard>
       {/* Promises card FIRST — what family can and can never do, plus the
           gold +1 line (trust semantics carry the trust token, never blue). */}
       <View

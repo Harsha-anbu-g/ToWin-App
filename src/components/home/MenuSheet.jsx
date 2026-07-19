@@ -133,6 +133,10 @@ export default function MenuSheet({ visible, onClose }) {
 
   const isHelper = user?.role === 'HELPER';
   const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
+  // FAMILY (FAM-407 2026-07-19, web NavBar parity): watching over a parent —
+  // no needs, streaks, or discovery surfaces, so the elder rows (Post Help,
+  // Posted Help, My Helpers, Add Friends, Daily check-in) must never leak.
+  const isFamily = user?.role === 'FAMILY';
 
   const go = (href) => {
     onClose();
@@ -207,6 +211,10 @@ export default function MenuSheet({ visible, onClose }) {
                 <Row first icon={Search} label="Offer Help" sublabel="Needs from elders near you" onPress={() => go('/(tabs)/action')} />
                 <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/home')} />
               </>
+            ) : isFamily ? (
+              // Their whole world is the parents hub — no posting, no
+              // discovery (web NavBar shows FAMILY no needs/friends links).
+              <Row first icon={UsersRound} label="My Parents" sublabel="Your parents and news about them" onPress={() => go('/(tabs)/home')} />
             ) : (
               <>
                 <Row first icon={Plus} label="Post Help" sublabel="Ask your neighbors for help" onPress={() => go('/(tabs)/action')} />
@@ -217,12 +225,18 @@ export default function MenuSheet({ visible, onClose }) {
                     that can never fill — hidden until an apply path exists. */}
               </>
             )}
-            <Row icon={UserRoundPlus} label="Add Friends" sublabel="Find people near you" onPress={() => go('/friends')} />
+            {!isFamily ? (
+              <Row icon={UserRoundPlus} label="Add Friends" sublabel="Find people near you" onPress={() => go('/friends')} />
+            ) : null}
           </Group>
 
           <Group>
             <Row first icon={() => <TortoiseMark size={24} />} label="Trust Score" sublabel="Your points and tier" onPress={() => go('/trust')} />
-            <Row icon={CalendarCheck} label="Daily check-in" sublabel="Your streak, day by day" onPress={() => go('/checkin')} />
+            {/* FAMILY has no streaks (home.jsx never fetches them) — a
+                check-in row would open a surface the role doesn't have. */}
+            {!isFamily ? (
+              <Row icon={CalendarCheck} label="Daily check-in" sublabel="Your streak, day by day" onPress={() => go('/checkin')} />
+            ) : null}
             <Row icon={Puzzle} label="Peekaboo" sublabel="A quiet minute with the tortoise" onPress={() => go('/game')} />
           </Group>
 

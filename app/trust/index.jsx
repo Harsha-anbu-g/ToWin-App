@@ -182,6 +182,10 @@ export default function TrustScreen() {
   // One screen, two perspectives: the score cards are simply the other party
   // of each connection, so every line of copy must match who is looking.
   const helping = user?.role === 'HELPER' || user?.role === 'BOTH';
+  // FAMILY (FAM-407 2026-07-19): their points come from their profile ONLY —
+  // no helpers, no reviews, and no add-friends surface anywhere in their app,
+  // so the elder copy and its "add someone" call would be a dead end (HCI 2/7).
+  const isFamily = user?.role === 'FAMILY';
 
   const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
@@ -201,7 +205,10 @@ export default function TrustScreen() {
         Your <Text style={{ color: t.trustGold }}>Trust</Text> Score
       </Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
-        {helping
+        {isFamily
+          ? // Honest, profile-only framing — never the elder scoring rules.
+            'Your score comes from your profile — fill it in to earn your first points.'
+          : helping
           ? 'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
           : // Elder split (FAM-405): elders score 7+5+2+1 — the family point
             // replaces the third profile point, so the total stays 15.
@@ -295,7 +302,11 @@ export default function TrustScreen() {
           ) : (
             <Card style={{ marginTop: spacing[4] }}>
               <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
-                Trust starts with a friend. Add someone, and your points appear here.
+                {isFamily
+                  ? // No "add someone" for FAMILY — the role has no way to do
+                    // it, and their score never grows from connections.
+                    'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
+                  : 'Trust starts with a friend. Add someone, and your points appear here.'}
               </Text>
             </Card>
           )}

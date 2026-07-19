@@ -250,3 +250,26 @@ test('MenuSheet: My Family row shows for elders only', async () => {
   const helper = await wrap(<MenuSheet visible onClose={jest.fn()} />);
   expect(helper.queryByLabelText('My Family')).toBeNull();
 });
+
+// FAM-407: FAMILY must never see the elder menu — no needs, streaks, or
+// discovery surfaces (web NavBar parity; Post Help would even crash, since
+// centerActionFor('FAMILY') is null).
+test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows', async () => {
+  mockRole = 'FAMILY';
+  const r = await wrap(<MenuSheet visible onClose={jest.fn()} />);
+
+  // Their real surfaces: hub, trust, game, guide.
+  r.getByLabelText('My Parents');
+  r.getByLabelText('Trust Score');
+  r.getByLabelText('Peekaboo');
+  r.getByLabelText('Guide');
+
+  // Elder/discovery rows must not leak (each is a wrong or crashing target).
+  expect(r.queryByLabelText('Post Help')).toBeNull();
+  expect(r.queryByLabelText('Posted Help')).toBeNull();
+  expect(r.queryByLabelText('My Helpers')).toBeNull();
+  expect(r.queryByLabelText('Add Friends')).toBeNull();
+  expect(r.queryByLabelText('Daily check-in')).toBeNull();
+  expect(r.queryByLabelText('My Family')).toBeNull();
+  expect(r.queryByLabelText('Emergency contacts')).toBeNull();
+});
