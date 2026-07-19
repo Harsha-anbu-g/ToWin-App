@@ -26,8 +26,8 @@ jest.mock('../src/api/client', () => ({
 }));
 
 // Pin the reduced-motion path: AccessibilityInfo's real promise resolves
-// outside act under Jest (same call as my-family.test.js); the knob still
-// animates (60ms), which is exactly the gentler-not-zero contract.
+// outside act under Jest (same call as my-family.test.js); under reduce
+// motion the knob SNAPS via setValue — the app convention (FAM-407).
 jest.mock('../src/lib/useReducedMotion', () => ({ useReducedMotion: () => true }));
 
 import api from '../src/api/client';
@@ -120,6 +120,41 @@ test('failure rolls the flip back and toasts the web copy', async () => {
 
   await fireEvent.press(r.getByRole('switch'));
   await r.findByText("Couldn't save that change. Please try again.");
+  r.getByRole('switch', { checked: false });
+  r.getByText('Kept private from family. Only you can change this.');
+});
+
+// FAM-407: ['connections'] refetches while the card stays mounted (pull-to-
+// refresh, panel invalidations) — a changed sharedWithFamily prop must reach
+// the toggle without a remount.
+test('server-truth re-sync: a changed prop updates the toggle in place', async () => {
+  const client = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
+  });
+  const tree = (shared) => (
+    <ThemeProvider>
+      <QueryClientProvider client={client}>
+        <ToastProvider>
+          <FamilyShareToggle connectionId="c1" shared={shared} />
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+
+  const r = await render(tree(false));
+  r.getByRole('switch', { checked: false });
+
+  // Elder flipped it on the website; a refetch re-rendered the card with the
+  // fresh value — same component instance, new prop.
+  await r.rerender(tree(true));
+  r.getByRole('switch', { checked: true });
+  r.getByText('Your family can see this friendship.');
+
+  // And back off again — the sync tracks every change, not just the first.
+  await r.rerender(tree(false));
   r.getByRole('switch', { checked: false });
   r.getByText('Kept private from family. Only you can change this.');
 });

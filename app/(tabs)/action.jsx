@@ -3,7 +3,7 @@
 // urgency, description; OTHER folds its detail into the description).
 // Helper: browse ALL open requests with one-tap apply.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -181,6 +181,12 @@ function PostNeedForm() {
 export default function ActionScreen() {
   const { user } = useAuth();
   const action = centerActionFor(user?.role);
+
+  // FAMILY has no center action (roles.js returns null, FAM-401) — the tab
+  // is href:null for them, but imperative navigation still reaches this
+  // route (game.jsx relies on that for the dashboard), so a stray push must
+  // land on Home, never red-screen on action.key (FAM-407 2026-07-19).
+  if (!action) return <Redirect href="/(tabs)/home" />;
 
   return action.key === 'find' ? (
     // 4b/4c: Offer Help owns its header + segments + radius row

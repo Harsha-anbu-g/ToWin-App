@@ -69,7 +69,23 @@ function AlertRow({ alert, kind, first, t, spacing, radius, type }) {
           </Text>
         ) : null}
       </View>
-      <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 22, marginTop: spacing[2] }}>
+      {/* Name the parent (FAM-407 2026-07-19): backend bodies carry no
+          subject ("Pressed the SOS button…") and a family member can link
+          several parents — elderName exists in the payload for exactly this. */}
+      {alert.elderName ? (
+        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 22, marginTop: spacing[2] }}>
+          {alert.elderName}
+        </Text>
+      ) : null}
+      <Text
+        style={{
+          fontSize: type.body,
+          fontWeight: alert.elderName ? '400' : '600',
+          color: t.ink,
+          lineHeight: 22,
+          marginTop: alert.elderName ? 2 : spacing[2],
+        }}
+      >
         {alert.body}
       </Text>
       {kind.explain ? (
@@ -87,6 +103,11 @@ export default function FamilyAlertsFeed() {
   const { data: alerts, isLoading, isError, refetch } = useQuery({
     queryKey: ['family-alerts'],
     queryFn: async () => (await api.get('/family/alerts')).data?.alerts ?? [],
+    // Alerts are in-app ONLY ("nothing is sent by text or email"), so this
+    // feed is the sole SOS channel — it must not wait for a pull-to-refresh
+    // while the app sits open. 30s is the unread-count convention
+    // (app/(tabs)/_layout.jsx). FAM-407 2026-07-19.
+    refetchInterval: 30_000,
   });
 
   const kinds = alertKindsFor(t);

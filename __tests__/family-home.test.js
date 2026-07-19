@@ -37,6 +37,7 @@ jest.mock('../src/components/home/MenuSheet', () => () => null);
 
 import api from '../src/api/client';
 import HomeScreen from '../app/(tabs)/home';
+import FamilyAlertsFeed from '../src/components/family/FamilyAlertsFeed';
 import FamilyHomePanel from '../src/components/family/FamilyHomePanel';
 
 const wrap = (ui) =>
@@ -94,6 +95,13 @@ const sosAlert = {
   body: 'Pressed the SOS button and may need help right away.',
   createdAt: '2026-07-17T12:00:00',
 };
+// A second linked parent — the feed interleaves alerts newest-first, so each
+// row must say WHOSE alert it is (FAM-407).
+const quietAlert = {
+  id: 'al2', elderId: 'e9', elderName: 'Arthur Chen', type: 'INACTIVITY',
+  body: 'Has not been active on ToWin for 5 days.',
+  createdAt: '2026-07-16T12:00:00',
+};
 
 const stubGet = (links, alerts) =>
   api.get.mockImplementation(async (url) => {
@@ -115,7 +123,7 @@ test('FAMILY home: My Parents panel renders; no streak fetch, no add-friends but
 });
 
 test('load: parents, requests, and alerts render web-exact — elder-side links never show', async () => {
-  stubGet(fullLinks, [sosAlert]);
+  stubGet(fullLinks, [sosAlert, quietAlert]);
   const r = await wrap(<FamilyHomePanel />);
 
   await r.findByText('margaret');
@@ -131,8 +139,38 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   r.getByText('Pressed the SOS button and may need help right away.');
   r.getByText('They pressed their SOS button and asked for urgent help. A call right now matters.');
 
+  // Each row names the parent (FAM-407) — with two linked parents the reader
+  // must know WHOSE alert this is; backend bodies carry no subject.
+  r.getByText('Margaret Reyes');
+  r.getByText('Arthur Chen');
+  r.getByText('Quiet lately');
+  r.getByText('Has not been active on ToWin for 5 days.');
+
   // The FAMILY seat filter: the caller-as-elder side of links stays hidden.
   expect(r.queryByText('shadow')).toBeNull();
+});
+
+// FAM-407: alerts are in-app only ("nothing is sent by text or email"), so
+// the feed is the SOLE SOS channel — it polls at the 30s unread-count
+// convention (app/(tabs)/_layout.jsx) instead of waiting for a manual refresh.
+test('family-alerts polls every 30s while the feed is mounted', async () => {
+  stubGet(emptyLinks, []);
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
+  const r = await render(
+    <ThemeProvider>
+      <QueryClientProvider client={client}>
+        <ToastProvider>
+          <FamilyAlertsFeed />
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+
+  await r.findByText('No alerts right now');
+  const query = client.getQueryCache().find({ queryKey: ['family-alerts'] });
+  expect(query.options.refetchInterval).toBe(30_000);
 });
 
 test('accept and decline post the respond payloads and toast the web copy', async () => {

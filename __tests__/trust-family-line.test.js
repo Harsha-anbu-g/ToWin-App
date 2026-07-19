@@ -110,3 +110,21 @@ test('helper: copy unchanged, no family card, no Family meter row', async () => 
   expect(r.queryByText('Family connected')).toBeNull();
   expect(r.queryByText('Family')).toBeNull();
 });
+
+// FAM-407: FAMILY viewers have no helpers, no reviews, and no add-friends
+// surface anywhere in their app — the elder scoring rules and the "add
+// someone" empty state would be dishonest dead ends (HCI 2/7). Their points
+// come from their profile only (backend /trust/my-score, no role guard).
+test('FAMILY: profile-only copy — no elder scoring rules, no add-someone dead end', async () => {
+  mockRole = 'FAMILY';
+  stubScore({ totalScore: 1, tier: 'Getting Started', family: null, customers: [] });
+  const r = await wrap(<TrustScreen />);
+
+  r.getByText('Your score comes from your profile — fill it in to earn your first points.');
+  await r.findByText(
+    'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
+  );
+  expect(r.queryByText(/Each helper you grow trust with/)).toBeNull();
+  expect(r.queryByText('Trust starts with a friend. Add someone, and your points appear here.')).toBeNull();
+  expect(r.queryByText('Family connected')).toBeNull();
+});
