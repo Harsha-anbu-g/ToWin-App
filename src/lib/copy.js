@@ -23,6 +23,20 @@ export function timeAgo(iso, now = new Date()) {
   return `${weeks} week${weeks === 1 ? '' : 's'} ago`;
 }
 
+// "July 17 at 12:00 PM" — family-alert timestamps (web FamilyHome parity,
+// FAM-402). Absolute, not relative: an SOS from two days ago must read as a
+// date, never soften into "2 days ago".
+export function friendlyDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return (
+    d.toLocaleDateString(undefined, { month: 'long', day: 'numeric' }) +
+    ' at ' +
+    d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })
+  );
+}
+
 // Full years between a YYYY-MM-DD birthdate and now (birthday counts).
 // The date string is split by hand so no timezone shift can move the day.
 export function yearsOld(dob, now = new Date()) {

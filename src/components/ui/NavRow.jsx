@@ -95,9 +95,13 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             <Text style={{ fontSize: type.caption, color: t.trustGold }}>trust</Text>
           </View>
         ) : null}
-        <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
-          <UserRoundPlus size={21} color={t.blueDeep} strokeWidth={1.8} />
-        </IconTarget>
+        {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
+            — no handler, no button, instead of a dead target. */}
+        {onAddFriends ? (
+          <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
+            <UserRoundPlus size={21} color={t.blueDeep} strokeWidth={1.8} />
+          </IconTarget>
+        ) : null}
       </View>
     </View>
   );
