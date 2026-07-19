@@ -10,51 +10,13 @@ import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
-import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
-
-function SectionHeading({ children }) {
-  const { t, spacing, fontFamily } = useTheme();
-  return (
-    <Text
-      accessibilityRole="header"
-      style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, marginTop: spacing[5] }}
-    >
-      {children}
-    </Text>
-  );
-}
-
-// One person-row: avatar + name + a consent-first sentence. Hairline above
-// every row but the first — rows straight on the page, never outlined boxes.
-function LinkRow({ name, line, first, badge, children }) {
-  const { t, spacing, type } = useTheme();
-  return (
-    <View
-      style={{
-        paddingVertical: spacing[4],
-        borderTopWidth: first ? 0 : 1,
-        borderTopColor: t.hairline,
-      }}
-    >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
-        <Avatar name={name} size={44} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{name}</Text>
-          <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 2 }}>
-            {line}
-          </Text>
-        </View>
-        {badge}
-      </View>
-      {children}
-    </View>
-  );
-}
+// Rows moved to FamilyRows (FAM-403) — the elder's My Family screen shares them.
+import { LinkRow, SectionHeading } from './FamilyRows';
 
 export default function FamilyHomePanel() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
