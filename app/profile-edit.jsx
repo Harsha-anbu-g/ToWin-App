@@ -67,6 +67,9 @@ export default function ProfileEdit() {
   const router = useRouter();
 
   const isHelper = user?.role === 'HELPER';
+  // Elder seat (ELDER or BOTH) — the only roles with a family circle to manage
+  // (web ElderOnly guard on /family; FAM-403).
+  const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
 
   const { data: me } = useQuery({
     queryKey: ['profile-me'],
@@ -393,6 +396,35 @@ export default function ProfileEdit() {
             />
           ) : null}
         </View>
+
+        {/* My Family (FAM-403, elders only) — web ProfileEdit card, exact copy.
+            Managing happens on /family; this card only explains and links. */}
+        {isElder ? (
+          <>
+            <SectionTitle>My Family</SectionTitle>
+            <View
+              style={{
+                backgroundColor: t.canvas,
+                borderWidth: 1,
+                borderColor: t.border,
+                borderRadius: 16,
+                padding: 14,
+                marginBottom: spacing[2],
+              }}
+            >
+              <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 21 }}>
+                Link your family so they can see you're safe. They only see the friendships you
+                choose to share, and you can remove anyone at any time.
+              </Text>
+              <Button
+                title="Manage My Family"
+                variant="secondary"
+                onPress={() => router.push('/family')}
+                style={{ marginTop: 12 }}
+              />
+            </View>
+          </>
+        ) : null}
       </ScrollView>
 
       {/* Pinned Save Changes + Cancel (3i) */}

@@ -26,6 +26,7 @@ import {
   Puzzle,
   Search,
   UserRoundPlus,
+  Users,
   UsersRound,
   X,
 } from 'lucide-react-native';
@@ -227,7 +228,12 @@ export default function MenuSheet({ visible, onClose }) {
 
           <Group>
             {isElder ? (
-              <Row first icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
+              <>
+                {/* Elder seat only (web ElderOnly guard on /family) — helpers
+                    and FAMILY users have no family circle to manage. */}
+                <Row first icon={Users} label="My Family" sublabel="Family who can see you're safe" onPress={() => go('/family')} />
+                <Row icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
+              </>
             ) : null}
             <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How ToWin works" onPress={() => go('/guide')} />
           </Group>

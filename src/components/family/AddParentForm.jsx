@@ -1,7 +1,8 @@
-// Add your parent (FAM-402) — the FAMILY user's request form, collapsed
-// behind Home's one filled primary. Copy is 1:1 with web FamilyHome.jsx;
-// side:'elder' means "the person I'm identifying takes the elder seat"
-// (the backend contract's seat rule — never flip it).
+// The family request form (FAM-402, side-aware since FAM-403) — collapsed
+// behind the screen's one filled primary. Copy is 1:1 with the web pages;
+// `side` names the seat the IDENTIFIED person takes (the backend contract's
+// seat rule — never flip it): 'elder' = a FAMILY user adding their parent
+// (FamilyHome), 'family' = an elder adding a family member (MyFamily).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
@@ -11,7 +12,26 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 
-export default function AddParentForm({ onClose }) {
+// Exact web copy per side — FamilyHome.jsx vs MyFamily.jsx. The only
+// differences the web has: title, consent helper, relationship label, toast.
+const COPY = {
+  elder: {
+    title: 'Add your parent',
+    helper:
+      'Type their exact ToWin username, email or phone. They must say yes before you see anything.',
+    relationshipLabel: 'Relationship (what you are to them)',
+    successToast: 'Request sent. You become family here once they accept.',
+  },
+  family: {
+    title: 'Add a family member',
+    helper:
+      'Type their exact ToWin username, email or phone. They must say yes before anything is shared.',
+    relationshipLabel: 'Relationship',
+    successToast: 'Request sent. It becomes a family link when they accept.',
+  },
+};
+
+export default function AddParentForm({ onClose, side = 'elder' }) {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -19,15 +39,17 @@ export default function AddParentForm({ onClose }) {
   const [relationship, setRelationship] = useState('');
   const [formError, setFormError] = useState('');
 
+  const copy = COPY[side];
+
   const send = useMutation({
     mutationFn: () =>
       api.post('/family/requests', {
         identifier: identifier.trim(),
         relationship: relationship.trim(),
-        side: 'elder',
+        side,
       }),
     onSuccess: () => {
-      showToast('Request sent. You become family here once they accept.', 'success');
+      showToast(copy.successToast, 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
       onClose();
     },
@@ -63,10 +85,10 @@ export default function AddParentForm({ onClose }) {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        Add your parent
+        {copy.title}
       </Text>
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}>
-        Type their exact ToWin username, email or phone. They must say yes before you see anything.
+        {copy.helper}
       </Text>
 
       <Input
@@ -79,7 +101,7 @@ export default function AddParentForm({ onClose }) {
         style={{ marginTop: spacing[4] }}
       />
       <Input
-        label="Relationship (what you are to them)"
+        label={copy.relationshipLabel}
         value={relationship}
         onChangeText={setRelationship}
         placeholder="Daughter, Son, Niece…"
@@ -97,7 +119,7 @@ export default function AddParentForm({ onClose }) {
 
       <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[4] }}>
         {/* "Send request" is the screen's one filled primary while the form is
-            open — the "+ Add your parent" pill that opened it is hidden. */}
+            open — the "+ Add …" pill that opened it is hidden either side. */}
         <Button
           title={send.isPending ? 'Sending…' : 'Send request'}
           onPress={submit}
