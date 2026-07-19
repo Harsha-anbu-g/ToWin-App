@@ -22,6 +22,16 @@ import { spacing } from '../../src/theme/tokens';
 const ROLES = [
   { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help' },
   { value: 'HELPER', label: 'Helper', desc: 'Want to help others' },
+  // FAM-406 (2026-07-19): FAMILY is a public signup role (web parity). The
+  // sentence-length label can't share a column, so this card spans the full
+  // row below the two short ones. Google finish-setup stays ELDER/HELPER —
+  // the backend rejects FAMILY on the OAuth path.
+  {
+    value: 'FAMILY',
+    label: "I'm here for a family member",
+    desc: "You'll link to your parent inside the app after you sign up.",
+    fullWidth: true,
+  },
 ];
 
 const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
@@ -144,8 +154,13 @@ export default function Register() {
         <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
           First, who are you joining as?
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[5] }}>
-          {ROLES.map(({ value, label, desc }) => {
+        {/* Wrapping row: ELDER + HELPER share the line, the full-width FAMILY
+            card drops below it (gap covers both directions). */}
+        <View
+          accessibilityRole="radiogroup"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[5] }}
+        >
+          {ROLES.map(({ value, label, desc, fullWidth }) => {
             const active = form.role === value;
             return (
               <Pressable
@@ -155,7 +170,7 @@ export default function Register() {
                 accessibilityLabel={`${label}. ${desc}`}
                 onPress={() => setField('role', value)}
                 style={{
-                  flex: 1,
+                  ...(fullWidth ? { width: '100%' } : { flex: 1 }),
                   minHeight: 64,
                   padding: spacing[3],
                   borderRadius: radius.input,
