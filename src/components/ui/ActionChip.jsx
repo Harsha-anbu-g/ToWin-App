@@ -4,25 +4,33 @@
 import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
-export default function ActionChip({ label, onPress, tonal = false, destructive = false }) {
+// `disabled` dims and blocks the chip while its mutation runs (HCI rule 1:
+// every tap shows progress); `style` lets rows stretch chips (flex:1) so
+// paired actions split the width like the website's side-by-side ghosts.
+export default function ActionChip({ label, onPress, tonal = false, destructive = false, disabled = false, style }) {
   const { t, radius, type } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       onPress={onPress}
       hitSlop={{ top: 6, bottom: 6 }}
-      style={({ pressed }) => ({
-        height: 36,
-        paddingHorizontal: 14,
-        borderRadius: radius.pill,
-        backgroundColor: 'transparent',
-        borderWidth: 1,
-        borderColor: tonal ? t.blueSoft : destructive ? t.redLine : t.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: pressed ? 0.7 : 1,
-      })}
+      style={({ pressed }) => [
+        {
+          height: 36,
+          paddingHorizontal: 14,
+          borderRadius: radius.pill,
+          backgroundColor: 'transparent',
+          borderWidth: 1,
+          borderColor: tonal ? t.blueSoft : destructive ? t.redLine : t.border,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
+        },
+        style,
+      ]}
     >
       <Text
         numberOfLines={1}
