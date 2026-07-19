@@ -28,3 +28,11 @@ test('second tab is Posted Help for elders; helpers have none', () => {
   expect(secondTabFor('HELPER')).toBeNull();
   expect(secondTabFor(undefined)).toEqual({ name: 'posted-help', label: 'Posted Help' });
 });
+
+// family-in-trust (2026-07-19): FAMILY watches over a parent — no posting,
+// no offering, no second tab. Their first tab is the parents hub.
+test('FAMILY gets no center action, no second tab, and a My Parents hub', () => {
+  expect(centerActionFor('FAMILY')).toBeNull();
+  expect(secondTabFor('FAMILY')).toBeNull();
+  expect(homeTabFor('FAMILY').label).toBe('My Parents');
+});

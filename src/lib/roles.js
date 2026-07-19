@@ -2,20 +2,24 @@
 // relationship hub — no separate "Home" label).
 // Elder (and BOTH): My Helpers · Posted Help · [Post Help FAB] · Messages · Profile
 // Helper:           My Elders  ·             [Offer Help FAB]  · Messages · Profile
+// Family (family-in-trust 2026-07-19): watching over a parent, never posting
+// or offering — no center FAB at all, so their bar is Home · Messages · Profile.
 export function centerActionFor(role) {
+  if (role === 'FAMILY') return null;
   if (role === 'HELPER') return { key: 'find', label: 'Offer Help' };
   return { key: 'ask', label: 'Post Help' };
 }
 
 // The first tab's identity (route stays "home"; the label is the hub's name).
 export function homeTabFor(role) {
+  if (role === 'FAMILY') return { label: 'My Parents' };
   if (role === 'HELPER') return { label: 'My Elders' };
   return { label: 'My Helpers' };
 }
 
-// Second tab: elders track their requests; helpers have no second tab (their
-// hub already fills the first slot).
+// Second tab: elders track their requests; helpers and family have no second
+// tab (their hub already fills the first slot).
 export function secondTabFor(role) {
-  if (role === 'HELPER') return null;
+  if (role === 'HELPER' || role === 'FAMILY') return null;
   return { name: 'posted-help', label: 'Posted Help' };
 }

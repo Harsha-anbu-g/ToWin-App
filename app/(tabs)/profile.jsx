@@ -186,7 +186,13 @@ export default function ProfileScreen() {
             </Text>
             <Text style={{ fontSize: 13, color: t.inkSlate, marginTop: 1 }}>
               {profile?.city ??
-                (user?.role === 'BOTH' ? 'Elder & Helper' : user?.role === 'HELPER' ? 'Helper' : 'Elder')}
+                (user?.role === 'BOTH'
+                  ? 'Elder & Helper'
+                  : user?.role === 'HELPER'
+                    ? 'Helper'
+                    : user?.role === 'FAMILY'
+                      ? 'Family member'
+                      : 'Elder')}
             </Text>
           </View>
           <Pressable
