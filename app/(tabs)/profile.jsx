@@ -262,7 +262,7 @@ export default function ProfileScreen() {
         />
         <Row
           icon={PhoneCall}
-          label="SOS — emergency contacts"
+          label="Emergency contacts"
           onPress={() => router.push('/emergency-contacts')}
           destructive
         />

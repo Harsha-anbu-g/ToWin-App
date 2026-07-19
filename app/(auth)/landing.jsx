@@ -21,7 +21,7 @@ import {
   Video,
 } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { Animated, Easing, FlatList, Pressable, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TortoiseMark, { IntroBrandLockup } from '../../src/components/TortoiseMark';
 import Button from '../../src/components/ui/Button';
@@ -114,7 +114,7 @@ function Slide({ index }) {
   const c = CHAPTERS[index];
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', paddingHorizontal: 28, paddingRight: 52 }}>
+    <View style={{ paddingHorizontal: 28, paddingRight: 52, paddingVertical: 12 }}>
       <Chapter n={c.n} label={c.label} />
 
       {index === 0 && (
@@ -302,7 +302,7 @@ export default function Landing() {
         toValue: i / last,
         duration: 240,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: false, // animates a layout % — rail is tiny, cheap
+        useNativeDriver: true, // transform-only (scaleY + translateY) — UI thread
       }).start();
     }
   };
@@ -342,7 +342,19 @@ export default function Landing() {
         keyExtractor={(c) => String(c.n)}
         renderItem={({ index: i }) => (
           <View style={{ height: slideH }}>
-            <Slide index={i} />
+            {/* Each fixed-height page scrolls internally when OS text scaling
+                makes its content taller than the page — otherwise the story
+                clips with no way to read it. When content fits (the common
+                case), bounces=false means the gesture falls through to the
+                pager unchanged. */}
+            <ScrollView
+              contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+              showsVerticalScrollIndicator={false}
+              bounces={false}
+              nestedScrollEnabled
+            >
+              <Slide index={i} />
+            </ScrollView>
             {i === last ? (
               <View style={{ paddingHorizontal: 28, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
                 <Button title="Start" onPress={() => go('/(auth)/register')} />
@@ -362,14 +374,18 @@ export default function Landing() {
         style={{ position: 'absolute', right: 14, top: topBar + (slideH - RAIL_H) / 2, height: RAIL_H, width: 30, alignItems: 'center' }}
       >
         <View style={{ position: 'absolute', top: 0, bottom: 0, width: 2, borderRadius: 1, backgroundColor: t.inputLine }} />
+        {/* Walked line: a full-height bar scaled from its top edge —
+            transform/opacity only, so the tween runs on the UI thread. */}
         <Animated.View
           style={{
             position: 'absolute',
             top: 0,
             width: 2,
+            height: RAIL_H,
             borderRadius: 1,
             backgroundColor: t.blue,
-            height: walk.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+            transformOrigin: 'top',
+            transform: [{ scaleY: walk }],
           }}
         />
         {CHAPTERS.map((c, i) => (
@@ -390,9 +406,12 @@ export default function Landing() {
         <Animated.View
           style={{
             position: 'absolute',
-            top: walk.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+            top: 0,
             marginTop: -13,
-            transform: [{ rotate: index === last ? '0deg' : '180deg' }],
+            transform: [
+              { translateY: walk.interpolate({ inputRange: [0, 1], outputRange: [0, RAIL_H] }) },
+              { rotate: index === last ? '0deg' : '180deg' },
+            ],
           }}
         >
           <TortoiseMark size={26} />

@@ -3,7 +3,7 @@
 // NOTE: no account exists until the emailed link is opened — success routes
 // to check-email, never logs in (mirrors web).
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -17,6 +17,7 @@ import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
 import { MATCH_GREEN, STRENGTH_FAIR, STRENGTH_WEAK } from '../../src/theme/parity';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { spacing } from '../../src/theme/tokens';
 
 const ROLES = [
   { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help' },
@@ -24,6 +25,10 @@ const ROLES = [
 ];
 
 const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FIELD_GAP = { marginBottom: spacing[4] };
+const FIELD_GAP_TOP = { marginTop: spacing[4] };
 
 function EyeToggle({ shown, onToggle, color }) {
   return (
@@ -40,7 +45,7 @@ function EyeToggle({ shown, onToggle, color }) {
 }
 
 export default function Register() {
-  const { t, spacing, radius, text, fontFamily } = useTheme();
+  const { t, radius, text, fontFamily } = useTheme();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -62,6 +67,37 @@ export default function Register() {
     setForm((f) => ({ ...f, [key]: value }));
     setFieldErrors((f) => ({ ...f, [key]: '' }));
   };
+
+  // Stable per-field handlers + memo'd eye slots (the action.jsx pattern):
+  // Input is memo'd (floating-label Paper fields), so a keystroke in one field
+  // must not hand every sibling fresh props — the source of typing lag on
+  // slow phones.
+  const setUsername = useCallback((v) => {
+    setForm((f) => ({ ...f, username: sanitizeUsername(v) }));
+    setFieldErrors((f) => ({ ...f, username: '' }));
+  }, []);
+  const setEmail = useCallback((v) => {
+    setForm((f) => ({ ...f, email: v }));
+    setFieldErrors((f) => ({ ...f, email: '' }));
+  }, []);
+  const setPassword = useCallback((v) => {
+    setForm((f) => ({ ...f, password: v }));
+    setFieldErrors((f) => ({ ...f, password: '' }));
+  }, []);
+  const setConfirmPassword = useCallback((v) => {
+    setForm((f) => ({ ...f, confirmPassword: v }));
+    setFieldErrors((f) => ({ ...f, confirmPassword: '' }));
+  }, []);
+  const togglePwd = useCallback(() => setShowPwd((v) => !v), []);
+  const toggleConfirm = useCallback(() => setShowConfirm((v) => !v), []);
+  const pwdEye = useMemo(
+    () => <EyeToggle shown={showPwd} onToggle={togglePwd} color={t.ink3} />,
+    [showPwd, togglePwd, t.ink3]
+  );
+  const confirmEye = useMemo(
+    () => <EyeToggle shown={showConfirm} onToggle={toggleConfirm} color={t.ink3} />,
+    [showConfirm, toggleConfirm, t.ink3]
+  );
 
   const handleSubmit = async () => {
     setError('');
@@ -158,36 +194,36 @@ export default function Register() {
         <Input
           label="Username"
           value={form.username}
-          onChangeText={(v) => setField('username', sanitizeUsername(v))}
+          onChangeText={setUsername}
           error={fieldErrors.username}
           helper="3-20 characters. Letters, numbers, underscores. Visible to others."
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="username"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <Input
           label="Email"
           value={form.email}
-          onChangeText={(v) => setField('email', v)}
+          onChangeText={setEmail}
           error={fieldErrors.email}
           helper="We'll send a link to confirm it's really you."
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"
           textContentType="emailAddress"
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <Input
           label="Password"
           value={form.password}
-          onChangeText={(v) => setField('password', v)}
+          onChangeText={setPassword}
           error={fieldErrors.password}
           secureTextEntry={!showPwd}
           textContentType="newPassword"
-          rightSlot={<EyeToggle shown={showPwd} onToggle={() => setShowPwd((v) => !v)} color={t.ink3} />}
+          rightSlot={pwdEye}
         />
         {form.password ? (
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 6 }}>
@@ -211,23 +247,27 @@ export default function Register() {
         <Input
           label="Re-enter password"
           value={form.confirmPassword}
-          onChangeText={(v) => setField('confirmPassword', v)}
+          onChangeText={setConfirmPassword}
           error={fieldErrors.confirmPassword}
           secureTextEntry={!showConfirm}
           textContentType="newPassword"
-          rightSlot={<EyeToggle shown={showConfirm} onToggle={() => setShowConfirm((v) => !v)} color={t.ink3} />}
-          style={{ marginTop: spacing[4] }}
+          rightSlot={confirmEye}
+          style={FIELD_GAP_TOP}
         />
         {form.confirmPassword && form.password && form.confirmPassword === form.password ? (
           <Text style={{ fontSize: text.xs, color: MATCH_GREEN, marginTop: 4 }}>Passwords match</Text>
         ) : null}
 
-        {/* Terms agreement — submit stays disabled until checked (HCI rule 5) */}
+        {/* Terms agreement — submit stays disabled until checked (HCI rule 5).
+            The row only toggles consent; the documents open from the two
+            full-height links below, so a near-miss on a tiny inline link can
+            never silently flip the checkbox (audit 2026-07-17). */}
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: agreed }}
           accessibilityLabel="I agree to the Terms of Service and Privacy Policy"
           onPress={() => setAgreed((v) => !v)}
+          hitSlop={{ top: 6, bottom: 6 }}
           style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3], marginTop: spacing[5] }}
         >
           <View
@@ -245,25 +285,30 @@ export default function Register() {
           >
             {agreed ? <Text style={{ color: t.actionInk, fontSize: 14, fontWeight: '700', lineHeight: 17 }}>✓</Text> : null}
           </View>
-          <Text style={{ flex: 1, fontSize: 14, color: t.ink3, lineHeight: 21 }}>
-            I agree to the{' '}
-            <Text
-              style={{ color: t.blueDeep, textDecorationLine: 'underline' }}
-              onPress={() => setLegalOpen('terms')}
-              accessibilityRole="link"
-            >
-              Terms of Service
-            </Text>{' '}
-            and{' '}
-            <Text
-              style={{ color: t.blueDeep, textDecorationLine: 'underline' }}
-              onPress={() => setLegalOpen('privacy')}
-              accessibilityRole="link"
-            >
-              Privacy Policy
-            </Text>
+          <Text style={{ flex: 1, fontSize: text.base, color: t.ink3, lineHeight: 25 }}>
+            I agree to the Terms of Service and Privacy Policy
           </Text>
         </Pressable>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing[5], marginLeft: 22 + spacing[3] }}>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => setLegalOpen('terms')}
+            style={{ minHeight: 44, justifyContent: 'center' }}
+          >
+            <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
+              Read the Terms
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="link"
+            onPress={() => setLegalOpen('privacy')}
+            style={{ minHeight: 44, justifyContent: 'center' }}
+          >
+            <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
+              Read the Privacy Policy
+            </Text>
+          </Pressable>
+        </View>
 
         <Button
           title={loading ? 'Creating account…' : 'Create Account'}

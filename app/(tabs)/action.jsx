@@ -17,6 +17,11 @@ import { useToast } from '../../src/context/ToastContext';
 import { CATEGORY } from '../../src/lib/needs';
 import { centerActionFor } from '../../src/lib/roles';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { spacing } from '../../src/theme/tokens';
+
+// Hoisted so memo'd Inputs get the same style object every render
+const FIELD_GAP = { marginBottom: spacing[4] };
+const DETAILS_INPUT_STYLE = { minHeight: 100, textAlignVertical: 'top' };
 
 function FieldLabel({ children }) {
   const { t, type } = useTheme();
@@ -30,7 +35,7 @@ function FieldLabel({ children }) {
 // Post Help (3e): title input, kind-of-help chips, Normal/Urgent, optional
 // details, bottom-pinned primary. Validation is inline on the fields.
 function PostNeedForm() {
-  const { t, spacing, type, fontFamily } = useTheme();
+  const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -119,7 +124,7 @@ function PostNeedForm() {
           onChangeText={setTitle}
           error={fieldErrors.title}
           helper='Short and clear, like "A ride to the clinic on Thursday".'
-          style={{ marginBottom: spacing[4] }}
+          style={FIELD_GAP}
         />
 
         <FieldLabel>Kind of help</FieldLabel>
@@ -140,7 +145,7 @@ function PostNeedForm() {
             value={form.categoryOther}
             onChangeText={setCategoryOther}
             error={fieldErrors.categoryOther}
-            style={{ marginBottom: spacing[4] }}
+            style={FIELD_GAP}
           />
         ) : null}
 
@@ -156,7 +161,7 @@ function PostNeedForm() {
           onChangeText={setDescription}
           multiline
           numberOfLines={4}
-          inputStyle={{ minHeight: 100, textAlignVertical: 'top' }}
+          inputStyle={DETAILS_INPUT_STYLE}
         />
       </ScrollView>
 

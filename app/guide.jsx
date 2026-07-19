@@ -13,7 +13,7 @@ const ELDER_CAN = [
   'Find and connect with helpers near you.',
   'Message the people you connect with, safely and simply.',
   'Check in every day to keep your daily streak going.',
-  'Add emergency contacts and use the SOS button any time you need help fast.',
+  'Add emergency contacts so the people you trust are easy to reach.',
 ];
 
 const HELPER_CAN = [
@@ -47,12 +47,12 @@ function Bullets({ items }) {
   );
 }
 
-export default function Guide() {
-  const { t, spacing, radius, text, fontFamily } = useTheme();
-  const { user } = useAuth();
-  const [role, setRole] = useState(user?.role === 'HELPER' ? 'HELPER' : 'ELDER');
-
-  const H = ({ children }) => (
+// Module-scope like Bullets (NOT defined during render): a new component type
+// per render would unmount/remount every heading and paragraph subtree on
+// each role toggle.
+function H({ children }) {
+  const { t, text, fontFamily } = useTheme();
+  return (
     <Text
       accessibilityRole="header"
       style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
@@ -60,11 +60,20 @@ export default function Guide() {
       {children}
     </Text>
   );
-  const P = ({ children, style }) => (
+}
+function P({ children, style }) {
+  const { t, text, spacing } = useTheme();
+  return (
     <Text style={[{ fontSize: text.base, lineHeight: 27, color: t.inkSlate, marginTop: spacing[2] }, style]}>
       {children}
     </Text>
   );
+}
+
+export default function Guide() {
+  const { t, spacing, radius, text } = useTheme();
+  const { user } = useAuth();
+  const [role, setRole] = useState(user?.role === 'HELPER' ? 'HELPER' : 'ELDER');
 
   return (
     <Screen back title="How ToWin works">
@@ -153,7 +162,7 @@ export default function Guide() {
           items={[
             'Phone numbers are shared only when you both reach the Phone Ready step.',
             'Meet in public places for first meetings.',
-            'Elders can add emergency contacts — the SOS button on Home alerts them instantly.',
+            'Elders can keep emergency contacts — the people to call when something happens.',
             'You can report anyone from their profile; our team reviews every report.',
           ]}
         />

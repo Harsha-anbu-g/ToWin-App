@@ -20,7 +20,6 @@ import {
   BookOpen,
   CalendarCheck,
   ChevronRight,
-  ClipboardList,
   HandHelping,
   PhoneCall,
   Plus,
@@ -212,9 +211,9 @@ export default function MenuSheet({ visible, onClose }) {
                 <Row first icon={Plus} label="Post Help" sublabel="Ask your neighbors for help" onPress={() => go('/(tabs)/action')} />
                 <Row icon={HandHelping} label="Posted Help" sublabel="Help you've asked for" onPress={() => go('/(tabs)/posted-help')} />
                 <Row icon={UsersRound} label="My Helpers" sublabel="Trust ladders with your helpers" onPress={() => go('/(tabs)/home')} />
-                {user?.role === 'BOTH' ? (
-                  <Row icon={ClipboardList} label="My offers" sublabel="Jobs you've offered to help with" onPress={() => go('/my-jobs')} />
-                ) : null}
+                {/* Role BOTH has no Offer Help surface yet (its center action
+                    is Post Help), so a "My offers" row would promise a list
+                    that can never fill — hidden until an apply path exists. */}
               </>
             )}
             <Row icon={UserRoundPlus} label="Add Friends" sublabel="Find people near you" onPress={() => go('/friends')} />
@@ -228,7 +227,7 @@ export default function MenuSheet({ visible, onClose }) {
 
           <Group>
             {isElder ? (
-              <Row first icon={PhoneCall} label="SOS — emergency contacts" sublabel="Help in an emergency" onPress={() => go('/emergency-contacts')} />
+              <Row first icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
             ) : null}
             <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How ToWin works" onPress={() => go('/guide')} />
           </Group>

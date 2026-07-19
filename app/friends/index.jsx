@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -250,7 +250,18 @@ export default function FriendsScreen() {
                     ) : (
                       <TonalChip
                         label={request.isPending && request.variables === p.userId ? 'Sending…' : 'Connect'}
-                        onPress={request.isPending ? undefined : () => request.mutate(p.userId)}
+                        // A sent request can't be withdrawn (backend has no
+                        // cancel), so a mis-tap must not send one — confirm
+                        // first (HCI rule 5, error prevention).
+                        onPress={
+                          request.isPending
+                            ? undefined
+                            : () =>
+                                Alert.alert('Send a friend request?', `${p.name} will be asked to connect with you.`, [
+                                  { text: 'Not now', style: 'cancel' },
+                                  { text: 'Send request', onPress: () => request.mutate(p.userId) },
+                                ])
+                        }
                       />
                     )
                   }
@@ -295,11 +306,22 @@ export default function FriendsScreen() {
                           style={{ flex: 1 }}
                         />
                         <Button
-                          title="Not now"
+                          title="Decline"
                           variant="text"
                           loading={respond.isPending && respond.variables?.id === conn.id && !respond.variables?.accept}
                           disabled={respond.isPending}
-                          onPress={() => respond.mutate({ id: conn.id, accept: false })}
+                          // Declining is permanent on the backend — the label
+                          // must not promise "later", and it confirms first.
+                          onPress={() =>
+                            Alert.alert(
+                              'Decline this invite?',
+                              `${conn.otherUserName} will be told you declined. They can invite you again later.`,
+                              [
+                                { text: 'Keep invite', style: 'cancel' },
+                                { text: 'Decline', style: 'destructive', onPress: () => respond.mutate({ id: conn.id, accept: false }) },
+                              ]
+                            )
+                          }
                           style={{ flex: 1 }}
                         />
                       </View>
@@ -312,17 +334,23 @@ export default function FriendsScreen() {
                     retry: refetchConns,
                   })
                 : requested.map((conn) => (
-                    <PersonRow
-                      key={conn.id}
-                      person={{
-                        name: conn.otherUserName,
-                        age: conn.otherUserAge,
-                        photoUrl: conn.otherUserPhotoUrl,
-                        trustScore: conn.otherUserTrustScore,
-                      }}
-                      onPress={() => router.push(`/user/${conn.otherUserId}`)}
-                      trailing={<TonalChip label="Requested" neutral />}
-                    />
+                    <View key={conn.id} style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
+                      <PersonRow
+                        person={{
+                          name: conn.otherUserName,
+                          age: conn.otherUserAge,
+                          photoUrl: conn.otherUserPhotoUrl,
+                          trustScore: conn.otherUserTrustScore,
+                        }}
+                        onPress={() => router.push(`/user/${conn.otherUserId}`)}
+                        trailing={<TonalChip label="Requested" neutral />}
+                      />
+                      {/* Requests can't be withdrawn yet (backend has no
+                          cancel) — at least say plainly what waiting means. */}
+                      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
+                        Waiting for {conn.otherUserName} to accept — they'll see your request in their invites.
+                      </Text>
+                    </View>
                   ))}
           </ScrollView>
         )}

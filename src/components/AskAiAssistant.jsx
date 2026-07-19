@@ -8,6 +8,7 @@
 // naming Groq, the outside AI service (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
 import { usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -25,6 +26,7 @@ import {
 } from 'react-native';
 import { Mic, Send, Volume2, X } from 'lucide-react-native';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
@@ -49,6 +51,7 @@ export default function AskAiAssistant() {
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
+  const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -67,12 +70,13 @@ export default function AskAiAssistant() {
 
   const headerRef = useRef(null); // screen-reader focus lands here on open
 
+  const { user } = useAuth();
   const [aiConsented, setAiConsented] = useState(false);
   useEffect(() => {
-    hasAiConsent().then((ok) => {
-      if (mounted.current && ok) setAiConsented(true);
+    hasAiConsent(user?.userId).then((ok) => {
+      if (mounted.current) setAiConsented(ok);
     });
-  }, []);
+  }, [user?.userId]);
 
   // One-time disclosure naming the AI provider before anything is sent
   // (App Store AI-consent rule). Resolves true to continue the send, false to
@@ -92,7 +96,7 @@ export default function AskAiAssistant() {
             text: "Yes, that's okay",
             onPress: () => {
               setAiConsented(true);
-              grantAiConsent();
+              grantAiConsent(user?.userId);
               resolve(true);
             },
           },
@@ -192,17 +196,10 @@ export default function AskAiAssistant() {
           if (node) AccessibilityInfo.setAccessibilityFocus(node);
         }}
       >
-        <View style={{ flex: 1, backgroundColor: t.scrim, justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              backgroundColor: t.surface,
-              borderTopLeftRadius: radius['2xl'],
-              borderTopRightRadius: radius['2xl'],
-              maxHeight: '80%',
-              minHeight: '55%',
-              overflow: 'hidden',
-            }}
-          >
+        {/* Full page (user call 2026-07-17): the helper owns the whole screen
+            instead of a bottom sheet. */}
+        <View style={{ flex: 1, backgroundColor: t.surface, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+          <View style={{ flex: 1, overflow: 'hidden' }}>
             {/* Wash header: mascot + Ask AI / Your ToWin helper */}
             <View
               style={{
@@ -266,7 +263,7 @@ export default function AskAiAssistant() {
                       accessibilityRole="button"
                       accessibilityLabel="Read the greeting aloud"
                       onPress={() => speak(GREETING)}
-                      hitSlop={{ top: 6, bottom: 6 }}
+                      hitSlop={{ top: 7, bottom: 7 }}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -331,7 +328,7 @@ export default function AskAiAssistant() {
                         accessibilityRole="button"
                         accessibilityLabel="Read this answer aloud"
                         onPress={() => speak(item.content)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
                         style={({ pressed }) => ({
                           flexDirection: 'row',
                           alignItems: 'center',
