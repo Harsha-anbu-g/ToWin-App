@@ -104,7 +104,9 @@ export default function TabsLayout() {
   const action = centerActionFor(user?.role);
   const second = secondTabFor(user?.role);
   const homeTab = homeTabFor(user?.role);
-  const ActionIcon = action.key === 'find' ? Search : Plus;
+  // FAMILY has no center action at all (roles.js) — the slot disappears and
+  // the bar is Home · Messages · Profile.
+  const ActionIcon = action?.key === 'find' ? Search : Plus;
 
   return (
     <View style={{ flex: 1 }}>
@@ -144,18 +146,22 @@ export default function TabsLayout() {
       <Tabs.Screen name="dashboard" options={{ href: null }} />
       <Tabs.Screen
         name="action"
-        options={{
-          title: action.label,
-          tabBarButton: (props) => (
-            <CenterActionButton
-              label={action.label}
-              Icon={ActionIcon}
-              onPress={props.onPress}
-              accessibilityState={props.accessibilityState}
-              t={t}
-            />
-          ),
-        }}
+        options={
+          action
+            ? {
+                title: action.label,
+                tabBarButton: (props) => (
+                  <CenterActionButton
+                    label={action.label}
+                    Icon={ActionIcon}
+                    onPress={props.onPress}
+                    accessibilityState={props.accessibilityState}
+                    t={t}
+                  />
+                ),
+              }
+            : { href: null }
+        }
       />
       <Tabs.Screen
         name="messages"
