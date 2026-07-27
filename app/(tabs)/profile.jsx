@@ -4,7 +4,7 @@
 // clearly separated (HCI: destructive-nav-separation).
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, Switch, Text, View } from 'react-native';
 import {
   BookOpen,
@@ -16,6 +16,7 @@ import {
   PhoneCall,
   ShieldCheck,
   UserX,
+  Vibrate,
 } from 'lucide-react-native';
 import api from '../../src/api/client';
 import TortoiseMark from '../../src/components/TortoiseMark';
@@ -26,10 +27,11 @@ import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
+import { isHapticsEnabled, setHapticsEnabled, subscribeHaptics } from '../../src/lib/haptics';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 function Stat({ value, label, gold }) {
-  const { t } = useTheme();
+  const { t, type } = useTheme();
   return (
     <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
       <Text
@@ -42,7 +44,7 @@ function Stat({ value, label, gold }) {
       >
         {value ?? '—'}
       </Text>
-      <Text style={{ fontSize: 12, color: gold ? t.trustGold : t.inkSlate }}>{label}</Text>
+      <Text style={{ fontSize: type.meta, color: gold ? t.trustGold : t.inkSlate }}>{label}</Text>
     </View>
   );
 }
@@ -80,7 +82,7 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole
       <Text
         style={{
           flex: 1,
-          fontSize: 15,
+          fontSize: 16, // elder floor — the whole settings list sat at 15
           fontWeight: destructive ? '600' : '400',
           color: destructive ? t.red : t.ink,
         }}
@@ -93,24 +95,33 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole
 }
 
 export default function ProfileScreen() {
-  const { t, spacing, text, fontFamily, mode, toggle } = useTheme();
+  const { t, spacing, text, type, fontFamily, mode, toggle } = useTheme();
   const { user, logout } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
+
+  // Vibration feedback (rulebook §11: haptics must be user-switchable) — the
+  // module holds the truth; this state only mirrors it for the Switch visual.
+  const [hapticsOn, setHapticsOn] = useState(isHapticsEnabled());
+  useEffect(() => subscribeHaptics(setHapticsOn), []);
+  // Account actions stay folded until asked for (see the card at the bottom).
+  const [accountOpen, setAccountOpen] = useState(false);
 
   const { data: profile, isError: profileFailed, refetch: refetchProfile } = useQuery({
     queryKey: ['profile-me'],
     queryFn: async () => (await api.get('/profile/me')).data,
   });
+  // isError on every stat feed: a failed fetch must render as "—", never as
+  // a confident 0 (rulebook: failed loads never masquerade as real data).
   const { data: trust } = useQuery({
     queryKey: ['trust-my-score'],
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
-  const { data: connections } = useQuery({
+  const { data: connections, isError: connectionsFailed } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
-  const { data: streak } = useQuery({
+  const { data: streak, isError: streakFailed } = useQuery({
     queryKey: ['streak-me'],
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
@@ -137,7 +148,8 @@ export default function ProfileScreen() {
       [
         { text: 'Keep my account', style: 'cancel' },
         {
-          text: 'Continue',
+          // A verb naming the consequence — never a bare "Continue" (rulebook).
+          text: 'Delete my account',
           style: 'destructive',
           onPress: () =>
             Alert.alert('Are you absolutely sure?', 'There is no way back after this.', [
@@ -163,7 +175,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen>
+    <Screen fab>
       <Text
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
@@ -184,7 +196,7 @@ export default function ProfileScreen() {
             <Text style={{ fontFamily: fontFamily.display, fontSize: 21, color: t.ink }}>
               {profile?.name ?? '…'}
             </Text>
-            <Text style={{ fontSize: 13, color: t.inkSlate, marginTop: 1 }}>
+            <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 1 }}>
               {profile?.city ??
                 (user?.role === 'BOTH'
                   ? 'Elder & Helper'
@@ -201,7 +213,9 @@ export default function ProfileScreen() {
             onPress={() => router.push('/profile-edit')}
             hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
-              height: 36,
+              // minHeight, not height — the label has to grow at 200% text scale
+              minHeight: 36,
+              paddingVertical: spacing[2],
               paddingHorizontal: 15,
               borderRadius: 18,
               backgroundColor: t.canvas,
@@ -212,7 +226,7 @@ export default function ProfileScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: t.ink }}>Edit</Text>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>Edit</Text>
           </Pressable>
         </View>
         <View
@@ -225,8 +239,11 @@ export default function ProfileScreen() {
           }}
         >
           <Stat value={trust ? Math.round(trust.totalScore) : undefined} label="trust" gold />
-          <Stat value={friendsCount} label="friends" />
-          <Stat value={streak?.currentStreak ?? 0} label="day streak" />
+          <Stat value={connectionsFailed ? undefined : friendsCount} label="friends" />
+          <Stat
+            value={streakFailed ? undefined : (streak?.currentStreak ?? undefined)}
+            label="day streak"
+          />
         </View>
       </Card>
 
@@ -267,10 +284,28 @@ export default function ProfileScreen() {
           }
         />
         <Row
+          icon={Vibrate}
+          label="Vibration feedback"
+          onPress={() => setHapticsEnabled(!hapticsOn)}
+          divider
+          a11yRole="switch"
+          a11yState={{ checked: hapticsOn }}
+          right={
+            // Visual-only, same as Night mode: the row is the single control.
+            <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Switch
+                value={hapticsOn}
+                trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
+              />
+            </View>
+          }
+        />
+        {/* Not destructive — red on a benign navigation row mis-signals danger
+            and burns the channel Delete-account needs (rulebook). */}
+        <Row
           icon={PhoneCall}
           label="Emergency contacts"
           onPress={() => router.push('/emergency-contacts')}
-          destructive
         />
       </Card>
 
@@ -319,19 +354,42 @@ export default function ProfileScreen() {
 
       <Button title="Log out" variant="secondary" onPress={logout} style={{ marginTop: spacing[5] }} />
 
-      {/* Account — separated from everything else on purpose */}
+      {/* Account — folded away behind one row so "Delete my account" is never
+          sitting in the open where a mis-tap can reach it (user call
+          2026-07-26). Opening it is a deliberate act. */}
       <Card style={{ marginTop: spacing[6] }}>
-        <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.inkSlate, marginBottom: spacing[2] }}>
-          My data
-        </Text>
-        <Button title="Send me a copy of my data" variant="text" loading={exporting} onPress={exportData} />
-        <Button
-          title={deleteAccount.isPending ? 'Deleting…' : 'Delete my account'}
-          variant="destructive"
-          onPress={confirmDelete}
-          loading={deleteAccount.isPending}
-          style={{ marginTop: spacing[3] }}
-        />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Account and data"
+          accessibilityState={{ expanded: accountOpen }}
+          onPress={() => setAccountOpen((v) => !v)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            minHeight: 44,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Text style={{ flex: 1, fontSize: text.base, color: t.ink }}>Account and data</Text>
+          <ChevronRight
+            size={18}
+            color={t.inkFaint2}
+            strokeWidth={1.8}
+            style={{ transform: [{ rotate: accountOpen ? '90deg' : '0deg' }] }}
+          />
+        </Pressable>
+
+        {accountOpen ? (
+          <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
+            <Button title="Send me a copy of my data" variant="text" loading={exporting} onPress={exportData} />
+            <Button
+              title={deleteAccount.isPending ? 'Deleting…' : 'Delete my account'}
+              variant="destructive"
+              onPress={confirmDelete}
+              loading={deleteAccount.isPending}
+            />
+          </View>
+        ) : null}
       </Card>
     </Screen>
   );

@@ -4,6 +4,7 @@
 // icon-only glyphs — UserRoundPlus especially — aren't self-evident for
 // elders; captions use the tab-bar label size, same convention).
 // Trust pill only renders once the score is known — no flash of "undefined".
+import { useRouter } from 'expo-router';
 import { Menu, UserRoundPlus } from 'lucide-react-native';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
@@ -34,6 +35,7 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
 
 export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
   const { t, radius, type } = useTheme();
+  const router = useRouter();
 
   return (
     <View
@@ -61,15 +63,19 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             letterSpacing: -0.4,
           }}
         >
-          ToWin
+          Towinly
         </Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
         {trustScore != null ? (
-          <View
-            accessible
-            accessibilityLabel={`${trustScore} trust`}
-            style={{
+          // The score is the doorway to the Trust Score page (user call
+          // 2026-07-26) — it was a dead label before.
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`${trustScore} trust. Open your Trust Score page`}
+            onPress={() => router.push('/trust')}
+            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
+            style={({ pressed }) => ({
               flexDirection: 'row',
               alignItems: 'center',
               gap: 4,
@@ -80,7 +86,8 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
               paddingVertical: 5,
               paddingHorizontal: 11,
               marginRight: 6,
-            }}
+              opacity: pressed ? 0.6 : 1,
+            })}
           >
             <Text
               style={{
@@ -93,7 +100,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
               {trustScore}
             </Text>
             <Text style={{ fontSize: type.caption, color: t.trustGold }}>trust</Text>
-          </View>
+          </Pressable>
         ) : null}
         {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
             — no handler, no button, instead of a dead target. */}

@@ -1,10 +1,10 @@
-// Login — port of ToWin/frontend/src/pages/Login.jsx for mobile (single column):
+// Login — port of Towinly/frontend/src/pages/Login.jsx for mobile (single column):
 // demo accounts first (they bypass the login rate limiter), then the form card.
 // Login body field is `identifier` (username/email/phone), NOT `email`.
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { AlertCircle, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
@@ -12,12 +12,13 @@ import { showDemoAccounts } from '../../src/lib/appEnv';
 import TortoiseMark from '../../src/components/TortoiseMark';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
 
 // Hoisted so memo'd Inputs get the same style object every render
-const FIELD_GAP = { marginBottom: spacing[4] };
+const FIELD_GAP = { marginBottom: spacing[5] };
 
 export default function Login() {
   const { t, radius, text, fontFamily } = useTheme();
@@ -67,7 +68,9 @@ export default function Login() {
     setError('');
     const errs = {};
     if (!form.identifier.trim()) errs.identifier = 'Enter your username, Gmail, or phone number';
-    if (form.password.length < 6) errs.password = 'Password must be at least 6 characters';
+    // 8, matching the register rule — a 6-char floor here described a password
+    // that cannot exist on any account (rulebook pass).
+    if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
@@ -86,12 +89,15 @@ export default function Login() {
   };
 
   return (
-    <Screen keyboard>
+    // Wider side margin than the app default (user call 2026-07-26: the fields
+    // ran edge to edge and the page read as one solid block). The type on this
+    // screen is large, so it needs a larger gutter to breathe.
+    <Screen keyboard contentStyle={{ paddingHorizontal: spacing[6], paddingTop: spacing[2] }}>
       {/* App-shaped opening: quiet brand lockup with breathing room */}
-      <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[6] }}>
+      <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[8] }}>
         <TortoiseMark size={52} />
         <Text style={{ fontSize: 22, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.5, marginTop: spacing[2] }}>
-          ToWin
+          Towinly
         </Text>
       </View>
 
@@ -103,8 +109,8 @@ export default function Login() {
         >
           Welcome back.
         </Text>
-        <Text style={{ fontSize: 16, color: t.ink3, marginTop: 4, marginBottom: spacing[5] }}>
-          Log in to your ToWin account.
+        <Text style={{ fontSize: 16, color: t.ink3, marginTop: spacing[2], marginBottom: spacing[6] }}>
+          Log in to your Towinly account.
         </Text>
 
         {sessionExpired ? (
@@ -118,7 +124,8 @@ export default function Login() {
               marginBottom: spacing[4],
             }}
           >
-            <Text style={{ fontSize: text.sm, color: t.blueTeal, lineHeight: 20 }}>
+            {/* blueDeep, not blueTeal — teal on the wash measured 3.47:1 (rulebook) */}
+            <Text style={{ fontSize: text.sm, color: t.blueDeep, lineHeight: 21 }}>
               For your safety, you were logged out after a period of inactivity. Please log in again.
             </Text>
           </View>
@@ -126,8 +133,12 @@ export default function Login() {
 
         {error ? (
           <View
+            accessible
             accessibilityRole="alert"
             style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: spacing[2],
               backgroundColor: t.redTint,
               borderWidth: 1,
               borderColor: t.redLine,
@@ -136,7 +147,11 @@ export default function Login() {
               marginBottom: spacing[4],
             }}
           >
-            <Text style={{ fontSize: text.sm, color: t.redError }}>{error}</Text>
+            {/* Icon + color, never color alone (rulebook) */}
+            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 1 }} />
+            <Text style={{ flex: 1, fontSize: text.sm, color: t.redError, lineHeight: 21 }}>
+              {error}
+            </Text>
           </View>
         ) : null}
 
@@ -148,6 +163,7 @@ export default function Login() {
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="username"
+          autoComplete="username"
           style={FIELD_GAP}
         />
 
@@ -158,31 +174,36 @@ export default function Login() {
           error={fieldErrors.password}
           secureTextEntry={!showPwd}
           textContentType="password"
+          autoComplete="current-password"
           rightSlot={pwdEye}
         />
 
-        <Pressable
-          accessibilityRole="link"
+        {/* marginBottom keeps this link's target clear of the Log In button
+            (rulebook: >=8pt inert space between adjacent targets). */}
+        <TextLink
+          label="Forgot password?"
           onPress={() => router.push('/(auth)/forgot-password')}
-          hitSlop={8}
-          style={{ alignSelf: 'flex-end', paddingVertical: spacing[3] }}
-        >
-          <Text style={{ fontSize: text.sm, color: t.blueDeep }}>Forgot password?</Text>
-        </Pressable>
+          style={{ alignSelf: 'flex-end', marginTop: spacing[2], marginBottom: spacing[5] }}
+        />
 
         <Button
           title={loading ? 'Logging in…' : 'Log In'}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
-          accessibilityHint="Logs in to your ToWin account"
+          accessibilityHint="Logs in to your Towinly account"
         />
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: spacing[5] }}>
-          <Text style={{ fontSize: 14, color: t.ink3 }}>New here? </Text>
-          <Pressable accessibilityRole="link" onPress={() => router.push('/(auth)/register')} hitSlop={8}>
-            <Text style={{ fontSize: 14, color: t.blueDeep, fontWeight: '600' }}>Create Account</Text>
-          </Pressable>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: spacing[6],
+          }}
+        >
+          <Text style={{ fontSize: 16, color: t.ink3 }}>New here? </Text>
+          <TextLink label="Create Account" onPress={() => router.push('/(auth)/register')} />
         </View>
 
         {/* Demo accounts live quietly under the form, not above it — hidden in

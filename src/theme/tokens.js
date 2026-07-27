@@ -1,4 +1,4 @@
-// ToWin design tokens — 1:1 port of ToWin/frontend/src/index.css (user-approved 2026-07-05),
+// Towinly design tokens — 1:1 port of Towinly/frontend/src/index.css (user-approved 2026-07-05),
 // updated 2026-07-11 to the Claude Design mobile redesign handoff
 // (towin-app-mobile-redesign/project/design_handoff_towin_mobile/README.md), which
 // supersedes website parity where they conflict: pages are WHITE (user decision),
@@ -26,6 +26,16 @@ export const light = {
   // darker blue "for contrast" — that was tried and rejected as off-brand.
   actionFill: '#4FA3CE', // web: var(--blue)
   actionInk: '#ffffff',
+  // Action color for text sitting ON the inverted ink pill (the toast). The
+  // fill waiver above covers filled buttons only — unfilled text on ink has no
+  // waiver, so this is the blue that clears 4.5:1 there.
+  actionOnInk: '#7ec0e4', // 8.46:1 on ink #1d1d1f
+  // Informational count badges (unread inbox, tab bar). The owner's call
+  // (2026-07-27): the fill waiver above is for buttons — a badge is not an
+  // action, and its 11-12px numeral needs the real 4.5:1, so badges alone go
+  // deeper while every button keeps the sky-blue fill untouched. Deliberately
+  // NOT blueDeep: that token flips pale at night and would strand white text.
+  badgeFill: '#2E7DA6', // 4.60:1 with white; ≥3:1 on every surface, both themes
 
   // Neutral slate — avatars & trust badge
   slateTint: '#EEF1F4',
@@ -70,7 +80,11 @@ export const light = {
   redSoft: '#fca5a5', // error border
   redDeep: '#9b3535', // destructive (end connection)
   greenDeep: '#1a5c2e', // trusted / success text
-  greenTint: '#ebf6ee', // success background
+  // Success FILL is neutral, not green (user call 2026-07-26: "remove the
+  // green background … remove it all over the app"). Green now lives only in
+  // text and marks. Token name kept so in-flight screens don't churn — same
+  // convention as trustGold below.
+  greenTint: '#f1eee8', // success background — warm neutral, no hue
   // Trust accent — deep green (user call 2026-07-12: the gold family clashed
   // with the white pages). Token name kept so in-flight screens don't churn;
   // rename to trustAccent once the redesign wave settles.
@@ -82,8 +96,8 @@ export const light = {
   skyLine: '#dcebf4', // borders on sky-tinted chips
   skyLine2: '#d8eaf4',
   skyGhost: '#f4fafd', // faintest sky fill
-  greenWash: '#f0fdf4',
-  greenLine: '#bfe0c9',
+  greenWash: '#faf9f6', // was green; neutralised with greenTint
+  greenLine: '#e5e1d9', // success border — warm hairline, no hue
   redLine: '#fecaca',
   greyFill: '#f5f5f7',
   greyFill2: '#f3f4f6',
@@ -148,6 +162,8 @@ export const dark = {
   // Ladder waiting-half (website 494fa79): earned fill is the BRIGHT blue at night,
   // so the pending half dims instead of lightens (light value collides with #7ec0e4).
   skyBarFrom: 'rgba(126, 192, 228, 0.55)',
+  // Ink flips light at night, so the pill's action text has to flip dark with it.
+  actionOnInk: '#1F5E80', // 6.21:1 on ink #f2f0ec
 
   slateTint: '#33363b',
   slateSoft: '#4a4e55',
@@ -157,7 +173,9 @@ export const dark = {
   ink3: '#a8a49c',
   ink4: '#949089',
   inkFaint: '#6f6c66',
-  inkFaint2: '#8f8b84',
+  // 4.94:1 on the card canvas — #8f8b84 measured 4.29 there and failed AA,
+  // the night twin of the light palette's same fix.
+  inkFaint2: '#9a968f',
   inkDeep: '#ccd3da',
   inkSlate: '#aeb6bf',
   inkSlate2: '#a7b1b9',
@@ -182,7 +200,7 @@ export const dark = {
   redSoft: 'rgba(248, 113, 113, 0.45)',
   redDeep: '#b45050',
   greenDeep: '#7cc28f',
-  greenTint: 'rgba(61, 139, 90, 0.18)',
+  greenTint: 'rgba(255, 255, 255, 0.07)', // neutral fill at night (see light theme note)
   trustGold: '#7cc28f', // trust accent at night — same green family as greenDeep
 
   hairline: '#33312d',
@@ -190,8 +208,8 @@ export const dark = {
   skyLine: 'rgba(79, 163, 206, 0.30)',
   skyLine2: 'rgba(79, 163, 206, 0.26)',
   skyGhost: 'rgba(79, 163, 206, 0.07)',
-  greenWash: 'rgba(61, 139, 90, 0.12)',
-  greenLine: 'rgba(124, 194, 143, 0.38)',
+  greenWash: 'rgba(255, 255, 255, 0.05)',
+  greenLine: '#3a3833',
   redLine: 'rgba(248, 113, 113, 0.35)',
   greyFill: '#2e2d2b',
   greyFill2: '#2e2d2b',
@@ -248,8 +266,11 @@ export const radius = {
   input: 12, card: 16, hero: 18,
 };
 
-// Legacy web-parity scale — superseded per-screen by `type` as the redesign lands
-export const text = { xs: 13, sm: 15, base: 18, lg: 22, xl: 28, '2xl': 34, '3xl': 40 };
+// Legacy web-parity scale — superseded per-screen by `type` as the redesign lands.
+// sm raised 15 → 16 (rulebook pass 2026-07-27): it carries Input errors/helpers,
+// secondary Button labels, toast messages, and the legal body — all reading text,
+// all under the elder floor at 15.
+export const text = { xs: 13, sm: 16, base: 18, lg: 22, xl: 28, '2xl': 34, '3xl': 40 };
 
 // Redesign SF type ramp (handoff, locked): body/UI on the system stack; scores,
 // streaks, and times ALWAYS render with tabular numerals (fontVariant:
@@ -260,11 +281,14 @@ export const type = {
   cardTitle: 19, // card titles (Newsreader)
   bigNumber: 48, // serif streaks/scores
   body: 16, // elder rule: running text never below 16 (handoff's 15 was under the floor)
-  meta: 13,
+  // Floors raised (rulebook pass 2026-07-27): meta carries actionable/meaningful
+  // secondary text (chip labels, status lines, ladder legends) — 13 was under the
+  // important-secondary floor; tabLabel sat below the hard 11pt platform minimum.
+  meta: 14,
   caption: 12,
-  segCount: 11, // segmented-control counts
-  tabLabel: 10, // tab bar labels
-  wordmark: 19, // 'ToWin' SF 600, color blueTeal
+  segCount: 12, // segmented-control counts
+  tabLabel: 11, // tab bar labels — the absolute HIG floor, never lower
+  wordmark: 19, // 'Towinly' SF 600, color blueTeal
 };
 
 export const fontFamily = {

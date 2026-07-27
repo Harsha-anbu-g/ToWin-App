@@ -1,10 +1,12 @@
 // The ☰ menu — a drawer that slides in from the LEFT (where the button
 // lives), grouped rows inside. One feature per row, one feature per screen.
-// Motion: 240ms ease-out on transform only; reduced motion renders in place.
+// Motion: transform only — 240ms ease-out in, 200ms accelerate out; reduced
+// motion renders in place.
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   Animated,
   Easing,
   findNodeHandle,
@@ -18,9 +20,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   BookOpen,
+  Briefcase,
   CalendarCheck,
   ChevronRight,
   HandHelping,
+  LogOut,
   PhoneCall,
   Plus,
   Puzzle,
@@ -93,7 +97,7 @@ function Group({ children }) {
 
 export default function MenuSheet({ visible, onClose }) {
   const { t, spacing, text, fontFamily } = useTheme();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
@@ -126,7 +130,8 @@ export default function MenuSheet({ visible, onClose }) {
       return;
     }
     Animated.parallel([
-      Animated.timing(slide, { toValue: -drawerW, duration: 200, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      // Exits accelerate away (entrances decelerate in) — Material emphasized-accelerate
+      Animated.timing(slide, { toValue: -drawerW, duration: 200, easing: Easing.bezier(0.3, 0, 0.8, 0.15), useNativeDriver: true }),
       Animated.timing(scrim, { toValue: 0, duration: 200, useNativeDriver: true }),
     ]).start(() => onClose());
   };
@@ -210,6 +215,9 @@ export default function MenuSheet({ visible, onClose }) {
               <>
                 <Row first icon={Search} label="Offer Help" sublabel="Needs from elders near you" onPress={() => go('/(tabs)/action')} />
                 <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/home')} />
+                {/* Helpers CAN apply (Offer Help) but had no way back to their
+                    applications — /my-jobs existed unreachable (orphan fix). */}
+                <Row icon={Briefcase} label="My offers & jobs" sublabel="Where your offers stand" onPress={() => go('/my-jobs')} />
               </>
             ) : isFamily ? (
               // Their whole world is the parents hub — no posting, no
@@ -249,7 +257,32 @@ export default function MenuSheet({ visible, onClose }) {
                 <Row icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
               </>
             ) : null}
-            <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How ToWin works" onPress={() => go('/guide')} />
+            <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How Towinly works" onPress={() => go('/guide')} />
+          </Group>
+
+          {/* Logout lives in the menu for every seat — elder, helper and
+              family (user call 2026-07-26). Confirmed, because an accidental
+              tap costs a full sign-in. */}
+          <Group>
+            <Row
+              first
+              icon={LogOut}
+              label="Log out"
+              sublabel="Sign out of Towinly"
+              onPress={() =>
+                Alert.alert('Log out?', 'You can sign back in any time.', [
+                  { text: 'Stay signed in', style: 'cancel' },
+                  {
+                    text: 'Log out',
+                    style: 'destructive',
+                    onPress: () => {
+                      onClose();
+                      logout();
+                    },
+                  },
+                ])
+              }
+            />
           </Group>
         </ScrollView>
       </Animated.View>
