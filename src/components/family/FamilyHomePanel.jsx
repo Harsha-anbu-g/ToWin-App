@@ -15,6 +15,7 @@ import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
+import { ParentOpenNeeds, ParentStatusLine, SharedHelpers } from './FamilyJourney';
 // Rows moved to FamilyRows (FAM-403) — the elder's My Family screen shares them.
 import { LinkRow, SectionHeading } from './FamilyRows';
 
@@ -28,6 +29,16 @@ export default function FamilyHomePanel() {
     queryKey: ['family-links'],
     queryFn: async () => (await api.get('/family/links')).data,
   });
+
+  // The parent's journey: check-in, open requests, and the friendships they
+  // chose to share. Kept as its own query so a journey outage still leaves the
+  // links list — and the accept/cancel actions — working (HCI 9).
+  const { data: journeyData } = useQuery({
+    queryKey: ['family-journey'],
+    queryFn: async () => (await api.get('/family/journey')).data,
+  });
+  const journeyFor = (elderId) =>
+    (journeyData?.elders ?? []).find((e) => e.elderId === elderId);
 
   // This panel is the FAMILY seat: only links where I'm the family side.
   const familySide = (list) => (list ?? []).filter((l) => !l.iAmElder);
@@ -213,7 +224,14 @@ export default function FamilyHomePanel() {
                       </Text>
                     </View>
                   }
-                />
+                >
+                  {/* Everything a family member may see about this parent —
+                      all of it read-only. Acting for them is guardian mode,
+                      granted per power on the parent's own My Family screen. */}
+                  <ParentStatusLine journey={journeyFor(l.elderId)} />
+                  <ParentOpenNeeds journey={journeyFor(l.elderId)} />
+                  <SharedHelpers journey={journeyFor(l.elderId)} />
+                </LinkRow>
               ))}
             </View>
           )}
