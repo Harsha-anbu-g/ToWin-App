@@ -24,7 +24,7 @@ import TrustLadder from './TrustLadder';
 const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
 function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
   const atTop = card.stageIndex >= 6;
   const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
@@ -35,18 +35,37 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
   return (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 16 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={44} />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
-            Stage {Math.min(card.stageIndex + 1, 7)} of 7 · {SHORT_STAGES[Math.min(card.stageIndex, 6)]}
-          </Text>
-        </View>
+        {/* The person IS the link to their profile (user call 2026-07-26):
+            tapping the photo or the name opens it, so the card no longer
+            carries a separate "View Profile" chip. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View ${card.customerName}'s profile`}
+          disabled={!conn}
+          onPress={() => router.push(`/user/${conn.otherUserId}`)}
+          hitSlop={6}
+          style={({ pressed }) => ({
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+            opacity: pressed ? 0.6 : 1,
+          })}
+        >
+          <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={44} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
+            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
+              Stage {Math.min(card.stageIndex + 1, 7)} of 7 · {SHORT_STAGES[Math.min(card.stageIndex, 6)]}
+            </Text>
+          </View>
+        </Pressable>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Trust score ${card.total} of ${card.totalMax}. Open your Trust Score page`}
           onPress={() => router.push('/trust')}
           hitSlop={10}
+          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
             {card.total}
@@ -55,29 +74,45 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
         </Pressable>
       </View>
 
-      {/* Actions — parity with the helper's ElderCard: the elder can message or
-          view a helper right from their own Home, not hunt the Messages tab */}
+      {/* Actions — parity with the helper's ElderCard: the elder can message a
+          helper right from their own Home, not hunt the Messages tab. The
+          profile now opens from the person's photo or name above. */}
       {conn ? (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 }}>
           <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${card.connectionId}`)} />
-          <ActionChip label="View Profile" onPress={() => router.push(`/user/${conn.otherUserId}`)} />
         </View>
       ) : null}
 
       <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 16 }} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
-        <Text style={{ fontSize: 13, color: t.inkSlate }}>Connected</Text>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
         {!atTop ? (
-          <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
         ) : null}
-        <Text style={{ fontSize: 13, color: t.trustGold }}>Trusted</Text>
+        <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
       </View>
 
       {atTop ? (
-        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, marginTop: 16 }}>
-          Fully trusted — the ladder is complete.
-        </Text>
+        // The product's headline achievement gets a moment, not one meta line
+        // (rulebook: peak-end — engineer the peak).
+        <View
+          style={{
+            backgroundColor: t.greenTint,
+            borderWidth: 1,
+            borderColor: t.greenLine,
+            borderRadius: 12,
+            padding: 14,
+            marginTop: 16,
+          }}
+        >
+          <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.greenDeep }}>
+            Fully trusted
+          </Text>
+          <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 20, marginTop: 2 }}>
+            Seven steps, climbed together — the whole ladder is complete.
+          </Text>
+        </View>
       ) : confirmedByMe && !confirmedByOther ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
           You've started the next step — waiting for {card.customerName} to accept.
@@ -103,13 +138,23 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
         <FamilyShareToggle connectionId={conn.id} shared={conn.sharedWithFamily} />
       ) : null}
 
+      {/* The shared updates thread (FAM-511) — only while this friendship is
+          shared; you, your helper, and your family read it together. */}
+      {conn?.sharedWithFamily ? (
+        <ActionChip
+          label="Open the family updates thread"
+          onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
+          style={{ marginTop: 10, alignSelf: 'flex-start' }}
+        />
+      ) : null}
+
       {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
       <Button
         title="Take a break"
         variant="text"
         onPress={onPause}
         accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
-        style={{ marginTop: 2 }}
+        style={{ marginTop: 12 }}
       />
     </View>
   );
@@ -150,10 +195,15 @@ export default function MyHelpersPanel() {
       showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
   });
 
+  // Pausing is reversible on the same connection id, so the way back rides in
+  // the toast (rulebook: undo over confirmation) — no dialog stands in front.
   const pause = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
-    onSuccess: () => {
-      showToast('Taking a break — trust steps and messages are paused until one of you resumes.', 'info');
+    onSuccess: (_r, connectionId) => {
+      showToast('Paused — you can resume any time.', 'info', {
+        actionLabel: 'Undo',
+        onAction: () => resume.mutate(connectionId),
+      });
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
@@ -170,16 +220,6 @@ export default function MyHelpersPanel() {
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
   });
-
-  const confirmPause = (card) =>
-    Alert.alert(
-      'Take a break?',
-      `Trust steps and messages with ${card.customerName} pause until either of you resumes. Nothing is lost.`,
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Pause', onPress: () => pause.mutate(card.connectionId) },
-      ]
-    );
 
   const confirmStep = (card) => {
     const accepting = !!connOf(card.connectionId)?.confirmedByOther;
@@ -266,7 +306,7 @@ export default function MyHelpersPanel() {
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}
-              onPause={() => confirmPause(card)}
+              onPause={() => pause.mutate(card.connectionId)}
             />
           );
         })

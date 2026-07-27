@@ -51,9 +51,13 @@ export default function TrustLadder({ stageIndex, style }) {
                   width: 24,
                   height: 24,
                   borderRadius: 12,
-                  backgroundColor: done ? t.blue : current ? t.canvas : t.greyFill3,
-                  borderWidth: current ? 2 : 0,
-                  borderColor: t.blue,
+                  backgroundColor: done ? t.blue : t.surface,
+                  // A step you haven't reached still gets a real ring (user
+                  // call 2026-07-26: "even though it is not done make the
+                  // circle visible") — the old faint grey disc disappeared
+                  // into the card.
+                  borderWidth: 2,
+                  borderColor: done ? t.blue : current ? t.blue : t.idleGrey,
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}

@@ -22,7 +22,7 @@ import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 
 function StatusPill({ status }) {
-  const { t, radius } = useTheme();
+  const { t, radius, type } = useTheme();
   const pill = NEED_STATUS[status] ?? NEED_STATUS.OPEN;
   return (
     // A label, not a button: soft fill, no border, so it can't be mistaken
@@ -36,7 +36,7 @@ function StatusPill({ status }) {
         alignSelf: 'flex-start',
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '600', color: t[pill.color] }}>{pill.label}</Text>
+      <Text style={{ fontSize: type.meta, fontWeight: '600', color: t[pill.color] }}>{pill.label}</Text>
     </View>
   );
 }
@@ -50,9 +50,20 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
     need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null].filter(Boolean).join(' · ');
 
   return (
-    <View style={{ paddingVertical: 18 }}>
+    // Each request is its own bordered card on the page (user call 2026-07-26:
+    // hairline-separated rows ran together and read as one long list).
+    <View
+      style={{
+        backgroundColor: t.canvas,
+        borderWidth: 1,
+        borderColor: t.border,
+        borderRadius: radius.card,
+        padding: 16,
+        marginTop: 12,
+      }}
+    >
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-        <Text style={{ fontSize: 15.5, fontWeight: '600', lineHeight: 20, flex: 1, color: t.ink }}>
+        <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, flex: 1, color: t.ink }}>
           {need.title}
         </Text>
         <StatusPill status={need.status} />
@@ -71,8 +82,11 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
             onPress={() => setOpen((v) => !v)}
             hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
-              height: 34,
+              // minHeight, not height: the label must grow with the user's text
+              // size instead of clipping (34 is the default-size look).
+              minHeight: 34,
               paddingHorizontal: 16,
+              paddingVertical: 8,
               borderRadius: radius.pill,
               backgroundColor: 'transparent',
               borderWidth: 1,
@@ -122,25 +136,39 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
           ))
         : null}
 
-      {need.status === 'ASSIGNED' ? (
-        <Button
-          title="Mark completed"
-          variant="secondary"
-          loading={pending.completing}
-          onPress={() => onComplete(need)}
-          style={{ marginTop: 12 }}
-        />
-      ) : null}
-      {need.status === 'OPEN' ? (
-        // Remove must not live inside the applicant expansion — a request with
-        // zero applicants has no expansion, yet still has to be deletable (HCI rule 3).
-        <Button
-          title="Remove"
-          variant="destructive"
-          loading={pending.removing}
-          onPress={() => onRemove(need)}
-          style={{ marginTop: 12 }}
-        />
+      {/* Card actions sit on one right-aligned row: a full-width red Remove
+          under every request shouted louder than the request itself.
+          Remove must not live inside the applicant expansion — a request with
+          zero applicants has no expansion, yet still has to be deletable (HCI rule 3). */}
+      {need.status === 'ASSIGNED' || need.status === 'OPEN' ? (
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            gap: 8,
+            marginTop: 14,
+          }}
+        >
+          {need.status === 'ASSIGNED' ? (
+            <Button
+              title="Mark completed"
+              variant="secondary"
+              size="small"
+              loading={pending.completing}
+              onPress={() => onComplete(need)}
+            />
+          ) : null}
+          {need.status === 'OPEN' ? (
+            <Button
+              title="Remove"
+              variant="text"
+              size="small"
+              loading={pending.removing}
+              onPress={() => onRemove(need)}
+            />
+          ) : null}
+        </View>
       ) : null}
     </View>
   );
@@ -150,6 +178,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const { t, type } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [seg, setSeg] = useState(initialSegment);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -209,7 +238,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const confirmComplete = (need) =>
     Alert.alert('Mark as completed?', `"${need.title}" will move to your finished requests.`, [
       { text: 'Not yet', style: 'cancel' },
-      { text: 'Completed', onPress: () => complete.mutate(need.id) },
+      // A verb, not an adjective (rulebook alert-button audit).
+      { text: 'Mark completed', onPress: () => complete.mutate(need.id) },
     ]);
   const confirmRemove = (need) =>
     Alert.alert('Remove this request?', `"${need.title}" will be taken down. This cannot be undone.`, [
@@ -246,17 +276,27 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
         <View style={{ paddingVertical: 24 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'open'
-              ? 'Nothing here yet. Tap the blue Post Help button below to ask your neighbors.'
+              ? 'Nothing here yet. Ask your neighbors for a hand — it takes a minute.'
               : seg === 'progress'
                 ? 'No requests in progress. When you accept a helper, it moves here.'
                 : 'No completed requests yet.'}
           </Text>
+          {/* A real starter action — never "tap the blue button below"
+              (rulebook: no color-and-position references; empty states carry
+              their own action). */}
+          {seg === 'open' ? (
+            <Button
+              title="Post a help request"
+              variant="secondary"
+              onPress={() => router.push('/(tabs)/action')}
+              style={{ marginTop: 16 }}
+            />
+          ) : null}
         </View>
       ) : (
-        <View style={{ marginTop: 4 }}>
-          {shown.map((need, i) => (
+        <View style={{ marginTop: 2 }}>
+          {shown.map((need) => (
             <View key={need.id}>
-              {i > 0 ? <View style={{ height: 1, backgroundColor: t.hairline }} /> : null}
               <NeedCard
                 need={need}
                 onAccept={confirmAccept}

@@ -4,6 +4,7 @@
 // mobile design law. Only family-side links render (!iAmElder — a BOTH user's
 // own elder-side links must never appear here, web-tested rule).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
@@ -15,7 +16,7 @@ import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
-import { ParentOpenNeeds, ParentStatusLine, SharedHelpers } from './FamilyJourney';
+import { ParentStatusLine } from './FamilyJourney';
 // Rows moved to FamilyRows (FAM-403) — the elder's My Family screen shares them.
 import { LinkRow, SectionHeading } from './FamilyRows';
 
@@ -23,6 +24,7 @@ export default function FamilyHomePanel() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
 
   const { data: family, isLoading, isError, refetch } = useQuery({
@@ -91,12 +93,19 @@ export default function FamilyHomePanel() {
           gap: spacing[3],
         }}
       >
-        <Text
-          accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}
-        >
-          My Parents
-        </Text>
+        <View style={{ flexShrink: 1 }}>
+          <Text
+            accessibilityRole="header"
+            style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}
+          >
+            My Parents
+          </Text>
+          {/* Same title + one-line subtitle rhythm the elder and helper panels
+              open with, so all three seats read as one app. */}
+          <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 4 }}>
+            The people you're watching over.
+          </Text>
+        </View>
         {!showAddForm ? (
           <Button
             title="+ Add your parent"
@@ -128,7 +137,7 @@ export default function FamilyHomePanel() {
                 >
                   <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
                     <ActionChip
-                      label="Accept"
+                      label={respondingTo === r.id ? 'Accepting…' : 'Accept'}
                       tonal
                       disabled={respondingTo === r.id}
                       onPress={() => respond.mutate({ id: r.id, accept: true })}
@@ -191,8 +200,18 @@ export default function FamilyHomePanel() {
                   textAlign: 'center',
                 }}
               >
-                Add your parent above. They must accept before you're linked.
+                They must accept before you're linked.
               </Text>
+              {/* The empty state carries its own starter action — never
+                  "the control is above" (rulebook). */}
+              {!showAddForm ? (
+                <Button
+                  title="Add your parent"
+                  variant="secondary"
+                  onPress={() => setShowAddForm(true)}
+                  style={{ marginTop: spacing[4], alignSelf: 'stretch' }}
+                />
+              ) : null}
             </View>
           ) : (
             <View style={{ marginTop: spacing[2] }}>
@@ -207,8 +226,9 @@ export default function FamilyHomePanel() {
                   }
                   first={i === 0}
                   badge={
-                    // A label, not a button — soft green wash so it can't be
-                    // mistaken for something tappable (green = achieved).
+                    // A label, not a button — a soft neutral wash so it can't
+                    // be mistaken for something tappable (the fill carries no
+                    // hue since the 2026-07-26 green-background removal).
                     <View
                       style={{
                         backgroundColor: t.greenTint,
@@ -225,12 +245,17 @@ export default function FamilyHomePanel() {
                     </View>
                   }
                 >
-                  {/* Everything a family member may see about this parent —
-                      all of it read-only. Acting for them is guardian mode,
-                      granted per power on the parent's own My Family screen. */}
+                  {/* The row keeps the at-a-glance status; everything deeper —
+                      shared friendships, guardian actions, open requests —
+                      moved to the per-parent screen (FAM-506, web user call
+                      2026-07-20: the home list got too crowded). */}
                   <ParentStatusLine journey={journeyFor(l.elderId)} />
-                  <ParentOpenNeeds journey={journeyFor(l.elderId)} />
-                  <SharedHelpers journey={journeyFor(l.elderId)} />
+                  <ActionChip
+                    label={`See ${l.otherUserName}`}
+                    tonal
+                    onPress={() => router.push(`/family/parent/${l.elderId}`)}
+                    style={{ marginTop: spacing[3], alignSelf: 'flex-start' }}
+                  />
                 </LinkRow>
               ))}
             </View>
