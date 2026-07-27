@@ -71,7 +71,13 @@ export default function HomeScreen() {
     // Refresh what Home actually shows — a blanket invalidateQueries() would
     // stampede every mounted screen's queries at once.
     const homeKeys = isFamily
-      ? [['family-links'], ['family-alerts'], ['trust-my-score'], ['profile-me']]
+      ? [
+          ['family-links'],
+          ['family-journey'],
+          ['family-alerts'],
+          ['trust-my-score'],
+          ['profile-me'],
+        ]
       : [
           ['connections'],
           ['trust-my-score'],
