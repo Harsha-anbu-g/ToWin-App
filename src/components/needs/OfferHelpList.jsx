@@ -8,11 +8,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { memo, useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import api from '../../api/client';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
+import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
@@ -23,7 +24,7 @@ import { useApplyMutations } from '../../lib/useApplyMutations';
 const RADIUS_STEPS = [5, 10, 25, 50, 100];
 
 function Pill({ label, tone = 'neutral' }) {
-  const { t, radius } = useTheme();
+  const { t, radius, type } = useTheme();
   const styles =
     tone === 'green'
       ? { backgroundColor: t.greenTint, borderColor: t.greenLine, color: t.greenDeep }
@@ -39,7 +40,7 @@ function Pill({ label, tone = 'neutral' }) {
         alignSelf: 'flex-start',
       }}
     >
-      <Text style={{ fontSize: 11, fontWeight: '600', color: styles.color }}>{label}</Text>
+      <Text style={{ fontSize: type.meta, fontWeight: '600', color: styles.color }}>{label}</Text>
     </View>
   );
 }
@@ -55,12 +56,6 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
   // the helper must be able to read the whole request before offering.
   const [descExpanded, setDescExpanded] = useState(false);
   const descLong = (need.description?.length ?? 0) > 120;
-
-  const confirmWithdraw = () =>
-    Alert.alert('Withdraw your offer?', `You'll stop offering to help with "${need.title}".`, [
-      { text: 'Keep offering', style: 'cancel' },
-      { text: 'Withdraw', style: 'destructive', onPress: () => onWithdraw(need.id) },
-    ]);
 
   const distance =
     Number.isFinite(need.distanceKm) && need.distanceKm > 0 ? `${need.distanceKm.toFixed(0)} km` : null;
@@ -84,7 +79,8 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
         <>
           <Text
             numberOfLines={descExpanded ? undefined : 2}
-            style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}
+            // Reading text a helper decides on — the elder floor applies (16).
+            style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 4 }}
           >
             {need.description}
           </Text>
@@ -94,8 +90,9 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
               accessibilityLabel={descExpanded ? 'Show less of the request' : 'Read the full request'}
               onPress={() => setDescExpanded((v) => !v)}
               hitSlop={8}
+              style={{ minHeight: 44, justifyContent: 'center' }}
             >
-              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, marginTop: 4 }}>
+              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
                 {descExpanded ? 'Show less' : 'Read more'}
               </Text>
             </Pressable>
@@ -120,7 +117,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
             }}
           >
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
-            <Text style={{ fontSize: 11, fontWeight: '600', color: t.redDeep }}>Urgent</Text>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.redDeep }}>Urgent</Text>
           </View>
         ) : null}
         {completed ? <Pill label="Completed" tone="green" /> : null}
@@ -157,17 +154,13 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
           <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 8 }}>
             The elder reviews all helpers and picks one.
           </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Withdraw my offer"
-            onPress={confirmWithdraw}
-            hitSlop={{ top: 8, bottom: 8 }}
-            style={{ alignSelf: 'flex-start', paddingVertical: 8 }}
-          >
-            <Text style={{ fontSize: type.meta, color: t.inkSlate, textDecorationLine: 'underline' }}>
-              Withdraw
-            </Text>
-          </Pressable>
+          {/* No confirm (rulebook: undo over confirmation) — withdrawing is
+              reversible in one tap: the Offer button reappears right here. */}
+          <ActionChip
+            label="Withdraw my offer"
+            onPress={() => onWithdraw(need.id)}
+            style={{ marginTop: 8, alignSelf: 'flex-start' }}
+          />
         </View>
       ) : mine === 'ACCEPTED' ? (
         <View style={{ marginTop: 12 }}>
@@ -179,6 +172,8 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
         </View>
       ) : (
         <Button
+          // Tonal, not filled — this card repeats for every open request, so a
+          // filled button here would mean several "primaries" on one screen.
           title="Offer to Help"
           variant="secondary"
           size="small"
@@ -203,7 +198,7 @@ export default function OfferHelpList() {
     queryKey: ['needs-open'],
     queryFn: async () => (await api.get('/needs/open')).data,
   });
-  const { data: appsData, isError: appsFailed, refetch: refetchApps } = useQuery({
+  const { data: appsData, isLoading: appsLoading, isError: appsFailed, refetch: refetchApps } = useQuery({
     queryKey: ['needs-applications'],
     queryFn: async () => (await api.get('/needs/applications')).data,
   });
@@ -289,8 +284,11 @@ export default function OfferHelpList() {
                 onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
                 hitSlop={{ top: 7, bottom: 7 }}
                 style={({ pressed }) => ({
-                  height: 30,
+                  // minHeight, not height: the label must grow with the user's
+                  // text size instead of clipping (30 is the default-size look).
+                  minHeight: 30,
                   paddingHorizontal: 12,
+                  paddingVertical: 6,
                   borderRadius: 15,
                   backgroundColor: t.surfaceFill,
                   borderWidth: 1,
@@ -300,7 +298,7 @@ export default function OfferHelpList() {
                   opacity: pressed ? 0.7 : 1,
                 })}
               >
-                <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
+                <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
                   {radiusKm} km
                 </Text>
               </Pressable>
@@ -312,7 +310,9 @@ export default function OfferHelpList() {
       }
       ListEmptyComponent={
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16 }}>
-          {isLoading ? (
+          {(seg === 'available' ? isLoading : appsLoading) ? (
+            // The pending load must never render "You haven't offered to help
+            // yet" on an account that has (rulebook).
             <SkeletonCard />
           ) : (seg === 'available' ? openFailed : appsFailed) ? (
             // "Check back soon" copy on a failed fetch discourages the retry
@@ -323,13 +323,25 @@ export default function OfferHelpList() {
               onRetry={seg === 'available' ? refetchOpen : refetchApps}
             />
           ) : (
-            <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
-              {seg === 'available'
-                ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
-                : seg === 'applied'
-                  ? "You haven't offered to help yet. Open Available and pick a need."
-                  : 'No completed help yet — it will show here.'}
-            </Text>
+            <>
+              <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
+                {seg === 'available'
+                  ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
+                  : seg === 'applied'
+                    ? "You haven't offered to help yet."
+                    : 'No completed help yet — it will show here.'}
+              </Text>
+              {/* A real starter action — never "open the Available tab"
+                  (rulebook: empty states carry their own action). */}
+              {seg === 'applied' ? (
+                <Button
+                  title="Browse needs near you"
+                  variant="secondary"
+                  onPress={() => setSeg('available')}
+                  style={{ marginTop: spacing[4] }}
+                />
+              ) : null}
+            </>
           )}
         </View>
       }

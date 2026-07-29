@@ -29,7 +29,7 @@ const hexPoints = (cx, cy) =>
 const RING_C = 2 * Math.PI * 26; // timer circle circumference (r=26)
 
 function TimerRing({ timeLeft }) {
-  const { t } = useTheme();
+  const { t, type } = useTheme();
   return (
     <View style={{ width: 64, height: 64 }}>
       <Svg width={64} height={64}>
@@ -55,7 +55,7 @@ function TimerRing({ timeLeft }) {
         >
           {timeLeft}
         </Text>
-        <Text style={{ fontSize: 9, color: t.inkFaint2 }}>SEC</Text>
+        <Text style={{ fontSize: type.caption, color: t.inkSlate, letterSpacing: 0.8 }}>SEC</Text>
       </View>
     </View>
   );
@@ -201,7 +201,7 @@ export default function GameScreen() {
     setPhase('playing');
   };
 
-  const toDashboard = () => router.replace('/(tabs)/dashboard');
+  const toHome = () => router.replace('/(tabs)/home');
   const matchedCount = cards.filter((c) => c.matched).length / 2;
 
   return (
@@ -294,19 +294,21 @@ export default function GameScreen() {
               ? 'You found them all — slow and steady wins!'
               : "Time's up — no rush, try again whenever you like."}
           </Text>
-          <Button title="Continue to Dashboard" variant="primary" onPress={toDashboard} style={{ marginTop: spacing[4] }} />
-          <Button title="Play again" variant="secondary" onPress={restart} style={{ marginTop: spacing[2] }} />
+          {/* After a 60-second game, playing again is the likely next action —
+              it gets the primary (rulebook); "Dashboard" was a dead redirect. */}
+          <Button title="Play again" variant="primary" onPress={restart} style={{ marginTop: spacing[4] }} />
+          <Button title="Back to Home" variant="secondary" onPress={toHome} style={{ marginTop: spacing[2] }} />
         </View>
       ) : (
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel="Skip to Dashboard"
-          onPress={toDashboard}
+          accessibilityLabel="Skip to Home"
+          onPress={toHome}
           hitSlop={{ top: 8, bottom: 8 }}
           style={{ alignSelf: 'center', paddingVertical: 10 }}
         >
           <Text style={{ fontSize: type.meta, color: t.inkSlate, textDecorationLine: 'underline' }}>
-            Skip to Dashboard
+            Skip to Home
           </Text>
         </Pressable>
       )}

@@ -1,4 +1,4 @@
-// Mirrors ToWin/frontend/src/context/AuthContext.jsx for mobile.
+// Mirrors Towinly/frontend/src/context/AuthContext.jsx for mobile.
 // Only the token is persisted (SecureStore, encrypted); role, userId and
 // emailVerified are ALWAYS derived from the signed JWT — never from writable
 // storage. An expired token at boot is treated as logged out from the start,

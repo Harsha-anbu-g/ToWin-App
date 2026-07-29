@@ -1,5 +1,5 @@
-// ToWin tortoise mark geometry — generated from
-// ToWin/frontend/src/components/tortoiseMarkPaths.js by scratchpad/gen-tortoise-paths.js.
+// Towinly tortoise mark geometry — generated from
+// Towinly/frontend/src/components/tortoiseMarkPaths.js by scratchpad/gen-tortoise-paths.js.
 // Do not hand-edit. Lengths are measured here (react-native-svg has no reliable
 // pathLength support, so dash draws need the real length); cell centers feed
 // the scale-from-center pop via the `origin` prop.

@@ -4,12 +4,13 @@
 // 50pt "I'm here today" primary. One tap says "I'm okay" and walks the elder
 // to their Dashboard (My Helpers) — instant state flip first (HCI rule 1).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
 import { Check } from 'lucide-react-native';
-import { Pressable, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Animated, Easing, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
+import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
@@ -51,7 +52,7 @@ function WeekStrip({ week }) {
           </View>
           <Text
             style={{
-              fontSize: 11,
+              fontSize: type.meta,
               fontWeight: d.today ? '600' : '400',
               color: d.today ? t.blueDeep : d.future ? t.greyText2 : t.inkSlate,
             }}
@@ -68,7 +69,13 @@ export default function CheckinCard() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const reducedMotion = useReducedMotion();
+  // Peak-end (rulebook pass 2026-07-27): the app used to toast and navigate
+  // AWAY from the streak number the person just earned. Now the moment stays
+  // on screen — the numeral settles in with one gentle scale (transform-only,
+  // <300ms, ease-out; reduced motion snaps), and the person leaves when ready.
+  const [justCheckedIn, setJustCheckedIn] = useState(false);
+  const pop = useRef(new Animated.Value(1)).current;
 
   const { data: streak, isLoading, isError, refetch } = useQuery({
     queryKey: ['streak-me'],
@@ -79,8 +86,16 @@ export default function CheckinCard() {
     mutationFn: async () => (await api.post('/streaks/checkin')).data,
     onSuccess: (data) => {
       queryClient.setQueryData(['streak-me'], data);
-      showToast('Checked in — see you tomorrow!', 'success');
-      router.replace('/(tabs)/home'); // Home = My Helpers
+      setJustCheckedIn(true);
+      if (!reducedMotion) {
+        pop.setValue(0.92);
+        Animated.timing(pop, {
+          toValue: 1,
+          duration: 240,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      }
     },
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not check in right now. Please try again.'), 'error'),
@@ -121,18 +136,19 @@ export default function CheckinCard() {
         <LoadError bare what="your check-in" onRetry={refetch} />
       ) : (
         <>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 9 }}>
-            <Text
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Animated.Text
               style={{
                 fontFamily: fontFamily.display,
                 fontSize: 56,
                 lineHeight: 58,
                 color: t.ink,
                 fontVariant: ['tabular-nums'],
+                transform: [{ scale: pop }],
               }}
             >
               {current}
-            </Text>
+            </Animated.Text>
             <Text style={{ fontSize: type.body, color: t.inkSlate }}>
               {current === 1 ? 'day in a row' : 'days in a row'}
             </Text>
@@ -153,7 +169,9 @@ export default function CheckinCard() {
               >
                 <Check size={16} color={t.greenDeep} strokeWidth={2.5} />
                 <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-                  Checked in for today
+                  {justCheckedIn
+                    ? `Day ${current} — see you tomorrow`
+                    : 'Checked in for today'}
                 </Text>
               </View>
             ) : (

@@ -3,7 +3,7 @@
 // (imperative navigation still reaches href:null tabs), and /family is
 // elder-seat only (web ElderOnly parity) — HELPER and FAMILY bounce to Home.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 
@@ -102,5 +102,8 @@ test('/family: BOTH keeps the elder seat (no redirect)', async () => {
   mockRole = 'BOTH';
   const r = await wrap(<MyFamilyScreen />);
   expect(mockRedirectHref).toBeNull();
+  // FAM-504: the screen is tabbed now — the promises card lives on the
+  // How-it-works tab; the tab strip itself proves the elder surface rendered.
+  await fireEvent.press(r.getByText('How it works'));
   r.getByText('How family works here');
 });

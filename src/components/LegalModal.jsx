@@ -12,17 +12,24 @@ export default function LegalModal({ title, sections, visible, onClose }) {
     <Modal
       visible={visible}
       transparent
-      animationType={reducedMotion ? 'none' : 'fade'}
+      animationType={reducedMotion ? 'none' : 'slide'}
       onRequestClose={onClose}
     >
       <View
         style={{
           flex: 1,
-          backgroundColor: t.scrim,
-          justifyContent: 'center',
+          justifyContent: 'flex-end',
           padding: spacing[5],
         }}
       >
+        {/* The dimmed parent is its own control: tapping outside the sheet is a
+            third way out, alongside the × and the Close button. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          onPress={onClose}
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim }}
+        />
         <View
           style={{
             backgroundColor: t.canvas,

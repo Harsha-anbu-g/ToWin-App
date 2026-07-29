@@ -1,4 +1,4 @@
-// Small copy helpers shared across screens. Port of ToWin/frontend/src/lib/copy.js.
+// Small copy helpers shared across screens. Port of Towinly/frontend/src/lib/copy.js.
 
 // "1 helper wants to help" / "3 helpers want to help"
 export function applicantsLabel(count) {

@@ -5,16 +5,18 @@
 // (recognition over recall); pinned Save Changes + Cancel (3i).
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
+import ChipsField from '../src/components/ui/ChipsField';
 import Chip from '../src/components/ui/Chip';
 import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
 import { useAuth } from '../src/context/AuthContext';
 import { useToast } from '../src/context/ToastContext';
+import { parseFlexibleDate } from '../src/lib/flexibleDate';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { yearsOld } from '../src/lib/copy';
 import { useTheme } from '../src/theme/ThemeContext';
@@ -77,6 +79,10 @@ export default function ProfileEdit() {
   });
 
   const [form, setForm] = useState(EMPTY_FORM);
+  const [dobError, setDobError] = useState('');
+  // Snapshot of the loaded form — Cancel compares against it so a filled
+  // form is never silently discarded (rulebook: confirm real data loss).
+  const initialFormRef = useRef(EMPTY_FORM);
   const [prefilled, setPrefilled] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingId, setUploadingId] = useState(false);
@@ -101,6 +107,20 @@ export default function ProfileEdit() {
         facebookUrl: me.facebookUrl ?? '',
         instagramUrl: me.instagramUrl ?? '',
       });
+      initialFormRef.current = {
+        name: me.name ?? '',
+        bio: me.bio ?? '',
+        tags: (isHelper ? me.skillsOffered : me.interests)?.join(', ') ?? '',
+        extraTags: (isHelper ? me.hobbies : me.lookingFor)?.join(', ') ?? '',
+        languages: me.languages?.join(', ') ?? '',
+        phone: me.phone ?? '',
+        city: me.city ?? '',
+        dateOfBirth: me.dateOfBirth ?? '',
+        occupation: me.occupation ?? '',
+        gender: me.gender ?? '',
+        facebookUrl: me.facebookUrl ?? '',
+        instagramUrl: me.instagramUrl ?? '',
+      };
       setPrefilled(true);
     }
   }, [me, isHelper, prefilled]);
@@ -108,7 +128,7 @@ export default function ProfileEdit() {
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      showToast('ToWin needs photo access — you can allow it in Settings.', 'error');
+      showToast('Towinly needs photo access — you can allow it in Settings.', 'error');
       return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -164,8 +184,16 @@ export default function ProfileEdit() {
 
   const save = useMutation({
     mutationFn: async () => {
+      // Forgiving DOB (rulebook §16 / Postel): any unambiguous format is
+      // accepted and normalized; ambiguity is refused with a plain error.
+      const parsedDob = parseFlexibleDate(form.dateOfBirth);
+      if (parsedDob?.error) {
+        setDobError(parsedDob.error);
+        throw Object.assign(new Error(parsedDob.error), { isDobError: true });
+      }
+      const dob = parsedDob?.value ?? null;
       // Age computes from date of birth when given (web computeAge parity)
-      const computedAge = form.dateOfBirth ? yearsOld(form.dateOfBirth) : me?.age;
+      const computedAge = dob ? yearsOld(dob) : me?.age;
       const base = {
         name: form.name.trim(),
         age: computedAge,
@@ -175,7 +203,7 @@ export default function ProfileEdit() {
         gender: form.gender || null,
         facebookUrl: form.facebookUrl.trim() || null,
         instagramUrl: form.instagramUrl.trim() || null,
-        dateOfBirth: form.dateOfBirth || null,
+        dateOfBirth: dob,
       };
       if (isHelper) {
         await api.put('/profile/helper', {
@@ -208,8 +236,11 @@ export default function ProfileEdit() {
       showToast('Profile saved.', 'success');
       router.back();
     },
-    onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not save right now. Please try again.'), 'error'),
+    onError: (err) => {
+      // A DOB parse error is already shown inline next to its field.
+      if (err?.isDobError) return;
+      showToast(friendlyWriteError(err, 'Could not save right now. Please try again.'), 'error');
+    },
   });
 
   // Stable per-field handlers (the action.jsx pattern): Input and Chip are
@@ -261,7 +292,7 @@ export default function ProfileEdit() {
               opacity: pressed || uploadingPhoto ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 13, fontWeight: '600', color: t.blueDeep }}>
+            <Text style={{ fontSize: 14, fontWeight: '600', color: t.blueDeep }}>
               {uploadingPhoto ? 'Uploading…' : 'Change photo'}
             </Text>
           </Pressable>
@@ -272,10 +303,13 @@ export default function ProfileEdit() {
         <Input
           label="Date of birth"
           value={form.dateOfBirth}
-          onChangeText={set('dateOfBirth')}
-          helper="Like 1953-05-14 — only your age shows to others, never the date."
+          onChangeText={(v) => {
+            set('dateOfBirth')(v);
+            if (dobError) setDobError('');
+          }}
+          error={dobError}
+          helper="Any way you like — 1953-05-14 or 14 May 1953. Only your age shows to others."
           autoCapitalize="none"
-          keyboardType="numbers-and-punctuation"
           style={FIELD_GAP}
         />
         <Input
@@ -310,29 +344,31 @@ export default function ProfileEdit() {
         </View>
 
         <SectionTitle>{isHelper ? 'How you help' : 'What you enjoy'}</SectionTitle>
-        <Input
+        {/* Chips, not comma bookkeeping (deferred rulebook item): each entry
+            is a removable pill; return or a typed comma adds the next one. */}
+        <ChipsField
           label={isHelper ? 'What I can help with' : 'My interests'}
           value={form.tags}
           onChangeText={set('tags')}
-          helper='Separate with commas, like "gardening, chess, cooking".'
+          helper='Type one, like "gardening", then press return. Tap a pill to remove it.'
           style={FIELD_GAP}
         />
-        <Input
+        <ChipsField
           label={isHelper ? 'My hobbies' : "What I'm looking for"}
           value={form.extraTags}
           onChangeText={set('extraTags')}
           helper={
             isHelper
-              ? 'Separate with commas — things you love doing.'
-              : 'Separate with commas, like "company, rides, a walking friend".'
+              ? 'Things you love doing — one at a time, press return after each.'
+              : 'Like "company" or "a walking friend" — press return after each.'
           }
           style={FIELD_GAP}
         />
-        <Input
+        <ChipsField
           label="Languages I speak"
           value={form.languages}
           onChangeText={set('languages')}
-          helper="Separate with commas."
+          helper="One language at a time, press return after each."
           style={FIELD_GAP}
         />
 
@@ -435,7 +471,22 @@ export default function ProfileEdit() {
           onPress={() => save.mutate()}
           loading={save.isPending}
         />
-        <Button title="Cancel" variant="text" onPress={() => router.back()} />
+        <Button
+          title="Cancel"
+          variant="text"
+          onPress={() => {
+            // A filled form must never vanish on one silent tap (rulebook:
+            // confirm genuinely irreversible data loss).
+            const dirty =
+              initialFormRef.current &&
+              JSON.stringify(form) !== JSON.stringify(initialFormRef.current);
+            if (!dirty) return router.back();
+            Alert.alert('Discard your changes?', 'Nothing you typed here will be saved.', [
+              { text: 'Keep editing', style: 'cancel' },
+              { text: 'Discard changes', style: 'destructive', onPress: () => router.back() },
+            ]);
+          }}
+        />
       </View>
     </Screen>
   );

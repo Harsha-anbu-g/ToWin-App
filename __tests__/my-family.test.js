@@ -110,11 +110,18 @@ const atCapLinks = {
   outgoingRequests: [outgoingReq],
 };
 
-const stubGet = (links) =>
+const stubGet = (links, conns = []) =>
   api.get.mockImplementation(async (url) => {
     if (url === '/family/links') return { data: links };
+    if (url === '/connections') return { data: conns };
     return { data: {} };
   });
+
+// The screen lands on Controls (web user call 2026-07-26); most member
+// assertions live on the My family tab — one press away.
+const openMembersTab = async (r) => {
+  await fireEvent.press(r.getByText('My family'));
+};
 
 beforeEach(() => {
   mockRole = 'ELDER';
@@ -125,7 +132,12 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
   stubGet(fullLinks);
   const r = await wrap(<MyFamilyScreen />);
 
-  // Promises card first: 4 bullets + the gold +1 line.
+  // Counter counts active + incoming + outgoing on the ELDER side only,
+  // and rides the title so it shows on every tab.
+  await r.findByText('My Family (4/5)');
+
+  // Promises card lives on the How-it-works tab now: 4 bullets + gold +1.
+  await fireEvent.press(r.getByText('How it works'));
   r.getByText('How family works here');
   r.getByText("Your family can see you're safe.");
   r.getByText('They only see the friendships you choose to share.');
@@ -135,9 +147,7 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
     'Family connected gives you +1 trust point — one point total, however many family members you add (up to 5 people).'
   );
 
-  // Counter counts active + incoming + outgoing on the ELDER side only.
-  await r.findByText('My Family (4/5)');
-
+  await openMembersTab(r);
   await r.findByText('sarah');
   r.getByText('Daughter');
   r.getByText('Main contact'); // gold badge on the primary row
@@ -159,6 +169,7 @@ test('cap: at 5 seats counting open requests, the add button is replaced by the 
   const r = await wrap(<MyFamilyScreen />);
 
   await r.findByText('My Family (5/5)');
+  await openMembersTab(r);
   r.getByText(
     "You've reached the limit of 5 family members, counting open requests. Remove someone or cancel a request to add another person."
   );
@@ -169,6 +180,8 @@ test('remove: confirm quotes the web danger message; DELETE fires only on confir
   const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   stubGet(fullLinks);
   const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
   await r.findByText('sarah');
 
   // Members render sarah (primary) then tom — press sarah's Remove.
@@ -194,6 +207,8 @@ test('remove: confirm quotes the web danger message; DELETE fires only on confir
 test('make main contact POSTs primary and toasts', async () => {
   stubGet(fullLinks);
   const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
   await r.findByText('tom');
 
   await fireEvent.press(r.getByRole('button', { name: 'Make main contact' }));
@@ -204,6 +219,8 @@ test('make main contact POSTs primary and toasts', async () => {
 test('accept and decline post the respond payloads and toast the elder-side web copy', async () => {
   stubGet(fullLinks);
   const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
   await r.findByText('They want to join your family');
 
   await fireEvent.press(r.getByRole('button', { name: 'Accept' }));
@@ -214,6 +231,8 @@ test('accept and decline post the respond payloads and toast the elder-side web 
 test('add form: elder-side copy, no API call on blank identifier, payload posts side family', async () => {
   stubGet(emptyLinks);
   const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (0/5)');
+  await openMembersTab(r);
 
   await r.findByText('No family linked yet');
   r.getByText("Add up to 5 people. Each one must accept before they're linked to you.");
@@ -221,7 +240,7 @@ test('add form: elder-side copy, no API call on blank identifier, payload posts 
   await fireEvent.press(r.getByRole('button', { name: '+ Add a family member' }));
   r.getByText('Add a family member');
   r.getByText(
-    'Type their exact ToWin username, email or phone. They must say yes before anything is shared.'
+    'Type their exact Towinly username, email or phone. They must say yes before anything is shared.'
   );
 
   await fireEvent.press(r.getByRole('button', { name: 'Send request' }));
@@ -237,6 +256,107 @@ test('add form: elder-side copy, no API call on blank identifier, payload posts 
     side: 'family',
   });
   await r.findByText('Request sent. It becomes a family link when they accept.');
+});
+
+// ── FAM-504: the Controls tab — Sharing and Act for me. ──────────────────
+const activeConn = (over = {}) => ({
+  id: 'c1', otherUserId: 'h1', otherUserName: 'Harsha', status: 'ACTIVE',
+  type: 'HELP', currentTrustLevel: 'MESSAGING', sharedWithFamily: false,
+  ...over,
+});
+
+test('Controls (default tab): sharing switches per friendship; family chats get none', async () => {
+  stubGet(fullLinks, [
+    activeConn(),
+    activeConn({ id: 'c2', otherUserId: 'h2', otherUserName: 'Priya', sharedWithFamily: true }),
+    // The family chat itself — never a friendship to share.
+    activeConn({ id: 'c3', otherUserId: 'f1', otherUserName: 'sarah', type: 'FAMILY' }),
+  ]);
+  const r = await wrap(<MyFamilyScreen />);
+
+  await r.findByText(
+    'Sharing is what your family can see. Act for me is what they can do. Both start off, and only you can change them.'
+  );
+  await r.findByText('Harsha');
+  r.getByText('Priya');
+  expect(r.getAllByLabelText('Let my family see this friendship')).toHaveLength(2);
+});
+
+test('Act for me gates on sharing: nothing shared → the switches wait', async () => {
+  stubGet(fullLinks, [activeConn()]); // one friendship, none shared
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+
+  await fireEvent.press(r.getByText('Act for me'));
+  r.getByText('Share a friendship first');
+  expect(r.queryByText('Ask for help for you')).toBeNull();
+});
+
+test('Act for me: with a shared friendship, each member gets the three power switches', async () => {
+  stubGet(fullLinks, [activeConn({ sharedWithFamily: true })]);
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+
+  await fireEvent.press(r.getByText('Act for me'));
+  // Two elder-side members (sarah, tom) × 3 switches each.
+  expect(await r.findAllByText('Ask for help for you')).toHaveLength(2);
+  expect(r.getAllByText('Move a friendship forward for you')).toHaveLength(2);
+  expect(r.getAllByText('Leave a review for you')).toHaveLength(2);
+});
+
+test('Controls with no members: add-first empty state, no switches', async () => {
+  stubGet(emptyLinks, [activeConn()]);
+  const r = await wrap(<MyFamilyScreen />);
+
+  await r.findByText('Add a family member first');
+  expect(r.queryByLabelText('Let my family see this friendship')).toBeNull();
+});
+
+// ── FAM-505: the consent flow — a family member asked for a power. ───────
+const linksWithAsk = {
+  ...fullLinks,
+  activeLinks: [
+    link({ id: 'm1', otherUserName: 'sarah', pendingPowerRequests: [{ id: 'pr1', power: 'ADVANCE_TRUST' }] }),
+    plainMember,
+  ],
+};
+
+test("power ask: the card explains a yes in the switch's own words", async () => {
+  stubGet(linksWithAsk);
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
+
+  await r.findByText("They're asking you");
+  r.getByText('sarah asks: move a friendship forward for you');
+  r.getByText(
+    "If you say yes: sarah can take your next step with a helper. The step still counts as yours, and your helper sees sarah took it for you. It's your choice, and you can turn it off again any time."
+  );
+});
+
+test('power ask: Yes and Not now post the respond payloads and toast', async () => {
+  stubGet(linksWithAsk);
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
+  await r.findByText("They're asking you");
+
+  await fireEvent.press(r.getByRole('button', { name: 'Yes' }));
+  expect(api.post).toHaveBeenCalledWith('/family/power-requests/pr1/respond', { accept: true });
+  await r.findByText('Done — they can do this for you now.');
+});
+
+// ── FAM-510 (elder side): the private chat with a family member. ─────────
+test('Message opens the family chat through the server', async () => {
+  stubGet(fullLinks);
+  api.post.mockResolvedValue({ data: 'chat-77' });
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
+  await r.findByText('sarah');
+
+  await fireEvent.press(r.getAllByRole('button', { name: 'Message' })[0]);
+  expect(api.post).toHaveBeenCalledWith('/family/chat/f1');
 });
 
 test('MenuSheet: My Family row shows for elders only', async () => {

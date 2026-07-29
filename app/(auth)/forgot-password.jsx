@@ -1,14 +1,15 @@
-// Forgot password — port of ToWin/frontend/src/pages/ForgotPassword.jsx.
+// Forgot password — port of Towinly/frontend/src/pages/ForgotPassword.jsx.
 // The "sent" state ALWAYS shows, whether or not the account exists (we never
 // reveal whether an email is registered).
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { EMAIL_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -45,21 +46,16 @@ export default function ForgotPassword() {
   };
 
   const backLink = (
-    <Pressable
-      accessibilityRole="link"
+    <TextLink
+      label="Back to log in"
       onPress={() => router.replace('/(auth)/login')}
-      hitSlop={8}
-      style={{ alignSelf: 'center', paddingVertical: spacing[3] }}
-    >
-      <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600', textDecorationLine: 'underline' }}>
-        Back to log in
-      </Text>
-    </Pressable>
+      style={{ marginTop: spacing[2] }}
+    />
   );
 
   if (sent) {
     return (
-      <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
+      <Screen contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
         <Card>
           <Text
             accessibilityRole="header"
@@ -83,7 +79,9 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Screen keyboard scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    // back + scrollable centered body — this screen is pushed from Log In and
+    // clipped at large OS text with scroll off (rulebook pass).
+    <Screen back keyboard contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card>
         <Text
           accessibilityRole="header"
@@ -107,6 +105,7 @@ export default function ForgotPassword() {
           autoCorrect={false}
           keyboardType="email-address"
           textContentType="emailAddress"
+          autoComplete="email"
           style={{ marginBottom: spacing[5] }}
         />
         <Button

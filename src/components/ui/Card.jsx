@@ -1,4 +1,4 @@
-// Card — Material component (react-native-paper) in OUTLINED mode: the ToWin
+// Card — Material component (react-native-paper) in OUTLINED mode: the Towinly
 // brand does hairlines over shadows (DESIGN.md), and MD3's outlined card is
 // exactly that. Same API as always (children, style, contentStyle, testID).
 import { Card as PaperCard } from 'react-native-paper';

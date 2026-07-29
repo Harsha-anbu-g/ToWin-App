@@ -1,6 +1,6 @@
 // One-time Ask AI disclosure flag (STORE-203). App Store guidance (Nov 2025)
 // requires a clear consent moment naming the outside AI provider before user
-// data is sent to it — ToWin's assistant replies come from Groq via the
+// data is sent to it — Towinly's assistant replies come from Groq via the
 // backend. Persisted with SecureStore like the onboarding flag.
 import * as SecureStore from 'expo-secure-store';
 

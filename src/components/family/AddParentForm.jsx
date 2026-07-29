@@ -18,14 +18,14 @@ const COPY = {
   elder: {
     title: 'Add your parent',
     helper:
-      'Type their exact ToWin username, email or phone. They must say yes before you see anything.',
+      'Type their exact Towinly username, email or phone. They must say yes before you see anything.',
     relationshipLabel: 'Relationship (what you are to them)',
     successToast: 'Request sent. You become family here once they accept.',
   },
   family: {
     title: 'Add a family member',
     helper:
-      'Type their exact ToWin username, email or phone. They must say yes before anything is shared.',
+      'Type their exact Towinly username, email or phone. They must say yes before anything is shared.',
     relationshipLabel: 'Relationship',
     successToast: 'Request sent. It becomes a family link when they accept.',
   },
@@ -95,7 +95,7 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
         label="Username, email or phone"
         value={identifier}
         onChangeText={setIdentifier}
-        placeholder="Exactly as they use it on ToWin"
+        placeholder="Exactly as they use it on Towinly"
         autoCapitalize="none"
         autoCorrect={false}
         style={{ marginTop: spacing[4] }}

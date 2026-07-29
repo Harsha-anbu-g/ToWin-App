@@ -5,10 +5,12 @@
 // FAM-405) — FamilyCard + a per-customer Family row render from the data.
 // Climbing the ladder lives on the Dashboard (3d); this screen explains.
 import { useQuery } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { Star } from 'lucide-react-native';
 import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
+import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
@@ -179,6 +181,7 @@ function HelperPointsCard({ card }) {
 export default function TrustScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { user } = useAuth();
+  const router = useRouter();
   // One screen, two perspectives: the score cards are simply the other party
   // of each connection, so every line of copy must match who is looking.
   const helping = user?.role === 'HELPER' || user?.role === 'BOTH';
@@ -221,48 +224,87 @@ export default function TrustScreen() {
         <LoadError what="your trust score" onRetry={refetch} style={{ marginTop: spacing[4] }} />
       ) : (
         <>
-          {/* Summary card */}
+          {/* Summary card — the trust seal (web e9d647c 2026-07-26): the
+              running total framed as a raised plaque, not a bare hero
+              number. It's a seal, not a ring or a bar — the score keeps
+              growing, so nothing here implies a max. Mobile wears the trust
+              accent in the settled deep-green family (design call
+              2026-07-12), hairline border, no drop shadow. */}
           <Card style={{ marginTop: spacing[4] }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Text
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4] }}>
+              <View
                 style={{
-                  fontFamily: fontFamily.display,
-                  fontSize: 42,
-                  lineHeight: 46,
-                  color: t.ink,
-                  fontVariant: ['tabular-nums'],
+                  width: 96,
+                  height: 96,
+                  borderRadius: radius.card,
+                  backgroundColor: t.greenTint,
+                  borderWidth: 1,
+                  borderColor: t.greenLine,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
-                {score}
-              </Text>
-              {breakdown?.tier ? (
-                <View
+                <Text
                   style={{
-                    // Trust semantics wear the trust color, never action-blue
-                    // (HCI rule 4 — same rule TrustBadge documents).
-                    backgroundColor: t.surfaceFill,
-                    borderWidth: 1,
-                    borderColor: t.border,
-                    borderRadius: radius.pill,
-                    paddingVertical: 4,
-                    paddingHorizontal: 12,
+                    fontFamily: fontFamily.display,
+                    fontSize: 40,
+                    lineHeight: 44,
+                    color: t.ink,
+                    fontVariant: ['tabular-nums'],
                   }}
                 >
-                  <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>
-                    {breakdown.tier}
-                  </Text>
-                </View>
-              ) : null}
+                  {score}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: type.caption,
+                    fontWeight: '600',
+                    color: t.trustGold,
+                    letterSpacing: 0.3,
+                    marginTop: 2,
+                  }}
+                >
+                  points
+                </Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                {breakdown?.tier ? (
+                  <View
+                    style={{
+                      // Trust semantics wear the trust color, never action-blue
+                      // (HCI rule 4 — same rule TrustBadge documents).
+                      alignSelf: 'flex-start',
+                      backgroundColor: t.surfaceFill,
+                      borderWidth: 1,
+                      borderColor: t.border,
+                      borderRadius: radius.pill,
+                      paddingVertical: 4,
+                      paddingHorizontal: 12,
+                    }}
+                  >
+                    <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>
+                      {breakdown.tier}
+                    </Text>
+                  </View>
+                ) : null}
+                {/* The headline names the goal, not the number again — the
+                    seal already shows the total. */}
+                <Text
+                  style={{
+                    fontFamily: fontFamily.display,
+                    fontSize: 19,
+                    color: t.ink,
+                    lineHeight: 25,
+                    marginTop: spacing[2],
+                  }}
+                >
+                  {next
+                    ? `${next.missing} point${next.missing === 1 ? '' : 's'} to ${next.name}`
+                    : "You've reached the top tier"}
+                </Text>
+              </View>
             </View>
-            {next ? (
-              <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
-                {next.missing} more point{next.missing === 1 ? '' : 's'} to {next.name}.
-              </Text>
-            ) : (
-              <Text style={{ fontSize: type.meta, color: t.trustGold, marginTop: 8 }}>
-                Community Champion — the top of the ladder.
-              </Text>
-            )}
             {customers.length > 0 ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
                 <View style={{ flexDirection: 'row' }}>
@@ -308,6 +350,15 @@ export default function TrustScreen() {
                     'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
                   : 'Trust starts with a friend. Add someone, and your points appear here.'}
               </Text>
+              {/* The empty state carries its own starter action (rulebook) */}
+              {!isFamily ? (
+                <Button
+                  title="Find friends"
+                  variant="secondary"
+                  onPress={() => router.push('/friends')}
+                  style={{ marginTop: spacing[4] }}
+                />
+              ) : null}
             </Card>
           )}
 

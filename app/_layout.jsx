@@ -8,6 +8,7 @@ import { MD3DarkTheme, MD3LightTheme, PaperProvider } from 'react-native-paper';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { AuthProvider } from '../src/context/AuthContext';
 import { ToastProvider } from '../src/context/ToastContext';
+import { loadHapticsPreference } from '../src/lib/haptics';
 import OfflineBanner from '../src/components/OfflineBanner';
 
 const queryClient = new QueryClient({
@@ -20,7 +21,7 @@ function ThemedShell() {
   const { mode, t } = useTheme();
 
   // Material (react-native-paper) theme fed by OUR tokens — the website's
-  // ToWin palette, Material components. One source of truth for both systems.
+  // Towinly palette, Material components. One source of truth for both systems.
   const paperTheme = useMemo(() => {
     const base = mode === 'dark' ? MD3DarkTheme : MD3LightTheme;
     return {
@@ -65,6 +66,9 @@ export default function RootLayout() {
   // unless AppState is wired to focusManager. Without this, the chat 5s poll and
   // the unread 30s poll keep hitting the network with the phone in a pocket.
   useEffect(() => {
+    // The saved "Vibration feedback" choice must be in force before the first
+    // toast can fire a haptic (rulebook §11: the off switch is absolute).
+    loadHapticsPreference();
     const sub = AppState.addEventListener('change', (status) => {
       focusManager.setFocused(status === 'active');
     });

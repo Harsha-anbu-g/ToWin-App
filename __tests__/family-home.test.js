@@ -99,7 +99,7 @@ const sosAlert = {
 // row must say WHOSE alert it is (FAM-407).
 const quietAlert = {
   id: 'al2', elderId: 'e9', elderName: 'Arthur Chen', type: 'INACTIVITY',
-  body: 'Has not been active on ToWin for 5 days.',
+  body: 'Has not been active on Towinly for 5 days.',
   createdAt: '2026-07-16T12:00:00',
 };
 
@@ -144,7 +144,7 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   r.getByText('Margaret Reyes');
   r.getByText('Arthur Chen');
   r.getByText('Quiet lately');
-  r.getByText('Has not been active on ToWin for 5 days.');
+  r.getByText('Has not been active on Towinly for 5 days.');
 
   // The FAMILY seat filter: the caller-as-elder side of links stays hidden.
   expect(r.queryByText('shadow')).toBeNull();
@@ -202,7 +202,9 @@ test('empty states carry the exact web sub-copy', async () => {
   const r = await wrap(<FamilyHomePanel />);
 
   await r.findByText('No parent linked yet');
-  r.getByText("Add your parent above. They must accept before you're linked.");
+  r.getByText("They must accept before you're linked.");
+  // The empty state carries its own starter action now (rulebook pass).
+  r.getByRole('button', { name: 'Add your parent' });
 
   await r.findByText('No alerts right now');
   r.getByText(
@@ -217,7 +219,7 @@ test('add form: no API call on a blank identifier; trimmed payload posts side el
 
   await fireEvent.press(r.getByRole('button', { name: '+ Add your parent' }));
   r.getByText(
-    'Type their exact ToWin username, email or phone. They must say yes before you see anything.'
+    'Type their exact Towinly username, email or phone. They must say yes before you see anything.'
   );
 
   await fireEvent.press(r.getByRole('button', { name: 'Send request' }));

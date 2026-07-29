@@ -1,4 +1,4 @@
-// Mirrors ToWin/frontend/src/api/axios.js for mobile.
+// Mirrors Towinly/frontend/src/api/axios.js for mobile.
 // A 401 on a request that carried a token means the session is dead (expired
 // or rejected) — the injected onSessionExpired logs the user out so screens
 // don't render silently empty. A 403 is different: the user IS authenticated

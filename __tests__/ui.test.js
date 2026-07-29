@@ -61,12 +61,13 @@ test('input has an accessible label and accepts text', async () => {
 });
 
 test('input error is announced below the field', async () => {
-  const { getByText } = await wrap(
+  const { getByText, getByRole } = await wrap(
     <Input label="Password" value="" onChangeText={() => {}} error="Please enter your password" />
   );
-  const err = getByText('Please enter your password');
-  expect(err).toBeOnTheScreen();
-  expect(err.props.accessibilityRole).toBe('alert');
+  expect(getByText('Please enter your password')).toBeOnTheScreen();
+  // The alert role lives on the error ROW (icon + text — rulebook: never color
+  // alone) so the whole thing is announced as one alert.
+  expect(getByRole('alert')).toBeOnTheScreen();
 });
 
 test('card renders its children on a testable surface', async () => {

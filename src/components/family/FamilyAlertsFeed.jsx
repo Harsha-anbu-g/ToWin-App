@@ -39,7 +39,7 @@ const alertKindsFor = (t) => ({
   },
 });
 
-function AlertRow({ alert, kind, first, t, spacing, radius, type }) {
+function AlertRow({ alert, kind, first, showExplain, t, spacing, radius, type }) {
   return (
     <View
       style={{
@@ -88,7 +88,9 @@ function AlertRow({ alert, kind, first, t, spacing, radius, type }) {
       >
         {alert.body}
       </Text>
-      {kind.explain ? (
+      {showExplain && kind.explain ? (
+        // Once per kind — three "Quiet lately" alerts must not print the same
+        // explanation three times (rulebook: glanceable rows).
         <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 4 }}>
           {kind.explain}
         </Text>
@@ -161,12 +163,13 @@ export default function FamilyAlertsFeed() {
         </View>
       ) : (
         <View style={{ marginTop: spacing[2] }}>
-          {(alerts ?? []).map((a, i) => (
+          {(alerts ?? []).map((a, i, list) => (
             <AlertRow
               key={a.id}
               alert={a}
               kind={kinds[a.type] ?? fallbackKind}
               first={i === 0}
+              showExplain={list.findIndex((x) => x.type === a.type) === i}
               t={t}
               spacing={spacing}
               radius={radius}

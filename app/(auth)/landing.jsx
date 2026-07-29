@@ -8,8 +8,10 @@ import { useRouter } from 'expo-router';
 import {
   Armchair,
   BadgeCheck,
+  Bell,
   Car,
   Coffee,
+  Eye,
   HandHeart,
   Link2,
   MessageCircle,
@@ -18,6 +20,7 @@ import {
   ShoppingBag,
   Star,
   TrendingUp,
+  Users,
   Video,
 } from 'lucide-react-native';
 import { useRef, useState } from 'react';
@@ -136,7 +139,7 @@ function Slide({ index }) {
           <Lead>{COPY.people.lead}</Lead>
           <View style={{ gap: 12 }}>
             {COPY.people.cards.map((card, i) => (
-              <MiniCard key={card.title} title={card.title} Icon={i === 0 ? Armchair : HandHeart}>
+              <MiniCard key={card.title} title={card.title} Icon={[Armchair, HandHeart, Users][i]}>
                 {card.body}
               </MiniCard>
             ))}
@@ -168,7 +171,7 @@ function Slide({ index }) {
           <Title>
             <Text style={{ color: t.trustGold }}>Trust</Text> is earned, not given
           </Title>
-          <Lead size={15}>{COPY.trust.lead}</Lead>
+          <Lead>{COPY.trust.lead}</Lead>
           <View style={{ gap: 8, marginBottom: 12 }}>
             <MiniCard title={COPY.trust.cards[0].title} badge={COPY.trust.cards[0].badge} Icon={BadgeCheck}>
               {COPY.trust.cards[0].body}
@@ -193,7 +196,7 @@ function Slide({ index }) {
           <Title>
             Rooting (<Text style={{ color: t.trustGold }}>Trust</Text> Ladder): how trust grows
           </Title>
-          <Lead size={15}>{COPY.rooting.lead}</Lead>
+          <Lead>{COPY.rooting.lead}</Lead>
           <View style={{ alignSelf: 'center', marginBottom: 12 }}>
             {STAGES.map((s, i) => {
               const isGoal = i === STAGES.length - 1;
@@ -240,10 +243,26 @@ function Slide({ index }) {
         </View>
       )}
 
+      {/* Family stays close (web 15046a5): the elder is always in charge. */}
       {index === 5 && (
         <View>
+          <Title>{COPY.family.title}</Title>
+          <Lead>{COPY.family.lead}</Lead>
+          <View style={{ gap: 8, marginBottom: 12 }}>
+            {COPY.family.cards.map((card, i) => (
+              <MiniCard key={card.title} title={card.title} Icon={[Eye, Bell, Users][i]}>
+                {card.body}
+              </MiniCard>
+            ))}
+          </View>
+          <NoteBox>{COPY.family.note}</NoteBox>
+        </View>
+      )}
+
+      {index === 6 && (
+        <View>
           <Title>{COPY.why.title}</Title>
-          <Lead size={14}>{COPY.why.lead}</Lead>
+          <Lead>{COPY.why.lead}</Lead>
           <View style={{ borderWidth: 1, borderColor: t.border, borderRadius: 14, overflow: 'hidden', marginBottom: 16 }}>
             {COPY.why.exchange.map(({ role, have, need }, i) => {
               const Icon = i === 0 ? Armchair : HandHeart;
@@ -267,7 +286,7 @@ function Slide({ index }) {
             })}
           </View>
           <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.ink, lineHeight: 26, textAlign: 'center' }}>
-            ToWin is where they meet and share, and <Text style={{ fontFamily: fontFamily.displayItalic }}>both</Text> win.
+            Towinly is where they meet and share, and <Text style={{ fontFamily: fontFamily.displayItalic }}>both</Text> win.
           </Text>
         </View>
       )}
@@ -324,17 +343,32 @@ export default function Landing() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TortoiseMark size={24} />
-          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>ToWin</Text>
+          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>Towinly</Text>
         </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Log in"
-          onPress={() => go('/(auth)/login')}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: 8 })}
-        >
-          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>Log in</Text>
-        </Pressable>
+        {/* gap 24, not 16: the two 8pt side slops eat 16 between them, and
+            these are different destinations — 8dp of inert space has to survive. */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 24 }}>
+          {/* Skip (rulebook: a 7-step walk always offers the way out for a
+              NEW person — Log in alone routed them to the wrong door). */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Skip the story and sign up"
+            onPress={() => go('/(auth)/register')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: 8 })}
+          >
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.inkSlate }}>Skip</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Log in"
+            onPress={() => go('/(auth)/login')}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: 8 })}
+          >
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>Log in</Text>
+          </Pressable>
+        </View>
       </View>
 
       <FlatList
@@ -422,11 +456,13 @@ export default function Landing() {
             bottom: -24,
             fontSize: type.caption,
             fontWeight: '600',
-            color: t.inkFaint2,
+            color: t.inkSlate,
             fontVariant: ['tabular-nums'],
           }}
         >
-          {String(index + 1).padStart(2, '0')}/06
+          {/* Derived, never hard-coded — the story grew to 7 chapters and the
+              fixed "/06" printed 07/06 (rulebook pass). */}
+          {String(index + 1).padStart(2, '0')}/{String(CHAPTERS.length).padStart(2, '0')}
         </Text>
       </View>
     </View>

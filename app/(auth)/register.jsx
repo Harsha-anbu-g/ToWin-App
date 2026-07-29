@@ -1,11 +1,11 @@
-// Register — port of ToWin/frontend/src/pages/Register.jsx for mobile:
+// Register — port of Towinly/frontend/src/pages/Register.jsx for mobile:
 // role choice first, sanitized username, strength meter, terms gate.
 // NOTE: no account exists until the emailed link is opened — success routes
 // to check-email, never logs in (mirrors web).
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
@@ -13,6 +13,7 @@ import { showDemoAccounts } from '../../src/lib/appEnv';
 import Input from '../../src/components/ui/Input';
 import LegalModal from '../../src/components/LegalModal';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
 import { MATCH_GREEN, STRENGTH_FAIR, STRENGTH_WEAK } from '../../src/theme/parity';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
@@ -55,7 +56,7 @@ function EyeToggle({ shown, onToggle, color }) {
 }
 
 export default function Register() {
-  const { t, radius, text, fontFamily } = useTheme();
+  const { t, radius, text, type, fontFamily } = useTheme();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -63,7 +64,9 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'ELDER',
+    // No preselected identity (rulebook: nothing optional is preselected) —
+    // "who are you joining as?" is a real question, so it starts unanswered.
+    role: '',
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
@@ -134,17 +137,19 @@ export default function Register() {
   };
 
   const strength = pwdStrength(form.password);
-  const strengthColors = [STRENGTH_WEAK, STRENGTH_FAIR, t.blue, t.blue];
+  // Good/Strong read green, not blue: blue on this screen means "tap me" (role
+  // cards, primary button) and a meter is not interactive.
+  const strengthColors = [STRENGTH_WEAK, STRENGTH_FAIR, MATCH_GREEN, MATCH_GREEN];
 
   return (
-    <Screen keyboard>
+    <Screen back keyboard>
       {/* 3q: the form sits flat on the white page — no card chrome */}
       <View style={{ marginTop: spacing[4] }}>
         <Text
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
         >
-          Join ToWin.
+          Join Towinly.
         </Text>
         <Text style={{ fontSize: 16, color: t.ink3, marginTop: 4, marginBottom: spacing[5] }}>
           Create your free account in minutes.
@@ -169,7 +174,7 @@ export default function Register() {
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`${label}. ${desc}`}
                 onPress={() => setField('role', value)}
-                style={{
+                style={({ pressed }) => ({
                   ...(fullWidth ? { width: '100%' } : { flex: 1 }),
                   minHeight: 64,
                   padding: spacing[3],
@@ -177,12 +182,15 @@ export default function Register() {
                   borderWidth: active ? 2 : 1.5,
                   borderColor: active ? t.blue : t.border,
                   backgroundColor: active ? t.blueWash : t.canvas,
-                }}
+                  opacity: pressed ? 0.8 : 1,
+                })}
               >
                 <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
                   {label}
                 </Text>
-                <Text style={{ fontSize: text.xs, color: active ? t.blueTeal : t.ink4, marginTop: 4, lineHeight: 17 }}>
+                {/* blueDeep/inkSlate, not teal/ink4 — this copy decides an
+                    identity; it must clear 4.5:1 (rulebook). */}
+                <Text style={{ fontSize: text.xs, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 18 }}>
                   {desc}
                 </Text>
               </Pressable>
@@ -192,8 +200,12 @@ export default function Register() {
 
         {error ? (
           <View
+            accessible
             accessibilityRole="alert"
             style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: spacing[2],
               backgroundColor: t.redTint,
               borderWidth: 1,
               borderColor: t.redLine,
@@ -202,7 +214,10 @@ export default function Register() {
               marginBottom: spacing[4],
             }}
           >
-            <Text style={{ fontSize: text.sm, color: t.redError }}>{error}</Text>
+            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 1 }} />
+            <Text style={{ flex: 1, fontSize: text.sm, color: t.redError, lineHeight: 21 }}>
+              {error}
+            </Text>
           </View>
         ) : null}
 
@@ -215,6 +230,7 @@ export default function Register() {
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="username"
+          autoComplete="username-new"
           style={FIELD_GAP}
         />
 
@@ -228,6 +244,7 @@ export default function Register() {
           autoCorrect={false}
           keyboardType="email-address"
           textContentType="emailAddress"
+          autoComplete="email"
           style={FIELD_GAP}
         />
 
@@ -238,6 +255,7 @@ export default function Register() {
           error={fieldErrors.password}
           secureTextEntry={!showPwd}
           textContentType="newPassword"
+          autoComplete="new-password"
           rightSlot={pwdEye}
         />
         {form.password ? (
@@ -253,7 +271,7 @@ export default function Register() {
                 }}
               />
             ))}
-            <Text style={{ fontSize: 12, color: t.ink3, marginLeft: 6 }}>
+            <Text style={{ fontSize: type.meta, color: t.ink3, marginLeft: 6 }}>
               {STRENGTH_LABELS[strength]}
             </Text>
           </View>
@@ -266,6 +284,7 @@ export default function Register() {
           error={fieldErrors.confirmPassword}
           secureTextEntry={!showConfirm}
           textContentType="newPassword"
+          autoComplete="new-password"
           rightSlot={confirmEye}
           style={FIELD_GAP_TOP}
         />
@@ -298,13 +317,16 @@ export default function Register() {
               marginTop: 2,
             }}
           >
-            {agreed ? <Text style={{ color: t.actionInk, fontSize: 14, fontWeight: '700', lineHeight: 17 }}>✓</Text> : null}
+            {/* An icon, not a glyph in a fixed line box — the ✓ clipped at
+                large OS text (rulebook). */}
+            {agreed ? <Check size={15} color={t.actionInk} strokeWidth={3} /> : null}
           </View>
           <Text style={{ flex: 1, fontSize: text.base, color: t.ink3, lineHeight: 25 }}>
             I agree to the Terms of Service and Privacy Policy
           </Text>
         </Pressable>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing[5], marginLeft: 22 + spacing[3] }}>
+        {/* rowGap: when the two 44pt links wrap they must not stack at 0pt */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing[5], rowGap: spacing[2], marginLeft: 22 + spacing[3] }}>
           <Pressable
             accessibilityRole="link"
             onPress={() => setLegalOpen('terms')}
@@ -325,21 +347,37 @@ export default function Register() {
           </Pressable>
         </View>
 
+        {/* The reason the button waits is written on screen, not hidden in an
+            accessibility hint (rulebook: a greyed button must explain itself). */}
+        {!form.role || !agreed ? (
+          <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21, marginTop: spacing[4] }}>
+            {!form.role
+              ? 'Choose who you are joining as, and agree to the terms above.'
+              : 'Agree to the terms above to continue.'}
+          </Text>
+        ) : null}
         <Button
           title={loading ? 'Creating account…' : 'Create Account'}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
-          disabled={!agreed}
-          style={{ marginTop: spacing[5] }}
-          accessibilityHint={agreed ? 'Creates your ToWin account' : 'Agree to the terms first'}
+          disabled={!agreed || !form.role}
+          style={{ marginTop: spacing[3] }}
+          accessibilityHint={
+            agreed && form.role ? 'Creates your Towinly account' : 'Choose a role and agree to the terms first'
+          }
         />
 
-        <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: spacing[5] }}>
-          <Text style={{ fontSize: text.sm, color: t.ink3 }}>Already have an account? </Text>
-          <Pressable accessibilityRole="link" onPress={() => router.push('/(auth)/login')} hitSlop={8}>
-            <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600' }}>Log in</Text>
-          </Pressable>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: spacing[4],
+          }}
+        >
+          <Text style={{ fontSize: 16, color: t.ink3 }}>Already have an account? </Text>
+          <TextLink label="Log in" onPress={() => router.push('/(auth)/login')} />
         </View>
 
         {/* Demo accounts live quietly under the form, not above it — hidden in

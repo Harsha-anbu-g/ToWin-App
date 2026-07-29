@@ -22,7 +22,7 @@ export default function Button({
   accessibilityLabel,
   accessibilityHint,
 }) {
-  const { t, radius } = useTheme();
+  const { t, radius, text } = useTheme();
   const blocked = disabled || loading;
   const small = size === 'small';
 
@@ -55,10 +55,10 @@ export default function Button({
   }[variant];
 
   const label = {
-    primary: { color: t.actionInk, fontSize: 16 },
-    secondary: { color: t.blueDeep, fontSize: 15 },
-    text: { color: t.blueDeep, fontSize: 15 },
-    destructive: { color: t.redDeep, fontSize: 15 },
+    primary: { color: t.actionInk, fontSize: text.sm },
+    secondary: { color: t.blueDeep, fontSize: text.sm },
+    text: { color: t.blueDeep, fontSize: text.sm },
+    destructive: { color: t.redDeep, fontSize: text.sm },
   }[variant];
 
   return (

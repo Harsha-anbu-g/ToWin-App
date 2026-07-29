@@ -1,4 +1,4 @@
-// Mirrors ToWin/frontend/src/context/ThemeContext.jsx: light is the ONLY default,
+// Mirrors Towinly/frontend/src/context/ThemeContext.jsx: light is the ONLY default,
 // night mode is strictly opt-in (Profile toggle), persisted under "towin-theme",
 // and the OS appearance is never followed (elder predictability).
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';

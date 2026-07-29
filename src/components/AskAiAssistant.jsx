@@ -1,5 +1,5 @@
 // Ask AI (3l) — the tortoise helper as a sheet: blueWash header with the
-// ai-tortoise avatar ("Ask AI / Your ToWin helper"), a greeting bubble with a
+// ai-tortoise avatar ("Ask AI / Your Towinly helper"), a greeting bubble with a
 // Read-aloud chip, three suggestion buttons, and a mic · pill · send composer.
 // Entry point is a wash pill FAB (tortoise + "Ask AI", 2px blue border).
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
@@ -36,7 +36,7 @@ const FALLBACK =
   "I couldn't answer just now. Please try again in a moment — or ask a real person through Share feedback in your Profile.";
 
 const GREETING =
-  "Hi! I'm your ToWin helper. Ask me anything in plain words — how trust works, what to do today, or where to find things.";
+  "Hi! I'm your Towinly helper. Ask me anything in plain words — how trust works, what to do today, or where to find things.";
 
 const SUGGESTIONS = [
   'What should I do today?',
@@ -86,8 +86,8 @@ export default function AskAiAssistant() {
     return new Promise((resolve) => {
       Alert.alert(
         'Before your first question',
-        "ToWin's helper uses Groq, an outside AI service, to write its answers. " +
-          'Your question, this chat, and a short summary of your own ToWin activity ' +
+        "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
+          'Your question, this chat, and a short summary of your own Towinly activity ' +
           '(like your first name and trust score) are shared with Groq — never your ' +
           'contact details. Is that okay?',
         [
@@ -162,12 +162,13 @@ export default function AskAiAssistant() {
       {/* Wash pill FAB — tortoise + label, above the tab bar */}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Ask AI, your ToWin helper"
+        accessibilityLabel="Ask AI, your Towinly helper"
         onPress={() => setOpen(true)}
         style={({ pressed }) => ({
           position: 'absolute',
           right: 16,
-          bottom: 118, // clear of the tab bar and the raised center button
+          // Clear of the tab bar (76 + safe-area) and the raised center button.
+          bottom: 76 + insets.bottom + 16,
           height: 44,
           paddingHorizontal: 14,
           borderRadius: 22,
@@ -200,7 +201,7 @@ export default function AskAiAssistant() {
             instead of a bottom sheet. */}
         <View style={{ flex: 1, backgroundColor: t.surface, paddingTop: insets.top, paddingBottom: insets.bottom }}>
           <View style={{ flex: 1, overflow: 'hidden' }}>
-            {/* Wash header: mascot + Ask AI / Your ToWin helper */}
+            {/* Wash header: mascot + Ask AI / Your Towinly helper */}
             <View
               style={{
                 flexDirection: 'row',
@@ -218,7 +219,7 @@ export default function AskAiAssistant() {
                 <Text ref={headerRef} accessibilityRole="header" style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
                   Ask AI
                 </Text>
-                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your ToWin helper</Text>
+                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your Towinly helper</Text>
               </View>
               <Pressable
                 accessibilityRole="button"

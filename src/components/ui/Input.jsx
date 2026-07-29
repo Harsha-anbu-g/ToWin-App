@@ -3,6 +3,7 @@
 // (used for the password eye toggles). Elder rules: >=48pt, 18px text.
 // memo'd: Paper inputs animate a floating label, so sibling fields skipping
 // re-renders per keystroke is what keeps slow typists free of keyboard lag.
+import { AlertCircle } from 'lucide-react-native';
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import { TextInput as PaperInput } from 'react-native-paper';
@@ -33,7 +34,9 @@ export default memo(function Input({
           error={!!error}
           style={[
             { backgroundColor: t.canvas, fontSize: text.base, minHeight: 48 },
-            rightSlot ? { paddingRight: 40 } : null,
+            // 48, not 40 — the eye slot occupies 46pt from the right edge;
+            // long values were rendering underneath it (rulebook pass).
+            rightSlot ? { paddingRight: 48 } : null,
             inputStyle,
           ]}
           outlineStyle={{ borderRadius: radius.input }}
@@ -54,12 +57,18 @@ export default memo(function Input({
         ) : null}
       </View>
       {error ? (
-        <Text
+        // Icon + color, never color alone (rulebook: ~8% of men are color-blind
+        // and sunlight flattens every phone screen).
+        <View
+          accessible
           accessibilityRole="alert"
-          style={{ color: t.redError, fontSize: text.sm, marginTop: spacing[2] }}
+          style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[2] }}
         >
-          {error}
-        </Text>
+          <AlertCircle size={16} color={t.redError} strokeWidth={2} style={{ marginTop: 2 }} />
+          <Text style={{ flex: 1, color: t.redError, fontSize: text.sm, lineHeight: 21 }}>
+            {error}
+          </Text>
+        </View>
       ) : helper ? (
         <Text style={{ color: t.inkSlate, fontSize: text.sm, marginTop: spacing[2] }}>
           {helper}

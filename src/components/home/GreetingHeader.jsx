@@ -1,5 +1,6 @@
 // The feed's opening breath — a personal serif greeting straight on the
-// page (3a: Newsreader 30, date 13). Editorial warmth, not another card.
+// page (3a: Newsreader 30, date at the meta floor). Editorial warmth, not
+// another card.
 import { useQuery } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
@@ -7,7 +8,7 @@ import { greeting } from '../../lib/streaks';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function GreetingHeader() {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, spacing, type, fontFamily } = useTheme();
 
   const { data: me } = useQuery({
     queryKey: ['profile-me'],
@@ -35,7 +36,7 @@ export default function GreetingHeader() {
       >
         {greeting()}{firstName ? `, ${firstName}` : ''}.
       </Text>
-      <Text style={{ fontSize: 13, color: t.inkSlate, marginTop: 4 }}>{today}</Text>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 4 }}>{today}</Text>
     </View>
   );
 }

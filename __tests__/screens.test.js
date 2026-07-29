@@ -53,20 +53,26 @@ test('login: empty fields show the exact web messages and fire NO api call', asy
   const { getByRole, getByText } = await wrap(<Login />);
   await fireEvent.press(getByRole('button', { name: 'Log In' }));
   getByText('Enter your username, Gmail, or phone number');
-  getByText('Password must be at least 6 characters');
+  // 8, matching the register rule (rulebook pass) — 6 described a password
+  // that cannot exist on any account.
+  getByText('Password must be at least 8 characters');
   expect(api.post).not.toHaveBeenCalled();
 });
 
-test('register: submit stays disabled until the terms are agreed', async () => {
+test('register: submit stays disabled until a role is chosen AND terms agreed', async () => {
   const { getByRole } = await wrap(<Register />);
+  // No preselected identity (rulebook): agreeing alone is not enough.
   expect(getByRole('button', { name: 'Create Account' })).toBeDisabled();
   await fireEvent.press(getByRole('checkbox'));
+  expect(getByRole('button', { name: 'Create Account' })).toBeDisabled();
+  await fireEvent.press(getByRole('radio', { name: /Elder\./ }));
   expect(getByRole('button', { name: 'Create Account' })).not.toBeDisabled();
 });
 
 test('register: invalid fields show the exact web messages, no api call', async () => {
   const { getByRole, getByText } = await wrap(<Register />);
-  await fireEvent.press(getByRole('checkbox')); // agree first
+  await fireEvent.press(getByRole('radio', { name: /Elder\./ })); // choose a role
+  await fireEvent.press(getByRole('checkbox')); // agree
   await fireEvent.press(getByRole('button', { name: 'Create Account' }));
   getByText('Username must be 3-20 characters: lowercase letters, numbers, underscores only');
   getByText('Enter a valid email address');

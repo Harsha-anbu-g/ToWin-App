@@ -16,11 +16,13 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      hitSlop={{ top: 6, bottom: 6 }}
+      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       style={({ pressed }) => [
         {
-          height: 36,
-          paddingHorizontal: 14,
+          // min, not fixed — the label must wrap at large OS text, never clip
+          minHeight: 36,
+          paddingVertical: 8,
+          paddingHorizontal: 16,
           borderRadius: radius.pill,
           backgroundColor: 'transparent',
           borderWidth: 1,
@@ -33,7 +35,6 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       ]}
     >
       <Text
-        numberOfLines={1}
         style={{
           fontSize: type.meta,
           fontWeight: '600',

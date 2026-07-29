@@ -1,4 +1,4 @@
-// Ported verbatim from ToWin/frontend/src/pages/ElderDashboard.jsx —
+// Ported verbatim from Towinly/frontend/src/pages/ElderDashboard.jsx —
 // plain everyday words (elder-first), same status copy, same ordering.
 export const CATEGORY = {
   COMPANIONSHIP: 'Company',
