@@ -18,14 +18,16 @@ test('logged-in users skip the story entirely', () => {
   ).toBe('/(auth)/verify-pending');
 });
 
-test('story is 6 chapters in the website order', () => {
+test('story is 7 chapters in the website order', () => {
+  // Family joined the walk upstream (web 15046a5): chapter 6 before Why.
   expect(CHAPTERS.map((c) => c.label)).toEqual([
     'Welcome',
     "Who it's for",
     'The problem we solve',
     'The real problem is trust',
     'One step at a time',
-    'Why ToWin',
+    'Family stays close',
+    'Why Towinly',
   ]);
 });
 

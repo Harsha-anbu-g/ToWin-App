@@ -1,15 +1,17 @@
-// Finish setup — port of ToWin/frontend/src/pages/FinishSetup.jsx. Completes a
+// Finish setup — port of Towinly/frontend/src/pages/FinishSetup.jsx. Completes a
 // Google sign-in (role + username + phone → POST /auth/oauth/complete). Google
 // OAuth itself is deferred to the release phase, so this screen is only
 // reachable once that lands — the no-token guard mirrors web behavior.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { AlertCircle } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -25,7 +27,8 @@ export default function FinishSetup() {
   const router = useRouter();
   const { onboardingToken, email: googleEmail, name: googleName } = useLocalSearchParams();
 
-  const [role, setRole] = useState('ELDER');
+  // No preselected identity (rulebook: nothing optional is preselected).
+  const [role, setRole] = useState('');
   const [username, setUsername] = useState('');
   const [phone, setPhone] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -102,7 +105,8 @@ export default function FinishSetup() {
               marginBottom: spacing[5],
             }}
           >
-            <Text style={{ fontSize: 14, color: t.blueTeal, textAlign: 'center' }}>
+            {/* blueDeep, not teal — teal on the wash measured 3.47:1 (rulebook) */}
+            <Text style={{ fontSize: 14, color: t.blueDeep, textAlign: 'center' }}>
               Signing in as <Text style={{ fontWeight: '700' }}>{googleEmail}</Text>
             </Text>
           </View>
@@ -110,8 +114,12 @@ export default function FinishSetup() {
 
         {error ? (
           <View
+            accessible
             accessibilityRole="alert"
             style={{
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              gap: spacing[2],
               backgroundColor: t.redTint,
               borderWidth: 1,
               borderColor: t.redLine,
@@ -120,7 +128,10 @@ export default function FinishSetup() {
               marginBottom: spacing[4],
             }}
           >
-            <Text style={{ fontSize: text.sm, color: t.redError }}>{error}</Text>
+            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 1 }} />
+            <Text style={{ flex: 1, fontSize: text.sm, color: t.redError, lineHeight: 21 }}>
+              {error}
+            </Text>
           </View>
         ) : null}
 
@@ -137,7 +148,7 @@ export default function FinishSetup() {
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`${label}. ${desc}`}
                 onPress={() => setRole(value)}
-                style={{
+                style={({ pressed }) => ({
                   flex: 1,
                   minHeight: 64,
                   padding: spacing[3],
@@ -145,12 +156,13 @@ export default function FinishSetup() {
                   borderWidth: active ? 2 : 1.5,
                   borderColor: active ? t.blue : t.border,
                   backgroundColor: active ? t.blueWash : t.canvas,
-                }}
+                  opacity: pressed ? 0.8 : 1,
+                })}
               >
                 <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
                   {label}
                 </Text>
-                <Text style={{ fontSize: text.xs, color: active ? t.blueTeal : t.ink4, marginTop: 4, lineHeight: 17 }}>
+                <Text style={{ fontSize: text.xs, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 18 }}>
                   {desc}
                 </Text>
               </Pressable>
@@ -171,6 +183,7 @@ export default function FinishSetup() {
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="username"
+          autoComplete="username-new"
           style={{ marginBottom: spacing[4] }}
         />
 
@@ -186,14 +199,30 @@ export default function FinishSetup() {
           placeholder="+1 416 555 0123"
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
+          autoComplete="tel"
           style={{ marginBottom: spacing[5] }}
         />
 
+        {!role ? (
+          <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21, marginBottom: spacing[3] }}>
+            Choose who you are joining as above.
+          </Text>
+        ) : null}
         <Button
           title={loading ? 'Signing in…' : 'Sign In'}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
+          disabled={!role}
+          accessibilityHint={role ? undefined : 'Choose a role first'}
+        />
+        {/* The escape hatch (rulebook: every multi-step flow has a Cancel) —
+            a person on the wrong Google account was trapped here before. */}
+        <TextLink
+          label="Cancel — use a different account"
+          onPress={() => router.replace('/(auth)/login')}
+          muted
+          style={{ marginTop: spacing[2] }}
         />
       </Card>
     </Screen>

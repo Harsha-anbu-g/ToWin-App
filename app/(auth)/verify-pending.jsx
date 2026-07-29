@@ -1,14 +1,15 @@
 // Full-page gate for a logged-in user who hasn't verified their email — port of
-// ToWin/frontend/src/pages/VerifyPending.jsx. They cannot reach any app screen
+// Towinly/frontend/src/pages/VerifyPending.jsx. They cannot reach any app screen
 // until they open the emailed link and sign in again (the `ev` claim lives in
 // the signed JWT, so only a fresh login unlocks — no focus re-check can work).
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { parseJwtPayload } from '../../src/lib/jwt';
@@ -44,7 +45,8 @@ export default function VerifyPending() {
   };
 
   return (
-    <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    // Scrollable + centered — scroll off clipped the card at large OS text.
+    <Screen contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card>
         <Text
           accessibilityRole="header"
@@ -73,7 +75,7 @@ export default function VerifyPending() {
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
             <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
             <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder — the ToWin verification email often lands there. If you find it, mark it "Not spam"
+            folder — the Towinly verification email often lands there. If you find it, mark it "Not spam"
             so future emails reach your inbox.
           </Text>
         </View>
@@ -85,16 +87,13 @@ export default function VerifyPending() {
           loading={sending}
           style={{ marginTop: spacing[6] }}
         />
-        <Pressable
-          accessibilityRole="button"
+        {/* The label names its consequence — this signs the current session
+            out so the fresh JWT can carry the verified claim (rulebook). */}
+        <TextLink
+          label="I've verified — sign in again"
           onPress={backToLogin}
-          hitSlop={8}
-          style={{ alignSelf: 'center', paddingVertical: spacing[3] }}
-        >
-          <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600', textDecorationLine: 'underline' }}>
-            I've verified — sign in
-          </Text>
-        </Pressable>
+          style={{ marginTop: spacing[2] }}
+        />
       </Card>
     </Screen>
   );

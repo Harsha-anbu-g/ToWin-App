@@ -157,7 +157,7 @@ export function ParentOpenNeeds({ journey }) {
     <View style={{ marginTop: spacing[5] }}>
       <Text
         accessibilityRole="header"
-        style={{ fontFamily: fontFamily.display, fontSize: 17, color: t.ink }}
+        style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
         Their open help requests
       </Text>
@@ -197,7 +197,7 @@ export function SharedHelpers({ journey }) {
     <View style={{ marginTop: spacing[5] }}>
       <Text
         accessibilityRole="header"
-        style={{ fontFamily: fontFamily.display, fontSize: 17, color: t.ink }}
+        style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
         Friendships shared with you
       </Text>

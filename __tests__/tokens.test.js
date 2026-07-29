@@ -46,10 +46,12 @@ test('redesign: SF type ramp per handoff', () => {
   expect(type.title).toBe(28);
   expect(type.cardTitle).toBe(19);
   expect(type.body).toBe(16); // audit 2026-07-17: elder rule — running text never below 16 (handoff said 15)
-  expect(type.meta).toBe(13);
+  // Rulebook pass 2026-07-27: meta carries meaningful secondary text (13 was
+  // under the floor); tabLabel sat below the hard 11pt platform minimum.
+  expect(type.meta).toBe(14);
   expect(type.caption).toBe(12);
-  expect(type.segCount).toBe(11);
-  expect(type.tabLabel).toBe(10);
+  expect(type.segCount).toBe(12);
+  expect(type.tabLabel).toBe(11);
   expect(type.bigNumber).toBe(48);
 });
 

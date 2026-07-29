@@ -5,10 +5,16 @@
 //      neutral rather than alarming;
 //   2. only the friendships the parent CHOSE to share appear, and an empty
 //      list explains whose choice that was rather than looking broken;
-//   3. this whole surface is read-only — no button here acts for the parent.
+//   3. watching alone is read-only — no button acts for the parent until a
+//      power is granted (asking for one is allowed; asking grants nothing).
+//
+// FAM-506: the deep view (shared friendships, open requests) moved off the
+// home list onto the per-parent screen, so those assertions render
+// FamilyParentScreen; the at-a-glance status line stays on FamilyHomePanel.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
 import React from 'react';
+import FamilyParentScreen from '../app/family/parent/[elderId]';
 import FamilyHomePanel from '../src/components/family/FamilyHomePanel';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
@@ -17,6 +23,7 @@ const mockPush = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush }),
+  useLocalSearchParams: () => ({ elderId: 'elder-margaret' }),
   useFocusEffect: () => {},
 }));
 
@@ -84,6 +91,7 @@ function stubGet(journey = JOURNEY, links = LINKS) {
     if (url === '/family/links') return Promise.resolve({ data: links });
     if (url === '/family/journey') return Promise.resolve({ data: journey });
     if (url === '/family/alerts') return Promise.resolve({ data: { alerts: [] } });
+    if (url === '/family/standings') return Promise.resolve({ data: { standings: [] } });
     return Promise.resolve({ data: {} });
   });
 }
@@ -138,62 +146,65 @@ describe('the parent status line', () => {
   });
 });
 
-describe('the parent’s open help requests', () => {
+describe('the parent’s open help requests (per-parent screen)', () => {
   test('lists them read-only', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     expect(await r.findByText('A lift to the pharmacy')).toBeTruthy();
     expect(r.getByText('Help with the garden')).toBeTruthy();
   });
 
-  test('shows no heading at all when there are none', async () => {
+  test('shows no heading at all when there are none and no power granted', async () => {
     stubGet({ elders: [{ ...JOURNEY.elders[0], openNeedsCount: 0, openNeeds: [] }] });
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     await r.findByText('Checked in today');
-    expect(r.queryByText('Their open help requests')).toBeNull();
+    expect(r.queryByText("Margaret's open help requests")).toBeNull();
   });
 });
 
-describe('friendships shared with the family member', () => {
+describe('friendships shared with the family member (per-parent screen)', () => {
   test('shows a shared helper with the parent’s progress', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     expect(await r.findByText('Harsha')).toBeTruthy();
     expect(r.getByText('Stage 6 of 7 · Ready to Meet')).toBeTruthy();
   });
 
   test('surfaces the ready-to-meet moment', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
-    expect(await r.findByText('They’re getting ready to meet in person')).toBeTruthy();
+    const r = await wrap(<FamilyParentScreen />);
+    expect(await r.findByText('Harsha is getting ready to meet in person')).toBeTruthy();
   });
 
   test('explains an empty list as the parent’s choice, not a fault', async () => {
     stubGet({ elders: [{ ...JOURNEY.elders[0], sharedHelpers: [] }] });
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     expect(
       await r.findByText(
-        'No friendships shared with you yet. Your parent chooses what to share.'
+        'No friendships shared with you yet. Margaret chooses what to share. When Margaret shares one, you can:'
       )
     ).toBeTruthy();
   });
 
   test('offers a way through to the helper’s full profile', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     expect(await r.findByLabelText("See Harsha's full profile")).toBeTruthy();
   });
 });
 
-describe('this surface never acts for the parent', () => {
-  test('offers no write-for-them, advance-trust or review action without a granted power', async () => {
+describe('watching alone never acts for the parent', () => {
+  test('offers no act-for-them control without a granted power — asking is all that remains', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
+    const r = await wrap(<FamilyParentScreen />);
     await r.findByText('Harsha');
-    expect(r.queryByText(/Write to Harsha for/)).toBeNull();
-    expect(r.queryByText(/Move the next step/)).toBeNull();
-    expect(r.queryByText(/Leave a review/)).toBeNull();
-    expect(r.queryByText(/Ask for help for/)).toBeNull();
+    // The act controls carry the parent's name; none may exist ungranted.
+    expect(r.queryByText('Move the next step forward for Margaret')).toBeNull();
+    expect(r.queryByText('Leave a review for Margaret')).toBeNull();
+    expect(r.queryByText('Ask for help for Margaret')).toBeNull();
+    expect(r.queryByText(/Anything you do here is in Margaret/)).toBeNull();
+    // The consent list is present — every power off, none granted.
+    expect(await r.findAllByText(/Not on yet — you can ask Margaret/)).toHaveLength(3);
   });
 });
 

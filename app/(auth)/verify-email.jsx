@@ -1,5 +1,5 @@
 // Landing for the verification link (deep link towin://verify-email?token=…).
-// Port of ToWin/frontend/src/pages/VerifyEmail.jsx: confirms the token with the
+// Port of Towinly/frontend/src/pages/VerifyEmail.jsx: confirms the token with the
 // backend and shows the result. No auth required.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';

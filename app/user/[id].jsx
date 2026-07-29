@@ -3,12 +3,16 @@
 // end-friendship / report actions. Trust climbing lives on the Trust screen.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
+import ActionChip from '../../src/components/ui/ActionChip';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
+import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
+import SkeletonCard from '../../src/components/ui/Skeleton';
 import TrustBadge from '../../src/components/ui/TrustBadge';
 import { useToast } from '../../src/context/ToastContext';
 import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
@@ -47,11 +51,16 @@ export default function UserProfile() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: profile, isLoading } = useQuery({
+  // isError separates "the network dropped" (retry) from "this profile is
+  // gone" — the two must never share one message (rulebook).
+  const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ['profile', id],
     queryFn: async () => (await api.get(`/profile/${id}`)).data,
     enabled: !!id,
   });
+  // In-screen report options (the 5-button Alert-as-picker is banned).
+  const [reportOpen, setReportOpen] = useState(false);
+  const [blocking, setBlocking] = useState(false);
 
   const { data: reviews } = useQuery({
     queryKey: ['reviews', id],
@@ -92,7 +101,10 @@ export default function UserProfile() {
 
   const report = useMutation({
     mutationFn: (reason) => api.post('/reports', { reportedUserId: id, reason, description: reason }),
-    onSuccess: () => showToast('Report sent. Thank you for keeping ToWin safe.', 'success'),
+    onSuccess: () => {
+      setReportOpen(false);
+      showToast('Report sent. Thank you for keeping Towinly safe.', 'success');
+    },
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not send the report. Please try again.'), 'error'),
   });
@@ -107,19 +119,20 @@ export default function UserProfile() {
       ]
     );
 
-  const pickReportReason = () =>
-    Alert.alert('Report this person', 'What went wrong?', [
-      ...REPORT_REASONS.map((reason) => ({ text: reason, onPress: () => report.mutate(reason) })),
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-
   // Device-side block (UGC 1.2): their content disappears everywhere for you,
   // and an active friendship ends so messages stop server-side too.
+  // `blocking` keeps the button honest while the writes run (rulebook: every
+  // mutation shows a pending state on the control that fired it).
   const doBlock = async () => {
-    await blockUser({ id, name: profile?.name ?? '' });
-    if (conn?.status === 'ACTIVE') endFriendship.mutate();
-    queryClient.invalidateQueries({ queryKey: ['block-list'] });
-    showToast("Blocked. You won't see this person anymore.", 'info');
+    setBlocking(true);
+    try {
+      await blockUser({ id, name: profile?.name ?? '' });
+      if (conn?.status === 'ACTIVE') endFriendship.mutate();
+      queryClient.invalidateQueries({ queryKey: ['block-list'] });
+      showToast("Blocked. You won't see this person anymore.", 'info');
+    } finally {
+      setBlocking(false);
+    }
   };
 
   const confirmBlock = () =>
@@ -142,13 +155,16 @@ export default function UserProfile() {
   return (
     <Screen back title={profile?.name ?? 'Profile'}>
       {isLoading ? (
-        <Card>
-          <Text style={{ fontSize: text.base, color: t.inkSlate }}>Loading profile…</Text>
-        </Card>
+        <SkeletonCard lines={4} />
+      ) : isError ? (
+        // Network failure gets a retry — the old copy promised a pull-to-
+        // refresh this screen never had (rulebook: never name an affordance
+        // that doesn't exist).
+        <LoadError what="this profile" onRetry={refetch} />
       ) : !profile ? (
         <Card>
           <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-            We couldn't load this profile. Pull down to try again, or go back.
+            This profile is no longer available.
           </Text>
           <Button title="Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing[5] }} />
         </Card>
@@ -228,9 +244,11 @@ export default function UserProfile() {
                     borderTopColor: t.hairline,
                   }}
                 >
-                  <Text style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}>
+                  <Text
+                    accessibilityLabel={`${Math.round(r.rating ?? 0)} out of 5 stars`}
+                    style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}
+                  >
                     {'★'.repeat(Math.round(r.rating ?? 0))}
-                    <Text style={{ color: t.idleGrey }}>{'★'.repeat(Math.max(0, 5 - Math.round(r.rating ?? 0)))}</Text>
                   </Text>
                   {r.comment ? (
                     <Text style={{ fontSize: text.base, lineHeight: 26, color: t.ink2, marginTop: 4 }}>
@@ -245,12 +263,42 @@ export default function UserProfile() {
             </Card>
           ) : null}
 
-          <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
+          {/* Report options live in the screen, not a 5-button Alert (rulebook:
+              more than ~3 choices is an action sheet / in-place list). */}
+          {reportOpen ? (
+            <Card style={{ marginTop: spacing[4] }}>
+              <Text
+                accessibilityRole="header"
+                style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
+              >
+                What went wrong?
+              </Text>
+              <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
+                {REPORT_REASONS.map((reason) => (
+                  <ActionChip
+                    key={reason}
+                    label={report.isPending && report.variables === reason ? 'Sending…' : reason}
+                    disabled={report.isPending}
+                    onPress={() => report.mutate(reason)}
+                  />
+                ))}
+                <ActionChip label="Never mind" onPress={() => setReportOpen(false)} />
+              </View>
+            </Card>
+          ) : null}
+
+          <View style={{ gap: spacing[3], marginTop: spacing[5] }}>
             {conn?.status === 'ACTIVE' ? (
               <Button title="End friendship" variant="destructive" onPress={confirmEnd} />
             ) : null}
-            <Button title="Report this person" variant="text" onPress={pickReportReason} />
-            <Button title="Block this person" variant="destructive" onPress={confirmBlock} />
+            <Button title="Report this person" variant="text" onPress={() => setReportOpen((v) => !v)} />
+            <Button
+              title={blocking ? 'Blocking…' : 'Block this person'}
+              variant="destructive"
+              onPress={confirmBlock}
+              loading={blocking}
+              disabled={blocking}
+            />
           </View>
         </>
       )}

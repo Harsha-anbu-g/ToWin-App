@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "ToWin",
+    "name": "Towinly",
     "slug": "towin",
     "version": "1.0.0",
     "runtimeVersion": {
@@ -45,9 +45,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ToWin uses your photo library so you can choose a profile picture.",
-          "cameraPermission": "ToWin uses your camera only if you choose to take a new profile picture.",
-          "microphonePermission": "ToWin uses the microphone only if you record a video for your profile picture."
+          "photosPermission": "Towinly uses your photo library so you can choose a profile picture.",
+          "cameraPermission": "Towinly uses your camera only if you choose to take a new profile picture.",
+          "microphonePermission": "Towinly uses the microphone only if you record a video for your profile picture."
         }
       ]
     ]

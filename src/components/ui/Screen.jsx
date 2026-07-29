@@ -16,6 +16,9 @@ export default function Screen({
   back = false,
   scroll = true,
   keyboard = false,
+  // Tab screens sit under the floating Ask-AI pill — `fab` adds the clearance
+  // so the last row is never rendered (or tapped) underneath it (rulebook pass).
+  fab = false,
   style,
   contentStyle,
 }) {
@@ -78,7 +81,10 @@ export default function Screen({
 
   const body = scroll ? (
     <ScrollView
-      contentContainerStyle={[{ padding: spacing[5], paddingBottom: spacing[12] }, contentStyle]}
+      contentContainerStyle={[
+        { padding: spacing[5], paddingBottom: fab ? 120 : spacing[12] },
+        contentStyle,
+      ]}
       keyboardShouldPersistTaps="handled"
     >
       {children}

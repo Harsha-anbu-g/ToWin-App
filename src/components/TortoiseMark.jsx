@@ -1,8 +1,8 @@
-// The ToWin tortoise, as vector geometry — port of the web's TortoiseMark +
-// IntroBrandLockup (ToWin/frontend/src/components/TortoiseMark.jsx and the
+// The Towinly tortoise, as vector geometry — port of the web's TortoiseMark +
+// IntroBrandLockup (Towinly/frontend/src/components/TortoiseMark.jsx and the
 // intro-draw beats in index.css). The mark draws itself in: shell first, the
 // head rises, legs arrive in pairs, the seven shell cells pop, then the mark
-// slides left as "ToWin" wipes in and pushes it aside.
+// slides left as "Towinly" wipes in and pushes it aside.
 //
 // Web timing, kept verbatim (a logo animating itself in is a brand beat, not a
 // UI response — the deliberate exception to the <300ms rule, same as the web):
@@ -139,10 +139,10 @@ export default function TortoiseMark({ size = 82, intro = false, running = false
 }
 
 /**
- * The mark and the "ToWin" wordmark as one unit, playing the intro on every
+ * The mark and the "Towinly" wordmark as one unit, playing the intro on every
  * mount (no once-per-session gate — the web plays it on every landing view).
  * While it draws, the tortoise sits centred over the whole lockup; when
- * "ToWin" arrives it slides back left into place, so the wordmark reads as
+ * "Towinly" arrives it slides back left into place, so the wordmark reads as
  * pushing it aside. The slide distance is half of (gap + wordmark width) —
  * measured, so it stays exact at any rendered text width.
  */
@@ -188,8 +188,8 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
   if (!play) {
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap }}>
-        <TortoiseMark size={size} title="ToWin tortoise logo" />
-        <Text style={word}>ToWin</Text>
+        <TortoiseMark size={size} title="Towinly tortoise logo" />
+        <Text style={word}>Towinly</Text>
       </View>
     );
   }
@@ -198,7 +198,7 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
     // invisible until measured so the primed offsets never flash unshifted
     <View style={{ flexDirection: 'row', alignItems: 'center', gap, opacity: running ? 1 : 0 }}>
       <Animated.View style={markStyle}>
-        <TortoiseMark size={size} intro running={running} title="ToWin tortoise logo" />
+        <TortoiseMark size={size} intro running={running} title="Towinly tortoise logo" />
       </Animated.View>
       {/* the wipe: overflow hidden + a translated inner (transform, GPU) */}
       <View style={{ overflow: 'hidden' }}>
@@ -206,7 +206,7 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
           style={[word, wordInnerStyle]}
           onLayout={(e) => setWordWidth(e.nativeEvent.layout.width)}
         >
-          ToWin
+          Towinly
         </Animated.Text>
       </View>
     </View>

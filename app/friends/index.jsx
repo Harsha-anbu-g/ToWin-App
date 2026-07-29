@@ -34,7 +34,8 @@ function TonalChip({ label, onPress, neutral = false }) {
       disabled={!onPress}
       hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => ({
-        height: 34,
+        minHeight: 34, // min, not fixed — grows with the OS large-text setting
+        paddingVertical: 6,
         paddingHorizontal: 16,
         borderRadius: radius.pill,
         backgroundColor: neutral ? t.surfaceFill : 'transparent',
@@ -118,7 +119,7 @@ export default function FriendsScreen() {
     queryKey: ['discover', path],
     queryFn: async () => (await api.get(path)).data,
   });
-  const { data: connections, isError: connsFailed, refetch: refetchConns } = useQuery({
+  const { data: connections, isLoading: connsLoading, isError: connsFailed, refetch: refetchConns } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
@@ -180,7 +181,8 @@ export default function FriendsScreen() {
   // an encouraging-but-false "nobody new right now" (silent-failure audit).
   const emptyCard = (message, { failed, what, retry } = {}) => (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16 }}>
-      {isLoading && seg === 'find' ? (
+      {(isLoading && seg === 'find') || (connsLoading && seg !== 'find') ? (
+        // A pending load must never render "No new invites" (rulebook).
         <SkeletonCard />
       ) : failed ? (
         <LoadError bare what={what} onRetry={retry} />
@@ -218,18 +220,58 @@ export default function FriendsScreen() {
             refreshControl={refreshControl}
             contentContainerStyle={{ paddingBottom: 64, gap: 10 }}
             ListHeaderComponent={
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ paddingBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <MapPin size={14} color={t.inkSlate} strokeWidth={1.8} />
                   <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
-                    Showing {who} near you
+                    Showing {who} within
                   </Text>
                 </View>
-                <TonalChip
-                  label={`${radiusKm} km`}
-                  neutral
-                  onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
-                />
+                {/* Direct choice, not a cycler — going from 25 back to 10 took
+                    four taps and a memorized sequence (rulebook: recognition
+                    over recall). */}
+                <View
+                  accessibilityRole="radiogroup"
+                  style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+                >
+                  {RADIUS_STEPS.map((km, i) => {
+                    const active = i === radiusIdx;
+                    return (
+                      <Pressable
+                        key={km}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`${km} kilometers`}
+                        accessibilityState={{ checked: active }}
+                        onPress={() => setRadiusIdx(i)}
+                        // 36pt visual, hitSlop tops the target up to >=44pt (the
+                        // kit Chip's trick — vertical only, so adjacent pills
+                        // never overlap each other's target).
+                        hitSlop={{ top: 4, bottom: 4 }}
+                        style={({ pressed }) => ({
+                          minHeight: 36,
+                          paddingHorizontal: 14,
+                          borderRadius: 18,
+                          justifyContent: 'center',
+                          backgroundColor: active ? t.blueWash : 'transparent',
+                          borderWidth: 1,
+                          borderColor: active ? t.blueSoft : t.border,
+                          opacity: pressed ? 0.7 : 1,
+                        })}
+                      >
+                        <Text
+                          style={{
+                            fontSize: type.meta,
+                            fontWeight: '600',
+                            color: active ? t.blueDeep : t.inkSlate,
+                            fontVariant: ['tabular-nums'],
+                          }}
+                        >
+                          {km} km
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
               </View>
             }
             ListEmptyComponent={emptyCard(

@@ -22,6 +22,6 @@ test('geometry: 7 drawn parts + 7 cells, measured lengths, artwork window', () =
 });
 
 test('static mark renders with an accessible title', async () => {
-  const { getByLabelText } = await wrap(<TortoiseMark title="ToWin tortoise logo" />);
-  expect(getByLabelText('ToWin tortoise logo')).toBeOnTheScreen();
+  const { getByLabelText } = await wrap(<TortoiseMark title="Towinly tortoise logo" />);
+  expect(getByLabelText('Towinly tortoise logo')).toBeOnTheScreen();
 });

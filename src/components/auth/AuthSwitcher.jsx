@@ -37,7 +37,11 @@ export default function AuthSwitcher({ active }) {
             onPress={() => router.replace(href)}
             style={{
               flex: 1,
-              height: 40,
+              // minHeight, not height: 44 is the tap floor, and the label has to
+              // grow the pill instead of clipping at large OS text.
+              minHeight: 44,
+              paddingVertical: spacing[2],
+              paddingHorizontal: spacing[2],
               borderRadius: radius.pill,
               alignItems: 'center',
               justifyContent: 'center',
@@ -50,6 +54,7 @@ export default function AuthSwitcher({ active }) {
               style={{
                 fontSize: text.sm,
                 fontWeight: '600',
+                textAlign: 'center',
                 color: isActive ? t.blueDeep : t.ink3,
               }}
             >

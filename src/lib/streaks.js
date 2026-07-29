@@ -1,4 +1,4 @@
-// Ported verbatim from ToWin/frontend/src/pages/Streaks.jsx.
+// Ported verbatim from Towinly/frontend/src/pages/Streaks.jsx.
 // Build the Monday–Sunday week containing today, marking which days fall inside
 // the current consecutive streak. Derived from currentStreak + lastCheckinDate
 // since the backend keeps no per-day history.

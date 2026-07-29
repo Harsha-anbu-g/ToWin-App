@@ -1,4 +1,4 @@
-// Peekaboo game logic — ported from ToWin/frontend/src/pages/PeekabooGame.jsx.
+// Peekaboo game logic — ported from Towinly/frontend/src/pages/PeekabooGame.jsx.
 // 6 numbered pairs, 12 cards; flip two, matches lock in, misses flip back.
 export const PAIRS = 6;
 export const TIME = 60;

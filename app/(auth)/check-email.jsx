@@ -1,13 +1,14 @@
-// Check email — port of ToWin/frontend/src/pages/CheckEmail.jsx. Shown right
+// Check email — port of Towinly/frontend/src/pages/CheckEmail.jsx. Shown right
 // after a manual signup: the account does NOT exist yet (created only when the
 // user opens the link), so nobody is logged in here.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -20,7 +21,12 @@ export default function CheckEmail() {
 
   const resend = async () => {
     if (!email) {
-      showToast('Please sign up again to get a new link.', 'error');
+      // The error names the fix AND carries the action (rulebook: recovery in
+      // place, never a dead-end toast).
+      showToast('Please sign up again to get a new link.', 'error', {
+        actionLabel: 'Sign up',
+        onAction: () => router.replace('/(auth)/register'),
+      });
       return;
     }
     setSending(true);
@@ -35,7 +41,8 @@ export default function CheckEmail() {
   };
 
   return (
-    <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    // Scrollable + centered — scroll off clipped the card at large OS text.
+    <Screen contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card contentStyle={{ alignItems: 'stretch' }}>
         <Text
           accessibilityRole="header"
@@ -85,7 +92,7 @@ export default function CheckEmail() {
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
             <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
             <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder — the ToWin email often lands there. If you find it, mark it "Not spam" so future
+            folder — the Towinly email often lands there. If you find it, mark it "Not spam" so future
             emails reach your inbox.
           </Text>
         </View>
@@ -97,16 +104,11 @@ export default function CheckEmail() {
           loading={sending}
           style={{ marginTop: spacing[6] }}
         />
-        <Pressable
-          accessibilityRole="link"
+        <TextLink
+          label="Back to log in"
           onPress={() => router.replace('/(auth)/login')}
-          hitSlop={8}
-          style={{ alignSelf: 'center', paddingVertical: spacing[3] }}
-        >
-          <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600', textDecorationLine: 'underline' }}>
-            Back to log in
-          </Text>
-        </Pressable>
+          style={{ marginTop: spacing[2] }}
+        />
       </Card>
     </Screen>
   );

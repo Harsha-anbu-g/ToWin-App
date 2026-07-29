@@ -1,13 +1,14 @@
-// Reset password — port of ToWin/frontend/src/pages/ResetPassword.jsx.
+// Reset password — port of Towinly/frontend/src/pages/ResetPassword.jsx.
 // Reached via the emailed deep link (towin://reset-password?token=…).
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
-import Input from '../../src/components/ui/Input';
+import PasswordInput from '../../src/components/ui/PasswordInput';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function ResetPassword() {
@@ -16,7 +17,9 @@ export default function ResetPassword() {
   const router = useRouter();
   const [pw, setPw] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
+  // Per-field errors — the length error must sit under the field it names,
+  // not under the confirm field (rulebook pass 2026-07-27).
+  const [fieldErrors, setFieldErrors] = useState({});
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -24,21 +27,19 @@ export default function ResetPassword() {
   const centerBody = { fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[3], lineHeight: 26 };
 
   const submit = async () => {
-    setError('');
-    if (pw.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    if (pw !== confirm) {
-      setError('Passwords do not match');
-      return;
-    }
+    const errs = {};
+    if (pw.length < 8) errs.pw = 'Password must be at least 8 characters';
+    if (!errs.pw && pw !== confirm) errs.confirm = 'Passwords do not match';
+    setFieldErrors(errs);
+    if (Object.keys(errs).length) return;
     setLoading(true);
     try {
       await api.post('/auth/reset-password', { token, newPassword: pw });
       setDone(true);
     } catch (err) {
-      setError(err?.response?.data?.message || 'This reset link is invalid or has expired.');
+      setFieldErrors({
+        confirm: err?.response?.data?.message || 'This reset link is invalid or has expired.',
+      });
     } finally {
       setLoading(false);
     }
@@ -83,32 +84,35 @@ export default function ResetPassword() {
   }
 
   return (
-    <Screen keyboard scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    // Scrollable + centered via flexGrow — scroll={false} clipped the button
+    // at large OS text sizes (rulebook pass).
+    <Screen keyboard contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card>
         <Text accessibilityRole="header" style={heading}>
           Choose a new password
         </Text>
-        <Input
+        <PasswordInput
           label="New password (at least 8 characters)"
           value={pw}
           onChangeText={(v) => {
             setPw(v);
-            setError('');
+            setFieldErrors((f) => ({ ...f, pw: '' }));
           }}
-          secureTextEntry
+          error={fieldErrors.pw}
           textContentType="newPassword"
+          autoComplete="new-password"
           style={{ marginTop: spacing[5], marginBottom: spacing[4] }}
         />
-        <Input
+        <PasswordInput
           label="Re-enter new password"
           value={confirm}
           onChangeText={(v) => {
             setConfirm(v);
-            setError('');
+            setFieldErrors((f) => ({ ...f, confirm: '' }));
           }}
-          secureTextEntry
+          error={fieldErrors.confirm}
           textContentType="newPassword"
-          error={error}
+          autoComplete="new-password"
           style={{ marginBottom: spacing[5] }}
         />
         <Button
@@ -117,16 +121,11 @@ export default function ResetPassword() {
           onPress={submit}
           loading={loading}
         />
-        <Pressable
-          accessibilityRole="link"
+        <TextLink
+          label="Back to log in"
           onPress={() => router.replace('/(auth)/login')}
-          hitSlop={8}
-          style={{ alignSelf: 'center', paddingVertical: spacing[3] }}
-        >
-          <Text style={{ fontSize: text.sm, color: t.blueDeep, fontWeight: '600', textDecorationLine: 'underline' }}>
-            Back to log in
-          </Text>
-        </Pressable>
+          style={{ marginTop: spacing[2] }}
+        />
       </Card>
     </Screen>
   );

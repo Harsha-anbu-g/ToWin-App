@@ -42,8 +42,12 @@ const tabIcon = (Icon) =>
     );
   };
 
-function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
+function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type }) {
   // The ONE filled primary of the shell. The whole slot is the target (>=44pt).
+  // Rulebook pass 2026-07-27: the circle used marginTop:-18 to poke above the
+  // bar — outside its Pressable's bounds, where Android drops touches, so the
+  // FAB's top third was dead. The bar is 76pt now and the circle sits fully
+  // inside its target; the white ring keeps the raised look.
   const active = !!accessibilityState?.selected;
   return (
     <Pressable
@@ -63,7 +67,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
           width: 54,
           height: 54,
           borderRadius: 27,
-          marginTop: -18, // raised above the bar
+          marginTop: -8, // slight lift, still fully inside the Pressable's box
           backgroundColor: active ? t.blueDeep : t.actionFill,
           alignItems: 'center',
           justifyContent: 'center',
@@ -75,7 +79,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
       </View>
       <Text
         numberOfLines={1}
-        style={{ fontSize: 10, fontWeight: '600', color: t.blueDeep, marginTop: 3 }}
+        style={{ fontSize: type.tabLabel, fontWeight: '600', color: t.blueDeep, marginTop: 2 }}
       >
         {label}
       </Text>
@@ -84,7 +88,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t }) {
 }
 
 export default function TabsLayout() {
-  const { t } = useTheme();
+  const { t, type } = useTheme();
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -115,13 +119,16 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,
         tabBarInactiveTintColor: t.inkSlate,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: '600' },
+        // 11 is the hard platform floor for tab labels — never lower (rulebook).
+        tabBarLabelStyle: { fontSize: type.tabLabel, fontWeight: '600' },
         tabBarStyle: {
           backgroundColor: t.canvas,
           borderTopWidth: 1,
           borderTopColor: t.border,
-          height: 64 + insets.bottom,
-          paddingTop: 6,
+          // 76, not 64: room for the center circle to sit fully INSIDE its
+          // Pressable (Android drops touches outside parent bounds).
+          height: 76 + insets.bottom,
+          paddingTop: 8,
           paddingBottom: Math.max(insets.bottom, 8),
         },
         sceneStyle: { backgroundColor: t.surface },
@@ -157,6 +164,7 @@ export default function TabsLayout() {
                     onPress={props.onPress}
                     accessibilityState={props.accessibilityState}
                     t={t}
+                    type={type}
                   />
                 ),
               }
@@ -170,7 +178,9 @@ export default function TabsLayout() {
           tabBarIcon: tabIcon(MessageCircle),
           tabBarBadge: unread > 0 ? unread : undefined,
           tabBarBadgeStyle: {
-            backgroundColor: t.blue, // gentle, not a red storm (HCI-RULES)
+            // Deep sky, not the action fill: gentle rather than a red storm
+            // (HCI-RULES), but 11px white needs the real 4.5:1.
+            backgroundColor: t.badgeFill,
             color: t.actionInk,
             fontSize: 11,
           },

@@ -1,11 +1,15 @@
 // Change password — port of ChangePassword.jsx (POST /auth/change-password).
+// Rulebook pass 2026-07-27: show-password eyes on all three fields (the
+// highest-error-rate screen in the app had none), per-field errors so the
+// length message sits under the field it names, autofill hints, and a
+// scrollable body so large OS text can't clip the button.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text } from 'react-native';
 import api from '../src/api/client';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
-import Input from '../src/components/ui/Input';
+import PasswordInput from '../src/components/ui/PasswordInput';
 import Screen from '../src/components/ui/Screen';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
@@ -18,69 +22,70 @@ export default function ChangePassword() {
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const submit = async () => {
-    setError('');
-    if (next.length < 8) {
-      setError('New password must be at least 8 characters');
-      return;
-    }
-    if (next !== confirm) {
-      setError('Passwords do not match');
-      return;
-    }
+    const errs = {};
+    if (next.length < 8) errs.next = 'New password must be at least 8 characters';
+    if (!errs.next && next !== confirm) errs.confirm = 'Passwords do not match';
+    setFieldErrors(errs);
+    if (Object.keys(errs).length) return;
     setLoading(true);
     try {
       await api.post('/auth/change-password', { currentPassword: current, newPassword: next });
       showToast('Password updated.', 'success');
       router.back();
     } catch (err) {
-      setError(err?.response?.data?.message || 'Could not change the password. Check your current one.');
+      setFieldErrors({
+        current:
+          err?.response?.data?.message || 'Could not change the password. Check your current one.',
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Screen back title="Change password" keyboard scroll={false} contentStyle={{ justifyContent: 'center' }}>
+    <Screen back title="Change password" keyboard contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card>
         <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}>
           Choose a new password
         </Text>
-        <Input
+        <PasswordInput
           label="Current password"
           value={current}
           onChangeText={(v) => {
             setCurrent(v);
-            setError('');
+            setFieldErrors((f) => ({ ...f, current: '' }));
           }}
-          secureTextEntry
+          error={fieldErrors.current}
           textContentType="password"
+          autoComplete="current-password"
           style={{ marginBottom: spacing[4] }}
         />
-        <Input
+        <PasswordInput
           label="New password (at least 8 characters)"
           value={next}
           onChangeText={(v) => {
             setNext(v);
-            setError('');
+            setFieldErrors((f) => ({ ...f, next: '' }));
           }}
-          secureTextEntry
+          error={fieldErrors.next}
           textContentType="newPassword"
+          autoComplete="new-password"
           style={{ marginBottom: spacing[4] }}
         />
-        <Input
+        <PasswordInput
           label="Re-enter new password"
           value={confirm}
           onChangeText={(v) => {
             setConfirm(v);
-            setError('');
+            setFieldErrors((f) => ({ ...f, confirm: '' }));
           }}
-          secureTextEntry
+          error={fieldErrors.confirm}
           textContentType="newPassword"
-          error={error}
+          autoComplete="new-password"
           style={{ marginBottom: spacing[5] }}
         />
         <Button

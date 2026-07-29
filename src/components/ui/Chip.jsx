@@ -1,7 +1,8 @@
 // Chip — canvas select chips (3e "Kind of help", filters) in M3 selected-state
 // grammar: idle = white card + hairline border; selected = tonal blueWash,
 // blueSoft border, blueDeep label with a leading check. `neutral` renders the
-// quiet surfaceFill status pill (3f). 36pt visual, hitSlop tops up to >=44pt.
+// quiet surfaceFill status pill (3f). The 44pt target is real box, not hitSlop:
+// chips wrap in grids with an 8pt gap, and slop would eat that inert space.
 import { Check } from 'lucide-react-native';
 import { memo } from 'react';
 import { Pressable, Text } from 'react-native';
@@ -22,20 +23,22 @@ export default memo(function Chip({ label, selected = false, neutral = false, on
       accessibilityState={{ selected }}
       onPress={onPress}
       disabled={!onPress}
-      hitSlop={{ top: 4, bottom: 4 }}
-      style={[
+      // Pressed feedback (rulebook: no silent taps) — chips are among the
+      // most-tapped controls and previously gave none.
+      style={({ pressed }) => [
         {
-          minHeight: 36, // min, not fixed — grows with the OS large-text setting
-          paddingVertical: 6,
-          paddingHorizontal: selected ? 14 : 15,
+          minHeight: 44, // min, not fixed — grows with the OS large-text setting
+          paddingVertical: 8,
+          paddingHorizontal: 16, // constant — no shift when the check appears
           borderRadius: radius.pill,
           backgroundColor,
           borderWidth: 1,
           borderColor,
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 5,
+          gap: 4,
           alignSelf: 'flex-start',
+          opacity: pressed ? 0.7 : 1,
         },
         style,
       ]}

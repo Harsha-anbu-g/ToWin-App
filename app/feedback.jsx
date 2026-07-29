@@ -1,13 +1,15 @@
-// Share Your Feedback (3m) + creator card (3n) — port of the website's
-// Feedback.jsx: prototype notice, name/email side by side, honest-message
-// field, seven 1–5 rating rows (Idea…Overall, filled stars in brand blue),
-// pinned Submit, then the founder card with contact rows and portfolio.
-// POST /feedback carries the same keys the website sends.
+// Share Your Feedback (3m) — port of the website's Feedback.jsx: prototype
+// notice, single-column name/email/message fields, seven 1–5 rating
+// rows, pinned Submit. The star row and the founder/portfolio cards live in
+// src/components/feedback/ (rulebook pass follow-up: the screen file keeps
+// only the form). POST /feedback carries the same keys the website sends.
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Image, Linking, Pressable, ScrollView, Text, View } from 'react-native';
-import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone, Star } from 'lucide-react-native';
+import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../src/api/client';
+import CreatorCard from '../src/components/feedback/CreatorCard';
+import RatingRow from '../src/components/feedback/RatingRow';
 import Button from '../src/components/ui/Button';
 import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
@@ -16,7 +18,6 @@ import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
 
 // Hoisted so memo'd Inputs get the same style object every render
-const FLEX_1 = { flex: 1 };
 const FIELD_GAP = { marginBottom: spacing[4] };
 const MESSAGE_INPUT_STYLE = { minHeight: 110, textAlignVertical: 'top' };
 
@@ -31,159 +32,8 @@ const RATINGS = [
   { key: 'ratingOverall', label: 'Overall' },
 ];
 
-const CONTACTS = [
-  { icon: Mail, label: 'agharsha.anbu@gmail.com', href: 'mailto:agharsha.anbu@gmail.com' },
-  { icon: Phone, label: '+1 438-535-5782 (WhatsApp)', href: 'https://wa.me/14385355782' },
-  { icon: MapPin, label: 'Montreal, Quebec, Canada', href: null },
-  { icon: Briefcase, label: 'LinkedIn: harsha-anbu-gowri', href: 'https://www.linkedin.com/in/harsha-anbu-gowri/' },
-  { icon: Code2, label: 'GitHub: Harsha-anbu-g', href: 'https://github.com/Harsha-anbu-g' },
-  { icon: Camera, label: 'Instagram: harsha._.ag', href: 'https://www.instagram.com/harsha._.ag' },
-];
-
-const founder = require('../assets/founder.jpg');
-
-function RatingRow({ label, value, onChange }) {
-  const { t, type } = useTheme();
-  return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}>
-      <Text style={{ fontSize: type.body, color: t.ink }}>{label}</Text>
-      <View style={{ flexDirection: 'row' }}>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Pressable
-            key={n}
-            accessibilityRole="button"
-            accessibilityLabel={`${label}: ${n} star${n > 1 ? 's' : ''}`}
-            accessibilityState={{ selected: value >= n }}
-            onPress={() => onChange(value === n ? 0 : n)}
-            hitSlop={2}
-            style={{ minWidth: 34, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
-          >
-            <Star
-              size={20}
-              color={value >= n ? t.trustGold : t.idleGrey}
-              fill={value >= n ? t.trustGold : 'transparent'}
-            />
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-function CreatorCard() {
-  const { t, type } = useTheme();
-  const open = (href) => href && Linking.openURL(href).catch(() => {});
-  return (
-    <>
-      <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 18, padding: 20, marginTop: 12 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
-          <Image
-            source={founder}
-            accessibilityLabel="Portrait of Harshavardhan"
-            style={{ width: 52, height: 52, borderRadius: 26, borderWidth: 1, borderColor: t.border }}
-          />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: 16, fontWeight: '600', lineHeight: 21, color: t.ink }}>
-              Harshavardhan Anbuchezhian Gowri
-            </Text>
-            <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Harsha</Text>
-          </View>
-        </View>
-        <Text style={{ fontSize: 13.5, color: t.blueDeep, fontWeight: '600', marginTop: 16, lineHeight: 19 }}>
-          Full-Stack Engineer · Aspiring Entrepreneur · AI-Driven Developer
-        </Text>
-        <Text style={{ fontSize: 12.5, color: t.inkSlate, marginTop: 2 }}>
-          Master's in Applied Computer Science · Concordia University, Montreal
-        </Text>
-        <View style={{ height: 1, backgroundColor: t.border, marginVertical: 16 }} />
-        <Text style={{ fontSize: 14, fontWeight: '600', lineHeight: 21, color: t.ink }}>
-          This isn't a university project. ToWin is my future startup.
-        </Text>
-        <Text style={{ fontSize: 13.5, color: t.inkSlate, lineHeight: 21, marginTop: 8 }}>
-          I'm building something real, and your feedback is what shapes it. Love the idea? Want to
-          connect? Let's talk!
-        </Text>
-        <View style={{ gap: 12, marginTop: 16 }}>
-          {CONTACTS.map(({ icon: Icon, label, href }) => (
-            <Pressable
-              key={label}
-              accessibilityRole={href ? 'link' : 'text'}
-              accessibilityLabel={label}
-              onPress={href ? () => open(href) : undefined}
-              disabled={!href}
-              hitSlop={{ top: 4, bottom: 4 }}
-              style={({ pressed }) => ({
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 12,
-                opacity: pressed ? 0.6 : 1,
-              })}
-            >
-              <Icon size={16} color={t.blue} strokeWidth={1.8} />
-              <Text style={{ fontSize: 13.5, color: href ? t.blueDeep : t.inkSlate }}>{label}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </View>
-
-      {/* Portfolio card: gold underlined link + gold pill */}
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel="Visit my portfolio"
-        onPress={() => open('https://portfolioharsha.vercel.app/')}
-        style={({ pressed }) => ({
-          backgroundColor: t.canvas,
-          borderWidth: 1,
-          borderColor: t.border,
-          borderRadius: 18,
-          paddingVertical: 16,
-          paddingHorizontal: 20,
-          marginTop: 12,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 12,
-          opacity: pressed ? 0.8 : 1,
-        })}
-      >
-        <View>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Want to know more?</Text>
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: '700',
-              color: t.trustGold,
-              textDecorationLine: 'underline',
-              marginTop: 2,
-            }}
-          >
-            Visit my portfolio
-          </Text>
-        </View>
-        {/* Neutral ghost pill — the trust color never fills an action (HCI rule 4),
-            and Submit stays this screen's only filled button (rule 8) */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-            backgroundColor: 'transparent',
-            borderWidth: 1,
-            borderColor: t.border,
-            paddingVertical: 8,
-            paddingHorizontal: 16,
-            borderRadius: 999,
-          }}
-        >
-          <Globe size={13} color={t.inkSlate} strokeWidth={2} />
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>My Portfolio</Text>
-        </View>
-      </Pressable>
-    </>
-  );
-}
-
 export default function Feedback() {
+  const insets = useSafeAreaInsets();
   const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const router = useRouter();
@@ -220,7 +70,7 @@ export default function Feedback() {
         message: form.message.trim(),
         ...Object.fromEntries(RATINGS.map(({ key }) => [key, ratings[key] || null])),
       });
-      showToast('Thank you — your feedback helps ToWin grow.', 'success');
+      showToast('Thank you — your feedback helps Towinly grow.', 'success');
       router.back();
     } catch (err) {
       showToast(err?.response?.data?.message || 'Could not send it right now. Please try again.', 'error');
@@ -246,7 +96,7 @@ export default function Feedback() {
           }}
         >
           <Text style={{ fontSize: type.meta, color: t.ink2, lineHeight: 20 }}>
-            <Text style={{ fontWeight: '700' }}>ToWin is an early prototype.</Text> You're trying a
+            <Text style={{ fontWeight: '700' }}>Towinly is an early prototype.</Text> You're trying a
             work in progress. Your feedback here directly shapes what gets built.
           </Text>
         </View>
@@ -261,23 +111,20 @@ export default function Feedback() {
           All fields are optional except your message.
         </Text>
 
-        {/* Name / Email side by side */}
-        <View style={{ flexDirection: 'row', gap: 12, marginBottom: spacing[4] }}>
-          <Input
-            label="Name"
-            value={form.name}
-            onChangeText={setName}
-            style={FLEX_1}
-          />
-          <Input
-            label="Email"
-            value={form.email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            style={FLEX_1}
-          />
-        </View>
+        <Input
+          label="Name"
+          value={form.name}
+          onChangeText={setName}
+          style={FIELD_GAP}
+        />
+        <Input
+          label="Email"
+          value={form.email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+          style={FIELD_GAP}
+        />
 
         <Input
           label="Message"
@@ -306,7 +153,15 @@ export default function Feedback() {
       </ScrollView>
 
       {/* Pinned Submit Feedback */}
-      <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[3] }}>
+      <View
+        style={{
+          paddingHorizontal: spacing[4],
+          paddingTop: spacing[2],
+          // Clear the home-indicator gesture zone (rulebook: never pin the
+          // primary under the system bar).
+          paddingBottom: Math.max(insets.bottom, spacing[3]),
+        }}
+      >
         <Button
           title={loading ? 'Sending…' : 'Submit Feedback'}
           variant="primary"

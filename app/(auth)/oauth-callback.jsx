@@ -8,11 +8,13 @@
 // server can bind the code to this client.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Text } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
+import { AlertCircle } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
+import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { consumeOAuthFlow } from '../../src/lib/oauthFlow';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -66,12 +68,17 @@ export default function OAuthCallback() {
       <Card>
         {error ? (
           <>
-            <Text
+            {/* Icon + color, never color alone (rulebook) */}
+            <View
+              accessible
               accessibilityRole="alert"
-              style={{ fontSize: text.base, lineHeight: 26, color: t.redError, textAlign: 'center' }}
+              style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing[2], alignSelf: 'center' }}
             >
-              {error}
-            </Text>
+              <AlertCircle size={20} color={t.redError} strokeWidth={2} style={{ marginTop: 3 }} />
+              <Text style={{ flexShrink: 1, fontSize: text.base, lineHeight: 26, color: t.redError }}>
+                {error}
+              </Text>
+            </View>
             <Button
               title="Back to log in"
               variant="primary"
@@ -94,6 +101,14 @@ export default function OAuthCallback() {
             >
               Connecting with Google…
             </Text>
+            {/* Escape hatch — if the exchange hangs, this screen must not be
+                a dead end (rulebook: never trap the user in a spinner). */}
+            <TextLink
+              label="Back to log in"
+              muted
+              onPress={() => router.replace('/(auth)/login')}
+              style={{ marginTop: spacing[4] }}
+            />
           </>
         )}
       </Card>

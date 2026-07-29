@@ -3,14 +3,16 @@
 // hidden app-wide for now (user call 2026-07-17); contacts remain manageable.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import Input from '../src/components/ui/Input';
+import LoadError from '../src/components/ui/LoadError';
 import Screen from '../src/components/ui/Screen';
+import SkeletonCard from '../src/components/ui/Skeleton';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
@@ -24,7 +26,10 @@ export default function EmergencyContacts() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: contacts, isLoading } = useQuery({
+  // isError matters more here than anywhere: a dropped network must NEVER
+  // tell someone they have no emergency contacts (rulebook: failed loads
+  // never masquerade as empty).
+  const { data: contacts, isLoading, isError, refetch } = useQuery({
     queryKey: ['emergency-contacts'],
     queryFn: async () => (await api.get('/emergency/contacts')).data,
   });
@@ -59,10 +64,20 @@ export default function EmergencyContacts() {
       ),
   });
 
+  // Undo over confirmation (rulebook): removing is reversible — we hold the
+  // contact's own data, so the toast's Undo re-adds it in one tap.
   const remove = useMutation({
-    mutationFn: (id) => api.delete(`/emergency/contacts/${id}`),
-    onSuccess: () => {
-      showToast('Contact removed.', 'info');
+    mutationFn: (contact) => api.delete(`/emergency/contacts/${contact.id}`),
+    onSuccess: (_r, contact) => {
+      showToast(`${contact.name} removed.`, 'info', {
+        actionLabel: 'Undo',
+        onAction: () =>
+          add.mutate({
+            name: contact.name,
+            phone: contact.phone,
+            relationship: contact.relationship || 'Contact',
+          }),
+      });
       refresh();
     },
     onError: (err) =>
@@ -83,14 +98,8 @@ export default function EmergencyContacts() {
     add.mutate({ name: form.name.trim(), phone: digits, relationship: form.relationship.trim() || 'Contact' });
   };
 
-  const confirmRemove = (contact) =>
-    Alert.alert('Remove this contact?', `${contact.name} will be removed from your emergency contacts.`, [
-      { text: 'Keep them', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => remove.mutate(contact.id) },
-    ]);
-
   return (
-    <Screen back title="Emergency" keyboard>
+    <Screen back title="Emergency contacts" keyboard>
 
       <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
@@ -106,7 +115,9 @@ export default function EmergencyContacts() {
           My contacts
         </Text>
         {isLoading ? (
-          <Text style={{ marginTop: spacing[3], fontSize: text.base, color: t.inkSlate }}>Loading…</Text>
+          <SkeletonCard lines={2} />
+        ) : isError ? (
+          <LoadError what="your emergency contacts" onRetry={refetch} style={{ marginTop: spacing[3] }} />
         ) : (contacts ?? []).length === 0 ? (
           <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
             Nobody yet. Add a family member or a trusted neighbor below.
@@ -135,7 +146,7 @@ export default function EmergencyContacts() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${c.name}`}
-                onPress={() => confirmRemove(c)}
+                onPress={() => remove.mutate(c)}
                 hitSlop={8}
                 style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
               >

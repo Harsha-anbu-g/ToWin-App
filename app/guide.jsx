@@ -1,9 +1,10 @@
-// How ToWin works — mobile port of the Guide (guideContent.jsx), with the same
+// How Towinly works — mobile port of the Guide (guideContent.jsx), with the same
 // role toggle and plain-English copy. One idea per section.
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
+import SegmentedControl from '../src/components/ui/SegmentedControl';
 import { useAuth } from '../src/context/AuthContext';
 import { useTheme } from '../src/theme/ThemeContext';
 
@@ -23,8 +24,19 @@ const HELPER_CAN = [
   'Grow your Trust Score and earn reviews each time you help.',
 ];
 
+// Web guideContent.jsx family section (2026-07-26): what family can do —
+// always with the parent's say-so.
+const FAMILY_CAN = [
+  'Link to your parent. They must say yes before you see anything.',
+  'See that they checked in today, so you know they are okay.',
+  'Follow the friendships they choose to share with you — and only those.',
+  'Read the small updates thread on a shared friendship, together with your parent and their helper.',
+  'Message their helpers directly, through the trust your parent has built.',
+  'Ask for permission to act for them — request help, move a friendship forward, or leave a review in their name.',
+];
+
 const LADDER = [
-  ['Just connected', 'You said yes to each other. Chat inside ToWin only.'],
+  ['Just connected', 'You said yes to each other. Chat inside Towinly only.'],
   ['Chatting', 'Regular messages — getting to know each other.'],
   ['Friendly', 'First names and warm conversation come naturally.'],
   ['Phone ready', 'You both agreed to share phone numbers.'],
@@ -71,55 +83,53 @@ function P({ children, style }) {
 }
 
 export default function Guide() {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, text } = useTheme();
   const { user } = useAuth();
-  const [role, setRole] = useState(user?.role === 'HELPER' ? 'HELPER' : 'ELDER');
+  const [role, setRole] = useState(
+    user?.role === 'HELPER' ? 'HELPER' : user?.role === 'FAMILY' ? 'FAMILY' : 'ELDER'
+  );
 
   return (
-    <Screen back title="How ToWin works">
+    <Screen back title="How Towinly works">
       <Card>
-        <H>Welcome to ToWin</H>
+        <H>Welcome to Towinly</H>
         <P>
-          ToWin is a community that brings older people and younger helpers together, so no one
+          Towinly is a community that brings older people and younger helpers together, so no one
           feels alone and everyday help is easy to find.
         </P>
         <P>
           Many older people have no safe, trusted way to meet new friends or get a hand with daily
-          tasks. ToWin gives them one, built around trust that grows one small step at a time — so
+          tasks. Towinly gives them one, built around trust that grows one small step at a time — so
           no one ever has to rush or feel unsafe.
         </P>
       </Card>
 
       <Card style={{ marginTop: spacing[4] }}>
-        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[3] }}>
-          {['ELDER', 'HELPER'].map((r) => {
-            const active = role === r;
-            return (
-              <Pressable
-                key={r}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-                onPress={() => setRole(r)}
-                style={{
-                  flex: 1,
-                  minHeight: 44,
-                  borderRadius: radius.pill,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderWidth: active ? 2 : 1.5,
-                  borderColor: active ? t.blue : t.border,
-                  backgroundColor: active ? t.blueWash : t.canvas,
-                }}
-              >
-                <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink3 }}>
-                  {r === 'ELDER' ? 'As an Elder' : 'As a Helper'}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        {/* The shared SegmentedControl — the app's one switcher, not a
+            hand-rolled sibling with different metrics (rulebook consistency). */}
+        <SegmentedControl
+          segments={[
+            { key: 'ELDER', label: 'As an Elder' },
+            { key: 'HELPER', label: 'As a Helper' },
+            { key: 'FAMILY', label: 'As Family' },
+          ]}
+          value={role}
+          onChange={setRole}
+          style={{ marginBottom: spacing[3] }}
+        />
         <H>What you can do</H>
-        <Bullets items={role === 'HELPER' ? HELPER_CAN : ELDER_CAN} />
+        {role === 'FAMILY' ? (
+          <P>As Family, you stay close to your parent&apos;s life here — always with their say-so.</P>
+        ) : null}
+        <Bullets
+          items={role === 'HELPER' ? HELPER_CAN : role === 'FAMILY' ? FAMILY_CAN : ELDER_CAN}
+        />
+        {role === 'FAMILY' ? (
+          <P>
+            Your parent stays in charge: every friendship starts private, every power starts off,
+            and they can change their mind at any time.
+          </P>
+        ) : null}
       </Card>
 
       <Card style={{ marginTop: spacing[4] }}>

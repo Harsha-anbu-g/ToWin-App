@@ -75,6 +75,7 @@ export default function HomeScreen() {
           ['family-links'],
           ['family-journey'],
           ['family-alerts'],
+          ['family-standings'],
           ['trust-my-score'],
           ['profile-me'],
         ]

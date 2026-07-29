@@ -1,5 +1,5 @@
 // Landing story copy — VERBATIM from the website's landingContent.jsx
-// (ToWin/frontend/src/data/landingContent.jsx). Do not reword: the handoff
+// (Towinly/frontend/src/data/landingContent.jsx). Do not reword: the handoff
 // locks this text. Rendering lives in app/(auth)/landing.jsx; this module is
 // plain data so the copy is testable and the screen stays layout-only.
 
@@ -9,7 +9,8 @@ export const CHAPTERS = [
   { n: 3, label: 'The problem we solve' },
   { n: 4, label: 'The real problem is trust' },
   { n: 5, label: 'One step at a time' },
-  { n: 6, label: 'Why ToWin' },
+  { n: 6, label: 'Family stays close' },
+  { n: 7, label: 'Why Towinly' },
 ];
 
 // The 7 Rooting stages — each step is worth +1 trust score.
@@ -31,8 +32,8 @@ export const COPY = {
       'A place where elders connect with younger people for company and daily help, with a trust score and trust ladder that keeps every connection safe.',
   },
   people: {
-    title: 'Two kinds of people',
-    lead: 'Everyone on ToWin is one of these two.',
+    title: 'Three kinds of people',
+    lead: 'Everyone on Towinly is one of these three.',
     cards: [
       {
         title: 'Elder',
@@ -42,6 +43,10 @@ export const COPY = {
         title: 'Helper',
         body: 'A younger person who gives time, company, and a hand with everyday things.',
       },
+      {
+        title: 'Family',
+        body: "A relative who stays close, sees how their elder's friendships grow, and helps when needed.",
+      },
     ],
   },
   solves: {
@@ -50,7 +55,7 @@ export const COPY = {
       "Small daily things, like shopping, a ride, or someone to talk to, take energy that elders don't always have.",
     chips: ['Shopping', 'A ride', 'Someone to talk to'],
     body:
-      'On ToWin, an elder simply asks. Helpers nearby see the request and come to help with whatever is needed.',
+      'On Towinly, an elder simply asks. Helpers nearby see the request and come to help with whatever is needed.',
   },
   trust: {
     // Title renders as gold "Trust" + " is earned, not given"
@@ -77,9 +82,21 @@ export const COPY = {
   rooting: {
     // Title renders as "Rooting (Trust Ladder): how trust grows" with gold "Trust"
     lead:
-      'Like a tree growing roots, every friendship on ToWin grows slowly, through 7 simple stages.',
+      'Like a tree growing roots, every friendship on Towinly grows slowly, through 7 simple stages.',
     note:
       'Both people must agree to every step. Nothing personal, like a phone number, is shared until trust has grown.',
+  },
+  family: {
+    title: 'Family can watch over',
+    lead:
+      'An elder can invite up to five family members to stay close and step in if they are ever needed.',
+    cards: [
+      { title: 'See the journey', body: 'Watch each friendship climb its seven steps.' },
+      { title: 'Hear right away', body: 'Alerts the moment something needs attention.' },
+      { title: 'Help decide', body: 'Look at a new helper and share their view.' },
+    ],
+    note:
+      'The elder is always in charge — one switch turns family sharing on or off, at any time.',
   },
   why: {
     title: 'Both sides win',
@@ -89,6 +106,6 @@ export const COPY = {
       { role: 'Elders', have: 'Time, money, and life lessons to share', need: 'Energy and company' },
       { role: 'Helpers', have: 'Energy, time, and good company', need: 'Money, care, and life advice' },
     ],
-    // Payoff renders with "both" italic: "ToWin is where they meet and share, and both win."
+    // Payoff renders with "both" italic: "Towinly is where they meet and share, and both win."
   },
 };

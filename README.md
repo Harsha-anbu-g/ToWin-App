@@ -1,7 +1,7 @@
-# ToWin Mobile
+# Towinly Mobile
 
-React Native + Expo app of the ToWin elders ↔ helpers trust platform. Same brand
-and theme as the website (`../ToWin`, read-only reference), redesigned for mobile:
+React Native + Expo app of the Towinly elders ↔ helpers trust platform. Same brand
+and theme as the website (`../Towinly`, read-only reference), redesigned for mobile:
 Instagram-shaped shell — Home feed, big center action, Messages, Profile, with
 Friends top-right.
 
@@ -10,7 +10,7 @@ Friends top-right.
 1. **Backend** (Spring Boot, reused unchanged; Postgres runs natively on :5432):
 
    ```bash
-   cd /Users/aghar/Documents/Projects/ToWin/backend
+   cd /Users/aghar/Documents/Projects/Towinly/backend
    set -a && source ../.env && set +a   # JWT_SECRET etc.
    ./mvnw spring-boot:run               # serves :8080
    ```
@@ -36,7 +36,7 @@ helper `helper` / `123456789`.
 
 - **Expo SDK 54** — the user's iPhone Expo Go supports SDK 54 only. Do NOT
   upgrade `expo` past 54 without re-checking Expo Go → Settings → Supported SDK.
-- `../ToWin` is **read-only** reference. All work happens here.
+- `../Towinly` is **read-only** reference. All work happens here.
 - **Never push to any remote** without explicit permission (local commits only).
 - Theme tokens (`src/theme/tokens.js`) are a locked 1:1 port of the website's
   `index.css` — do not "improve" the palette.

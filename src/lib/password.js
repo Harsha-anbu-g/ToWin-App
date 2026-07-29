@@ -1,4 +1,4 @@
-// Ported from ToWin/frontend/src/pages/Register.jsx — same scoring and the
+// Ported from Towinly/frontend/src/pages/Register.jsx — same scoring and the
 // same input sanitizing so mobile and web accept identical usernames.
 export const pwdStrength = (p) => {
   if (!p) return 0;

@@ -6,7 +6,7 @@ import TortoiseMark from '../TortoiseMark';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function PeekabooRow() {
-  const { t, radius, type } = useTheme();
+  const { t, radius, spacing, type } = useTheme();
   const router = useRouter();
 
   return (
@@ -37,7 +37,9 @@ export default function PeekabooRow() {
       </View>
       <View
         style={{
-          height: 34,
+          // minHeight, not height — the label has to grow at 200% text scale
+          minHeight: 34,
+          paddingVertical: spacing[2],
           paddingHorizontal: 16,
           borderRadius: radius.pill,
           backgroundColor: 'transparent',
