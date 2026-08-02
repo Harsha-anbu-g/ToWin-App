@@ -7,6 +7,7 @@ import { Pressable, Text, View } from 'react-native';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
+import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
 import { showDemoAccounts } from '../../src/lib/appEnv';
 import TortoiseMark from '../../src/components/TortoiseMark';
@@ -154,6 +155,10 @@ export default function Login() {
             </Text>
           </View>
         ) : null}
+
+        {/* Google first — the easiest path, especially for new users (website
+            parity). Web build only; renders nothing in the store apps. */}
+        <GoogleLoginButton />
 
         <Input
           label="Username, Gmail, or phone"
