@@ -26,6 +26,10 @@ export const KEYS = {
   oauthVerifier: 'towin-oauth-verifier',
   // Per-user, so it is a prefix rather than a key — see aiConsentKey().
   aiConsentPrefix: 'towin-ai-consent-',
+  // Per-user + per-category, see seenKey(). NOT the website's `towinly_seen_`
+  // prefix (registered below as website-owned): the web build shares the
+  // website's localStorage, so the app keeps its own seen-state.
+  seenPrefix: 'towin-seen-',
   // READ-ONLY fallback. Returning visitors who set night mode on the old
   // website still have this; we honour it once and then write KEYS.theme.
   // Writing it is forbidden — see the test.
@@ -34,6 +38,13 @@ export const KEYS = {
 
 /** @param {string|undefined|null} userId */
 export const aiConsentKey = (userId) => `${KEYS.aiConsentPrefix}${userId ?? 'anon'}`;
+
+/**
+ * Seen-token store key for the red tab badges (web lib/useSeenIds.js parity).
+ * @param {string|undefined|null} userId
+ * @param {string} category e.g. 'connections' | 'applicants'
+ */
+export const seenKey = (userId, category) => `${KEYS.seenPrefix}${userId ?? 'anon'}-${category}`;
 
 /**
  * Every key the app writes. The disjointness contract is asserted against
@@ -51,6 +62,7 @@ export const APP_WRITTEN_KEYS = [
   KEYS.oauthState,
   KEYS.oauthVerifier,
   aiConsentKey('example'),
+  seenKey('example', 'connections'),
 ];
 
 /**

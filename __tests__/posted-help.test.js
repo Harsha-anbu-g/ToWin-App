@@ -9,6 +9,11 @@ import { ConfirmProvider } from '../src/context/ConfirmContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  useFocusEffect: () => {},
+}));
+
+jest.mock('../src/context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'ELDER', userId: 'me', emailVerified: true }, booted: true }),
 }));
 
 jest.mock('../src/api/client', () => ({

@@ -23,6 +23,7 @@ import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
+import { useUnseenBadge } from '../../src/lib/seenIds';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 const tabIcon = (Icon) =>
@@ -92,6 +93,33 @@ export default function TabsLayout() {
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
+  // Red "new activity" badges (web b37420d): new people on the hub tab, new
+  // applicants on Posted Help. Seen-state lives in src/lib/seenIds; the
+  // screens mark their tokens seen on focus.
+  const { data: connectionsData } = useQuery({
+    queryKey: ['connections'],
+    queryFn: async () => (await api.get('/connections')).data,
+    enabled: !!user,
+  });
+  const isElderSeat = user?.role === 'ELDER' || user?.role === 'BOTH';
+  const { data: needsData } = useQuery({
+    queryKey: ['needs-mine'],
+    queryFn: async () => (await api.get('/needs/mine')).data,
+    enabled: !!user && isElderSeat,
+  });
+  const connTokens = (Array.isArray(connectionsData) ? connectionsData : [])
+    .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
+    .map((c) => `${c.id}:${c.status}`);
+  const applicantTokens = (needsData?.content ?? []).flatMap((n) =>
+    (n.applications ?? []).map((a) => `${n.id}:${a.helperId}`)
+  );
+  const connBadge = useUnseenBadge(user?.userId, 'connections', connTokens);
+  const applicantsBadge = useUnseenBadge(user?.userId, 'applicants', applicantTokens);
+  // Red, unlike the gentle sky on Messages: a new person on your ladder or a
+  // new applicant is the count worth standing out (web b37420d). Text is
+  // t.canvas — white-on-red by day, dark-on-soft-red at night (web --canvas).
+  const newBadgeStyle = { backgroundColor: t.red, color: t.canvas, fontSize: 11 };
+
   // Unread conversations badge — backend returns a plain integer (NavBar.jsx parity)
   const { data: unread } = useQuery({
     queryKey: ['unread-count'],
@@ -137,7 +165,12 @@ export default function TabsLayout() {
       {/* First tab IS the relationship hub — My Helpers / My Elders by role */}
       <Tabs.Screen
         name="home"
-        options={{ title: homeTab.label, tabBarIcon: tabIcon(UsersRound) }}
+        options={{
+          title: homeTab.label,
+          tabBarIcon: tabIcon(UsersRound),
+          tabBarBadge: connBadge > 0 ? connBadge : undefined,
+          tabBarBadgeStyle: newBadgeStyle,
+        }}
       />
       <Tabs.Screen
         name="posted-help"
@@ -145,6 +178,8 @@ export default function TabsLayout() {
           title: 'Posted Help',
           tabBarIcon: tabIcon(FileText),
           href: second?.name === 'posted-help' ? undefined : null,
+          tabBarBadge: applicantsBadge > 0 ? applicantsBadge : undefined,
+          tabBarBadgeStyle: newBadgeStyle,
         }}
       />
       {/* Old helper second tab — the hub moved to slot one; route redirects */}

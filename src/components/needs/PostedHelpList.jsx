@@ -7,12 +7,15 @@
 // (HCI rule 5). Shared by the elder's second tab and the pushed My requests
 // screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel, NEED_STATUS } from '../../lib/needs';
+import { markSeen } from '../../lib/seenIds';
+import { seenKey } from '../../lib/storageKeys';
+import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -189,6 +192,22 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     queryFn: async () => (await api.get('/needs/mine')).data,
   });
   const needs = data?.content ?? [];
+
+  // Reading this list clears the red "new applicants" tab badge (web
+  // b37420d: the dashboard marks its tab's tokens seen on open).
+  const { user } = useAuth();
+  const applicantTokens = useMemo(
+    () =>
+      (data?.content ?? []).flatMap((n) =>
+        (n.applications ?? []).map((a) => `${n.id}:${a.helperId}`)
+      ),
+    [data]
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (applicantTokens.length) markSeen(seenKey(user?.userId, 'applicants'), applicantTokens);
+    }, [user?.userId, applicantTokens])
+  );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['needs-mine'] });
   const onRefresh = async () => {

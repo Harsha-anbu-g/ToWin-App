@@ -70,6 +70,16 @@ describe.each([
     expect(t.badgeFill).toBe(light.badgeFill);
   });
 
+  // The red "new activity" badges (web b37420d) put a canvas-colored numeral
+  // on the semantic red — the same 11px numeral, the same real floor.
+  test('the new-activity numeral clears 4.5:1 on the red fill', () => {
+    expect(contrast(t.canvas, t.red)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test('the red fill stays visible against the tab bar canvas', () => {
+    expect(contrast(t.red, t.canvas)).toBeGreaterThanOrEqual(3);
+  });
+
   test('the buttons keep the exact sky-blue fill the owner locked', () => {
     expect(t.actionFill).toBe('#4FA3CE');
   });
