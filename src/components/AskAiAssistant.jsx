@@ -11,8 +11,6 @@ import { usePathname } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import {
-  AccessibilityInfo,
-  findNodeHandle,
   FlatList,
   Image,
   Modal,
@@ -27,6 +25,7 @@ import { useAuth } from '../context/AuthContext';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { announce } from '../lib/announce';
+import focusForScreenReader from '../lib/focusForScreenReader';
 import KeyboardAvoider from './ui/KeyboardAvoider';
 import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
@@ -190,10 +189,7 @@ export default function AskAiAssistant() {
         onRequestClose={close}
         // Android Modal doesn't relocate TalkBack focus on its own — hand it to
         // the sheet header so focus isn't stuck on the hidden screen behind it.
-        onShow={() => {
-          const node = findNodeHandle(headerRef.current);
-          if (node) AccessibilityInfo.setAccessibilityFocus(node);
-        }}
+        onShow={() => focusForScreenReader(headerRef)}
       >
         {/* Full page (user call 2026-07-17): the helper owns the whole screen
             instead of a bottom sheet. */}
