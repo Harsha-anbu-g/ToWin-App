@@ -13,9 +13,11 @@ import Avatar from '../../src/components/ui/Avatar';
 import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
 import LoadError from '../../src/components/ui/LoadError';
 import { useAuth } from '../../src/context/AuthContext';
+import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { announce } from '../../src/lib/announce';
 import { getDraft, setDraft } from '../../src/lib/chatDrafts';
+import { MESSAGING_STAGE, stageIndexOf } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 const dayLabel = (iso) => {
@@ -67,11 +69,31 @@ export default function ChatThread() {
     }, [])
   );
 
-  const { data: connections } = useQuery({
+  const askConfirm = useConfirm();
+  const { data: connections, isLoading: connsLoading } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
   const conn = (connections ?? []).find((c) => c.id === connectionId);
+  // Until the list resolves, the locked/paused state is UNKNOWN — render no
+  // footer rather than flashing an open composer at a below-Messaging chat
+  // (a deep link lands here with a cold cache).
+  const connUnknown = !conn && connsLoading;
+
+  // The backend send() gate, mirrored: a MAIN-channel, non-family connection
+  // below Messaging is refused server-side — so say it in place instead of
+  // letting the send 409 (HCI rules 3 + 9), same pattern as the PAUSED block.
+  const trustLocked =
+    !isFamilyChannel &&
+    conn?.status === 'ACTIVE' &&
+    conn.type !== 'FAMILY' &&
+    stageIndexOf(conn) < MESSAGING_STAGE;
+  // Backend rule (website ea03935): the elder starts each step — the helper
+  // only ever ACCEPTS, and never sees a dead start button (TrustService
+  // refuses a helper-initiated confirm; same guard as MyEldersPanel).
+  const actsAsElder = user?.role === 'ELDER' || user?.role === 'BOTH';
+  const accepting = !!conn?.confirmedByOther;
+  const stepLabel = accepting ? 'Accept the next step' : 'Start the next step';
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['messages', connectionId, channel],
@@ -131,9 +153,59 @@ export default function ChatThread() {
     onError: (err, content) => {
       // Restore the failed text without eating anything typed since (HCI rule 9)
       setInput((cur) => (cur ? `${content} ${cur}` : content));
-      showToast(friendlyWriteError(err, "Message didn't send. Tap send to try again."), 'error');
+      // The server's trust gate answers 409 "Trust level too low to message" —
+      // name that reason instead of the generic retry line, and resync so the
+      // lock panel takes over the composer: this only happens when the cached
+      // list was stale. Match the exact gate phrase, NOT just 'trust': the
+      // family chat-closed 409 also says "shared trust" and is a different rule.
+      const refusedByTrustGate =
+        err?.response?.status === 409 &&
+        /trust level too low/i.test(err?.response?.data?.message ?? '');
+      if (refusedByTrustGate) {
+        queryClient.invalidateQueries({ queryKey: ['connections'] });
+      }
+      showToast(
+        refusedByTrustGate
+          ? 'Your trust level is too low to message yet — take the next trust step together first.'
+          : friendlyWriteError(err, "Message didn't send. Tap send to try again."),
+        'error'
+      );
     },
   });
+
+  // Confirm-the-step from inside the locked chat — same endpoint and words as
+  // the trust panels, so the action lives WHERE the lock is announced
+  // (rulebook: recognition over recall, like Resume on the paused block).
+  const confirmStep = useMutation({
+    mutationFn: () => api.post(`/trust/${connectionId}/confirm`),
+    onSuccess: () => {
+      showToast(
+        conn && !conn.confirmedByOther
+          ? `Step confirmed — waiting for ${conn.otherUserName} to agree too.`
+          : 'You both agreed — one step up the ladder!',
+        'success'
+      );
+      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+    },
+    onError: (err) =>
+      showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
+  });
+
+  // askConfirm, not confirm — the same irreversible tap gets the same dialog
+  // and words as the trust panels (HCI rule 4: identical action, identical
+  // friction).
+  const confirmStepTap = async () => {
+    const ok = await askConfirm({
+      title: accepting ? 'Accept the next step?' : 'Start the next step?',
+      message: accepting
+        ? `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`
+        : `Trust grows only when BOTH of you agree. ${conn.otherUserName} will get a tap to accept.`,
+      cancelLabel: 'Not yet',
+      confirmLabel: accepting ? 'Accept' : 'Start',
+    });
+    if (ok) confirmStep.mutate();
+  };
 
   const handleSend = () => {
     const content = input.trim();
@@ -288,6 +360,10 @@ export default function ChatThread() {
                 onRetry={refetch}
                 style={{ transform: [{ scaleY: -1 }] }} // un-flip inside the inverted list
               />
+            ) : trustLocked || connUnknown ? (
+              // A locked (or not-yet-known) chat must not say "Say hello" —
+              // the lock panel explains the empty thread (web parity).
+              null
             ) : (
               <Text
                 style={{
@@ -306,7 +382,7 @@ export default function ChatThread() {
 
         {/* Paused friendships block sending server-side — say so plainly
             instead of letting a send fail (HCI rules 3 + 9) */}
-        {conn?.status === 'PAUSED' ? (
+        {connUnknown ? null : conn?.status === 'PAUSED' ? (
           <View
             style={{
               padding: spacing[4],
@@ -338,6 +414,63 @@ export default function ChatThread() {
                 {resume.isPending ? 'Resuming…' : 'Resume'}
               </Text>
             </Pressable>
+          </View>
+        ) : trustLocked ? (
+          <View
+            style={{
+              padding: spacing[4],
+              borderTopWidth: 1,
+              borderTopColor: t.border,
+              backgroundColor: t.canvas,
+            }}
+          >
+            <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
+              You're connected — messages unlock at the next trust step.
+            </Text>
+            {conn.confirmedByMe ? (
+              <Text
+                style={{
+                  fontSize: text.base,
+                  color: t.inkSlate,
+                  textAlign: 'center',
+                  lineHeight: 24,
+                  marginTop: spacing[1],
+                }}
+              >
+                You've started the next step — waiting for {conn.otherUserName} to accept.
+              </Text>
+            ) : actsAsElder || accepting ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={stepLabel}
+                disabled={confirmStep.isPending}
+                onPress={confirmStepTap}
+                style={({ pressed }) => ({
+                  alignSelf: 'center',
+                  minHeight: 44,
+                  justifyContent: 'center',
+                  paddingHorizontal: spacing[4],
+                  marginTop: spacing[1],
+                  opacity: confirmStep.isPending ? 0.5 : pressed ? 0.6 : 1,
+                })}
+              >
+                <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep }}>
+                  {confirmStep.isPending ? 'Confirming…' : stepLabel}
+                </Text>
+              </Pressable>
+            ) : (
+              <Text
+                style={{
+                  fontSize: text.base,
+                  color: t.inkSlate,
+                  textAlign: 'center',
+                  lineHeight: 24,
+                  marginTop: spacing[1],
+                }}
+              >
+                {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
+              </Text>
+            )}
           </View>
         ) : (
         <View

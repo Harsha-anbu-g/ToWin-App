@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
+import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { AuthProvider } from '../src/context/AuthContext';
 
 jest.mock('expo-router', () => ({
@@ -41,7 +42,9 @@ const wrap = (ui) =>
         client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })}
       >
         <AuthProvider>
-          <ToastProvider>{ui}</ToastProvider>
+          <ToastProvider>
+            <ConfirmProvider>{ui}</ConfirmProvider>
+          </ToastProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
