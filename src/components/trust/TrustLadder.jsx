@@ -26,7 +26,12 @@ export default function TrustLadder({ stageIndex, style }) {
         const done = i < stageIndex || (stageIndex >= 6 && isGoal);
         const current = i === stageIndex && !done;
         return (
-          <View key={i} style={{ flexDirection: 'row', alignItems: 'center', flex: i === 0 ? 0 : 1 }}>
+          // No flex on node 0 — a plain content-sized wrapper. `flex: 0` looks
+          // harmless but react-native-web expands it to flex-basis: 0%, which
+          // collapses the wrapper and lets the whole ladder pile onto the
+          // first circle (phone web, 2026-08-02). Yoga and CSS only agree
+          // when the property is absent.
+          <View key={i} style={[{ flexDirection: 'row', alignItems: 'center' }, i > 0 && { flex: 1 }]}>
             {i > 0 ? (
               <View style={{ flex: 1, height: 2, backgroundColor: i <= stageIndex ? t.blue : t.avatarGrey }} />
             ) : null}
