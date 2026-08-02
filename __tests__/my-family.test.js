@@ -391,18 +391,20 @@ test('MenuSheet: My Family row shows for elders only', async () => {
   expect(helper.queryByLabelText('My Family')).toBeNull();
 });
 
-// FAM-407: FAMILY must never see the elder menu — no needs, streaks, or
-// discovery surfaces (web NavBar parity; Post Help would even crash, since
-// centerActionFor('FAMILY') is null).
+// FAM-407 + no-repeat menu (user call 2026-08-02): the menu only carries
+// surfaces with no tab of their own, and FAMILY must never see the elder
+// rows (Post Help would even crash, since centerActionFor('FAMILY') is null).
 test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows', async () => {
   mockRole = 'FAMILY';
   const r = await wrap(<MenuSheet visible onClose={jest.fn()} />);
 
-  // Their real surfaces: hub, trust, game, guide.
-  r.getByLabelText('My Parents');
+  // Their real menu surfaces: trust, game, guide.
   r.getByLabelText('Trust Score');
   r.getByLabelText('Peekaboo');
   r.getByLabelText('Guide');
+
+  // On-screen tabs never repeat in the menu.
+  expect(r.queryByLabelText('My Parents')).toBeNull();
 
   // Elder/discovery rows must not leak (each is a wrong or crashing target).
   expect(r.queryByLabelText('Post Help')).toBeNull();
@@ -412,4 +414,26 @@ test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows
   expect(r.queryByLabelText('Daily check-in')).toBeNull();
   expect(r.queryByLabelText('My Family')).toBeNull();
   expect(r.queryByLabelText('Emergency contacts')).toBeNull();
+});
+
+// No-repeat menu (2026-08-02): elders and helpers lose the rows that
+// duplicate the tab bar; the helper keeps My offers & jobs because /my-jobs
+// has no other way in.
+test('MenuSheet: tab-duplicate rows are gone for every seat', async () => {
+  const elder = await wrap(<MenuSheet visible onClose={jest.fn()} />);
+  expect(elder.queryByLabelText('Post Help')).toBeNull();
+  expect(elder.queryByLabelText('Posted Help')).toBeNull();
+  expect(elder.queryByLabelText('My Helpers')).toBeNull();
+  expect(elder.queryByLabelText('Add Friends')).toBeNull();
+  elder.getByLabelText('My Family');
+  elder.getByLabelText('My boxes');
+  elder.getByLabelText('Emergency contacts');
+  await elder.unmount();
+
+  mockRole = 'HELPER';
+  const helper = await wrap(<MenuSheet visible onClose={jest.fn()} />);
+  expect(helper.queryByLabelText('Offer Help')).toBeNull();
+  expect(helper.queryByLabelText('My Elders')).toBeNull();
+  expect(helper.queryByLabelText('Add Friends')).toBeNull();
+  helper.getByLabelText('My offers & jobs');
 });
