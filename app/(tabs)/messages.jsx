@@ -5,13 +5,14 @@
 // with. A helper's chat with a family member, and a family member's chat
 // with their parent, both belong under Family. Shared friendships carry a
 // group updates thread (Groups). One group of chats on screen at a time,
-// switched with tabs at the top — and only groups with a conversation get
-// a tab at all.
+// switched with tabs at the top. Web f6e5e84 (2026-08-02): every heading the
+// account can ever fill stays on screen even while empty — people first, then
+// Groups, then Family — and an empty tab explains itself.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { ChevronRight, Users } from 'lucide-react-native';
+import { ChevronRight, MessageCircle, Users } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -31,7 +32,24 @@ const groupOf = (c) => {
   return 'helpers';
 };
 
-const GROUP_LABELS = { family: 'Family', elders: 'Elders', helpers: 'Helpers' };
+const GROUP_LABELS = { family: 'Family', elders: 'Elders', helpers: 'Helpers', groups: 'Groups' };
+
+// Every heading this account can ever fill stays on screen even while empty,
+// in a fixed order — one-to-one chats first, then Groups, then Family (web
+// f6e5e84). Only a bucket the role can never fill (e.g. a helper chatting
+// with another helper) is left out.
+const ROLE_TAB_ORDER = {
+  ELDER: ['helpers', 'groups', 'family'],
+  HELPER: ['elders', 'groups', 'family'],
+  FAMILY: ['helpers', 'groups', 'family'],
+};
+const DEFAULT_TAB_ORDER = ['elders', 'helpers', 'groups', 'family'];
+const EMPTY_TAB_COPY = {
+  groups: 'No group chats yet. When a friendship is shared with family, its updates will show here.',
+  elders: 'No chats with elders yet. Offer to help on your dashboard to start one.',
+  helpers: 'No chats with helpers yet. Connect with someone on your dashboard to start one.',
+  family: 'No family chats yet. When a family member joins you here, your chat with them will show up.',
+};
 
 // Relative timestamp for inbox rows — glanceable, never a full date string.
 const timeAgo = (iso) => {
@@ -47,7 +65,7 @@ const timeAgo = (iso) => {
 };
 
 export default function MessagesInbox() {
-  const { t, spacing, text, type, fontFamily } = useTheme();
+  const { t, spacing, text, type, fontFamily, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -97,24 +115,18 @@ export default function MessagesInbox() {
     (o) => !journeyThreads.some((j) => j.id === o.id)
   )];
 
-  // Only groups with a conversation get a tab. Order (user call 2026-07-26):
-  // the people you help or who help you come first, then Groups, then Family
-  // last. An elder therefore opens on Helpers and a helper on Elders, and both
-  // read people · Groups · Family from left to right.
-  const sections = [
-    ...['helpers', 'elders'].map((key) =>
-      active.some((c) => groupOf(c) === key) ? { key, label: GROUP_LABELS[key] } : null
-    ),
-    groupThreads.length > 0 ? { key: 'groups', label: 'Groups' } : null,
-    active.some((c) => groupOf(c) === 'family')
-      ? { key: 'family', label: GROUP_LABELS.family }
-      : null,
-  ].filter(Boolean);
+  // Tabs stay fixed per role; a tab with no chats shows a friendly empty note
+  // instead of disappearing (web f6e5e84).
+  const tabKeys = ROLE_TAB_ORDER[user?.role] || DEFAULT_TAB_ORDER;
+  const sections = tabKeys.map((key) => ({ key, label: GROUP_LABELS[key] }));
+  const rowsOf = (key) =>
+    key === 'groups' ? groupThreads : active.filter((c) => groupOf(c) === key);
+  // Land on the first tab that has a conversation, not on an empty one.
   const currentTab = sections.some((s) => s.key === activeTab)
     ? activeTab
-    : (sections[0]?.key ?? null);
+    : (sections.find((s) => rowsOf(s.key).length > 0) ?? sections[0]).key;
 
-  const rows = currentTab === 'groups' ? [] : active.filter((c) => groupOf(c) === currentTab);
+  const rows = currentTab === 'groups' ? [] : rowsOf(currentTab);
   const hasAnyConversation = active.length > 0 || groupThreads.length > 0;
 
   const onRefresh = async () => {
@@ -168,17 +180,53 @@ export default function MessagesInbox() {
           </View>
         ) : (
           <View>
-            {/* One group on screen at a time; a single group needs no tabs. */}
-            {sections.length > 1 ? (
-              <SegmentedControl
-                segments={sections}
-                value={currentTab}
-                onChange={setActiveTab}
-                style={{ marginBottom: spacing[3] }}
-              />
-            ) : null}
+            {/* The tabs stay on screen for every account (web f6e5e84) —
+                an empty one explains itself below instead of vanishing. */}
+            <SegmentedControl
+              segments={sections}
+              value={currentTab}
+              onChange={setActiveTab}
+              style={{ marginBottom: spacing[3] }}
+            />
 
-            {currentTab === 'groups'
+            {(currentTab === 'groups' ? groupThreads : rows).length === 0 ? (
+              <View
+                style={{
+                  backgroundColor: t.canvas,
+                  borderWidth: 1,
+                  borderColor: t.border,
+                  borderRadius: radius.card,
+                  paddingVertical: 40,
+                  paddingHorizontal: 24,
+                  alignItems: 'center',
+                }}
+              >
+                <View
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: 26,
+                    backgroundColor: t.blueWash,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 14,
+                  }}
+                >
+                  <MessageCircle size={24} color={t.blueDeep} strokeWidth={2} />
+                </View>
+                <Text
+                  style={{
+                    fontSize: text.base,
+                    color: t.inkSlate,
+                    lineHeight: 26,
+                    textAlign: 'center',
+                    maxWidth: 380,
+                  }}
+                >
+                  {EMPTY_TAB_COPY[currentTab]}
+                </Text>
+              </View>
+            ) : currentTab === 'groups'
               ? groupThreads.map((g, i) => (
                   <View key={g.id}>
                     {i > 0 ? (
