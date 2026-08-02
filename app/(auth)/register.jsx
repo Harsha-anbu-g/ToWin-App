@@ -9,6 +9,7 @@ import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
+import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
 import { showDemoAccounts } from '../../src/lib/appEnv';
 import Input from '../../src/components/ui/Input';
 import LegalModal from '../../src/components/LegalModal';
@@ -220,6 +221,9 @@ export default function Register() {
             </Text>
           </View>
         ) : null}
+
+        {/* Google first (website parity) — web build only, nothing in stores. */}
+        <GoogleLoginButton label="Continue with Google" dividerLabel="or sign up with username" />
 
         <Input
           label="Username"
