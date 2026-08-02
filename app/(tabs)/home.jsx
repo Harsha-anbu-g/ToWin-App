@@ -3,8 +3,8 @@
 // first Home visit of a day walks there ONCE if today isn't checked in yet.
 // Helpers see their quiet doorways (their ladders live on the My Elders tab).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { RefreshControl, ScrollView } from 'react-native';
 import api from '../../src/api/client';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
@@ -17,6 +17,8 @@ import NavRow from '../../src/components/ui/NavRow';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { getPromptedDay, markPromptedToday, shouldPromptCheckin } from '../../src/lib/checkinGate';
+import { markSeen } from '../../src/lib/seenIds';
+import { seenKey } from '../../src/lib/storageKeys';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function HomeScreen() {
@@ -38,6 +40,25 @@ export default function HomeScreen() {
     queryKey: ['trust-my-score'],
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
+
+  // Opening Home reads the hub, so the red "new people" tab badge clears here
+  // (web b37420d: the dashboard marks its tab's tokens seen on open).
+  const { data: connectionsData } = useQuery({
+    queryKey: ['connections'],
+    queryFn: async () => (await api.get('/connections')).data,
+  });
+  const connTokens = useMemo(
+    () =>
+      (Array.isArray(connectionsData) ? connectionsData : [])
+        .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
+        .map((c) => `${c.id}:${c.status}`),
+    [connectionsData]
+  );
+  useFocusEffect(
+    useCallback(() => {
+      if (connTokens.length) markSeen(seenKey(user?.userId, 'connections'), connTokens);
+    }, [user?.userId, connTokens])
+  );
 
   // Once-a-day check-in walk (evaluated once per mount, after streak loads).
   // FAMILY never fetches streaks, so `streak` stays undefined and the gate
