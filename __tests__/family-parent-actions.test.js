@@ -118,6 +118,8 @@ afterEach(() => jest.clearAllMocks());
 test('asking for a power posts that ONE power and toasts who decides', async () => {
   stubGet();
   const r = await wrap(<FamilyParentScreen />);
+  await r.findByText('Friendships shared with you');
+  await fireEvent.press(r.getByRole('tab', { name: 'What I can do' }));
   await r.findByText('What I can do for Margaret');
 
   const askButtons = r.getAllByRole('button', { name: 'Ask Margaret' });
@@ -138,6 +140,8 @@ test('a pending ask renders Waiting, not another Ask button', async () => {
     },
   });
   const r = await wrap(<FamilyParentScreen />);
+  await r.findByText('Friendships shared with you');
+  await fireEvent.press(r.getByRole('tab', { name: 'What I can do' }));
   await r.findByText('What I can do for Margaret');
 
   r.getByText('Waiting');
@@ -156,6 +160,8 @@ test('a granted power shows On and drops its Ask button', async () => {
     },
   });
   const r = await wrap(<FamilyParentScreen />);
+  await r.findByText('Friendships shared with you');
+  await fireEvent.press(r.getByRole('tab', { name: 'What I can do' }));
   await r.findByText('What I can do for Margaret');
 
   r.getByText('On');
@@ -230,6 +236,8 @@ test('MANAGE_HELP_REQUESTS: the ask-for-help form posts on behalf of the parent'
     },
   });
   const r = await wrap(<FamilyParentScreen />);
+  await r.findByText('Friendships shared with you');
+  await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
   await r.findByText("Margaret's open help requests");
 
   await fireEvent.press(r.getByRole('button', { name: 'Ask for help for Margaret' }));
@@ -282,7 +290,7 @@ test('Message Margaret opens the parent chat through the server', async () => {
   stubGet();
   api.post.mockResolvedValue({ data: 'chat-42' });
   const r = await wrap(<FamilyParentScreen />);
-  await r.findByText('What I can do for Margaret');
+  await r.findByText('Friendships shared with you');
 
   await fireEvent.press(r.getByRole('button', { name: 'Message Margaret' }));
   expect(api.post).toHaveBeenCalledWith('/family/chat/elder-margaret');

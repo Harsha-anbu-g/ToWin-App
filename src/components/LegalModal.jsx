@@ -1,6 +1,7 @@
-// Legal document sheet — port of Register.jsx's LegalModal (placeholder docs).
+// Legal document sheet — port of Register.jsx's LegalModal (draft legal copy).
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import Button from './ui/Button';
+import { DRAFT } from '../data/legalContent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -85,7 +86,15 @@ export default function LegalModal({ title, sections, visible, onClose }) {
                 marginBottom: spacing[4],
               }}
             >
-              Placeholder document, prototype only
+              {DRAFT.eyebrow}
+            </Text>
+            {/* Said in full at signup — this is the document somebody is
+                about to tick a box against. */}
+            <Text style={{ fontSize: text.sm, color: t.inkSlate2, lineHeight: 22, marginBottom: 6 }}>
+              {DRAFT.body}
+            </Text>
+            <Text style={{ fontSize: 12, color: t.ink4, marginBottom: spacing[4] }}>
+              {DRAFT.asOf}
             </Text>
             {sections.map((s) => (
               <View key={s.h} style={{ marginBottom: spacing[5] }}>

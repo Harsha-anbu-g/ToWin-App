@@ -12,7 +12,7 @@
 // home list onto the per-parent screen, so those assertions render
 // FamilyParentScreen; the at-a-glance status line stays on FamilyHomePanel.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import FamilyParentScreen from '../app/family/parent/[elderId]';
 import FamilyHomePanel from '../src/components/family/FamilyHomePanel';
@@ -150,6 +150,8 @@ describe('the parent’s open help requests (per-parent screen)', () => {
   test('lists them read-only', async () => {
     stubGet();
     const r = await wrap(<FamilyParentScreen />);
+    await r.findByText('Friendships shared with you');
+    await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
     expect(await r.findByText('A lift to the pharmacy')).toBeTruthy();
     expect(r.getByText('Help with the garden')).toBeTruthy();
   });
@@ -179,10 +181,9 @@ describe('friendships shared with the family member (per-parent screen)', () => 
   test('explains an empty list as the parent’s choice, not a fault', async () => {
     stubGet({ elders: [{ ...JOURNEY.elders[0], sharedHelpers: [] }] });
     const r = await wrap(<FamilyParentScreen />);
+    expect(await r.findByText('Margaret chooses which friendships you see here.')).toBeTruthy();
     expect(
-      await r.findByText(
-        'No friendships shared with you yet. Margaret chooses what to share. When Margaret shares one, you can:'
-      )
+      await r.findByText('No friendships shared with you yet. When Margaret shares one, you can:')
     ).toBeTruthy();
   });
 
@@ -204,6 +205,7 @@ describe('watching alone never acts for the parent', () => {
     expect(r.queryByText('Ask for help for Margaret')).toBeNull();
     expect(r.queryByText(/Anything you do here is in Margaret/)).toBeNull();
     // The consent list is present — every power off, none granted.
+    await fireEvent.press(r.getByRole('tab', { name: 'What I can do' }));
     expect(await r.findAllByText(/Not on yet — you can ask Margaret/)).toHaveLength(3);
   });
 });

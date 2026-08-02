@@ -14,6 +14,7 @@ import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+import KeyholderAsk from '../passon/KeyholderAsk';
 import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
 import { ParentStatusLine } from './FamilyJourney';
@@ -116,6 +117,11 @@ export default function FamilyHomePanel() {
       </View>
 
       {showAddForm ? <AddParentForm onClose={() => setShowAddForm(false)} /> : null}
+
+      {/* Someone has asked me to hold a key to their Sealed box. Sits with
+          the other "they are asking you something" cards, above the parent
+          list, and renders nothing at all when nobody has asked. */}
+      <KeyholderAsk />
 
       {isLoading ? (
         <View style={{ marginTop: spacing[5] }}>

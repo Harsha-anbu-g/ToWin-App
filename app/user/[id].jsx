@@ -3,9 +3,11 @@
 // end-friendship / report actions. Trust climbing lives on the Trust screen.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { BookOpen } from 'lucide-react-native';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
+import { FROM_PAGE } from '../../src/lib/passOnLocks';
 import ActionChip from '../../src/components/ui/ActionChip';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -46,7 +48,7 @@ function ChipRow({ items }) {
 const REPORT_REASONS = ['Unsafe behavior', 'Harassment', 'Scam or fraud', 'Something else'];
 
 export default function UserProfile() {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, spacing, text, type, fontFamily } = useTheme();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
@@ -198,6 +200,47 @@ export default function UserProfile() {
               </View>
               {Number.isFinite(profile.trustScore) ? <TrustBadge score={profile.trustScore} /> : null}
             </View>
+
+            {/* What she passes on. Offered on an elder's profile only —
+                helpers and family have no pass-on page. A slim row above the
+                bio, never the loudest thing on somebody's profile. */}
+            {profile.role === 'ELDER' || profile.role === 'BOTH' ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={FROM_PAGE.linkFromProfile(profile.name || 'this person')}
+                onPress={() => router.push(`/passed-on/${id}`)}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing[3],
+                  minHeight: 44,
+                  marginTop: spacing[4],
+                  opacity: pressed ? 0.7 : 1,
+                })}
+              >
+                <View
+                  aria-hidden
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                    backgroundColor: t.greenTint,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <BookOpen size={16} color={t.trustGold} strokeWidth={2.2} />
+                </View>
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.blueDeep }}>
+                    {FROM_PAGE.linkFromProfile(profile.name || 'this person')}
+                  </Text>
+                  <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
+                    {FROM_PAGE.linkBlurb}
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
 
             {profile.bio ? (
               <Text style={{ fontSize: text.base, lineHeight: 27, color: t.ink2, marginTop: spacing[4] }}>

@@ -30,5 +30,9 @@ export function entryRouteFor({ user, onboarded }) {
   if (!user) return onboarded ? '/(auth)/login' : '/(auth)/landing';
   if (user.role === 'ADMIN') return '/admin'; // web parity: admins never see the feeds
   if (user.emailVerified === false) return '/(auth)/verify-pending';
+  // Web landingPath.js parity: elders (and BOTH, who are elders too) land on
+  // the daily check-in — the one thing Towinly asks of them each day, and what
+  // tells their family they are alright. Nobody else has a check-in.
+  if (user.role === 'ELDER' || user.role === 'BOTH') return '/checkin';
   return '/(tabs)/home';
 }

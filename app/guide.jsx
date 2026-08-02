@@ -13,7 +13,7 @@ const ELDER_CAN = [
   'See the helpers who apply and choose the person you trust.',
   'Find and connect with helpers near you.',
   'Message the people you connect with, safely and simply.',
-  'Check in every day to keep your daily streak going.',
+  'Check in each day so your family know you are alright.',
   'Add emergency contacts so the people you trust are easy to reach.',
 ];
 
