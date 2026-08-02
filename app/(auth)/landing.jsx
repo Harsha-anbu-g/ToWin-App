@@ -391,7 +391,7 @@ export default function Landing() {
             </ScrollView>
             {i === last ? (
               <View style={{ paddingHorizontal: 28, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
-                <Button title="Start" onPress={() => go('/(auth)/register')} />
+                <Button title="Start" onPress={() => go('/(auth)/login')} />
               </View>
             ) : null}
           </View>

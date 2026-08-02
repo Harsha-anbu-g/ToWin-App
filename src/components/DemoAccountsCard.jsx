@@ -58,7 +58,7 @@ export default function DemoAccountsCard({ onError }) {
         minHeight: 54,
         backgroundColor: t.canvas,
         borderWidth: 1,
-        borderColor: t.border,
+        borderColor: t.fieldLine,
         borderRadius: radius.input,
         alignItems: 'center',
         justifyContent: 'center',

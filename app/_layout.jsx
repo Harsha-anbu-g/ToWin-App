@@ -56,7 +56,7 @@ function ThemedShell() {
         surfaceVariant: t.surface2,
         onSurface: t.ink,
         onSurfaceVariant: t.inkSlate,
-        outline: t.border,
+        outline: t.fieldLine,
         error: t.redError,
       },
     };

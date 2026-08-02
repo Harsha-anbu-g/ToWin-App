@@ -59,7 +59,7 @@ export default function GoogleLoginButton({
           minHeight: 48,
           backgroundColor: t.canvas,
           borderWidth: 1.5,
-          borderColor: pressed ? t.blueSoft : t.border,
+          borderColor: pressed ? t.blueSoft : t.fieldLine,
           borderRadius: radius.pill,
         })}
       >
