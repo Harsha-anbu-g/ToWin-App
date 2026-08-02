@@ -72,6 +72,11 @@ export const light = {
   // Borders — warm hairlines (ink-on-paper feel)
   border: '#e5e1d9',
   borderSoft: '#efebe3',
+  // Interactive boundaries (inputs, role cards, choice boxes) — hairlines
+  // measure ~1.3:1 on the white page, invisible on a real phone. This line
+  // is held to the 3:1 non-text floor on both the page and the parchment
+  // fill (contrast.test.js).
+  fieldLine: '#7a8490',
 
   // Semantic
   red: '#cc0000',
@@ -193,6 +198,7 @@ export const dark = {
 
   border: '#3a3833',
   borderSoft: '#33312d',
+  fieldLine: '#7b8087', // 3:1+ on the night page AND the night cards
 
   red: '#ff6b5e',
   redError: '#f87171',

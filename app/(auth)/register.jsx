@@ -181,7 +181,7 @@ export default function Register() {
                   padding: spacing[3],
                   borderRadius: radius.input,
                   borderWidth: active ? 2 : 1.5,
-                  borderColor: active ? t.blue : t.border,
+                  borderColor: active ? t.blue : t.fieldLine,
                   backgroundColor: active ? t.blueWash : t.canvas,
                   opacity: pressed ? 0.8 : 1,
                 })}
@@ -314,7 +314,7 @@ export default function Register() {
               height: 22,
               borderRadius: 6,
               borderWidth: 1.5,
-              borderColor: agreed ? t.blue : t.ringIdle,
+              borderColor: agreed ? t.blue : t.fieldLine,
               backgroundColor: agreed ? t.blue : t.canvas,
               alignItems: 'center',
               justifyContent: 'center',

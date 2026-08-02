@@ -78,6 +78,25 @@ describe.each([
 describe.each([
   ['light', light],
   ['dark', dark],
+])('%s theme — field boundaries (fieldLine)', (name, t) => {
+  // Live-mobile bug 2026-08-02: every auth box (inputs, role cards, Google
+  // pill) drew its edge with the decorative hairline, which measures ~1.3:1
+  // on the white page — invisible on a real phone. Interactive boundaries
+  // get their own token held to the 3:1 non-text floor (rulebook §7).
+  test('fieldLine clears 3:1 on the page and on the parchment fill', () => {
+    expect(contrast(t.fieldLine, t.surface)).toBeGreaterThanOrEqual(3);
+    expect(contrast(t.fieldLine, t.canvas)).toBeGreaterThanOrEqual(3);
+  });
+
+  test('fieldLine is not the decorative hairline', () => {
+    expect(t.fieldLine).toBeDefined();
+    expect(t.fieldLine).not.toBe(t.border);
+  });
+});
+
+describe.each([
+  ['light', light],
+  ['dark', dark],
 ])('%s theme — body text on the app surfaces', (name, t) => {
   test.each(['ink', 'ink2', 'ink3', 'inkSlate', 'inkFaint2'])(
     '%s clears 4.5:1 on both the canvas and the parchment surface',
