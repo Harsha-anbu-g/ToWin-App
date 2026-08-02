@@ -11,11 +11,20 @@ test('after onboarding, logged out opens straight to Log In', () => {
 });
 
 test('logged-in users skip the story entirely', () => {
-  expect(entryRouteFor({ user: { role: 'ELDER' }, onboarded: false })).toBe('/(tabs)/home');
   expect(entryRouteFor({ user: { role: 'ADMIN' }, onboarded: true })).toBe('/admin');
   expect(
     entryRouteFor({ user: { role: 'ELDER', emailVerified: false }, onboarded: true })
   ).toBe('/(auth)/verify-pending');
+});
+
+// Web landingPath.js parity ("one rule for where each role lands after
+// sign-in"): the check-in is the first screen elders see; helpers and
+// family go to their own hub.
+test('each role lands on its own first screen', () => {
+  expect(entryRouteFor({ user: { role: 'ELDER' }, onboarded: true })).toBe('/checkin');
+  expect(entryRouteFor({ user: { role: 'BOTH' }, onboarded: true })).toBe('/checkin');
+  expect(entryRouteFor({ user: { role: 'HELPER' }, onboarded: true })).toBe('/(tabs)/home');
+  expect(entryRouteFor({ user: { role: 'FAMILY' }, onboarded: true })).toBe('/(tabs)/home');
 });
 
 test('story is 7 chapters in the website order', () => {

@@ -4,14 +4,16 @@
 // card (web user call 2026-07-20), so the list stayed there and the depth
 // moved here.
 //
-// Order (web user call 2026-07-26): the friendships the parent shares come
-// first, so the trust ladder is what family sees on arrival. Each shared
-// friendship card holds both what you can see and, where the parent has
-// trusted you, what you can do in their name — the doing folded in beside
-// the seeing, never floating over an empty space.
+// That depth then became one long scroll of equally loud cards. It is three
+// tabs now, one job each (web user call 2026-07-26): the friendships they
+// share, how they are today, and what this family member is allowed to do.
+// Friendships is the landing tab — the trust ladder is what family should
+// see on arrival — and the check-in chip sits in the header so the "are they
+// alright?" answer never hides behind a tab.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MessageCircle, UserRound } from 'lucide-react-native';
+import { Check, Clock, MessageCircle, UserRound } from 'lucide-react-native';
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../../src/api/client';
 import FamilyHelperConnect from '../../../src/components/family/FamilyHelperConnect';
@@ -25,6 +27,7 @@ import Avatar from '../../../src/components/ui/Avatar';
 import Button from '../../../src/components/ui/Button';
 import LoadError from '../../../src/components/ui/LoadError';
 import Screen from '../../../src/components/ui/Screen';
+import SegmentedControl from '../../../src/components/ui/SegmentedControl';
 import SkeletonCard from '../../../src/components/ui/Skeleton';
 import TrustBadge from '../../../src/components/ui/TrustBadge';
 import { useToast } from '../../../src/context/ToastContext';
@@ -32,12 +35,41 @@ import { SHARING_GIVES } from '../../../src/lib/sharingGives';
 import { SHORT_STAGES, TRUSTED_STAGE, stageIndexOf } from '../../../src/lib/trustStages';
 import { useTheme } from '../../../src/theme/ThemeContext';
 
+/** The "are they alright?" answer, in the header where it never hides behind a tab. */
+function CheckInChip({ checkedIn }) {
+  const { t, type, radius } = useTheme();
+  const Icon = checkedIn ? Check : Clock;
+  const color = checkedIn ? t.greenDeep : t.ink3;
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        borderWidth: 1,
+        borderColor: checkedIn ? t.greenLine : t.border,
+        backgroundColor: checkedIn ? 'transparent' : t.surfaceFill,
+        borderRadius: radius.pill,
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        alignSelf: 'flex-start',
+      }}
+    >
+      <Icon size={13} color={color} strokeWidth={2.4} />
+      <Text style={{ fontSize: type.meta, fontWeight: '600', color }}>
+        {checkedIn ? 'Checked in today' : 'No check-in yet today'}
+      </Text>
+    </View>
+  );
+}
+
 export default function FamilyParentScreen() {
   const { elderId } = useLocalSearchParams();
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [tab, setTab] = useState('friendships');
 
   const { data: family, isLoading: linksLoading } = useQuery({
     queryKey: ['family-links'],
@@ -130,7 +162,8 @@ export default function FamilyParentScreen() {
         </View>
       ) : (
         <>
-          {/* Header — who this parent is, and the one blue action. */}
+          {/* Header — who this parent is, how they are right now, and the
+              one blue action. */}
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
             <Avatar name={elderName} size={52} />
             <View style={{ flex: 1 }}>
@@ -147,6 +180,11 @@ export default function FamilyParentScreen() {
               </Text>
             </View>
           </View>
+          {j ? (
+            <View style={{ marginTop: spacing[3] }}>
+              <CheckInChip checkedIn={j.checkedInToday} />
+            </View>
+          ) : null}
           <Button
             title={messageParent.isPending ? 'Opening…' : `Message ${elderName}`}
             onPress={() => messageParent.mutate()}
@@ -154,33 +192,62 @@ export default function FamilyParentScreen() {
             style={{ marginTop: spacing[4] }}
           />
 
-          {/* Friendships they chose to share — first thing on the page. */}
-          <Text
-            accessibilityRole="header"
-            style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, marginTop: spacing[6] }}
-          >
-            Friendships shared with you
-          </Text>
+          {/* Three jobs, three tabs. Only the "today" tab carries a count —
+              an open help request is the one thing that may want acting on. */}
+          <SegmentedControl
+            segments={[
+              { key: 'friendships', label: 'Friendships' },
+              {
+                key: 'today',
+                label: 'Today',
+                count: (j?.openNeedsCount ?? j?.openNeeds?.length) || undefined,
+              },
+              { key: 'powers', label: 'What I can do' },
+            ]}
+            value={tab}
+            onChange={setTab}
+            style={{ marginTop: spacing[4] }}
+          />
 
-          {/* Same words the parent reads beside the switch (sharingGives),
-              so what was promised there is what appears here. */}
-          <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}>
-            {sharedHelpers.length === 0
-              ? `No friendships shared with you yet. ${elderName} chooses what to share. When ${elderName} shares one, you can:`
-              : `On a friendship ${elderName} shares, you can:`}
-          </Text>
-          <View style={{ marginTop: spacing[2] }}>
-            {SHARING_GIVES.map((g) => (
-              <View key={g.key} style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[1] }}>
-                <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>•</Text>
-                <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-                  {g.family(elderName)}
-                </Text>
-              </View>
-            ))}
-          </View>
+          {tab === 'friendships' ? (
+            <>
+              <Text
+                accessibilityRole="header"
+                style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, marginTop: spacing[5] }}
+              >
+                Friendships shared with you
+              </Text>
+              <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}>
+                {elderName} chooses which friendships you see here.
+              </Text>
 
-          {sharedHelpers.map((h) => {
+              {/* What sharing gives you is explained once — in the empty
+                  state, and on the What I can do tab — never as a standing
+                  preamble above the cards (web parity). */}
+              {sharedHelpers.length === 0 ? (
+                <>
+                  <Text
+                    style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[3] }}
+                  >
+                    No friendships shared with you yet. When {elderName} shares one, you can:
+                  </Text>
+                  <View style={{ marginTop: spacing[2] }}>
+                    {SHARING_GIVES.map((g) => (
+                      <View
+                        key={g.key}
+                        style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[1] }}
+                      >
+                        <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>•</Text>
+                        <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
+                          {g.family(elderName)}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+
+              {sharedHelpers.map((h) => {
             const stage = stageIndexOf(h);
             // The doing is folded in beside the seeing. Each control only
             // shows when the parent granted that power AND the ladder is at
@@ -300,43 +367,73 @@ export default function FamilyParentScreen() {
               </View>
             );
           })}
-
-          {/* A journey failure must not silently erase the check-in and
-              friendship sections (rulebook: no silent partial failure). */}
-          {journeyFailed ? (
-            <LoadError
-              what={`how ${elderName} is doing`}
-              onRetry={refetchJourney}
-              style={{ marginTop: spacing[4] }}
-            />
+            </>
           ) : null}
 
-          {/* What I can do — consent flow. Asking never grants anything. */}
-          <FamilyPowerAsks link={link} elderName={elderName} onChanged={reload} />
+          {tab === 'today' ? (
+            <>
+              {/* A journey failure must not silently erase this tab
+                  (rulebook: no silent partial failure). */}
+              {journeyFailed ? (
+                <LoadError
+                  what={`how ${elderName} is doing`}
+                  onRetry={refetchJourney}
+                  style={{ marginTop: spacing[4] }}
+                />
+              ) : null}
 
-          {/* How they are today */}
-          {j ? (
-            <View style={{ marginTop: spacing[5] }}>
+              {j ? (
+                <View style={{ marginTop: spacing[5] }}>
+                  <Text
+                    accessibilityRole="header"
+                    style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
+                  >
+                    How {elderName} is today
+                  </Text>
+                  <ParentStatusLine journey={j} />
+
+                  {/* Seeing their open requests was never a power; acting on
+                      them is. The list reads only unless the parent granted
+                      MANAGE_HELP_REQUESTS, and the server re-checks that
+                      grant before any change goes through. */}
+                  <FamilyNeedsForParent
+                    elderId={j.elderId}
+                    elderName={elderName}
+                    openNeeds={j.openNeeds}
+                    canManage={powers.includes('MANAGE_HELP_REQUESTS')}
+                    onChanged={reload}
+                  />
+                </View>
+              ) : null}
+            </>
+          ) : null}
+
+          {tab === 'powers' ? (
+            <>
+              {/* Same words the parent reads beside the switch (sharingGives),
+                  so what was promised there is what appears here. */}
               <Text
-                accessibilityRole="header"
-                style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
+                style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[5] }}
               >
-                How {elderName} is today
+                On a friendship {elderName} shares, you can:
               </Text>
-              <ParentStatusLine journey={j} />
+              <View style={{ marginTop: spacing[2] }}>
+                {SHARING_GIVES.map((g) => (
+                  <View
+                    key={g.key}
+                    style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[1] }}
+                  >
+                    <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>•</Text>
+                    <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
+                      {g.family(elderName)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
 
-              {/* Seeing their open requests was never a power; acting on them
-                  is. The list reads only unless the parent granted
-                  MANAGE_HELP_REQUESTS, and the server re-checks that grant
-                  before any change goes through. */}
-              <FamilyNeedsForParent
-                elderId={j.elderId}
-                elderName={elderName}
-                openNeeds={j.openNeeds}
-                canManage={powers.includes('MANAGE_HELP_REQUESTS')}
-                onChanged={reload}
-              />
-            </View>
+              {/* What I can do — consent flow. Asking never grants anything. */}
+              <FamilyPowerAsks link={link} elderName={elderName} onChanged={reload} />
+            </>
           ) : null}
         </>
       )}

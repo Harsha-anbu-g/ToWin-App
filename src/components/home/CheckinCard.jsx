@@ -1,13 +1,18 @@
 // Daily check-in hero (3a) — the one feature on Home. The only warm surface
-// left in the app: heroParchment fill, hairline border, radius 18. Uppercase
-// label, the streak as a big serif numeral, the Monday–Sunday strip, then the
-// 50pt "I'm here today" primary. One tap says "I'm okay" and walks the elder
-// to their Dashboard (My Helpers) — instant state flip first (HCI rule 1).
+// left in the app: heroParchment fill, hairline border, radius 18.
+//
+// The card leads with the reason rather than the score (web Streaks parity,
+// 2026-08-02): tapping "I'm here today" is what puts "All looks well —
+// Margaret checked in today" on her family's own page, and she should be able
+// to see that is what she is doing — by name, before she taps. The streak
+// sits underneath: the reward, not the reason.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { useRef, useState } from 'react';
 import { Animated, Easing, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { familyNamesLabel } from '../../lib/copy';
 import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
@@ -15,6 +20,55 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+import TextLink from '../ui/TextLink';
+
+/**
+ * Who today's check-in reaches — directly under the button, because it is the
+ * reason the button exists, not a footnote. With nobody linked this becomes a
+ * quiet invitation. Never a warning: an elder with no family on Towinly is
+ * not doing anything wrong.
+ */
+function FamilyNote({ names, checkedIn }) {
+  const { t, text } = useTheme();
+  const router = useRouter();
+  const label = familyNamesLabel(names);
+
+  if (!label) {
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          columnGap: 4,
+          marginTop: 10,
+        }}
+      >
+        <TextLink label="Add your family" onPress={() => router.push('/family')} />
+        <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 22 }}>
+          and they will see you checked in.
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <Text
+      accessibilityLiveRegion="polite"
+      style={{
+        fontSize: text.sm,
+        fontWeight: '600',
+        color: checkedIn ? t.greenDeep : t.inkSlate,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginTop: 10,
+      }}
+    >
+      {checkedIn ? `${label} can see you checked in.` : `${label} will see this.`}
+    </Text>
+  );
+}
 
 function WeekStrip({ week }) {
   const { t, radius, type } = useTheme();
@@ -82,6 +136,19 @@ export default function CheckinCard() {
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
 
+  // Who sees this check-in. Only links where she sits in the elder seat — the
+  // family she watches over herself are on the other side and see nothing. A
+  // failure leaves the list empty, which shows the invitation instead; the
+  // check-in itself never waits on this call.
+  const { data: familyLinks } = useQuery({
+    queryKey: ['family-links'],
+    queryFn: async () => (await api.get('/family/links')).data,
+  });
+  const familyNames = (familyLinks?.activeLinks || [])
+    .filter((l) => l.iAmElder)
+    .map((l) => l.otherUserName)
+    .filter(Boolean);
+
   const checkin = useMutation({
     mutationFn: async () => (await api.post('/streaks/checkin')).data,
     onSuccess: (data) => {
@@ -116,19 +183,6 @@ export default function CheckinCard() {
         gap: spacing[5],
       }}
     >
-      <Text
-        accessibilityRole="header"
-        style={{
-          fontSize: type.caption,
-          fontWeight: '600',
-          letterSpacing: 1,
-          textTransform: 'uppercase',
-          color: t.inkSlate,
-        }}
-      >
-        Daily check-in
-      </Text>
-
       {isLoading ? (
         <SkeletonCard lines={3} />
       ) : isError ? (
@@ -136,25 +190,19 @@ export default function CheckinCard() {
         <LoadError bare what="your check-in" onRetry={refetch} />
       ) : (
         <>
-          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
-            <Animated.Text
-              style={{
-                fontFamily: fontFamily.display,
-                fontSize: 56,
-                lineHeight: 58,
-                color: t.ink,
-                fontVariant: ['tabular-nums'],
-                transform: [{ scale: pop }],
-              }}
-            >
-              {current}
-            </Animated.Text>
-            <Text style={{ fontSize: type.body, color: t.inkSlate }}>
-              {current === 1 ? 'day in a row' : 'days in a row'}
-            </Text>
-          </View>
-
-          <WeekStrip week={week} />
+          {/* The reason, before the score: who this one tap reassures. */}
+          <Text
+            accessibilityRole="header"
+            style={{
+              fontFamily: fontFamily.display,
+              fontSize: 28,
+              lineHeight: 33,
+              color: t.ink,
+              letterSpacing: -0.5,
+            }}
+          >
+            {done ? "Your family knows you're alright today." : "Let your family know you're alright."}
+          </Text>
 
           <View>
             {done ? (
@@ -182,10 +230,29 @@ export default function CheckinCard() {
                 loading={checkin.isPending}
               />
             )}
-            <Text style={{ fontSize: type.caption, color: t.inkSlate, textAlign: 'center', marginTop: 10 }}>
-              One tap tells your people you're okay.
+            <FamilyNote names={familyNames} checkedIn={done} />
+          </View>
+
+          {/* The run of days behind it — the reward, not the reason. */}
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
+            <Animated.Text
+              style={{
+                fontFamily: fontFamily.display,
+                fontSize: 56,
+                lineHeight: 58,
+                color: t.ink,
+                fontVariant: ['tabular-nums'],
+                transform: [{ scale: pop }],
+              }}
+            >
+              {current}
+            </Animated.Text>
+            <Text style={{ fontSize: type.body, color: t.inkSlate }}>
+              {current === 1 ? 'day in a row' : 'days in a row'}
             </Text>
           </View>
+
+          <WeekStrip week={week} />
         </>
       )}
     </View>

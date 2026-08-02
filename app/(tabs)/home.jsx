@@ -10,6 +10,7 @@ import api from '../../src/api/client';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
 import MenuSheet from '../../src/components/home/MenuSheet';
+import MyBoxesCard from '../../src/components/passon/MyBoxesCard';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
@@ -125,6 +126,9 @@ export default function HomeScreen() {
       >
         <GreetingHeader />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
+        {/* My boxes — the way into What I pass on. Renders only for elders,
+            and only once the real counts are in (web ElderDashboard parity). */}
+        <MyBoxesCard />
         {/* SOS hidden for now (user call 2026-07-17) — SosCard stays in the
             codebase for when it returns. */}
       </ScrollView>

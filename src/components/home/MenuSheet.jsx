@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+  Archive,
   BookOpen,
   Briefcase,
   CalendarCheck,
@@ -251,6 +252,9 @@ export default function MenuSheet({ visible, onClose }) {
                 {/* Elder seat only (web ElderOnly guard on /family) — helpers
                     and FAMILY users have no family circle to manage. */}
                 <Row first icon={Users} label="My Family" sublabel="Family who can see you're safe" onPress={() => go('/family')} />
+                {/* The way in to What I pass on (web: "My boxes" beside
+                    Messages in the top bar). Elder seat only, like the page. */}
+                <Row icon={Archive} label="My boxes" sublabel="Stories, letters, and your sealed box" onPress={() => go('/pass-on')} />
                 <Row icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
               </>
             ) : null}
