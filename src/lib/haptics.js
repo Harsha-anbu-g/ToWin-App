@@ -4,10 +4,12 @@
 // budget: no haptic on ordinary button presses, and the whole layer can be
 // switched off (Profile → Vibration feedback) with the app fully usable
 // without it. Failures no-op silently — feedback must never become an error.
+import { Platform } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import * as SecureStore from 'expo-secure-store';
+import * as Store from './storage';
+import { KEYS } from './storageKeys';
 
-const KEY = 'towin-haptics';
+const KEY = KEYS.haptics;
 
 let enabled = true; // default on until the saved preference loads
 let loaded = false;
@@ -19,7 +21,7 @@ export async function loadHapticsPreference() {
   if (loaded) return;
   loaded = true;
   try {
-    const saved = await SecureStore.getItemAsync(KEY);
+    const saved = await Store.getItemAsync(KEY);
     if (saved === 'off') {
       enabled = false;
       notify();
@@ -37,7 +39,7 @@ export async function setHapticsEnabled(next) {
   enabled = !!next;
   notify();
   try {
-    await SecureStore.setItemAsync(KEY, enabled ? 'on' : 'off');
+    await Store.setItemAsync(KEY, enabled ? 'on' : 'off');
   } catch {
     // Persisting is best-effort; the in-session choice still holds.
   }
@@ -49,8 +51,10 @@ export function subscribeHaptics(fn) {
   return () => listeners.delete(fn);
 }
 
+// expo-haptics has no web implementation, so the browser build simply doesn't
+// vibrate — checked up front rather than throwing once per interaction.
 const fire = (run) => {
-  if (!enabled) return;
+  if (!enabled || Platform.OS === 'web') return;
   try {
     run().catch(() => {});
   } catch {

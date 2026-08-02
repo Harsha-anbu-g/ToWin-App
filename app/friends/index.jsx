@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -16,6 +16,7 @@ import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
+import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -104,6 +105,7 @@ export default function FriendsScreen() {
   const { t, spacing, type, fontFamily } = useTheme();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -298,11 +300,15 @@ export default function FriendsScreen() {
                         onPress={
                           request.isPending
                             ? undefined
-                            : () =>
-                                Alert.alert('Send a friend request?', `${p.name} will be asked to connect with you.`, [
-                                  { text: 'Not now', style: 'cancel' },
-                                  { text: 'Send request', onPress: () => request.mutate(p.userId) },
-                                ])
+                            : async () => {
+                                const ok = await confirm({
+                                  title: 'Send a friend request?',
+                                  message: `${p.name} will be asked to connect with you.`,
+                                  cancelLabel: 'Not now',
+                                  confirmLabel: 'Send request',
+                                });
+                                if (ok) request.mutate(p.userId);
+                              }
                         }
                       />
                     )
@@ -354,16 +360,16 @@ export default function FriendsScreen() {
                           disabled={respond.isPending}
                           // Declining is permanent on the backend — the label
                           // must not promise "later", and it confirms first.
-                          onPress={() =>
-                            Alert.alert(
-                              'Decline this invite?',
-                              `${conn.otherUserName} will be told you declined. They can invite you again later.`,
-                              [
-                                { text: 'Keep invite', style: 'cancel' },
-                                { text: 'Decline', style: 'destructive', onPress: () => respond.mutate({ id: conn.id, accept: false }) },
-                              ]
-                            )
-                          }
+                          onPress={async () => {
+                            const ok = await confirm({
+                              title: 'Decline this invite?',
+                              message: `${conn.otherUserName} will be told you declined. They can invite you again later.`,
+                              cancelLabel: 'Keep invite',
+                              confirmLabel: 'Decline',
+                              destructive: true,
+                            });
+                            if (ok) respond.mutate({ id: conn.id, accept: false });
+                          }}
                           style={{ flex: 1 }}
                         />
                       </View>

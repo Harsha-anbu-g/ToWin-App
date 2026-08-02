@@ -13,7 +13,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import AddParentForm from '../../src/components/family/AddParentForm';
 import DelegatedPowerToggle from '../../src/components/family/DelegatedPowerToggle';
@@ -26,6 +26,7 @@ import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
+import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { POWERS } from '../../src/lib/familyPowers';
 import { SHARING_GIVES } from '../../src/lib/sharingGives';
@@ -46,6 +47,7 @@ export default function MyFamilyScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { user, booted } = useAuth();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -158,17 +160,19 @@ export default function MyFamilyScreen() {
       showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
   });
 
-  // Native confirm (the emergency-contacts pattern) with the web's exact
-  // danger message — removing must spell out what the person loses (HCI 5).
-  const confirmRemove = (link) =>
-    Alert.alert(
-      `Remove ${link.otherUserName} from your family?`,
-      "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again.",
-      [
-        { text: 'Keep', style: 'cancel' },
-        { text: 'Remove from family', style: 'destructive', onPress: () => remove.mutate(link.id) },
-      ]
-    );
+  // The shared confirm dialog with the web's exact danger message — removing
+  // must spell out what the person loses (HCI 5).
+  const confirmRemove = async (link) => {
+    const ok = await confirm({
+      title: `Remove ${link.otherUserName} from your family?`,
+      message:
+        "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again.",
+      cancelLabel: 'Keep',
+      confirmLabel: 'Remove from family',
+      destructive: true,
+    });
+    if (ok) remove.mutate(link.id);
+  };
 
   const respondingTo = respond.isPending ? respond.variables?.id : null;
   const answeringAsk = respondToAsk.isPending ? respondToAsk.variables?.id : null;

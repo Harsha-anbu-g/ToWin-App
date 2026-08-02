@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import ActionChip from '../../src/components/ui/ActionChip';
 import Avatar from '../../src/components/ui/Avatar';
@@ -14,6 +14,7 @@ import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import TrustBadge from '../../src/components/ui/TrustBadge';
+import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -49,6 +50,7 @@ export default function UserProfile() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   // isError separates "the network dropped" (retry) from "this profile is
@@ -109,15 +111,16 @@ export default function UserProfile() {
       showToast(friendlyWriteError(err, 'Could not send the report. Please try again.'), 'error'),
   });
 
-  const confirmEnd = () =>
-    Alert.alert(
-      'End this friendship?',
-      `You and ${profile?.name ?? 'this person'} will no longer be connected. This cannot be undone.`,
-      [
-        { text: 'Keep friendship', style: 'cancel' },
-        { text: 'End it', style: 'destructive', onPress: () => endFriendship.mutate() },
-      ]
-    );
+  const confirmEnd = async () => {
+    const ok = await confirm({
+      title: 'End this friendship?',
+      message: `You and ${profile?.name ?? 'this person'} will no longer be connected. This cannot be undone.`,
+      cancelLabel: 'Keep friendship',
+      confirmLabel: 'End it',
+      destructive: true,
+    });
+    if (ok) endFriendship.mutate();
+  };
 
   // Device-side block (UGC 1.2): their content disappears everywhere for you,
   // and an active friendship ends so messages stop server-side too.
@@ -135,16 +138,17 @@ export default function UserProfile() {
     }
   };
 
-  const confirmBlock = () =>
-    Alert.alert(
-      `Block ${profile?.name ?? 'this person'}?`,
-      "You won't see their help requests or messages anymore, and any friendship ends. " +
+  const confirmBlock = async () => {
+    const ok = await confirm({
+      title: `Block ${profile?.name ?? 'this person'}?`,
+      message:
+        "You won't see their help requests or messages anymore, and any friendship ends. " +
         'You can change your mind later in Profile → Blocked people.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Block', style: 'destructive', onPress: doBlock },
-      ]
-    );
+      confirmLabel: 'Block',
+      destructive: true,
+    });
+    if (ok) doBlock();
+  };
 
   const doUnblock = async () => {
     await unblockUser(id);

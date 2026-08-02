@@ -2,15 +2,17 @@
 // Confirms before sending (HCI rule 5); POST /emergency/sos alerts all
 // emergency contacts (mirrors EmergencyContacts.jsx / NavBar).
 import { useMutation } from '@tanstack/react-query';
-import { Alert, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import api from '../../api/client';
 import Button from '../ui/Button';
+import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function SosCard() {
   const { t, spacing, radius, text } = useTheme();
   const { showToast } = useToast();
+  const confirm = useConfirm();
 
   const sos = useMutation({
     mutationFn: () => api.post('/emergency/sos'),
@@ -18,15 +20,15 @@ export default function SosCard() {
     onError: () => showToast('Failed to send SOS. Please call your contacts directly.', 'error'),
   });
 
-  const confirmSos = () =>
-    Alert.alert(
-      'Send SOS?',
-      'This immediately alerts all of your emergency contacts that you need help.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Send SOS', style: 'destructive', onPress: () => sos.mutate() },
-      ]
-    );
+  const confirmSos = async () => {
+    const ok = await confirm({
+      title: 'Send SOS?',
+      message: 'This immediately alerts all of your emergency contacts that you need help.',
+      confirmLabel: 'Send SOS',
+      destructive: true,
+    });
+    if (ok) sos.mutate();
+  };
 
   return (
     <View

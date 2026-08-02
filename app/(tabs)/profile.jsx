@@ -5,7 +5,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, Switch, Text, View } from 'react-native';
+import { Platform, Pressable, Switch, Text, View } from 'react-native';
 import {
   BookOpen,
   ChevronRight,
@@ -14,6 +14,7 @@ import {
   MessageSquareHeart,
   Moon,
   PhoneCall,
+  Monitor,
   ShieldCheck,
   UserX,
   Vibrate,
@@ -26,7 +27,9 @@ import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
+import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
+import { switchToFullWebsite } from '../../src/lib/fullWebsite';
 import { isHapticsEnabled, setHapticsEnabled, subscribeHaptics } from '../../src/lib/haptics';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -98,6 +101,7 @@ export default function ProfileScreen() {
   const { t, spacing, text, type, fontFamily, mode, toggle } = useTheme();
   const { user, logout } = useAuth();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const router = useRouter();
 
   // Vibration feedback (rulebook §11: haptics must be user-switchable) — the
@@ -141,24 +145,28 @@ export default function ProfileScreen() {
     onError: () => showToast('Could not delete the account right now. Please try again.', 'error'),
   });
 
-  const confirmDelete = () =>
-    Alert.alert(
-      'Delete your account?',
-      'This permanently removes your profile, friendships, messages, and requests. It cannot be undone.',
-      [
-        { text: 'Keep my account', style: 'cancel' },
-        {
-          // A verb naming the consequence — never a bare "Continue" (rulebook).
-          text: 'Delete my account',
-          style: 'destructive',
-          onPress: () =>
-            Alert.alert('Are you absolutely sure?', 'There is no way back after this.', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete forever', style: 'destructive', onPress: () => deleteAccount.mutate() },
-            ]),
-        },
-      ]
-    );
+  // Two gates, deliberately. Sequential awaits rather than a nested callback:
+  // same two-stage protection, but it reads top-to-bottom and works on web.
+  const confirmDelete = async () => {
+    const first = await confirm({
+      title: 'Delete your account?',
+      message:
+        'This permanently removes your profile, friendships, messages, and requests. It cannot be undone.',
+      cancelLabel: 'Keep my account',
+      // A verb naming the consequence — never a bare "Continue" (rulebook).
+      confirmLabel: 'Delete my account',
+      destructive: true,
+    });
+    if (!first) return;
+
+    const second = await confirm({
+      title: 'Are you absolutely sure?',
+      message: 'There is no way back after this.',
+      confirmLabel: 'Delete forever',
+      destructive: true,
+    });
+    if (second) deleteAccount.mutate();
+  };
 
   const [exporting, setExporting] = useState(false);
   const exportData = async () => {
@@ -315,7 +323,18 @@ export default function ProfileScreen() {
         <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} divider />
         <Row icon={UserX} label="Blocked people" onPress={() => router.push('/blocked')} divider />
         <Row icon={ShieldCheck} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
-        <Row icon={FileText} label="Terms of service" onPress={() => router.push('/terms')} />
+        <Row
+          icon={FileText}
+          label="Terms of service"
+          onPress={() => router.push('/terms')}
+          divider={Platform.OS === 'web'}
+        />
+        {/* Web only: phones are sent here from the website, so there has to be
+            a way back to it (HCI 3). Invisible in the store apps, where there
+            is nothing to switch to. */}
+        {Platform.OS === 'web' ? (
+          <Row icon={Monitor} label="Use the full website" onPress={switchToFullWebsite} />
+        ) : null}
       </Card>
 
       {(myReviews ?? []).length > 0 ? (

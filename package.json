@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/newsreader": "^0.4.1",
     "@expo-google-fonts/poppins": "^0.4.1",
+    "@expo/metro-runtime": "~6.1.2",
     "@react-native-community/netinfo": "11.4.1",
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
@@ -24,12 +25,14 @@
     "expo-updates": "~29.0.19",
     "lucide-react-native": "^1.23.0",
     "react": "19.1.0",
+    "react-dom": "19.1.0",
     "react-native": "0.81.5",
     "react-native-paper": "^5.15.3",
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
+    "react-native-web": "^0.21.0",
     "react-native-worklets": "0.5.1"
   },
   "scripts": {

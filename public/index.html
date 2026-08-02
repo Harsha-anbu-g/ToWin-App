@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!--
+      Deliberately no `user-scalable=no` and no maximum-scale: elders must be
+      able to pinch-zoom. The app's own large-text rules are a floor, not a
+      replacement for the browser's zoom. `viewport-fit=cover` lets the layout
+      reach under the notch, where the safe-area insets take over.
+    -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no, viewport-fit=cover"
+    />
+
+    <title>Towinly</title>
+
+    <!--
+      Every URL here is written with the /app prefix on purpose. This file is
+      static, so it cannot read app.json's experiments.baseUrl — and a relative
+      path would resolve against the current route, so `manifest.json` would be
+      fetched from /app/user/manifest.json on a profile page.
+      __tests__/web-shell-config.test.js asserts these stay in step with
+      app.json; change one and that test fails.
+    -->
+    <link rel="manifest" href="/app/manifest.json" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- iOS ignores the manifest: it needs its own icon and meta tags. -->
+    <link rel="apple-touch-icon" href="/app/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Towinly" />
+
+    <!--
+      The app is proxied into the marketing site's URL space, so this half of
+      towinly.com must stay out of the index — the website's own pages are the
+      ones Google should show.
+    -->
+    <meta name="robots" content="noindex" />
+
+    <!--
+      Expo's ScrollViewStyleReset, written out by hand because that component
+      only exists for the app/+html.jsx path, which `output: "single"` ignores.
+      The background is src/theme/tokens.js `light.surface` — the same white the
+      app paints — so an overscroll never flashes a different colour. Inline
+      STYLE is allowed by the website's CSP (`style-src 'unsafe-inline'`);
+      inline SCRIPT is not, and there is none here on purpose.
+    -->
+    <style id="expo-reset">
+      html,
+      body,
+      #root {
+        height: 100%;
+        background-color: #ffffff;
+      }
+      body {
+        overflow: hidden;
+        margin: 0;
+      }
+      #root {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

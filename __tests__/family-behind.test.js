@@ -7,6 +7,7 @@ import { render } from '@testing-library/react-native';
 import React from 'react';
 import MyEldersPanel from '../src/components/trust/MyEldersPanel';
 import { ToastProvider } from '../src/context/ToastContext';
+import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 
 jest.mock('expo-router', () => ({
@@ -66,7 +67,9 @@ function wrap(ui) {
   return render(
     <ThemeProvider>
       <QueryClientProvider client={qc}>
-        <ToastProvider>{ui}</ToastProvider>
+        <ToastProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

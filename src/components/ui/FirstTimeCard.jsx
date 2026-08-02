@@ -1,9 +1,10 @@
 // First-visit explainer (HCI rule 10): a dismissible plain-words card that
 // shows once per concept, then never again (one SecureStore flag each —
 // same pattern as the daily check-in gate).
-import * as SecureStore from 'expo-secure-store';
+import * as Store from '../../lib/storage';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { announce } from '../../lib/announce';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from './Button';
 
@@ -13,7 +14,7 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
 
   useEffect(() => {
     let alive = true;
-    SecureStore.getItemAsync(flag)
+    Store.getItemAsync(flag)
       .then((seen) => {
         if (alive && !seen) setShow(true);
       })
@@ -29,8 +30,8 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
 
   const dismiss = () => {
     setShow(false);
-    SecureStore.setItemAsync(flag, '1').catch(() => {}); // best-effort — worst case the note shows again
-    AccessibilityInfo.announceForAccessibility('Got it — this note will not show again.');
+    Store.setItemAsync(flag, '1').catch(() => {}); // best-effort — worst case the note shows again
+    announce('Got it — this note will not show again.');
   };
 
   if (!show) return null;

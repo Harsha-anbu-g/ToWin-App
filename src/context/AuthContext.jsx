@@ -1,17 +1,25 @@
 // Mirrors Towinly/frontend/src/context/AuthContext.jsx for mobile.
-// Only the token is persisted (SecureStore, encrypted); role, userId and
+// Only the token is persisted (src/lib/storage — the phone keychain, encrypted;
+// localStorage in the browser build, which is NOT encrypted); role, userId and
 // emailVerified are ALWAYS derived from the signed JWT — never from writable
 // storage. An expired token at boot is treated as logged out from the start,
 // so pages never render broken and silently empty. Absent `ev` claim
 // (old/grandfathered tokens) = verified.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
+import * as Store from '../lib/storage';
 import { setOnSessionExpired, setTokenGetter } from '../api/client';
 import { clearDrafts } from '../lib/chatDrafts';
 import { parseJwtPayload } from '../lib/jwt';
+import { KEYS } from '../lib/storageKeys';
+import {
+  clearWebsiteToken,
+  readWebsiteToken,
+  subscribeSessionChanges,
+  writeWebsiteToken,
+} from '../lib/webSession';
 
-const KEY = 'towin-token';
+const KEY = KEYS.authToken;
 const AuthContext = createContext(null);
 
 export function userFromToken(token) {
@@ -43,8 +51,13 @@ export function AuthProvider({ children }) {
     // any unsent chat drafts.
     queryClient.clear();
     clearDrafts();
+    // Web build only: the website shares this origin, so leaving its token
+    // behind would keep a shared phone signed in on towinly.com after the
+    // person pressed "Log out" here. Cleared FIRST, and outside the try, so a
+    // failure to reach the app's own store can never skip it.
+    clearWebsiteToken();
     try {
-      await SecureStore.deleteItemAsync(KEY);
+      await Store.deleteItemAsync(KEY);
     } catch {
       // storage unavailable — in-memory logout still holds for this session
     }
@@ -55,8 +68,11 @@ export function AuthProvider({ children }) {
     if (!next) return false;
     setSessionExpired(false);
     setUser(next);
+    // Web build only: one sign-in, one session — the marketing pages of the
+    // same site should not greet a signed-in person as a stranger.
+    writeWebsiteToken(token);
     try {
-      await SecureStore.setItemAsync(KEY, token);
+      await Store.setItemAsync(KEY, token);
     } catch {
       // not persisted — user stays logged in for this session only
     }
@@ -71,18 +87,41 @@ export function AuthProvider({ children }) {
     });
     (async () => {
       try {
-        const stored = await SecureStore.getItemAsync(KEY);
+        const stored = await Store.getItemAsync(KEY);
         if (stored) {
           const restored = userFromToken(stored);
           if (restored) setUser(restored);
-          else await SecureStore.deleteItemAsync(KEY);
+          else await Store.deleteItemAsync(KEY);
+        } else {
+          // Web build only: someone who signed in on the website and then
+          // opened the app half of the same site is already signed in. An
+          // expired one is ignored rather than deleted — that token belongs to
+          // the website and it clears its own.
+          const adopted = readWebsiteToken();
+          if (adopted && userFromToken(adopted)) await login(adopted);
         }
       } catch {
         // unreadable storage — start logged out
       }
       setBooted(true);
     })();
-  }, [logout]);
+  }, [logout, login]);
+
+  // Web build only: another tab — the website itself, or a second app tab —
+  // signing in or out must take this one with it. The browser never fires
+  // `storage` in the tab that wrote, so this can't loop.
+  useEffect(
+    () =>
+      subscribeSessionChanges((token) => {
+        if (!token) {
+          if (userRef.current) logout();
+          return;
+        }
+        if (token === userRef.current?.token) return;
+        login(token);
+      }),
+    [login, logout]
+  );
 
   // Stable value — useAuth() consumers span the whole app; don't re-render them
   // all just because the provider re-rendered.

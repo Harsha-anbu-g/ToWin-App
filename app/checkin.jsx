@@ -11,6 +11,7 @@ import FirstTimeCard from '../src/components/ui/FirstTimeCard';
 import Screen from '../src/components/ui/Screen';
 import TextLink from '../src/components/ui/TextLink';
 import api from '../src/api/client';
+import { KEYS } from '../src/lib/storageKeys';
 import { useTheme } from '../src/theme/ThemeContext';
 
 export default function Checkin() {
@@ -31,7 +32,7 @@ export default function Checkin() {
     <Screen back contentStyle={{ gap: spacing[4] }}>
       <GreetingHeader />
       <FirstTimeCard
-        flag="towin-checkin-explained"
+        flag={KEYS.checkinExplained}
         title="What's a check-in?"
         body="One tap on “I'm here today” tells your trusted people you're okay. Skipping a day is fine — it's a gentle signal, never a duty."
         linkTitle="Read the Guide"

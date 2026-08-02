@@ -6,7 +6,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
@@ -15,8 +15,10 @@ import Chip from '../src/components/ui/Chip';
 import Input from '../src/components/ui/Input';
 import Screen from '../src/components/ui/Screen';
 import { useAuth } from '../src/context/AuthContext';
+import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
 import { parseFlexibleDate } from '../src/lib/flexibleDate';
+import { buildUpload } from '../src/lib/uploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { yearsOld } from '../src/lib/copy';
 import { useTheme } from '../src/theme/ThemeContext';
@@ -65,6 +67,7 @@ export default function ProfileEdit() {
   const { t, type } = useTheme();
   const { user } = useAuth();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -140,20 +143,19 @@ export default function ProfileEdit() {
     return picked.assets[0];
   };
 
-  const asFile = (asset) => ({
-    uri: asset.uri,
-    name: asset.fileName ?? 'photo.jpg',
-    type: asset.mimeType ?? 'image/jpeg',
-  });
-
   // Same shape the website sends: PUT /profile/photo multipart `file`.
   const changePhoto = async () => {
     const asset = await pickImage();
     if (!asset) return;
+    const { file, error } = buildUpload(asset);
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
     setUploadingPhoto(true);
     try {
       const data = new FormData();
-      data.append('file', asFile(asset));
+      data.append('file', file);
       await api.put('/profile/photo', data, { headers: { 'Content-Type': 'multipart/form-data' } });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
       showToast('Photo updated.', 'success');
@@ -168,10 +170,15 @@ export default function ProfileEdit() {
   const uploadId = async () => {
     const asset = await pickImage();
     if (!asset) return;
+    const { file, error } = buildUpload(asset);
+    if (error) {
+      showToast(error, 'error');
+      return;
+    }
     setUploadingId(true);
     try {
       const fd = new FormData();
-      fd.append('file', asFile(asset));
+      fd.append('file', file);
       await api.post('/auth/verify-id', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
       showToast('ID uploaded. Verification is pending review.', 'success');
@@ -474,17 +481,21 @@ export default function ProfileEdit() {
         <Button
           title="Cancel"
           variant="text"
-          onPress={() => {
+          onPress={async () => {
             // A filled form must never vanish on one silent tap (rulebook:
             // confirm genuinely irreversible data loss).
             const dirty =
               initialFormRef.current &&
               JSON.stringify(form) !== JSON.stringify(initialFormRef.current);
             if (!dirty) return router.back();
-            Alert.alert('Discard your changes?', 'Nothing you typed here will be saved.', [
-              { text: 'Keep editing', style: 'cancel' },
-              { text: 'Discard changes', style: 'destructive', onPress: () => router.back() },
-            ]);
+            const ok = await confirm({
+              title: 'Discard your changes?',
+              message: 'Nothing you typed here will be saved.',
+              cancelLabel: 'Keep editing',
+              confirmLabel: 'Discard changes',
+              destructive: true,
+            });
+            if (ok) router.back();
           }}
         />
       </View>

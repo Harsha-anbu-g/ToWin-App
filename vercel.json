@@ -1,0 +1,35 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npx expo export --platform web --output-dir dist",
+  "outputDirectory": "dist",
+  "framework": null,
+  "rewrites": [
+    { "source": "/app/_expo/:path*", "destination": "/_expo/:path*" },
+    { "source": "/app/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/app/icons/:path*", "destination": "/icons/:path*" },
+    { "source": "/app/manifest.json", "destination": "/manifest.json" },
+    { "source": "/app/sw.js", "destination": "/sw.js" },
+    { "source": "/app/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/_expo/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/index.html",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    }
+  ]
+}

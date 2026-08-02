@@ -3,10 +3,11 @@
 // remove confirm (DELETE only after "Remove from family"), main-contact
 // promotion, and the elder-only MenuSheet entry.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
+import { ConfirmProvider } from '../src/context/ConfirmContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
@@ -70,7 +71,9 @@ const wrap = (ui) =>
           })
         }
       >
-        <ToastProvider>{ui}</ToastProvider>
+        <ToastProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
@@ -176,8 +179,11 @@ test('cap: at 5 seats counting open requests, the add button is replaced by the 
   expect(r.queryByRole('button', { name: '+ Add a family member' })).toBeNull();
 });
 
+// This used to spy on Alert.alert and call its button callback by hand, because
+// Alert rendered natively and was unreachable from the tree. The dialog is now a
+// real component, so the test presses the actual button — which also proves the
+// path works on web, where Alert.alert is a no-op and this flow was dead.
 test('remove: confirm quotes the web danger message; DELETE fires only on confirm', async () => {
-  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   stubGet(fullLinks);
   const r = await wrap(<MyFamilyScreen />);
   await r.findByText('My Family (4/5)');
@@ -185,23 +191,37 @@ test('remove: confirm quotes the web danger message; DELETE fires only on confir
   await r.findByText('sarah');
 
   // Members render sarah (primary) then tom — press sarah's Remove.
-  await fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
-  expect(api.delete).not.toHaveBeenCalled();
-  expect(alertSpy).toHaveBeenCalledWith(
-    'Remove sarah from your family?',
-    "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again.",
-    expect.any(Array)
+  // NOT awaited: the handler returns confirm()'s promise, which only settles
+  // once a dialog button is pressed. Awaiting the press would make act() wait
+  // for a promise that this line itself is blocking — an instant deadlock.
+  fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
+
+  await r.findByText('Remove sarah from your family?');
+  r.getByText(
+    "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again."
   );
+  r.getByLabelText('Keep');
+  // Opening the dialog must not delete anything on its own.
+  expect(api.delete).not.toHaveBeenCalled();
 
-  const buttons = alertSpy.mock.calls[0][2];
-  expect(buttons[0]).toMatchObject({ text: 'Keep', style: 'cancel' });
-  expect(buttons[1]).toMatchObject({ text: 'Remove from family', style: 'destructive' });
-
-  // The native dialog button is invoked directly, wrapped in act by hand —
-  // there is no fireEvent to do it (Alert renders natively, not in the tree).
-  await act(async () => buttons[1].onPress());
+  await fireEvent.press(r.getByLabelText('Remove from family'));
   expect(api.delete).toHaveBeenCalledWith('/family/links/m1');
   await r.findByText('Removed from your family.');
+});
+
+test('remove: keeping the family member fires no DELETE', async () => {
+  stubGet(fullLinks);
+  const r = await wrap(<MyFamilyScreen />);
+  await r.findByText('My Family (4/5)');
+  await openMembersTab(r);
+  await r.findByText('sarah');
+
+  fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
+  await r.findByText('Remove sarah from your family?');
+  fireEvent.press(r.getByLabelText('Keep'));
+
+  await waitFor(() => expect(r.queryByText('Remove sarah from your family?')).toBeNull());
+  expect(api.delete).not.toHaveBeenCalled();
 });
 
 test('make main contact POSTs primary and toasts', async () => {

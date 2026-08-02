@@ -5,23 +5,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, ChevronRight, Send } from 'lucide-react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
+import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
 import LoadError from '../../src/components/ui/LoadError';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
+import { announce } from '../../src/lib/announce';
 import { getDraft, setDraft } from '../../src/lib/chatDrafts';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -121,9 +114,7 @@ export default function ChatThread() {
       // Screen-reader users sitting in an open thread get no visual cue that
       // a reply landed — announce it (skip the announcement on first open).
       if (!isFirstLoad) {
-        AccessibilityInfo.announceForAccessibility(
-          `New message from ${conn?.otherUserName ?? 'your friend'}`
-        );
+        announce(`New message from ${conn?.otherUserName ?? 'your friend'}`);
       }
     }
   }, [messages, connectionId, user?.userId, queryClient, isFocused, conn?.otherUserName]);
@@ -278,10 +269,7 @@ export default function ChatThread() {
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAvoider>
         <FlatList
           inverted
           data={listData}
@@ -404,7 +392,7 @@ export default function ChatThread() {
           </Pressable>
         </View>
         )}
-      </KeyboardAvoidingView>
+      </KeyboardAvoider>
     </SafeAreaView>
   );
 }

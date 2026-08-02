@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
+import { ConfirmProvider } from '../src/context/ConfirmContext';
 
 // Capture where <Redirect> points — the guard contract IS the href.
 let mockRedirectHref = null;
@@ -60,7 +61,9 @@ const wrap = (ui) =>
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })}
       >
-        <ToastProvider>{ui}</ToastProvider>
+        <ToastProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

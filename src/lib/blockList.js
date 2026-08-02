@@ -1,17 +1,18 @@
 // Device-side block list (Apple UGC 1.2 — STORE-204). The backend has report
 // + end-connection but no block endpoint (read-only reference repo), so the
 // block lives on this phone: a blocked person's requests, rails, and
-// conversations disappear for the blocker. Persisted with SecureStore like
+// conversations disappear for the blocker. Persisted with src/lib/storage like
 // the theme/onboarding flags — the app's one storage mechanism. Consumers
 // read it through react-query (queryKey ['block-list']) so every screen
 // refreshes when it changes.
-import * as SecureStore from 'expo-secure-store';
+import * as Store from './storage';
+import { KEYS } from './storageKeys';
 
-const KEY = 'towin-blocked-users';
+const KEY = KEYS.blockedUsers;
 
 async function persist(list) {
   try {
-    await SecureStore.setItemAsync(KEY, JSON.stringify(list));
+    await Store.setItemAsync(KEY, JSON.stringify(list));
   } catch {
     // persistence failed — the block still applies for this session via the
     // returned list; worst case it's forgotten on restart, never a crash
@@ -22,7 +23,7 @@ async function persist(list) {
 /** @returns {Promise<Array<{id: string, name: string}>>} */
 export async function getBlocked() {
   try {
-    const raw = await SecureStore.getItemAsync(KEY);
+    const raw = await Store.getItemAsync(KEY);
     const list = raw ? JSON.parse(raw) : [];
     return Array.isArray(list) ? list : [];
   } catch {

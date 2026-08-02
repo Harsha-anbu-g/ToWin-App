@@ -5,8 +5,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
@@ -163,6 +164,7 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
 export default function MyHelpersPanel() {
   const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
+  const askConfirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState('building');
@@ -221,18 +223,18 @@ export default function MyHelpersPanel() {
       showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
   });
 
-  const confirmStep = (card) => {
+  // askConfirm, not confirm: `confirm` is already the trust-step mutation.
+  const confirmStep = async (card) => {
     const accepting = !!connOf(card.connectionId)?.confirmedByOther;
-    Alert.alert(
-      accepting ? 'Accept the next step?' : 'Start the next step?',
-      accepting
+    const ok = await askConfirm({
+      title: accepting ? 'Accept the next step?' : 'Start the next step?',
+      message: accepting
         ? `${card.customerName} has asked to move one step up. Accepting climbs the ladder for both of you.`
         : `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
-      [
-        { text: 'Not yet', style: 'cancel' },
-        { text: accepting ? 'Accept' : 'Start', onPress: () => confirm.mutate(card.connectionId) },
-      ]
-    );
+      cancelLabel: 'Not yet',
+      confirmLabel: accepting ? 'Accept' : 'Start',
+    });
+    if (ok) confirm.mutate(card.connectionId);
   };
 
   // Blocked people never appear in the relationship hub (UGC 1.2); score
