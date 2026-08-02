@@ -6,8 +6,9 @@
 // phones), and it can carry ONE action ("Undo") — the undo-over-confirm rule
 // needs somewhere for the undo to live.
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { announce } from '../lib/announce';
 import { haptic } from '../lib/haptics';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -33,9 +34,10 @@ export function ToastProvider({ children }) {
     // silent: restraint is the budget.
     if (type === 'success') haptic.success();
     else if (type === 'error') haptic.error();
-    // accessibilityLiveRegion only speaks on Android — VoiceOver needs an
-    // explicit announcement, or iOS elders never hear "sent" / "saved" / errors.
-    if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(message);
+    // accessibilityLiveRegion only speaks on Android — VoiceOver and browser
+    // screen readers need an explicit announcement, or those elders never hear
+    // "sent" / "saved" / errors (announce() picks the right one per platform).
+    announce(message);
     // A toast carrying an action needs longer on screen — the person has to
     // read it AND decide; 4s is the no-decision case.
     const ttl = options.actionLabel ? 6000 : 4000;

@@ -9,10 +9,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel, NEED_STATUS } from '../../lib/needs';
+import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
@@ -177,6 +178,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
 export default function PostedHelpList({ initialSegment = 'open' }) {
   const { t, type } = useTheme();
   const { showToast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState(initialSegment);
@@ -225,27 +227,37 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
 
   // The row clamps long applications to 2 lines — the confirm dialog carries
   // the FULL message so the elder reads it all before deciding.
-  const confirmAccept = (need, app) =>
-    Alert.alert(
-      'Accept this helper?',
-      `${app.helperName} will be your helper for "${need.title}".` +
+  const confirmAccept = async (need, app) => {
+    const ok = await confirm({
+      title: 'Accept this helper?',
+      message:
+        `${app.helperName} will be your helper for "${need.title}".` +
         (app.message ? `\n\nTheir message:\n“${app.message}”` : ''),
-      [
-        { text: 'Not now', style: 'cancel' },
-        { text: 'Accept', onPress: () => accept.mutate({ needId: need.id, helperId: app.helperId }) },
-      ]
-    );
-  const confirmComplete = (need) =>
-    Alert.alert('Mark as completed?', `"${need.title}" will move to your finished requests.`, [
-      { text: 'Not yet', style: 'cancel' },
+      cancelLabel: 'Not now',
+      confirmLabel: 'Accept',
+    });
+    if (ok) accept.mutate({ needId: need.id, helperId: app.helperId });
+  };
+  const confirmComplete = async (need) => {
+    const ok = await confirm({
+      title: 'Mark as completed?',
+      message: `"${need.title}" will move to your finished requests.`,
+      cancelLabel: 'Not yet',
       // A verb, not an adjective (rulebook alert-button audit).
-      { text: 'Mark completed', onPress: () => complete.mutate(need.id) },
-    ]);
-  const confirmRemove = (need) =>
-    Alert.alert('Remove this request?', `"${need.title}" will be taken down. This cannot be undone.`, [
-      { text: 'Keep it', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => remove.mutate(need.id) },
-    ]);
+      confirmLabel: 'Mark completed',
+    });
+    if (ok) complete.mutate(need.id);
+  };
+  const confirmRemove = async (need) => {
+    const ok = await confirm({
+      title: 'Remove this request?',
+      message: `"${need.title}" will be taken down. This cannot be undone.`,
+      cancelLabel: 'Keep it',
+      confirmLabel: 'Remove',
+      destructive: true,
+    });
+    if (ok) remove.mutate(need.id);
+  };
 
   const looking = needs.filter((n) => n.status === 'OPEN');
   const inProgress = needs.filter((n) => n.status === 'ASSIGNED');

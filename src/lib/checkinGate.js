@@ -2,9 +2,10 @@
 // screen (/checkin); Home shows My Helpers. On the first Home visit of a
 // local day, if the elder hasn't checked in yet, the app walks them to the
 // check-in screen ONCE — skipping it doesn't re-prompt until tomorrow.
-import * as SecureStore from 'expo-secure-store';
+import * as Store from './storage';
+import { KEYS } from './storageKeys';
 
-const KEY = 'towin-checkin-prompted';
+const KEY = KEYS.checkinPrompted;
 
 // Local calendar date — the streak day flips at the user's midnight.
 export function localDay(now = new Date()) {
@@ -23,7 +24,7 @@ export function shouldPromptCheckin(streak, promptedDay, now = new Date()) {
 
 export async function getPromptedDay() {
   try {
-    return await SecureStore.getItemAsync(KEY);
+    return await Store.getItemAsync(KEY);
   } catch {
     return null;
   }
@@ -31,7 +32,7 @@ export async function getPromptedDay() {
 
 export async function markPromptedToday(now = new Date()) {
   try {
-    await SecureStore.setItemAsync(KEY, localDay(now));
+    await Store.setItemAsync(KEY, localDay(now));
   } catch {
     // best effort — worst case the prompt shows again next open
   }

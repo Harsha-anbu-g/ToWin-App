@@ -6,10 +6,11 @@
 // stored values so a link can never be replayed. With no pending flow (all of
 // v1, where the app never starts OAuth), every unsolicited deep link is refused.
 import * as Crypto from 'expo-crypto';
-import * as SecureStore from 'expo-secure-store';
+import * as Store from './storage';
+import { KEYS } from './storageKeys';
 
-const STATE_KEY = 'towin-oauth-state';
-const VERIFIER_KEY = 'towin-oauth-verifier';
+const STATE_KEY = KEYS.oauthState;
+const VERIFIER_KEY = KEYS.oauthVerifier;
 
 const toBase64Url = (bytes) =>
   btoa(String.fromCharCode(...bytes))
@@ -25,8 +26,8 @@ async function randomToken() {
 export async function beginOAuthFlow() {
   const state = await randomToken();
   const codeVerifier = await randomToken();
-  await SecureStore.setItemAsync(STATE_KEY, state);
-  await SecureStore.setItemAsync(VERIFIER_KEY, codeVerifier);
+  await Store.setItemAsync(STATE_KEY, state);
+  await Store.setItemAsync(VERIFIER_KEY, codeVerifier);
   const digest = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, codeVerifier, {
     encoding: Crypto.CryptoEncoding.BASE64,
   });
@@ -40,14 +41,14 @@ export async function consumeOAuthFlow(state) {
   let stored = null;
   let verifier = null;
   try {
-    stored = await SecureStore.getItemAsync(STATE_KEY);
-    verifier = await SecureStore.getItemAsync(VERIFIER_KEY);
+    stored = await Store.getItemAsync(STATE_KEY);
+    verifier = await Store.getItemAsync(VERIFIER_KEY);
   } catch {
     return null;
   }
   try {
-    await SecureStore.deleteItemAsync(STATE_KEY);
-    await SecureStore.deleteItemAsync(VERIFIER_KEY);
+    await Store.deleteItemAsync(STATE_KEY);
+    await Store.deleteItemAsync(VERIFIER_KEY);
   } catch {
     // best effort — values may already be gone
   }

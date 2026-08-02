@@ -12,13 +12,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   findNodeHandle,
   FlatList,
   Image,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   Text,
   TextInput,
@@ -27,7 +24,10 @@ import {
 import { Mic, Send, Volume2, X } from 'lucide-react-native';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
+import { announce } from '../lib/announce';
+import KeyboardAvoider from './ui/KeyboardAvoider';
 import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
@@ -71,6 +71,7 @@ export default function AskAiAssistant() {
   const headerRef = useRef(null); // screen-reader focus lands here on open
 
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [aiConsented, setAiConsented] = useState(false);
   useEffect(() => {
     hasAiConsent(user?.userId).then((ok) => {
@@ -81,29 +82,26 @@ export default function AskAiAssistant() {
   // One-time disclosure naming the AI provider before anything is sent
   // (App Store AI-consent rule). Resolves true to continue the send, false to
   // cancel — the typed question stays in the composer either way.
-  const ensureAiConsent = () => {
-    if (aiConsented) return Promise.resolve(true);
-    return new Promise((resolve) => {
-      Alert.alert(
-        'Before your first question',
+  // Was a hand-rolled Promise around Alert.alert. On web that never settled —
+  // Alert is a no-op there, so no button could ever resolve it and Send hung
+  // forever with no spinner and no error. confirm() owns the promise now, and
+  // dismissing it resolves false by contract, so the { onDismiss } arg is gone.
+  const ensureAiConsent = async () => {
+    if (aiConsented) return true;
+    const ok = await confirm({
+      title: 'Before your first question',
+      message:
         "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
-          'Your question, this chat, and a short summary of your own Towinly activity ' +
-          '(like your first name and trust score) are shared with Groq — never your ' +
-          'contact details. Is that okay?',
-        [
-          { text: 'Not now', style: 'cancel', onPress: () => resolve(false) },
-          {
-            text: "Yes, that's okay",
-            onPress: () => {
-              setAiConsented(true);
-              grantAiConsent(user?.userId);
-              resolve(true);
-            },
-          },
-        ],
-        { cancelable: true, onDismiss: () => resolve(false) }
-      );
+        'Your question, this chat, and a short summary of your own Towinly activity ' +
+        '(like your first name and trust score) are shared with Groq — never your ' +
+        'contact details. Is that okay?',
+      cancelLabel: 'Not now',
+      confirmLabel: "Yes, that's okay",
     });
+    if (!ok) return false;
+    setAiConsented(true);
+    grantAiConsent(user?.userId);
+    return true;
   };
 
   // Read a message out loud (web parity: speechSynthesis → expo-speech).
@@ -135,19 +133,19 @@ export default function AskAiAssistant() {
     setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'user', content: q }]);
     setThinking(true);
     // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
-    AccessibilityInfo.announceForAccessibility('Thinking…');
+    announce('Thinking…');
     try {
       const { data } = await api.post('/assistant/chat', { message: q, history });
       if (!mounted.current) return;
       setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: data.reply }]);
-      AccessibilityInfo.announceForAccessibility(data.reply);
+      announce(data.reply);
     } catch {
       if (!mounted.current) return;
       // "Please try again" must not mean retyping — put the question back
       // unless the user already started typing a new one (HCI rule 9).
       setInput((cur) => cur || q);
       setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: FALLBACK }]);
-      AccessibilityInfo.announceForAccessibility(FALLBACK);
+      announce(FALLBACK);
     } finally {
       if (mounted.current) setThinking(false);
     }
@@ -232,10 +230,7 @@ export default function AskAiAssistant() {
               </Pressable>
             </View>
 
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-              style={{ flex: 1 }}
-            >
+            <KeyboardAvoider>
               <FlatList
                 data={messages}
                 keyExtractor={(m) => String(m.id)}
@@ -423,7 +418,7 @@ export default function AskAiAssistant() {
                   <Send size={20} color={t.actionInk} />
                 </Pressable>
               </View>
-            </KeyboardAvoidingView>
+            </KeyboardAvoider>
           </View>
         </View>
       </Modal>

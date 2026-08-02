@@ -6,8 +6,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Phone } from 'lucide-react-native';
 import { useState } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { useTheme } from '../../theme/ThemeContext';
@@ -220,6 +221,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
 export default function MyEldersPanel() {
   const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
+  const askConfirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState('building');
@@ -326,25 +328,27 @@ export default function MyEldersPanel() {
       showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
   });
 
-  const confirmStep = (conn) =>
-    Alert.alert(
-      'Accept the next step?',
-      `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`,
-      [
-        { text: 'Not yet', style: 'cancel' },
-        { text: 'Accept', onPress: () => confirm.mutate(conn.id) },
-      ]
-    );
+  // askConfirm, not confirm: `confirm` is already the trust-step mutation.
+  const confirmStep = async (conn) => {
+    const ok = await askConfirm({
+      title: 'Accept the next step?',
+      message: `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`,
+      cancelLabel: 'Not yet',
+      confirmLabel: 'Accept',
+    });
+    if (ok) confirm.mutate(conn.id);
+  };
 
-  const confirmEnd = (conn) =>
-    Alert.alert(
-      'End this connection?',
-      `You and ${conn.otherUserName} will no longer be connected. This cannot be undone.`,
-      [
-        { text: 'Keep it', style: 'cancel' },
-        { text: 'End', style: 'destructive', onPress: () => end.mutate(conn.id) },
-      ]
-    );
+  const confirmEnd = async (conn) => {
+    const ok = await askConfirm({
+      title: 'End this connection?',
+      message: `You and ${conn.otherUserName} will no longer be connected. This cannot be undone.`,
+      cancelLabel: 'Keep it',
+      confirmLabel: 'End',
+      destructive: true,
+    });
+    if (ok) end.mutate(conn.id);
+  };
 
   return (
     <View>

@@ -1,14 +1,15 @@
 // First-launch gate for the landing story (handoff 3o): the 6 slides show
 // once, then the app opens straight to Log In (logged out) or Home (logged
-// in). Persisted with SecureStore like the theme flag — the app's one
+// in). Persisted with src/lib/storage like the theme flag — the app's one
 // storage mechanism (AsyncStorage isn't a dependency here).
-import * as SecureStore from 'expo-secure-store';
+import * as Store from './storage';
+import { KEYS } from './storageKeys';
 
-const KEY = 'towin-onboarded';
+const KEY = KEYS.onboarded;
 
 export async function hasOnboarded() {
   try {
-    return (await SecureStore.getItemAsync(KEY)) === '1';
+    return (await Store.getItemAsync(KEY)) === '1';
   } catch {
     // unreadable flag — treat as first launch; worst case the story replays
     return false;
@@ -17,7 +18,7 @@ export async function hasOnboarded() {
 
 export async function markOnboarded() {
   try {
-    await SecureStore.setItemAsync(KEY, '1');
+    await Store.setItemAsync(KEY, '1');
   } catch {
     // persistence failed — the story may replay next launch; nothing breaks
   }

@@ -1,30 +1,22 @@
 // Offline banner — a calm strip when the network is gone (HCI rule 1: the app
 // always says what's happening). TanStack Query retries when back online.
-import NetInfo from '@react-native-community/netinfo';
-import { onlineManager } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Platform, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { Text, View } from 'react-native';
+import { announce } from '../lib/announce';
+import useIsOffline from '../lib/useIsOffline';
 import { useTheme } from '../theme/ThemeContext';
+
+const MESSAGE = "You're offline — we'll retry as soon as you're back.";
 
 export default function OfflineBanner() {
   const { t, spacing, text } = useTheme();
-  const [offline, setOffline] = useState(false);
+  const offline = useIsOffline();
 
+  // accessibilityLiveRegion is Android-only; VoiceOver and browser screen
+  // readers need an explicit announcement so elders hear that the network
+  // dropped (announce() picks the right mechanism per platform).
   useEffect(() => {
-    const unsub = NetInfo.addEventListener((state) => {
-      const isOffline = !(state.isConnected && state.isInternetReachable !== false);
-      setOffline(isOffline);
-      onlineManager.setOnline(!isOffline); // queries pause offline, retry when back
-    });
-    return unsub;
-  }, []);
-
-  // accessibilityLiveRegion is Android-only; VoiceOver needs an explicit
-  // announcement so iOS elders hear that the network dropped.
-  useEffect(() => {
-    if (offline && Platform.OS === 'ios') {
-      AccessibilityInfo.announceForAccessibility("You're offline — we'll retry as soon as you're back.");
-    }
+    if (offline) announce(MESSAGE);
   }, [offline]);
 
   if (!offline) return null;
@@ -41,9 +33,7 @@ export default function OfflineBanner() {
         paddingHorizontal: spacing[4],
       }}
     >
-      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>
-        You're offline — we'll retry as soon as you're back.
-      </Text>
+      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>{MESSAGE}</Text>
     </View>
   );
 }

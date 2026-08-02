@@ -3,10 +3,11 @@
 // `back` renders a VISIBLE back chevron — elders shouldn't need to know the
 // swipe gesture (HCI: user control and freedom).
 import { useRouter } from 'expo-router';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import KeyboardAvoider from './KeyboardAvoider';
 
 export default function Screen({
   children,
@@ -96,16 +97,7 @@ export default function Screen({
   return (
     <SafeAreaView edges={['top']} style={[{ flex: 1, backgroundColor: t.surface }, style]}>
       {header}
-      {keyboard ? (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={{ flex: 1 }}
-        >
-          {body}
-        </KeyboardAvoidingView>
-      ) : (
-        body
-      )}
+      {keyboard ? <KeyboardAvoider>{body}</KeyboardAvoider> : body}
     </SafeAreaView>
   );
 }

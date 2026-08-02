@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
+import { ConfirmProvider } from '../src/context/ConfirmContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
@@ -51,7 +52,9 @@ const wrap = (ui) =>
           })
         }
       >
-        <ToastProvider>{ui}</ToastProvider>
+        <ToastProvider>
+          <ConfirmProvider>{ui}</ConfirmProvider>
+        </ToastProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

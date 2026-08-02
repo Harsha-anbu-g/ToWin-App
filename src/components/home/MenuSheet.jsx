@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   Animated,
   Easing,
   findNodeHandle,
@@ -35,6 +34,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
 import TortoiseMark from '../TortoiseMark';
@@ -98,6 +98,7 @@ function Group({ children }) {
 export default function MenuSheet({ visible, onClose }) {
   const { t, spacing, text, fontFamily } = useTheme();
   const { user, logout } = useAuth();
+  const confirm = useConfirm();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
@@ -269,19 +270,18 @@ export default function MenuSheet({ visible, onClose }) {
               icon={LogOut}
               label="Log out"
               sublabel="Sign out of Towinly"
-              onPress={() =>
-                Alert.alert('Log out?', 'You can sign back in any time.', [
-                  { text: 'Stay signed in', style: 'cancel' },
-                  {
-                    text: 'Log out',
-                    style: 'destructive',
-                    onPress: () => {
-                      onClose();
-                      logout();
-                    },
-                  },
-                ])
-              }
+              onPress={async () => {
+                const ok = await confirm({
+                  title: 'Log out?',
+                  message: 'You can sign back in any time.',
+                  cancelLabel: 'Stay signed in',
+                  confirmLabel: 'Log out',
+                  destructive: true,
+                });
+                if (!ok) return;
+                onClose();
+                logout();
+              }}
             />
           </Group>
         </ScrollView>
