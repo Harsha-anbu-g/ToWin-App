@@ -10,6 +10,7 @@ import Svg, { Circle, Ellipse, G, Path, Polygon, Text as SvgText } from 'react-n
 import Button from '../src/components/ui/Button';
 import Screen from '../src/components/ui/Screen';
 import { initCards, resolvePair, won, PAIRS, TIME } from '../src/lib/peekaboo';
+import { svgButtonA11y } from '../src/lib/svgA11y';
 import {
   PEEKABOO_BODY,
   PEEKABOO_CELL_FLIPPED,
@@ -108,11 +109,9 @@ const TortoiseBoard = memo(function TortoiseBoard({ cards, onFlip, disabled }) {
               stroke={PEEKABOO_SHELL}
               strokeWidth={2.5}
               onPress={disabled || card.matched || showing ? undefined : () => onFlip(idx)}
-              accessible
-              accessibilityRole="button"
-              accessibilityLabel={
+              {...svgButtonA11y(
                 card.matched ? `Matched ${card.num}` : showing ? `Showing ${card.num}` : 'Hidden cell'
-              }
+              )}
             />
             {card.matched ? (
               <Path
