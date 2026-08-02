@@ -21,15 +21,10 @@ import {
   Briefcase,
   CalendarCheck,
   ChevronRight,
-  HandHelping,
   LogOut,
   PhoneCall,
-  Plus,
   Puzzle,
-  Search,
-  UserRoundPlus,
   Users,
-  UsersRound,
   X,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
@@ -140,8 +135,7 @@ export default function MenuSheet({ visible, onClose }) {
   const isHelper = user?.role === 'HELPER';
   const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
   // FAMILY (FAM-407 2026-07-19, web NavBar parity): watching over a parent —
-  // no needs, streaks, or discovery surfaces, so the elder rows (Post Help,
-  // Posted Help, My Helpers, Add Friends, Daily check-in) must never leak.
+  // no needs, streaks, or discovery surfaces (no Daily check-in row).
   const isFamily = user?.role === 'FAMILY';
 
   const go = (href) => {
@@ -205,36 +199,18 @@ export default function MenuSheet({ visible, onClose }) {
           </Pressable>
         </View>
 
-        {/* Rows speak the redesign's names — the same words as the tabs and
-            screen titles (Posted Help, Offer Help, My Helpers, Add Friends). */}
+        {/* The menu never repeats what the tabs already show (user call
+            2026-08-02): Post Help, Posted Help, My Helpers, Offer Help,
+            My Elders, My Parents and Add Friends all live on screen, so
+            only the extra surfaces get rows here. */}
         <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[12] }}>
-          <Group>
-            {isHelper ? (
-              <>
-                <Row first icon={Search} label="Offer Help" sublabel="Needs from elders near you" onPress={() => go('/(tabs)/action')} />
-                <Row icon={UsersRound} label="My Elders" sublabel="The elders you help" onPress={() => go('/(tabs)/home')} />
-                {/* Helpers CAN apply (Offer Help) but had no way back to their
-                    applications — /my-jobs existed unreachable (orphan fix). */}
-                <Row icon={Briefcase} label="My offers & jobs" sublabel="Where your offers stand" onPress={() => go('/my-jobs')} />
-              </>
-            ) : isFamily ? (
-              // Their whole world is the parents hub — no posting, no
-              // discovery (web NavBar shows FAMILY no needs/friends links).
-              <Row first icon={UsersRound} label="My Parents" sublabel="Your parents and news about them" onPress={() => go('/(tabs)/home')} />
-            ) : (
-              <>
-                <Row first icon={Plus} label="Post Help" sublabel="Ask your neighbors for help" onPress={() => go('/(tabs)/action')} />
-                <Row icon={HandHelping} label="Posted Help" sublabel="Help you've asked for" onPress={() => go('/(tabs)/posted-help')} />
-                <Row icon={UsersRound} label="My Helpers" sublabel="Trust ladders with your helpers" onPress={() => go('/(tabs)/home')} />
-                {/* Role BOTH has no Offer Help surface yet (its center action
-                    is Post Help), so a "My offers" row would promise a list
-                    that can never fill — hidden until an apply path exists. */}
-              </>
-            )}
-            {!isFamily ? (
-              <Row icon={UserRoundPlus} label="Add Friends" sublabel="Find people near you" onPress={() => go('/friends')} />
-            ) : null}
-          </Group>
+          {isHelper ? (
+            // The one surface with no tab of its own — /my-jobs would be
+            // unreachable without this row (orphan fix, kept on purpose).
+            <Group>
+              <Row first icon={Briefcase} label="My offers & jobs" sublabel="Where your offers stand" onPress={() => go('/my-jobs')} />
+            </Group>
+          ) : null}
 
           <Group>
             <Row first icon={() => <TortoiseMark size={24} />} label="Trust Score" sublabel="Your points and tier" onPress={() => go('/trust')} />
