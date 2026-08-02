@@ -5,10 +5,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   Easing,
-  findNodeHandle,
   Modal,
   Pressable,
   ScrollView,
@@ -34,6 +32,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { useAuth } from '../../context/AuthContext';
+import focusForScreenReader from '../../lib/focusForScreenReader';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
@@ -157,10 +156,7 @@ export default function MenuSheet({ visible, onClose }) {
       onRequestClose={close}
       // Android Modal doesn't relocate TalkBack focus on its own — without
       // this, focus stays "stuck" on the hidden screen behind the drawer.
-      onShow={() => {
-        const node = findNodeHandle(headerRef.current);
-        if (node) AccessibilityInfo.setAccessibilityFocus(node);
-      }}
+      onShow={() => focusForScreenReader(headerRef)}
     >
       {/* Scrim — tap anywhere outside the drawer to close */}
       <Animated.View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
