@@ -19,7 +19,7 @@ export const TERMS_CONTENT = [
   { h: '8. Changes to these terms',
     p: 'We may update these terms from time to time. We will notify you of significant changes. Continued use of Towinly after changes take effect means you accept the revised terms.' },
   { h: '9. Contact',
-    p: 'Questions about these terms can be sent to support@towin.example. Last updated: May 2026.' },
+    p: 'Questions about these terms can be sent to support@towinly.example. Last updated: May 2026.' },
 ];
 
 export const PRIVACY_CONTENT = [
@@ -36,11 +36,11 @@ export const PRIVACY_CONTENT = [
   { h: '6. Data retention',
     p: 'We keep your account data while your account is active. If you delete your account, we remove your profile within 30 days. Anonymized records of past interactions may be retained for safety investigations.' },
   { h: '7. Your rights',
-    p: 'You can edit or delete your profile information at any time from the Profile page. You can request a copy of your data or full deletion by contacting support@towin.example.' },
+    p: 'You can edit or delete your profile information at any time from the Profile page. You can request a copy of your data or full deletion by contacting support@towinly.example.' },
   { h: '8. Security',
     p: 'We use industry-standard encryption in transit and at rest. No system is perfectly secure, so please use a strong, unique password and report anything suspicious.' },
   { h: '9. Children',
     p: 'Towinly is not directed at children under 18. If we learn we have collected data from a minor, we will delete it.' },
   { h: '10. Contact',
-    p: 'Privacy questions can be sent to privacy@towin.example. Last updated: May 2026.' },
+    p: 'Privacy questions can be sent to privacy@towinly.example. Last updated: May 2026.' },
 ];

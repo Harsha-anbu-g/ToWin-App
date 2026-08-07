@@ -1,4 +1,6 @@
-// Landing for the verification link (deep link towin://verify-email?token=…).
+// Landing for the verification link (/verify-email?token=…). The token comes
+// off the query string, so this works from the emailed https link and from a
+// future towinly:// deep link alike — nothing here reads the scheme.
 // Port of Towinly/frontend/src/pages/VerifyEmail.jsx: confirms the token with the
 // backend and shows the result. No auth required.
 import { useLocalSearchParams, useRouter } from 'expo-router';
