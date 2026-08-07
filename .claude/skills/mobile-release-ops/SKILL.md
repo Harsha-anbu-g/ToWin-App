@@ -15,9 +15,17 @@ description: Shipping and operating the Towinly app — EAS builds and submits, 
 - **Expo SDK 54 ceiling.** The founder's iPhone runs an Expo Go that supports SDK 54 only.
   Never bump `expo` past 54 without re-checking that device. Any dependency bump that drags
   the SDK forward is a blocking finding, not a routine update.
-- Store identifiers are `com.towin.app` (iOS + Android), slug `towin`, display name Towinly —
-  the rename shipped for strings; identifier changes are a separate, deliberate migration
-  (new store listings vs. update-in-place) — never change them casually.
+- Store identifiers are `com.towinly.app` (iOS + Android), slug `towinly`, scheme `towinly`,
+  display name Towinly. **These are now frozen.** They were renamed off `com.towin.app` on
+  2026-08-06, while it was still free to do so, and the free window has closed behind us:
+  the identifier locks at the FIRST BUILD UPLOAD to App Store Connect or to any Play track
+  (internal testing counts), not at first submission. The slug locks at `eas init`. After
+  either, a change means brand-new store listings with zero reviews or installs carried
+  over, and Play never lets a package name be reused. Never change them again.
+- Never rename identifiers with a repo-wide `towin` → `towinly` substitution. Two families of
+  string must survive verbatim: the `towin-*` storage keys in `src/lib/storageKeys.js` (live
+  web sessions at towinly.com/app depend on them) and the `@towin.app` demo-account emails,
+  which are seeded by the READ-ONLY backend and cannot be changed to match.
 
 ## Channels and builds
 

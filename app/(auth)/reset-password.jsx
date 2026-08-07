@@ -1,5 +1,6 @@
 // Reset password — port of Towinly/frontend/src/pages/ResetPassword.jsx.
-// Reached via the emailed deep link (towin://reset-password?token=…).
+// Reached from the emailed link (/reset-password?token=…) — the token comes off
+// the query string, so the URL scheme is irrelevant here.
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';

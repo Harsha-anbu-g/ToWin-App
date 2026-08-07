@@ -1,5 +1,5 @@
 // OAuth callback — port of OAuthCallback.jsx. Handles the Google redirect
-// (towin://oauth-callback?code=…&state=…): exchanges the code, then either logs
+// (towinly://oauth-callback?code=…&state=…): exchanges the code, then either logs
 // in (READY) or continues to finish-setup (NEEDS_ONBOARDING). The Google button
 // itself ships in the release phase; this landing is ready for it.
 // SECURITY: the exchange runs ONLY when the deep link's `state` matches a flow

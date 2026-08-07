@@ -1,14 +1,14 @@
 {
   "expo": {
     "name": "Towinly",
-    "slug": "towin",
+    "slug": "towinly",
     "version": "1.0.0",
     "runtimeVersion": {
       "policy": "fingerprint"
     },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "towin",
+    "scheme": "towinly",
     "userInterfaceStyle": "light",
     "backgroundColor": "#f6f4ef",
     "splash": {
@@ -21,13 +21,13 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.towin.app",
+      "bundleIdentifier": "com.towinly.app",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.towin.app",
+      "package": "com.towinly.app",
       "adaptiveIcon": {
         "backgroundColor": "#f6f4ef",
         "foregroundImage": "./assets/android-icon-foreground.png",
