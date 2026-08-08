@@ -327,16 +327,34 @@ export default function AskAiAssistant() {
                     }}
                   >
                     <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
+                    {/* Measured at 320pt (iPhone SE): the two labels together are wider
+                        than an 85% bubble allows, and React Native never shrinks a row
+                        child, so `nowrap` pushed "Report this answer" clean through the
+                        bubble's right padding. Wrapping lets it take its own line on the
+                        narrowest phone and keeps both on one line everywhere wider. The
+                        44pt height is a real box rather than hitSlop, which React Native
+                        Web drops entirely. */}
                     {item.role === 'assistant' ? (
-                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4], marginTop: 6 }}>
+                      <View
+                        testID="ai-answer-actions"
+                        style={{
+                          flexDirection: 'row',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                          columnGap: spacing[4],
+                          rowGap: spacing[1],
+                        }}
+                      >
                         <Pressable
                           accessibilityRole="button"
                           accessibilityLabel="Read this answer aloud"
                           onPress={() => speak(item.content)}
-                          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+                          hitSlop={{ left: 8, right: 8 }}
                           style={({ pressed }) => ({
                             flexDirection: 'row',
                             alignItems: 'center',
+                            justifyContent: 'center',
+                            minHeight: 44,
                             gap: 5,
                             opacity: pressed ? 0.6 : 1,
                           })}
@@ -354,10 +372,12 @@ export default function AskAiAssistant() {
                           accessibilityRole="button"
                           accessibilityLabel="Report this answer"
                           onPress={() => reportAnswer(item.content)}
-                          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+                          hitSlop={{ left: 8, right: 8 }}
                           style={({ pressed }) => ({
                             flexDirection: 'row',
                             alignItems: 'center',
+                            justifyContent: 'center',
+                            minHeight: 44,
                             gap: 5,
                             opacity: pressed ? 0.6 : 1,
                           })}
