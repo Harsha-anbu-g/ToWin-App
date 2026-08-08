@@ -36,7 +36,7 @@ export default function PassOnSheet() {
   const { showToast } = useToast();
   const [savedAt, setSavedAt] = useState(null);
 
-  const { data, isError } = useQuery({
+  const { data, isError, refetch } = useQuery({
     queryKey: ['passon-sheet'],
     queryFn: async () => {
       const r = await api.get('/passon/sheet');
@@ -95,7 +95,7 @@ export default function PassOnSheet() {
   }
 
   return (
-    <Screen back title={SHEET.pageTitle} contentStyle={{ gap: spacing[4] }}>
+    <Screen back title={SHEET.pageTitle} onRefresh={refetch} contentStyle={{ gap: spacing[4] }}>
       <Text style={{ fontSize: text.sm, color: t.ink3, lineHeight: 24 }}>{SHEET.pageLead}</Text>
 
       {isError ? (

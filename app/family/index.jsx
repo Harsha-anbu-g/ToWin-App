@@ -70,6 +70,13 @@ export default function MyFamilyScreen() {
     (c) => c.status === 'ACTIVE' && c.type !== 'FAMILY'
   );
 
+  // Pull-to-refresh (UX-704): reload exactly what this screen shows.
+  const reload = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['family-links'] }),
+      queryClient.invalidateQueries({ queryKey: ['connections'] }),
+    ]);
+
   // This screen is the ELDER seat: only links where I'm the elder side.
   const elderSide = (list) => (list ?? []).filter((l) => l.iAmElder);
   const members = elderSide(family?.activeLinks);
@@ -202,7 +209,7 @@ export default function MyFamilyScreen() {
   return (
     // `keyboard` because AddParentForm opens mid-page — without it the
     // keyboard covers the identifier field on small phones (FAM-407).
-    <Screen back keyboard>
+    <Screen back keyboard onRefresh={reload}>
       {/* Serif title with the live seat counter, then the three areas. */}
       <Text
         accessibilityRole="header"

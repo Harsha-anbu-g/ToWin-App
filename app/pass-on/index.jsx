@@ -412,7 +412,7 @@ export default function PassOn() {
   }
 
   return (
-    <Screen back keyboard title="What I pass on" contentStyle={{ gap: spacing[4] }}>
+    <Screen back keyboard title="What I pass on" onRefresh={reload} contentStyle={{ gap: spacing[4] }}>
       <Text style={{ fontSize: text.sm, color: t.ink3, lineHeight: 24 }}>{PAGE_LEAD}</Text>
 
       <NotAWillPrimer />

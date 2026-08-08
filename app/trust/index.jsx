@@ -200,7 +200,7 @@ export default function TrustScreen() {
   const next = nextTier(score);
 
   return (
-    <Screen back>
+    <Screen back onRefresh={refetch}>
       <Text
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}

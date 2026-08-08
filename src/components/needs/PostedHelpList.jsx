@@ -9,7 +9,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel, NEED_STATUS } from '../../lib/needs';
@@ -291,7 +292,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
 
   return (
     <ScrollView
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingBottom: 120 }} // clears the Ask-AI FAB band on the posted-help tab
     >
       <SegmentedControl

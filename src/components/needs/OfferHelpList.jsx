@@ -8,7 +8,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { memo, useCallback, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Pressable, Text, View } from 'react-native';
+import RefreshControl from '../ui/RefreshControl';
 import api from '../../api/client';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
@@ -254,7 +255,7 @@ export default function OfferHelpList() {
     <FlatList
       data={isLoading && seg === 'available' ? [] : shown}
       keyExtractor={(n) => n.id}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: 64, gap: 12 }}
       ListHeaderComponent={
         <View>

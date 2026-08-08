@@ -86,11 +86,14 @@ export default function FamilyParentScreen() {
     queryFn: async () => (await api.get('/family/standings')).data,
   });
 
-  const reload = () => {
-    queryClient.invalidateQueries({ queryKey: ['family-links'] });
-    queryClient.invalidateQueries({ queryKey: ['family-journey'] });
-    queryClient.invalidateQueries({ queryKey: ['family-standings'] });
-  };
+  // Returns the settle so pull-to-refresh (UX-704) can hold its spinner until
+  // the reload lands; the mutations that call it fire-and-forget as before.
+  const reload = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['family-links'] }),
+      queryClient.invalidateQueries({ queryKey: ['family-journey'] }),
+      queryClient.invalidateQueries({ queryKey: ['family-standings'] }),
+    ]);
 
   // Only the family side of the link — this page never renders my own elder seat.
   const link = (family?.activeLinks || []).find((l) => !l.iAmElder && l.elderId === elderId);
@@ -157,7 +160,7 @@ export default function FamilyParentScreen() {
   return (
     // keyboard: the needs form and the review form live down this page, and
     // the keyboard must never cover the field being typed into (UX-702).
-    <Screen back keyboard>
+    <Screen back keyboard onRefresh={reload}>
       {!loaded ? (
         <View style={{ marginTop: spacing[4] }}>
           <SkeletonCard lines={4} />

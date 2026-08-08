@@ -3,11 +3,13 @@
 // `back` renders a VISIBLE back chevron — elders shouldn't need to know the
 // swipe gesture (HCI: user control and freedom).
 import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import KeyboardAvoider from './KeyboardAvoider';
+import RefreshControl from './RefreshControl';
 
 export default function Screen({
   children,
@@ -20,11 +22,29 @@ export default function Screen({
   // Tab screens sit under the floating Ask-AI pill — `fab` adds the clearance
   // so the last row is never rendered (or tapped) underneath it (rulebook pass).
   fab = false,
+  // Data screens pass their reload here (UX-704) and the page answers the pull
+  // gesture with the themed spinner. Needs `scroll` (the default) — a
+  // scroll={false} screen owns its scroller and mounts RefreshControl itself.
+  onRefresh,
   style,
   contentStyle,
 }) {
   const { t, spacing, text, fontFamily, fontScaleCaps } = useTheme();
   const router = useRouter();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await onRefresh();
+    } catch {
+      // A failed reload already surfaces through the screen's own query state
+      // (LoadError with retry). The gesture's one promise is that the spinner
+      // stops when the fetch settles.
+    } finally {
+      setRefreshing(false);
+    }
+  }, [onRefresh]);
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -83,11 +103,15 @@ export default function Screen({
 
   const body = scroll ? (
     <ScrollView
+      testID="screen-scroll"
       contentContainerStyle={[
         { padding: spacing[5], paddingBottom: fab ? 120 : spacing[12] },
         contentStyle,
       ]}
       keyboardShouldPersistTaps="handled"
+      refreshControl={
+        onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} /> : undefined
+      }
     >
       {children}
     </ScrollView>

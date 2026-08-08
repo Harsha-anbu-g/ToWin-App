@@ -33,7 +33,7 @@ export default function Checkin() {
   // Only to word the exit honestly: before checking in it's "Not now",
   // after it's simply "Take me home" (the card no longer auto-navigates —
   // the streak moment stays on screen until the person chooses to leave).
-  const { data: streak } = useQuery({
+  const { data: streak, refetch } = useQuery({
     queryKey: ['streak-me'],
     queryFn: async () => (await api.get('/streaks/me')).data,
   });
@@ -48,7 +48,7 @@ export default function Checkin() {
   }
 
   return (
-    <Screen back contentStyle={{ gap: spacing[4] }}>
+    <Screen back onRefresh={refetch} contentStyle={{ gap: spacing[4] }}>
       <GreetingHeader />
       <FirstTimeCard
         flag={KEYS.checkinExplained}

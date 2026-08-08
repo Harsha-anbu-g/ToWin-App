@@ -49,7 +49,7 @@ export default function BlockedPeople() {
   };
 
   return (
-    <Screen back title="Blocked people">
+    <Screen back title="Blocked people" onRefresh={refetch}>
       {isLoading ? (
         <SkeletonCard lines={2} />
       ) : isError ? (

@@ -99,7 +99,7 @@ export default function EmergencyContacts() {
   };
 
   return (
-    <Screen back title="Emergency contacts" keyboard>
+    <Screen back title="Emergency contacts" keyboard onRefresh={refresh}>
 
       <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>

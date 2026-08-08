@@ -5,7 +5,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { RefreshControl, ScrollView } from 'react-native';
+import { ScrollView } from 'react-native';
+import RefreshControl from '../../src/components/ui/RefreshControl';
 import api from '../../src/api/client';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
@@ -22,7 +23,7 @@ import { seenKey } from '../../src/lib/storageKeys';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function HomeScreen() {
-  const { t, spacing } = useTheme();
+  const { spacing } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -121,7 +122,7 @@ export default function HomeScreen() {
       <Screen scroll={false} keyboard contentStyle={{ padding: 0 }}>
         <NavRow trustScore={trust ? Math.round(trust.totalScore) : undefined} onMenu={() => setMenuOpen(true)} />
         <ScrollView
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
         >
@@ -142,7 +143,7 @@ export default function HomeScreen() {
         onAddFriends={() => router.push('/friends')}
       />
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
       >
         <GreetingHeader />
