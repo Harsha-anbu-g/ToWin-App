@@ -14,6 +14,7 @@ import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
+import { objectionableError } from '../../src/lib/contentFilter';
 import { CATEGORY } from '../../src/lib/needs';
 import { centerActionFor } from '../../src/lib/roles';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -76,7 +77,10 @@ function PostNeedForm() {
     setForm((f) => ({ ...f, categoryOther: v }));
     setFieldErrors((f) => ({ ...f, categoryOther: '' }));
   }, []);
-  const setDescription = useCallback((v) => setForm((f) => ({ ...f, description: v })), []);
+  const setDescription = useCallback((v) => {
+    setForm((f) => ({ ...f, description: v }));
+    setFieldErrors((f) => ({ ...f, description: '' }));
+  }, []);
   const setCategory = useCallback((value) => setForm((f) => ({ ...f, category: value })), []);
   const setUrgencyNormal = useCallback(() => setForm((f) => ({ ...f, urgency: 'NORMAL' })), []);
   const setUrgencyUrgent = useCallback(() => setForm((f) => ({ ...f, urgency: 'URGENT' })), []);
@@ -91,6 +95,11 @@ function PostNeedForm() {
     if (!form.title.trim()) errs.title = 'Please give your request a short title.';
     if (form.category === 'OTHER' && !form.categoryOther.trim())
       errs.categoryOther = 'Please tell us what kind of help you need.';
+    // Apple 1.2: objectionable material must be stopped before it is posted.
+    errs.title = errs.title || objectionableError(form.title);
+    errs.description = objectionableError(form.description);
+    errs.categoryOther = errs.categoryOther || objectionableError(form.categoryOther);
+    Object.keys(errs).forEach((k) => { if (!errs[k]) delete errs[k]; });
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     const { categoryOther, ...rest } = form;
@@ -159,6 +168,7 @@ function PostNeedForm() {
           label="Details (optional)"
           value={form.description}
           onChangeText={setDescription}
+          error={fieldErrors.description}
           multiline
           numberOfLines={4}
           inputStyle={DETAILS_INPUT_STYLE}

@@ -3,7 +3,7 @@
 // rows, pinned Submit. The star row and the founder/portfolio cards live in
 // src/components/feedback/ (rulebook pass follow-up: the screen file keeps
 // only the form). POST /feedback carries the same keys the website sends.
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,7 +38,17 @@ export default function Feedback() {
   const { showToast } = useToast();
   const router = useRouter();
 
-  const [form, setForm] = useState({ message: '', name: '', email: '' });
+  // Arriving from "Report this answer" in the AI helper: quote the answer so the
+  // person only has to say what was wrong with it. Lazy initialiser, so typing
+  // into the field is never overwritten by a re-render.
+  const { reportedAnswer } = useLocalSearchParams();
+  const [form, setForm] = useState(() => ({
+    message: reportedAnswer
+      ? `I want to report an answer from the Towinly helper.\n\nThe answer was:\n"${reportedAnswer}"\n\nWhat was wrong with it:\n`
+      : '',
+    name: '',
+    email: '',
+  }));
   const [ratings, setRatings] = useState({});
   const [fieldError, setFieldError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -85,7 +95,9 @@ export default function Feedback() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}
       >
-        {/* Prototype notice */}
+        {/* What this form is for. Deliberately says nothing about beta or prototype
+            status: Apple guideline 2.2 keeps betas on TestFlight, and the old wording
+            told App Review the shipped app was unfinished. */}
         <View
           style={{
             backgroundColor: t.blueWash,
@@ -96,8 +108,8 @@ export default function Feedback() {
           }}
         >
           <Text style={{ fontSize: type.meta, color: t.ink2, lineHeight: 20 }}>
-            <Text style={{ fontWeight: '700' }}>Towinly is an early prototype.</Text> You're trying a
-            work in progress. Your feedback here directly shapes what gets built.
+            <Text style={{ fontWeight: '700' }}>We read every message.</Text> What you write here
+            shapes what gets built next, so tell us what helped and what got in your way.
           </Text>
         </View>
 

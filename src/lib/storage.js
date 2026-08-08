@@ -17,12 +17,23 @@ import * as SecureStore from 'expo-secure-store';
 
 const isWeb = Platform.OS === 'web';
 
+// What lives behind these three calls is the session JWT, the OAuth PKCE verifier
+// and state, and the block list — the list of people an elder is hiding from.
+// expo-secure-store defaults to kSecAttrAccessibleWhenUnlocked, which travels in
+// encrypted device backups and can restore onto a different phone. Pinning the
+// ThisDeviceOnly class keeps all of it on the handset that wrote it
+// (OWASP MASTG-BEST-0023). The class MUST be identical on write and read or the
+// read silently misses, so it is declared once here and shared by all three.
+const KEYCHAIN_OPTIONS = {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY,
+};
+
 /**
  * @param {string} key
  * @returns {Promise<string|null>} the stored value, or null when absent
  */
 export async function getItemAsync(key) {
-  if (!isWeb) return SecureStore.getItemAsync(key);
+  if (!isWeb) return SecureStore.getItemAsync(key, KEYCHAIN_OPTIONS);
   return window.localStorage.getItem(key);
 }
 
@@ -32,7 +43,7 @@ export async function getItemAsync(key) {
  * @returns {Promise<void>}
  */
 export async function setItemAsync(key, value) {
-  if (!isWeb) return SecureStore.setItemAsync(key, value);
+  if (!isWeb) return SecureStore.setItemAsync(key, value, KEYCHAIN_OPTIONS);
   window.localStorage.setItem(key, value);
 }
 
@@ -41,6 +52,6 @@ export async function setItemAsync(key, value) {
  * @returns {Promise<void>}
  */
 export async function deleteItemAsync(key) {
-  if (!isWeb) return SecureStore.deleteItemAsync(key);
+  if (!isWeb) return SecureStore.deleteItemAsync(key, KEYCHAIN_OPTIONS);
   window.localStorage.removeItem(key);
 }

@@ -6,19 +6,22 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "channel": "development"
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
-        "APP_ENV": "preview",
-        "EXPO_PUBLIC_SHOW_DEMO": "1"
+        "EXPO_PUBLIC_SHOW_DEMO": "1",
+        "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
       }
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "env": {
-        "APP_ENV": "production"
+        "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
       }
     }
   },

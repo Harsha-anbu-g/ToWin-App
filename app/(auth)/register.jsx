@@ -16,6 +16,8 @@ import LegalModal from '../../src/components/LegalModal';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
+import { yearsOld } from '../../src/lib/copy';
+import { parseFlexibleDate } from '../../src/lib/flexibleDate';
 import { MATCH_GREEN, STRENGTH_FAIR, STRENGTH_WEAK } from '../../src/theme/parity';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -37,6 +39,15 @@ const ROLES = [
 ];
 
 const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+
+// The Terms have always said Towinly is not for under-18s, and the privacy policy
+// has always said a date of birth is collected at signup. Neither was true until
+// this field existed. Google Play also asks you to declare a target age and looks
+// for a real gate behind an adults-only answer.
+const MIN_AGE = 18;
+// Nobody alive is older than this, so a four-digit typo lands here rather than
+// silently passing the age check.
+const MAX_AGE = 120;
 
 // Hoisted so memo'd Inputs get the same style object every render
 const FIELD_GAP = { marginBottom: spacing[4] };
@@ -65,6 +76,7 @@ export default function Register() {
     email: '',
     password: '',
     confirmPassword: '',
+    dateOfBirth: '',
     // No preselected identity (rulebook: nothing optional is preselected) —
     // "who are you joining as?" is a real question, so it starts unanswered.
     role: '',
@@ -90,6 +102,11 @@ export default function Register() {
     setForm((f) => ({ ...f, username: sanitizeUsername(v) }));
     setFieldErrors((f) => ({ ...f, username: '' }));
   }, []);
+  const setDateOfBirth = useCallback((v) => {
+    setForm((f) => ({ ...f, dateOfBirth: v }));
+    setFieldErrors((f) => ({ ...f, dateOfBirth: '' }));
+  }, []);
+
   const setEmail = useCallback((v) => {
     setForm((f) => ({ ...f, email: v }));
     setFieldErrors((f) => ({ ...f, email: '' }));
@@ -121,6 +138,23 @@ export default function Register() {
     if (!EMAIL_RE.test(form.email)) errs.email = 'Enter a valid email address';
     if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
     if (form.confirmPassword !== form.password) errs.confirmPassword = 'Passwords do not match';
+
+    // Age gate. parseFlexibleDate returns null for empty, { error } for an
+    // impossible date, or { value } as YYYY-MM-DD.
+    const parsedDob = parseFlexibleDate(form.dateOfBirth);
+    let dateOfBirth = '';
+    if (!parsedDob) {
+      errs.dateOfBirth = 'Enter your date of birth';
+    } else if (parsedDob.error) {
+      errs.dateOfBirth = parsedDob.error;
+    } else {
+      const age = yearsOld(parsedDob.value);
+      if (age < 0) errs.dateOfBirth = 'That date is in the future, please check it.';
+      else if (age > MAX_AGE) errs.dateOfBirth = 'Please check the year you typed.';
+      else if (age < MIN_AGE) errs.dateOfBirth = `You have to be ${MIN_AGE} or over to join Towinly.`;
+      else dateOfBirth = parsedDob.value;
+    }
+
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
@@ -128,7 +162,7 @@ export default function Register() {
       const { username, email, password, role } = form;
       // No account is created yet — the backend holds the signup until the user
       // opens the email link. So we don't log in here; we send them to check email.
-      await api.post('/auth/register', { username, email, password, role });
+      await api.post('/auth/register', { username, email, password, role, dateOfBirth });
       router.replace({ pathname: '/(auth)/check-email', params: { email } });
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -249,6 +283,21 @@ export default function Register() {
           keyboardType="email-address"
           textContentType="emailAddress"
           autoComplete="email"
+          style={FIELD_GAP}
+        />
+
+        {/* Age gate. Free text on purpose: a spinning date wheel is hard work for
+            an 80-year-old, and parseFlexibleDate already accepts "14 May 1953",
+            "May 14, 1953" and "1953-05-14" alike. */}
+        <Input
+          label="Date of birth"
+          value={form.dateOfBirth}
+          onChangeText={setDateOfBirth}
+          error={fieldErrors.dateOfBirth}
+          helper="For example 14 May 1953. You have to be 18 or over to join."
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="birthdate"
           style={FIELD_GAP}
         />
 

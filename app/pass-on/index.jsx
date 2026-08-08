@@ -37,6 +37,7 @@ import {
   TAKE_DOWN,
   TAKE_OUT_OF_BOX,
 } from '../../src/lib/passOnLocks';
+import { objectionableError } from '../../src/lib/contentFilter';
 import { herFamilyList, peopleSheKnows } from '../../src/lib/passOnPeople';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -274,6 +275,14 @@ export default function PassOn() {
   const writingHere = (kind) => writing?.kind === kind;
 
   async function save(payload) {
+    // Apple 1.2: stop objectionable material before it is posted. Checked on the
+    // title and the body, whoever the audience is: a Keyholder reading a letter
+    // years from now deserves the same protection as a stranger.
+    const problem = objectionableError(payload.title) || objectionableError(payload.body);
+    if (problem) {
+      showToast(problem, 'error');
+      return;
+    }
     // "Anyone" is the only audience that reaches people she has never met, so
     // it is the only one worth stopping for.
     if (payload.audience === 'EVERYONE' && !writing?.item) {
