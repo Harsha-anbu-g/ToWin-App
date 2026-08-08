@@ -155,7 +155,9 @@ export default function FamilyParentScreen() {
   }
 
   return (
-    <Screen back>
+    // keyboard: the needs form and the review form live down this page, and
+    // the keyboard must never cover the field being typed into (UX-702).
+    <Screen back keyboard>
       {!loaded ? (
         <View style={{ marginTop: spacing[4] }}>
           <SkeletonCard lines={4} />

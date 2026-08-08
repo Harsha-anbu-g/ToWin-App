@@ -13,12 +13,19 @@ import useKeyboardInset from '../../lib/useKeyboardInset';
 export default function KeyboardAvoider({ children, style }) {
   const inset = useKeyboardInset();
 
+  // The testID is load-bearing: keyboard-avoidance.test.js pins that every
+  // form and the chat composer really render inside this wrapper.
   if (Platform.OS === 'web') {
-    return <View style={[{ flex: 1, paddingBottom: inset }, style]}>{children}</View>;
+    return (
+      <View testID="keyboard-avoider" style={[{ flex: 1, paddingBottom: inset }, style]}>
+        {children}
+      </View>
+    );
   }
 
   return (
     <KeyboardAvoidingView
+      testID="keyboard-avoider"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={[{ flex: 1 }, style]}
     >
