@@ -75,7 +75,7 @@ export default function VerifyPending() {
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
             <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
             <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder — the Towinly verification email often lands there. If you find it, mark it "Not spam"
+            folder. The Towinly verification email often lands there. If you find it, mark it "Not spam"
             so future emails reach your inbox.
           </Text>
         </View>
@@ -90,7 +90,7 @@ export default function VerifyPending() {
         {/* The label names its consequence — this signs the current session
             out so the fresh JWT can carry the verified claim (rulebook). */}
         <TextLink
-          label="I've verified — sign in again"
+          label="I've verified. Sign in again"
           onPress={backToLogin}
           style={{ marginTop: spacing[2] }}
         />

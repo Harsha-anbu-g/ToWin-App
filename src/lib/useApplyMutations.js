@@ -16,7 +16,7 @@ export function useApplyMutations() {
   const apply = useMutation({
     mutationFn: (needId) => api.post(`/needs/${needId}/apply`),
     onSuccess: () => {
-      showToast('Offer sent — the elder will see it right away.', 'success');
+      showToast('Offer sent. The elder will see it right away.', 'success');
       refresh();
     },
     onError: (err) =>

@@ -219,7 +219,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const accept = useMutation({
     mutationFn: ({ needId, helperId }) => api.post(`/needs/${needId}/accept/${helperId}`),
     onSuccess: () => {
-      showToast('Helper accepted — they can now message you.', 'success');
+      showToast('Helper accepted. They can now message you.', 'success');
       refresh();
     },
     onError: (err) =>
@@ -307,7 +307,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
         <View style={{ paddingVertical: 24 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'open'
-              ? 'Nothing here yet. Ask your neighbors for a hand — it takes a minute.'
+              ? 'Nothing here yet. Ask your neighbors for a hand. It takes a minute.'
               : seg === 'progress'
                 ? 'No requests in progress. When you accept a helper, it moves here.'
                 : 'No completed requests yet.'}

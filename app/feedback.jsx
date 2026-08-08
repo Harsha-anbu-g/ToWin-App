@@ -80,7 +80,7 @@ export default function Feedback() {
         message: form.message.trim(),
         ...Object.fromEntries(RATINGS.map(({ key }) => [key, ratings[key] || null])),
       });
-      showToast('Thank you — your feedback helps Towinly grow.', 'success');
+      showToast('Thank you. Your feedback helps Towinly grow.', 'success');
       router.back();
     } catch (err) {
       showToast(err?.response?.data?.message || 'Could not send it right now. Please try again.', 'error');

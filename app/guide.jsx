@@ -29,19 +29,19 @@ const HELPER_CAN = [
 const FAMILY_CAN = [
   'Link to your parent. They must say yes before you see anything.',
   'See that they checked in today, so you know they are okay.',
-  'Follow the friendships they choose to share with you — and only those.',
+  'Follow the friendships they choose to share with you, and only those.',
   'Read the small updates thread on a shared friendship, together with your parent and their helper.',
   'Message their helpers directly, through the trust your parent has built.',
-  'Ask for permission to act for them — request help, move a friendship forward, or leave a review in their name.',
+  'Ask for permission to act for them: request help, move a friendship forward, or leave a review in their name.',
 ];
 
 const LADDER = [
   ['Just connected', 'You said yes to each other. Chat inside Towinly only.'],
-  ['Chatting', 'Regular messages — getting to know each other.'],
+  ['Chatting', 'Regular messages. Getting to know each other.'],
   ['Friendly', 'First names and warm conversation come naturally.'],
   ['Phone ready', 'You both agreed to share phone numbers.'],
   ['Met in person', 'A first meeting in a public place went well.'],
-  ['Helping hand', 'Real help happens — errands, rides, company.'],
+  ['Helping hand', 'Real help happens: errands, rides, company.'],
   ['Fully trusted', 'The top of the ladder. Trust earned one step at a time.'],
 ];
 
@@ -99,7 +99,7 @@ export default function Guide() {
         </P>
         <P>
           Many older people have no safe, trusted way to meet new friends or get a hand with daily
-          tasks. Towinly gives them one, built around trust that grows one small step at a time — so
+          tasks. Towinly gives them one, built around trust that grows one small step at a time, so
           no one ever has to rush or feel unsafe.
         </P>
       </Card>
@@ -119,7 +119,7 @@ export default function Guide() {
         />
         <H>What you can do</H>
         {role === 'FAMILY' ? (
-          <P>As Family, you stay close to your parent&apos;s life here — always with their say-so.</P>
+          <P>As Family, you stay close to your parent&apos;s life here, always with their say-so.</P>
         ) : null}
         <Bullets
           items={role === 'HELPER' ? HELPER_CAN : role === 'FAMILY' ? FAMILY_CAN : ELDER_CAN}
@@ -138,7 +138,7 @@ export default function Guide() {
         </H>
         <P>
           Trust is earned one step at a time on a seven-step ladder. Every step needs BOTH of you
-          to agree — nobody can rush it.
+          to agree. Nobody can rush it.
         </P>
         <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
           {LADDER.map(([stage, desc], i) => (
@@ -172,7 +172,7 @@ export default function Guide() {
           items={[
             'Phone numbers are shared only when you both reach the Phone Ready step.',
             'Meet in public places for first meetings.',
-            'Elders can keep emergency contacts — the people to call when something happens.',
+            'Elders can keep emergency contacts: the people to call when something happens.',
             'You can report anyone from their profile; our team reviews every report.',
           ]}
         />

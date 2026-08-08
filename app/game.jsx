@@ -263,8 +263,8 @@ export default function GameScreen() {
 
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 21, marginTop: 12 }}>
         {paused
-          ? 'Paused — take all the time you need. Tap Resume when ready.'
-          : 'Tap two cells on the shell. A pair that matches stays open — slow and steady.'}
+          ? 'Paused. Take all the time you need. Tap Resume when ready.'
+          : 'Tap two cells on the shell. A pair that matches stays open. Slow and steady.'}
       </Text>
 
       <View style={{ alignItems: 'center', marginTop: 8 }}>
@@ -290,8 +290,8 @@ export default function GameScreen() {
             }}
           >
             {phase === 'won'
-              ? 'You found them all — slow and steady wins!'
-              : "Time's up — no rush, try again whenever you like."}
+              ? 'You found them all. Slow and steady wins!'
+              : "Time's up. No rush, try again whenever you like."}
           </Text>
           {/* After a 60-second game, playing again is the likely next action —
               it gets the primary (rulebook); "Dashboard" was a dead redirect. */}

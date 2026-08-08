@@ -302,8 +302,11 @@ export default function UserProfile() {
                       {r.comment}
                     </Text>
                   ) : null}
+                  {/* "by Name", not an em dash before it: the character is banned
+                      outright, and the word says who wrote this to a screen reader
+                      as well as to the eye. */}
                   {r.reviewerName ? (
-                    <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 4 }}>— {r.reviewerName}</Text>
+                    <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 4 }}>by {r.reviewerName}</Text>
                   ) : null}
                 </View>
               ))}

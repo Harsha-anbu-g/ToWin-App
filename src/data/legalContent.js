@@ -12,7 +12,7 @@
 
 /** The draft notice, visible at the top of both pages and the signup modal. */
 export const DRAFT = {
-  eyebrow: 'Draft — a lawyer has not checked this yet',
+  eyebrow: 'Draft: a lawyer has not checked this yet',
   body:
     'We wrote this ourselves, in plain words, from what Towinly actually does. A lawyer has '
     + 'not been through it yet. Where something is still to be decided, this page says so '
@@ -21,20 +21,46 @@ export const DRAFT = {
 };
 
 /**
- * Where a person writes to Towinly. The address is deployment configuration —
- * EXPO_PUBLIC_LEGAL_CONTACT_EMAIL — never written here: an invented mailbox
- * that cannot receive mail loses somebody's deletion request in silence.
+ * Where a person writes to Towinly.
+ *
+ * This used to be deployment configuration only (EXPO_PUBLIC_LEGAL_CONTACT_EMAIL,
+ * which eas.json sets for both store profiles) with no fallback, on the reasoning
+ * that an invented mailbox loses somebody's request in silence. The Vercel web
+ * project does not set that variable, so on ONE deployment three legal pages gave
+ * two different answers: /app/delete-account named an address while /app/privacy
+ * and /app/terms said there was none. That was audit finding V5.
+ *
+ * The fallback below is not invented. It is the same mailbox eas.json already
+ * ships, so the original reasoning is satisfied and every surface now resolves the
+ * same way. __tests__/legal-contact-parity.test.js reads eas.json and fails if the
+ * two ever disagree, and fails if a legal screen reads the variable for itself
+ * instead of coming through here.
  */
+export const LEGAL_CONTACT_FALLBACK = 'help@towinly.com';
+
 export const LEGAL_CONTACT = {
   noAddressYet:
     'Towinly has not set an address to write to yet. We would rather tell you that than send '
     + 'you to a mailbox that cannot answer.',
 };
 
-/** The configured address, or null. Blank and whitespace both count as unset. */
+/**
+ * The public account-deletion page. Play Console holds this URL in the Data
+ * safety form, and the privacy policy has to link to it (audit finding V7).
+ *
+ * It lives here rather than in deleteAccountPage.js because the privacy policy
+ * quotes it, and deleteAccountPage.js already imports from this module: putting
+ * it the other way round would make the two files import each other.
+ */
+export const DELETION_PAGE_URL = 'https://towinly.com/app/delete-account';
+
+/**
+ * The address every legal surface writes to. A deploy that configures one wins;
+ * otherwise the real mailbox above. Blank and whitespace both count as unset.
+ */
 export function legalContactEmail() {
   const configured = (process.env.EXPO_PUBLIC_LEGAL_CONTACT_EMAIL || '').trim();
-  return configured || null;
+  return configured || LEGAL_CONTACT_FALLBACK;
 }
 
 const contactSection = (h, p, email) =>
@@ -99,7 +125,7 @@ export function termsSections(email) {
     { h: 'After you are gone',
       p: 'Nothing on Towinly opens by itself. There is no timer, no countdown, and no button '
         + 'anywhere that releases what you wrote. If you have set up a Sealed box you will have '
-        + 'chosen a few people you trust — your Keyholders — and how many of them must agree. '
+        + 'chosen a few people you trust, your Keyholders, and how many of them must agree. '
         + 'After you die, one of them writes to us. Then a person here, not a computer, reads a '
         + 'death certificate with their own eyes, asks each of your Keyholders separately and in '
         + 'writing, and waits thirty days, trying to reach you the whole time. If the number you '
@@ -112,7 +138,7 @@ export function termsSections(email) {
 
     { h: 'What cannot be got back',
       p: 'What you put in your Sealed box is scrambled before it is saved. If the key that '
-        + 'unscrambles it is ever lost, what is inside is gone — not hidden, gone — for '
+        + 'unscrambles it is ever lost, what is inside is gone. Not hidden, gone, for '
         + 'everybody, including us. There is no spare copy and no way to work it out again. '
         + KEEP_YOUR_OWN_COPY },
 
@@ -208,7 +234,7 @@ export function privacySections(email) {
 
     { h: 'Your stories, your letters and your Sealed box',
       p: 'You choose who can see each story. A letter goes to one person and to nobody else. '
-        + 'What you put in your Sealed box is for you alone — even the name you give a thing in '
+        + 'What you put in your Sealed box is for you alone. Even the name you give a thing in '
         + 'it is scrambled, so nobody here can see a list of your labels, and your Keyholders '
         + 'never see one either.' },
 
@@ -216,7 +242,7 @@ export function privacySections(email) {
       p: 'What you put in the Sealed box is scrambled before it is saved, and the key that '
         + 'unscrambles it is not kept beside it. If somebody stole our records, they could not '
         + 'read a word of what you wrote. If somebody broke into the company itself, they '
-        + 'could — because we hold both the records and the key. We are not going to tell you '
+        + 'could, because we hold both the records and the key. We are not going to tell you '
         + 'otherwise. We hold both on purpose, so that you can never be shut out of your own '
         + 'box: forget your password, reset it the way you always do, and your box is still '
         + 'there. The price of that is the sentence above. If anybody here were asked "could '
@@ -224,7 +250,7 @@ export function privacySections(email) {
         + 'opened we write down when, and you can see that list.' },
 
     { h: 'If the key is ever lost',
-      p: 'Then everything in every Sealed box is gone. Not locked away somewhere — gone. Nobody '
+      p: 'Then everything in every Sealed box is gone. Not locked away somewhere. Gone. Nobody '
         + 'can get it back, including us, and there is no second copy anywhere. ' + KEEP_YOUR_OWN_COPY },
 
     { h: 'After somebody dies',
@@ -233,7 +259,7 @@ export function privacySections(email) {
         + 'reads a death certificate with their own eyes and writes down what they saw, asks '
         + 'each of the Keyholders you chose separately and in writing, and then waits thirty '
         + 'days while still trying to reach you. Only if the number of Keyholders you set agree, '
-        + 'and nobody reaches you, does a person here hand over what is in your Sealed box — to '
+        + 'and nobody reaches you, does a person here hand over what is in your Sealed box, to '
         + 'those Keyholders and to nobody else. Any letter you marked to be read after you are '
         + 'gone opens for the one person you addressed it to. While all this is going on we do '
         + 'not confirm to anybody that you have died, and we never tell your family when you '
@@ -261,18 +287,23 @@ export function privacySections(email) {
         + 'if another member wrote a story of their own that mentions you, those are their '
         + 'words and they stay.' },
 
+    // The link is audit finding V7: Play requires the deletion page to be
+    // reachable FROM the privacy policy, not only from the Data safety form.
+    // It is a real control on all three renderers, because a person who has
+    // lost the app cannot tap a sentence.
     { h: 'Asking for a copy of your information',
       p: email
         ? 'You can change or remove most things yourself from your profile page. For a copy of '
           + 'everything we hold about you, or to close your account for good, open your profile, '
           + 'tap "Account and data", then "Send me a copy of my data" or "Delete my account". '
           + 'If you would rather ask a person, write to us at the address at the bottom of this '
-          + 'page.'
+          + 'page. If you no longer have the app, you can ask on the web instead.'
         : 'You can change or remove most things yourself from your profile page. For a copy of '
           + 'everything we hold about you, or to close your account for good, open your profile, '
           + 'tap "Account and data", then "Send me a copy of my data" or "Delete my account". '
           + 'Towinly has not set an address to write to yet, so those two buttons are the way to '
-          + 'ask.' },
+          + 'ask. If you no longer have the app, you can ask on the web instead.',
+      link: { label: 'Delete your account on the web', url: DELETION_PAGE_URL } },
 
     { h: 'Children',
       p: 'Towinly is not meant for anybody under 18. If we find out we have collected '
@@ -285,7 +316,7 @@ export function privacySections(email) {
     contactSection(
       'Questions',
       email
-        ? 'Anything on this page, a copy of your information, or deleting your account — write to us at'
+        ? 'Anything on this page, a copy of your information, or deleting your account, write to us at'
         : LEGAL_CONTACT.noAddressYet,
       email,
     ),

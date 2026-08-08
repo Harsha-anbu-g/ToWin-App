@@ -76,7 +76,7 @@ export default function CheckEmail() {
             lineHeight: 26,
           }}
         >
-          Open it to finish creating your account — then come back and log in.
+          Open it to finish creating your account, then come back and log in.
         </Text>
 
         <View
@@ -92,7 +92,7 @@ export default function CheckEmail() {
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
             <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
             <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder — the Towinly email often lands there. If you find it, mark it "Not spam" so future
+            folder. The Towinly email often lands there. If you find it, mark it "Not spam" so future
             emails reach your inbox.
           </Text>
         </View>

@@ -48,7 +48,7 @@ api.interceptors.response.use(
 //   onError: (err) => showToast(friendlyWriteError(err, 'Could not …'), 'error')
 export const friendlyWriteError = (error, fallback) =>
   error?.response?.status === 403
-    ? 'Please verify your email first — check your inbox for the link, then try again.'
+    ? 'Please verify your email first. Check your inbox for the link, then try again.'
     : fallback;
 
 export default api;

@@ -146,7 +146,7 @@ test('a pending ask renders Waiting, not another Ask button', async () => {
 
   r.getByText('Waiting');
   r.getByText(
-    'You asked. Waiting for Margaret to decide — they answer on their My Family page.'
+    'You asked. Waiting for Margaret to decide. They answer on their My Family page.'
   );
   expect(r.getAllByRole('button', { name: 'Ask Margaret' })).toHaveLength(2);
 });
@@ -261,14 +261,14 @@ test('below Messaging there is nothing to inherit — the unlock is explained', 
   stubGet({ journeyData: journey([helper({ stageIndex: 0, currentTrustLevel: 'DISCOVERED' })]) });
   const r = await wrap(<FamilyParentScreen />);
   await r.findByText(
-    "Family chat opens when Margaret and Harsha reach Messaging — they're still at the first step."
+    "Family chat opens when Margaret and Harsha reach Messaging. They're still at the first step."
   );
 });
 
 test('an active standing offers message and pause; pause posts the standing id', async () => {
   stubGet({ standings: [standing()] });
   const r = await wrap(<FamilyParentScreen />);
-  await r.findByText("You hold Margaret's trust with Harsha — you can message them directly.");
+  await r.findByText("You hold Margaret's trust with Harsha. You can message them directly.");
 
   await fireEvent.press(r.getByRole('button', { name: 'Pause' }));
   expect(api.post).toHaveBeenCalledWith('/family/standings/conn-1/pause');
@@ -279,7 +279,7 @@ test('a paused standing explains itself and resumes', async () => {
   stubGet({ standings: [standing({ paused: true })] });
   const r = await wrap(<FamilyParentScreen />);
   await r.findByText(
-    'You paused this chat — neither of you can send messages until you resume it.'
+    'You paused this chat. Neither of you can send messages until you resume it.'
   );
   await fireEvent.press(r.getByRole('button', { name: 'Resume' }));
   expect(api.post).toHaveBeenCalledWith('/family/standings/conn-1/resume');

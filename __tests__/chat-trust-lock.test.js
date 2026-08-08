@@ -93,12 +93,12 @@ test('below Messaging the composer is replaced by the lock notice and the start-
   const r = await wrap(<ChatThread />);
 
   expect(
-    await r.findByText("You're connected — messages unlock at the next trust step.")
+    await r.findByText("You're connected. Messages unlock at the next trust step.")
   ).toBeTruthy();
   expect(await r.findByText('Start the next step')).toBeTruthy();
   expect(r.queryByLabelText('Message')).toBeNull();
   // The lock explains the empty thread — never "Say hello" (web parity).
-  expect(r.queryByText('Say hello — every friendship starts with one message.')).toBeNull();
+  expect(r.queryByText('Say hello. Every friendship starts with one message.')).toBeNull();
 });
 
 test('the start-step action asks first, then confirms the trust step on this connection', async () => {
@@ -144,7 +144,7 @@ test('a helper never sees a dead start button — the elder starts each step', a
   const r = await wrap(<ChatThread />);
 
   expect(
-    await r.findByText("Priya starts each trust step — you'll get a tap here to accept.")
+    await r.findByText("Priya starts each trust step. You'll get a tap here to accept.")
   ).toBeTruthy();
   expect(r.queryByText('Start the next step')).toBeNull();
 });
@@ -170,7 +170,7 @@ test('after I confirm, the lock explains it is waiting on the other side', async
   const r = await wrap(<ChatThread />);
 
   expect(
-    await r.findByText("You've started the next step — waiting for Priya to accept.")
+    await r.findByText("You've started the next step. Waiting for Priya to accept.")
   ).toBeTruthy();
   expect(r.queryByText('Start the next step')).toBeNull();
 });
@@ -181,7 +181,7 @@ test('at Messaging and above the composer renders with no lock notice', async ()
 
   expect(await r.findByLabelText('Message')).toBeTruthy();
   expect(
-    r.queryByText("You're connected — messages unlock at the next trust step.")
+    r.queryByText("You're connected. Messages unlock at the next trust step.")
   ).toBeNull();
 });
 
@@ -204,7 +204,7 @@ test('a send refused by the server trust gate names the real reason, not the gen
 
   expect(
     await r.findByText(
-      'Your trust level is too low to message yet — take the next trust step together first.'
+      'Your trust level is too low to message yet. Take the next trust step together first.'
     )
   ).toBeTruthy();
   expect(r.queryByText("Message didn't send. Tap send to try again.")).toBeNull();
@@ -229,7 +229,7 @@ test("the family chat-closed 409 also says 'shared trust' but must NOT show the 
   expect(await r.findByText("Message didn't send. Tap send to try again.")).toBeTruthy();
   expect(
     r.queryByText(
-      'Your trust level is too low to message yet — take the next trust step together first.'
+      'Your trust level is too low to message yet. Take the next trust step together first.'
     )
   ).toBeNull();
 });

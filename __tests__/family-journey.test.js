@@ -206,7 +206,7 @@ describe('watching alone never acts for the parent', () => {
     expect(r.queryByText(/Anything you do here is in Margaret/)).toBeNull();
     // The consent list is present — every power off, none granted.
     await fireEvent.press(r.getByRole('tab', { name: 'What I can do' }));
-    expect(await r.findAllByText(/Not on yet — you can ask Margaret/)).toHaveLength(3);
+    expect(await r.findAllByText(/Not on yet. You can ask Margaret/)).toHaveLength(3);
   });
 });
 

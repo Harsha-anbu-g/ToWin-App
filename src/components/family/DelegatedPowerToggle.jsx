@@ -47,7 +47,7 @@ function PowerSwitch({ power, name, isOn, busy, onFlip }) {
   return (
     <Pressable
       accessibilityRole="switch"
-      accessibilityLabel={`${power.title} — ${name}`}
+      accessibilityLabel={`${power.title}, ${name}`}
       accessibilityState={{ checked: isOn, disabled: busy, busy }}
       disabled={busy}
       onPress={onFlip}

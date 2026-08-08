@@ -229,7 +229,7 @@ export default function FinishSetup() {
         {/* The escape hatch (rulebook: every multi-step flow has a Cancel) —
             a person on the wrong Google account was trapped here before. */}
         <TextLink
-          label="Cancel — use a different account"
+          label="Cancel and use a different account"
           onPress={() => router.replace('/(auth)/login')}
           muted
           style={{ marginTop: spacing[2] }}

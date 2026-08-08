@@ -49,7 +49,7 @@ export default function FamilyHelperConnect({
   if (!isInheritable(helper)) {
     return (
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: spacing[3] }}>
-        Family chat opens when {parent} and {firstName} reach Messaging — they&apos;re still at the
+        Family chat opens when {parent} and {firstName} reach Messaging. They&apos;re still at the
         first step.
       </Text>
     );
@@ -93,7 +93,7 @@ export default function FamilyHelperConnect({
     return (
       <View style={{ marginTop: spacing[3] }}>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20 }}>
-          You paused this chat — neither of you can send messages until you resume it.
+          You paused this chat. Neither of you can send messages until you resume it.
         </Text>
         <ActionChip
           label="Resume"
@@ -136,7 +136,7 @@ export default function FamilyHelperConnect({
   return (
     <View style={{ marginTop: spacing[3] }}>
       <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, lineHeight: 20 }}>
-        You hold {parent}&apos;s trust with {firstName} — you can message them directly.
+        You hold {parent}&apos;s trust with {firstName}. You can message them directly.
       </Text>
       <View
         style={{

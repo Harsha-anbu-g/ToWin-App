@@ -111,12 +111,12 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
             Fully trusted
           </Text>
           <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 20, marginTop: 2 }}>
-            Seven steps, climbed together — the whole ladder is complete.
+            Seven steps, climbed together. The whole ladder is complete.
           </Text>
         </View>
       ) : confirmedByMe && !confirmedByOther ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
-          You've started the next step — waiting for {card.customerName} to accept.
+          You've started the next step. Waiting for {card.customerName} to accept.
         </Text>
       ) : !connReady ? (
         // Confirmed flags are unknown until ['connections'] resolves — a
@@ -186,8 +186,8 @@ export default function MyHelpersPanel() {
       const c = connOf(connectionId);
       showToast(
         c && !c.confirmedByOther
-          ? `Step confirmed — waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed — one step up the ladder!',
+          ? `Step confirmed. Waiting for ${c.otherUserName} to agree too.`
+          : 'You both agreed. One step up the ladder!',
         'success'
       );
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
@@ -202,7 +202,7 @@ export default function MyHelpersPanel() {
   const pause = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
     onSuccess: (_r, connectionId) => {
-      showToast('Paused — you can resume any time.', 'info', {
+      showToast('Paused. You can resume any time.', 'info', {
         actionLabel: 'Undo',
         onAction: () => resume.mutate(connectionId),
       });
@@ -215,7 +215,7 @@ export default function MyHelpersPanel() {
   const resume = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
     onSuccess: () => {
-      showToast('Welcome back — trust steps and messages are on again.', 'success');
+      showToast('Welcome back. Trust steps and messages are on again.', 'success');
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
@@ -291,7 +291,7 @@ export default function MyHelpersPanel() {
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
-              ? 'No fully trusted friends yet — every ladder ends here.'
+              ? 'No fully trusted friends yet. Every ladder ends here.'
               : 'No ladders in progress. Add a friend and trust starts growing.'}
           </Text>
           <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />

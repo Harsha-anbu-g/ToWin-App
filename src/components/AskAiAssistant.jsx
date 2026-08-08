@@ -32,10 +32,10 @@ import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
 const FALLBACK =
-  "I couldn't answer just now. Please try again in a moment — or ask a real person through Share feedback in your Profile.";
+  "I couldn't answer just now. Please try again in a moment, or ask a real person through Share feedback in your Profile.";
 
 const GREETING =
-  "Hi! I'm your Towinly helper. Ask me anything in plain words — how trust works, what to do today, or where to find things.";
+  "Hi! I'm your Towinly helper. Ask me anything in plain words: how trust works, what to do today, or where to find things.";
 
 const SUGGESTIONS = [
   'What should I do today?',

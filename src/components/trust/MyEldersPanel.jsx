@@ -128,7 +128,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
             Fully trusted
           </Text>
           <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 20, marginTop: 2 }}>
-            Seven steps, climbed together — the whole ladder is complete.
+            Seven steps, climbed together. The whole ladder is complete.
           </Text>
         </View>
       ) : conn.confirmedByOther && !conn.confirmedByMe ? (
@@ -141,11 +141,11 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
         />
       ) : waiting ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
-          Waiting for {conn.otherUserName} to accept the next step — they'll get a tap on their side.
+          Waiting for {conn.otherUserName} to accept the next step. They'll get a tap on their side.
         </Text>
       ) : (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 16 }}>
-          {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
+          {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
         </Text>
       )}
 
@@ -173,7 +173,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
                     {f.familyName}
                     {f.relationship ? (
                       <Text style={{ fontWeight: '400', color: t.inkSlate }}>
-                        {` — ${conn.otherUserName ? `${conn.otherUserName}'s` : 'their'} ${f.relationship.toLowerCase()}`}
+                        {`, ${conn.otherUserName ? `${conn.otherUserName}'s` : 'their'} ${f.relationship.toLowerCase()}`}
                       </Text>
                     ) : null}
                   </Text>
@@ -284,8 +284,8 @@ export default function MyEldersPanel() {
       const c = active.find((x) => x.id === connectionId);
       showToast(
         c && !c.confirmedByOther
-          ? `Step confirmed — waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed — one step up the ladder!',
+          ? `Step confirmed. Waiting for ${c.otherUserName} to agree too.`
+          : 'You both agreed. One step up the ladder!',
         'success'
       );
       refresh();
@@ -309,7 +309,7 @@ export default function MyEldersPanel() {
   const pause = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
     onSuccess: (_r, connectionId) => {
-      showToast('Paused — you can resume any time.', 'info', {
+      showToast('Paused. You can resume any time.', 'info', {
         actionLabel: 'Undo',
         onAction: () => resume.mutate(connectionId),
       });
@@ -321,7 +321,7 @@ export default function MyEldersPanel() {
   const resume = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
     onSuccess: () => {
-      showToast('Welcome back — trust steps and messages are on again.', 'success');
+      showToast('Welcome back. Trust steps and messages are on again.', 'success');
       refresh();
     },
     onError: (err) =>
@@ -380,7 +380,7 @@ export default function MyEldersPanel() {
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
-              ? 'No fully trusted elders yet — every ladder ends here.'
+              ? 'No fully trusted elders yet. Every ladder ends here.'
               : 'No connections yet. Find an elder nearby and say hello.'}
           </Text>
           <Button title="Find elders" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />

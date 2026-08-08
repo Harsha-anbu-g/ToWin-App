@@ -46,7 +46,10 @@ function Stat({ value, label, gold }) {
           color: gold ? t.trustGold : t.ink,
         }}
       >
-        {value ?? '—'}
+        {/* Plain hyphen, not an em dash: CLAUDE.md rule 5 bans the character
+            outright, and a machine check with no exceptions is worth more than
+            a nuanced one. It still reads as "no number yet". */}
+        {value ?? '-'}
       </Text>
       <Text style={{ fontSize: type.meta, color: gold ? t.trustGold : t.inkSlate }}>{label}</Text>
     </View>
@@ -277,7 +280,7 @@ export default function ProfileScreen() {
         <Row
           icon={() => (
             <Text style={{ fontSize: 14, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-              {trust ? Math.round(trust.totalScore) : '—'}
+              {trust ? Math.round(trust.totalScore) : '-'}
             </Text>
           )}
           label={

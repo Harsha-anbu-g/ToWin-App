@@ -96,7 +96,7 @@ export const COPY = {
       { title: 'Help decide', body: 'Look at a new helper and share their view.' },
     ],
     note:
-      'The elder is always in charge — one switch turns family sharing on or off, at any time.',
+      'The elder is always in charge. One switch turns family sharing on or off, at any time.',
   },
   why: {
     title: 'Both sides win',
