@@ -16,6 +16,9 @@ import { useAuth } from '../../src/context/AuthContext';
 import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 
+// Heading and group label read from one string, so they cannot drift apart.
+const ROLE_PROMPT = 'I am joining as';
+
 const ROLES = [
   { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help' },
   { value: 'HELPER', label: 'Helper', desc: 'Want to help others' },
@@ -136,16 +139,23 @@ export default function FinishSetup() {
         ) : null}
 
         <Text style={{ fontSize: 14, fontWeight: '600', color: t.ink, marginBottom: spacing[3] }}>
-          I am joining as
+          {ROLE_PROMPT}
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[5] }}>
+        {/* The two cards were loose Pressables with no group around them, so a
+            screen reader read two radios belonging to nothing. */}
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel={ROLE_PROMPT}
+          style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[5] }}
+        >
           {ROLES.map(({ value, label, desc }) => {
             const active = role === value;
             return (
               <Pressable
                 key={value}
                 accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
+                // aria-checked, not accessibilityState: see register.jsx.
+                aria-checked={active}
                 accessibilityLabel={`${label}. ${desc}`}
                 onPress={() => setRole(value)}
                 style={({ pressed }) => ({

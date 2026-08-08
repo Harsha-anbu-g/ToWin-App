@@ -23,6 +23,11 @@ import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
 
+// Read twice: once as the visible heading, once as the label on the group of
+// role cards. One constant so a reworded heading cannot leave the group saying
+// something else.
+const ROLE_PROMPT = 'First, who are you joining as?';
+
 const ROLES = [
   { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help' },
   { value: 'HELPER', label: 'Helper', desc: 'Want to help others' },
@@ -192,12 +197,16 @@ export default function Register() {
 
         {/* Role cards — the first decision (3q): selected = 2px blue + wash */}
         <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
-          First, who are you joining as?
+          {ROLE_PROMPT}
         </Text>
         {/* Wrapping row: ELDER + HELPER share the line, the full-width FAMILY
             card drops below it (gap covers both directions). */}
+        {/* The heading above is a separate node — without a label on the group
+            itself a screen reader announces three options and never says what
+            question they answer. Same string, so the two cannot drift. */}
         <View
           accessibilityRole="radiogroup"
+          accessibilityLabel={ROLE_PROMPT}
           style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[5] }}
         >
           {ROLES.map(({ value, label, desc, fullWidth }) => {
@@ -206,7 +215,12 @@ export default function Register() {
               <Pressable
                 key={value}
                 accessibilityRole="radio"
-                accessibilityState={{ selected: active }}
+                // Was accessibilityState={{ selected }}: aria-selected is not an
+                // attribute a radio carries, so the chosen role went unannounced.
+                // aria-checked is the one spelling that lands on both sides —
+                // RN merges it into accessibilityState, react-native-web writes
+                // it to the DOM and ignores accessibilityState entirely.
+                aria-checked={active}
                 accessibilityLabel={`${label}. ${desc}`}
                 onPress={() => setField('role', value)}
                 style={({ pressed }) => ({
@@ -380,8 +394,11 @@ export default function Register() {
         </Pressable>
         {/* rowGap: when the two 44pt links wrap they must not stack at 0pt */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing[5], rowGap: spacing[2], marginLeft: 22 + spacing[3] }}>
+          {/* button, not link: these open a sheet over this screen. "Link"
+              promises a screen reader it is going somewhere, and this is the
+              last thing read before the agree checkbox. */}
           <Pressable
-            accessibilityRole="link"
+            accessibilityRole="button"
             onPress={() => setLegalOpen('terms')}
             style={{ minHeight: 44, justifyContent: 'center' }}
           >
@@ -390,7 +407,7 @@ export default function Register() {
             </Text>
           </Pressable>
           <Pressable
-            accessibilityRole="link"
+            accessibilityRole="button"
             onPress={() => setLegalOpen('privacy')}
             style={{ minHeight: 44, justifyContent: 'center' }}
           >

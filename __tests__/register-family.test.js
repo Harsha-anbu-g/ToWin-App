@@ -60,8 +60,10 @@ test('register: FAMILY card carries the web copy, spans the full row, keeps radi
   expect(StyleSheet.flatten(family.props.style).width).toBe('100%');
 
   await fireEvent.press(family);
-  getByRole('radio', { name: /I'm here for a family member/, selected: true });
-  getByRole('radio', { name: /^Elder\./, selected: false });
+  // checked, not selected (SHIP-606): a radio announces aria-checked, and this
+  // assertion used to pass against a state no screen reader ever read out.
+  getByRole('radio', { name: /I'm here for a family member/, checked: true });
+  getByRole('radio', { name: /^Elder\./, checked: false });
 });
 
 test('register: selecting FAMILY submits role FAMILY and routes to check-email', async () => {

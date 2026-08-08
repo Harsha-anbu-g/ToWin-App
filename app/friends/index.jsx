@@ -234,6 +234,7 @@ export default function FriendsScreen() {
                     over recall). */}
                 <View
                   accessibilityRole="radiogroup"
+                  accessibilityLabel={`Showing ${who} within`}
                   style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
                 >
                   {RADIUS_STEPS.map((km, i) => {
@@ -243,7 +244,7 @@ export default function FriendsScreen() {
                         key={km}
                         accessibilityRole="radio"
                         accessibilityLabel={`${km} kilometers`}
-                        accessibilityState={{ checked: active }}
+                        aria-checked={active}
                         onPress={() => setRadiusIdx(i)}
                         // 36pt visual, hitSlop tops the target up to >=44pt (the
                         // kit Chip's trick — vertical only, so adjacent pills

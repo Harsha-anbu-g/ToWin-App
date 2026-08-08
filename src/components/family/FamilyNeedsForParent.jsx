@@ -39,7 +39,7 @@ function ChoiceChip({ label, selected, onPress }) {
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={label}
-      accessibilityState={{ checked: selected }}
+      aria-checked={selected}
       onPress={onPress}
       style={({ pressed }) => ({
         minHeight: 44,
@@ -269,6 +269,7 @@ export default function FamilyNeedsForParent({
             </Text>
             <View
               accessibilityRole="radiogroup"
+              accessibilityLabel="What kind of help?"
               style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}
             >
               {CATEGORIES.map(([key, label]) => (
@@ -286,7 +287,11 @@ export default function FamilyNeedsForParent({
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, marginBottom: spacing[2] }}>
               How soon does {parent} need it?
             </Text>
-            <View accessibilityRole="radiogroup" style={{ flexDirection: 'row', gap: spacing[2] }}>
+            <View
+              accessibilityRole="radiogroup"
+              accessibilityLabel={`How soon does ${parent} need it?`}
+              style={{ flexDirection: 'row', gap: spacing[2] }}
+            >
               {URGENCIES.map(([key, label]) => (
                 <ChoiceChip
                   key={key}
