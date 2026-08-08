@@ -7,7 +7,7 @@
 // The very first question is gated by a one-time plain-words consent note
 // naming Groq, the outside AI service (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
-import { usePathname } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -19,7 +19,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Mic, Send, Volume2, X } from 'lucide-react-native';
+import { Flag, Mic, Send, Volume2, X } from 'lucide-react-native';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm } from '../context/ConfirmContext';
@@ -50,6 +50,7 @@ export default function AskAiAssistant() {
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
@@ -92,8 +93,10 @@ export default function AskAiAssistant() {
       message:
         "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
         'Your question, this chat, and a short summary of your own Towinly activity ' +
-        '(like your first name and trust score) are shared with Groq — never your ' +
-        'contact details. Is that okay?',
+        '(like your first name and trust score) are shared with Groq. Your contact ' +
+        'details are never shared. The answers are written by a machine, so they can ' +
+        'be wrong. Every answer has a "Report this answer" button if one looks wrong ' +
+        'or upsetting. Is that okay?',
       cancelLabel: 'Not now',
       confirmLabel: "Yes, that's okay",
     });
@@ -101,6 +104,15 @@ export default function AskAiAssistant() {
     setAiConsented(true);
     grantAiConsent(user?.userId);
     return true;
+  };
+
+  // Hand a bad AI answer to the feedback form, with the answer already quoted so
+  // the person only has to say what was wrong with it. Closes the sheet first:
+  // it is a Modal, and navigating underneath it would leave it covering the form.
+  const reportAnswer = (content) => {
+    Speech.stop();
+    setOpen(false);
+    router.push({ pathname: '/feedback', params: { reportedAnswer: content } });
   };
 
   // Read a message out loud (web parity: speechSynthesis → expo-speech).
@@ -316,25 +328,46 @@ export default function AskAiAssistant() {
                   >
                     <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
                     {item.role === 'assistant' ? (
-                      <Pressable
-                        accessibilityRole="button"
-                        accessibilityLabel="Read this answer aloud"
-                        onPress={() => speak(item.content)}
-                        hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
-                        style={({ pressed }) => ({
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          gap: 5,
-                          alignSelf: 'flex-start',
-                          marginTop: 6,
-                          opacity: pressed ? 0.6 : 1,
-                        })}
-                      >
-                        <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
-                        <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
-                          Read aloud
-                        </Text>
-                      </Pressable>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4], marginTop: 6 }}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Read this answer aloud"
+                          onPress={() => speak(item.content)}
+                          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+                          style={({ pressed }) => ({
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 5,
+                            opacity: pressed ? 0.6 : 1,
+                          })}
+                        >
+                          <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
+                          <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
+                            Read aloud
+                          </Text>
+                        </Pressable>
+                        {/* Google Play's AI-Generated Content policy requires an in-app way to
+                            flag offensive AI output. The /reports endpoint needs a
+                            reportedUserId and there is no user behind a Groq answer, so this
+                            carries the answer into the feedback form instead. */}
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel="Report this answer"
+                          onPress={() => reportAnswer(item.content)}
+                          hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+                          style={({ pressed }) => ({
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            gap: 5,
+                            opacity: pressed ? 0.6 : 1,
+                          })}
+                        >
+                          <Flag size={13} color={t.inkSlate} strokeWidth={1.8} />
+                          <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
+                            Report this answer
+                          </Text>
+                        </Pressable>
+                      </View>
                     ) : null}
                   </View>
                 )}

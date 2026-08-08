@@ -7,7 +7,15 @@ import * as SecureStore from 'expo-secure-store';
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(() => Promise.resolve(null)),
   setItemAsync: jest.fn(() => Promise.resolve()),
+  deleteItemAsync: jest.fn(() => Promise.resolve()),
+  // src/lib/storage.js pins every call to the ThisDeviceOnly keychain class, so
+  // the mock has to carry the constant or it silently reads back undefined.
+  WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY',
 }));
+
+// Every secure write goes out with this, so the keychain hardening cannot be
+// dropped from one call site without a test noticing. See audit finding R9.
+const KEYCHAIN = { keychainAccessible: 'WHEN_UNLOCKED_THIS_DEVICE_ONLY' };
 
 describe('haptic causal map', () => {
   let lib;
@@ -46,7 +54,7 @@ describe('haptic causal map', () => {
 
     expect(Haptics.notificationAsync).not.toHaveBeenCalled();
     expect(Haptics.selectionAsync).not.toHaveBeenCalled();
-    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('towin-haptics', 'off');
+    expect(SecureStore.setItemAsync).toHaveBeenCalledWith('towin-haptics', 'off', KEYCHAIN);
     expect(lib.isHapticsEnabled()).toBe(false);
   });
 

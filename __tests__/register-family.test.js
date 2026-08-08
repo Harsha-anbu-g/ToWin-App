@@ -69,6 +69,7 @@ test('register: selecting FAMILY submits role FAMILY and routes to check-email',
   await fireEvent.press(r.getByRole('radio', { name: /I'm here for a family member/ }));
   await fireEvent.changeText(r.getByLabelText('Username'), 'sarah_lee');
   await fireEvent.changeText(r.getByLabelText('Email'), 'sarah@example.com');
+  await fireEvent.changeText(r.getByLabelText('Date of birth'), '12 March 1980');
   await fireEvent.changeText(r.getByLabelText('Password'), 'longenough1');
   await fireEvent.changeText(r.getByLabelText('Re-enter password'), 'longenough1');
   await fireEvent.press(r.getByRole('checkbox'));
@@ -80,6 +81,9 @@ test('register: selecting FAMILY submits role FAMILY and routes to check-email',
       email: 'sarah@example.com',
       password: 'longenough1',
       role: 'FAMILY',
+      // Normalised to ISO from the free-typed "12 March 1980"; the backend's
+      // RegisterRequest binds it to a LocalDate.
+      dateOfBirth: '1980-03-12',
     })
   );
   await waitFor(() =>

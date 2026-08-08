@@ -20,6 +20,7 @@ import { useToast } from '../src/context/ToastContext';
 import { parseFlexibleDate } from '../src/lib/flexibleDate';
 import { buildUpload } from '../src/lib/uploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { objectionableError } from '../src/lib/contentFilter';
 import { yearsOld } from '../src/lib/copy';
 import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
@@ -83,6 +84,8 @@ export default function ProfileEdit() {
 
   const [form, setForm] = useState(EMPTY_FORM);
   const [dobError, setDobError] = useState('');
+  // Apple 1.2: a bio is read by every elder deciding whether to let this person in.
+  const [bioError, setBioError] = useState('');
   // Snapshot of the loaded form — Cancel compares against it so a filled
   // form is never silently discarded (rulebook: confirm real data loss).
   const initialFormRef = useRef(EMPTY_FORM);
@@ -198,6 +201,12 @@ export default function ProfileEdit() {
         setDobError(parsedDob.error);
         throw Object.assign(new Error(parsedDob.error), { isDobError: true });
       }
+      // Apple 1.2: stop objectionable material before it is posted.
+      const bioProblem = objectionableError(form.bio);
+      if (bioProblem) {
+        setBioError(bioProblem);
+        throw Object.assign(new Error(bioProblem), { isBioError: true });
+      }
       const dob = parsedDob?.value ?? null;
       // Age computes from date of birth when given (web computeAge parity)
       const computedAge = dob ? yearsOld(dob) : me?.age;
@@ -244,8 +253,9 @@ export default function ProfileEdit() {
       router.back();
     },
     onError: (err) => {
-      // A DOB parse error is already shown inline next to its field.
-      if (err?.isDobError) return;
+      // A DOB parse error or a blocked-word error is already shown inline next
+      // to its own field; a toast on top would just repeat it.
+      if (err?.isDobError || err?.isBioError) return;
       showToast(friendlyWriteError(err, 'Could not save right now. Please try again.'), 'error');
     },
   });
@@ -322,7 +332,11 @@ export default function ProfileEdit() {
         <Input
           label="About you"
           value={form.bio}
-          onChangeText={set('bio')}
+          onChangeText={(v) => {
+            if (bioError) setBioError('');
+            set('bio')(v);
+          }}
+          error={bioError}
           multiline
           numberOfLines={4}
           inputStyle={BIO_INPUT_STYLE}

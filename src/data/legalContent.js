@@ -53,9 +53,12 @@ export function termsSections(email) {
         + 'private notes to be passed on to people you choose. By making an account, you agree '
         + 'to what is on this page.' },
 
-    { h: 'Towinly is new',
-      p: 'Towinly is in beta. That means it is early. Screens will move, things will change, '
-        + 'and now and then something will break. ' + KEEP_YOUR_OWN_COPY },
+    // Says the same honest thing without the words beta / prototype / trial / work in
+    // progress: Apple guideline 2.2 reads those as "this belongs on TestFlight", and a
+    // person ticks the agreement box directly under this paragraph.
+    { h: 'Towinly keeps changing',
+      p: 'Towinly is worked on all the time. Screens will move, things will change, and now '
+        + 'and then something will break. ' + KEEP_YOUR_OWN_COPY },
 
     { h: 'Who can use Towinly',
       p: 'You must be 18 or over. The elder side of Towinly is meant for people aged 55 and '
@@ -165,15 +168,32 @@ export function privacySections(email) {
       p: 'Your information is kept on servers in the United States. Photos and identity '
         + 'documents are kept in Amazon S3, also in the United States.' },
 
-    { h: 'Location',
-      p: 'If you share your location, we use it only to show you people who are nearby. You can '
-        + 'turn it off whenever you like. Your account carries on working without it — you just '
-        + 'will not see how far away somebody is.' },
+    // Towinly has never asked the phone for its location: there is no expo-location
+    // dependency, no location permission, and no call site. The town is typed by hand
+    // and turned into rough coordinates on our servers. The old wording promised a
+    // location switch that does not exist.
+    { h: 'Where you live',
+      p: 'Towinly never asks your phone where it is. You type the name of your town, and we '
+        + 'look it up to get a rough position so we can show you people nearby. Only the town '
+        + 'is shown to other members, never an address. Leave the town blank and your account '
+        + 'carries on working, you just will not see how far away somebody is.' },
 
     { h: 'How we use your information',
       p: 'To run Towinly: showing you people nearby, letting you write to each other, working '
         + 'out trust scores, sending an alert to the contacts you nominated, and keeping the '
         + 'community safe. We do not sell your information to anybody.' },
+
+    // Play's User Data policy requires disclosing the types of parties that receive
+    // data. The policy used to name only Amazon S3, while four other companies also
+    // handle some of it.
+    { h: 'Who else touches your information',
+      p: 'A few outside companies do jobs for Towinly, and each one sees only what it needs. '
+        + 'Amazon keeps your photos and identity documents. Twilio sends the text messages, so '
+        + 'it sees the phone number a message is going to. OpenStreetMap turns the name of your '
+        + 'town into a rough position, and is told nothing about you. Groq writes the answers '
+        + 'from the Towinly helper, and only when you have said yes to that. Railway runs the '
+        + 'servers everything sits on. None of them are allowed to sell your information or use '
+        + 'it for their own purposes.' },
 
     { h: 'Who can see what',
       p: 'Other members can see your name, your role, your city, your bio, your interests and '
@@ -244,13 +264,15 @@ export function privacySections(email) {
     { h: 'Asking for a copy of your information',
       p: email
         ? 'You can change or remove most things yourself from your profile page. For a copy of '
-          + 'everything we hold about you, or to have your account deleted, write to us at the '
-          + 'address at the bottom of this page. There is no button for either in the app yet.'
+          + 'everything we hold about you, or to close your account for good, open your profile, '
+          + 'tap "Account and data", then "Send me a copy of my data" or "Delete my account". '
+          + 'If you would rather ask a person, write to us at the address at the bottom of this '
+          + 'page.'
         : 'You can change or remove most things yourself from your profile page. For a copy of '
-          + 'everything we hold about you, or to have your account deleted, you would write to '
-          + 'us — but there is no button for either in the app yet, and no address set to write '
-          + 'to. So today there is no way to ask us for either, and we would rather say that '
-          + 'plainly than point you at a mailbox that cannot answer.' },
+          + 'everything we hold about you, or to close your account for good, open your profile, '
+          + 'tap "Account and data", then "Send me a copy of my data" or "Delete my account". '
+          + 'Towinly has not set an address to write to yet, so those two buttons are the way to '
+          + 'ask.' },
 
     { h: 'Children',
       p: 'Towinly is not meant for anybody under 18. If we find out we have collected '
