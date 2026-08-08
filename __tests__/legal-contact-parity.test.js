@@ -173,7 +173,7 @@ describe('the privacy policy points at the deletion page', () => {
     // Assert
     expect(linked).toHaveLength(1);
     expect(linked[0].link.url).toBe(DELETION_PAGE_URL);
-    expect(DELETION_PAGE_URL).toBe('https://towinly.com/app/delete-account');
+    expect(DELETION_PAGE_URL).toBe('https://www.towinly.com/app/delete-account');
   });
 
   test('the deletion page and the policy quote one URL, not two', () => {

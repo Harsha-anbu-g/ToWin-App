@@ -6,14 +6,15 @@
 //
 //  1. The in-app labels it quotes are copied by hand from app/(tabs)/profile.jsx.
 //     Rename a button there and this page starts telling people to tap something
-//     that does not exist. The drift test reads profile.jsx off disk.
+//     that does not exist. That guard now renders the screen and lives in
+//     __tests__/profile-label-drift.test.js.
 //  2. The address. legalContactEmail() reads EXPO_PUBLIC_LEGAL_CONTACT_EMAIL,
 //     which eas.json sets for the store builds but the Vercel web project does
 //     NOT. This page IS the Vercel web build, so an unset variable would render
 //     "no address set yet" on the one surface Play points at.
 //  3. Words a stranger reads: no em dashes, no beta or prototype wording.
 import { fireEvent, render } from '@testing-library/react-native';
-import { Linking } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import {
@@ -24,6 +25,7 @@ import {
   deletionContactEmail,
   deletionMailto,
 } from '../src/data/deleteAccountPage';
+import { DELETION_PAGE_URL_APEX } from '../src/data/legalContent';
 import DeleteAccount from '../app/delete-account';
 
 const fs = require('fs');
@@ -33,8 +35,6 @@ const path = require('path');
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => false }),
 }));
-
-const PROFILE_SCREEN = path.join(__dirname, '..', 'app', '(tabs)', 'profile.jsx');
 
 /** Every word the page renders, as one string. */
 const renderedCopy = () =>
@@ -53,29 +53,11 @@ const renderedCopy = () =>
 
 const section = (heading) => DELETE_ACCOUNT_PAGE.sections.find((s) => s.h === heading);
 
-describe('delete-account page: the in-app path it tells people to take', () => {
-  // The three labels a person actually taps, from app/(tabs)/profile.jsx.
-  const LABELS = ['Account and data', 'Delete my account', 'Send me a copy of my data'];
-
-  test.each(LABELS)('quotes "%s" exactly as the app renders it', (label) => {
-    // Arrange
-    const profileSource = fs.readFileSync(PROFILE_SCREEN, 'utf8');
-
-    // Act / Assert - the label is on the page AND still in the screen it names.
-    // Renaming the button in profile.jsx fails this, which is the whole point.
-    expect(renderedCopy()).toContain(label);
-    expect(profileSource).toContain(label);
-  });
-
-  test('names the second confirm, so nobody stops at the first one', () => {
-    // Arrange / Act
-    const { p } = section('If you have the Towinly app');
-
-    // Assert - profile.jsx gates deletion behind two sequential confirms.
-    expect(p).toContain('Delete forever');
-    expect(fs.readFileSync(PROFILE_SCREEN, 'utf8')).toContain('Delete forever');
-  });
-});
+// The drift guard used to live here and read app/(tabs)/profile.jsx off disk as
+// a string. Audit finding V3 proved by mutation that a whole-file substring
+// check does not bite: a stale copy of "Delete my account" sits in a code
+// comment, so renaming every button a person can see left it green. It now
+// renders the screen instead, in __tests__/profile-label-drift.test.js.
 
 describe('delete-account page: the route for someone with no app', () => {
   const REAL_ENV = process.env.EXPO_PUBLIC_LEGAL_CONTACT_EMAIL;
@@ -144,7 +126,7 @@ describe('delete-account page: the URL a store console will hold', () => {
 
     // Act / Assert
     expect(baseUrl).toBe('/app');
-    expect(DELETION_PAGE_URL).toBe(`https://towinly.com${baseUrl}${DELETION_PAGE_PATH}`);
+    expect(DELETION_PAGE_URL).toBe(`https://www.towinly.com${baseUrl}${DELETION_PAGE_PATH}`);
   });
 
   test('the URL sits under /app, which no phone redirect rule touches', () => {
@@ -153,7 +135,20 @@ describe('delete-account page: the URL a store console will hold', () => {
     // vercel.json redirects). Every one of those sources is a website path.
     // /app/:path* is a REWRITE, not a redirect, so the website bundle that
     // mounts <PhoneAppRedirect /> never loads on this URL.
-    expect(DELETION_PAGE_URL.startsWith('https://towinly.com/app/')).toBe(true);
+    expect(DELETION_PAGE_URL.startsWith('https://www.towinly.com/app/')).toBe(true);
+  });
+
+  test('it is the host that answers, not the one that redirects', () => {
+    // The apex works and it is the address the brand uses everywhere else, but
+    // it answers 308 and hands the browser to www:
+    //
+    //   $ curl -sI https://towinly.com/app/delete-account
+    //   HTTP/2 308   location: https://www.towinly.com/app/delete-account
+    //
+    // A store console gets the address that does not move. One hop fewer, and
+    // it cannot be broken by a redirect rule changing on the website side.
+    expect(DELETION_PAGE_URL).toBe(DELETION_PAGE_URL_APEX.replace('//towinly', '//www.towinly'));
+    expect(DELETION_PAGE_URL.startsWith('https://www.')).toBe(true);
   });
 });
 
@@ -289,8 +284,12 @@ describe('delete-account screen: what a stranger actually sees', () => {
     expect(openURL).toHaveBeenCalledWith(deletionMailto(deletionContactEmail()));
   });
 
-  test('says the address out loud when no mail app answers', async () => {
-    // Arrange
+  test('on a phone, says the address out loud when no mail app answers', async () => {
+    // Arrange - this is the NATIVE path and it is the only one where the reject
+    // is real: iOS and Android genuinely reject openURL with no handler. The web
+    // does not, which is why it has its own test below rather than sharing this
+    // one and pretending the mock proves something.
+    expect(Platform.OS).not.toBe('web');
     jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
     const { getByRole, findByText } = await wrap();
 
@@ -301,6 +300,34 @@ describe('delete-account screen: what a stranger actually sees', () => {
     await findByText(
       `Write to ${deletionContactEmail()} and ask us to delete your account.`
     );
+  });
+
+  test('on the web, the answer is true whether or not a mail app opened', async () => {
+    // Arrange - the old suite pinned "we have started a message" on a resolve
+    // and "this browser could not open a mail app" on a reject. On
+    // react-native-web openURL RESOLVES either way, so the second branch could
+    // never run in the one environment this page ships in, and the first one
+    // claimed something nothing had checked. The web now says what is true of
+    // both endings, and this test does not depend on a rejection that cannot
+    // happen.
+    const realOS = Platform.OS;
+    Platform.OS = 'web';
+    jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+
+    try {
+      const { getByRole, findByText } = await wrap();
+
+      // Act
+      await fireEvent.press(getByRole('button', { name: DELETE_ACCOUNT_PAGE.actionLabel }));
+
+      // Assert
+      const said = await findByText(DELETE_ACCOUNT_PAGE.startedOnWeb(deletionContactEmail()));
+      expect(said).toBeTruthy();
+      expect(DELETE_ACCOUNT_PAGE.startedOnWeb(deletionContactEmail())).toContain('If nothing opened');
+      expect(DELETE_ACCOUNT_PAGE.startedOnWeb(deletionContactEmail())).toContain('within seven days');
+    } finally {
+      Platform.OS = realOS;
+    }
   });
 
   // Audit finding V11. Pressing the button used to change nothing on the page:

@@ -42,7 +42,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "verify:published": "node scripts/verify-published-page.mjs https://www.towinly.com/app/delete-account --expect \"Write to us and ask\" --expect \"Please delete my Towinly account\""
   },
   "jest": {
     "preset": "jest-expo",

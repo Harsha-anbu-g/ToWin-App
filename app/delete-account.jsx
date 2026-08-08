@@ -2,7 +2,7 @@
 //
 // Play wants a web address where somebody can ask for deletion without
 // installing anything. It lives here, in the phone web export, and goes live at
-// https://towinly.com/app/delete-account. Two reasons it had to be this route
+// https://www.towinly.com/app/delete-account. Two reasons it had to be this route
 // rather than a page on the website:
 //
 //  - the website (ToWin/) is read-only reference in this repo, so nothing new
@@ -18,7 +18,7 @@
 // terms.jsx and privacy.jsx. Someone who has already lost access to their
 // account still has to be able to ask.
 import { useState } from 'react';
-import { Linking, Text, View } from 'react-native';
+import { Linking, Platform, Text, View } from 'react-native';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
@@ -48,12 +48,22 @@ export default function DeleteAccount() {
     announce(sentence);
   };
 
-  // A browser with no mail client handles nothing and reports nothing, so the
-  // address is also rendered as selectable text below (HCI 9) and the failure
-  // is spoken rather than swallowed.
+  // A browser with no mail client handles nothing and REPORTS nothing: on
+  // react-native-web Linking.openURL resolves either way, so the catch below can
+  // never run in the environment this page ships in. Claiming "we have started a
+  // message" there would be a guess. The web is therefore told the truth about
+  // both endings at once, and the address is rendered as selectable text below
+  // whatever happens (HCI 9). Native does reject when no handler exists, so it
+  // keeps the two precise answers.
   const writeToUs = () =>
     Linking.openURL(deletionMailto(email))
-      .then(() => say(DELETE_ACCOUNT_PAGE.started(email)))
+      .then(() =>
+        say(
+          Platform.OS === 'web'
+            ? DELETE_ACCOUNT_PAGE.startedOnWeb(email)
+            : DELETE_ACCOUNT_PAGE.started(email)
+        )
+      )
       .catch(() => {
         say(DELETE_ACCOUNT_PAGE.noMailApp(email));
         showToast(`Write to ${email} and ask us to delete your account.`, 'info');

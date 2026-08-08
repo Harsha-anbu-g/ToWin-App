@@ -14,8 +14,12 @@
   ],
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/((?!delete-account$|privacy$|terms$).*)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
+      "source": "/(delete-account|privacy|terms)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "index, follow" }]
     },
     {
       "source": "/_expo/static/(.*)",
