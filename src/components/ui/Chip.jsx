@@ -10,7 +10,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // memo'd so a keystroke elsewhere in a form doesn't re-render every chip row.
 export default memo(function Chip({ label, selected = false, neutral = false, onPress, style }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontScaleCaps } = useTheme();
 
   const backgroundColor = selected ? t.blueWash : neutral ? t.surfaceFill : t.canvas;
   const borderColor = selected ? t.blueSoft : t.border;
@@ -44,7 +44,9 @@ export default memo(function Chip({ label, selected = false, neutral = false, on
       ]}
     >
       {selected ? <Check size={14} color={t.blueDeep} strokeWidth={2} /> : null}
-      <Text style={{ fontSize: type.meta, fontWeight: '600', color }}>{label}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.body} style={{ fontSize: type.meta, fontWeight: '600', color }}>
+        {label}
+      </Text>
     </Pressable>
   );
 });

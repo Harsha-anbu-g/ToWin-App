@@ -22,7 +22,7 @@ export default function Button({
   accessibilityLabel,
   accessibilityHint,
 }) {
-  const { t, radius, text } = useTheme();
+  const { t, radius, text, fontScaleCaps } = useTheme();
   const blocked = disabled || loading;
   const small = size === 'small';
 
@@ -89,7 +89,7 @@ export default function Button({
       {loading ? <ActivityIndicator size="small" color={label.color} /> : null}
       <Text
         numberOfLines={2}
-        maxFontSizeMultiplier={2}
+        maxFontSizeMultiplier={fontScaleCaps.body}
         style={{ fontSize: label.fontSize, fontWeight: '600', letterSpacing: 0.1, color: label.color, textAlign: 'center' }}
       >
         {title}

@@ -7,7 +7,7 @@ import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function SegmentedControl({ segments, value, onChange, style }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontScaleCaps } = useTheme();
 
   return (
     <View
@@ -57,6 +57,7 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
           >
             <Text
               numberOfLines={1}
+              maxFontSizeMultiplier={fontScaleCaps.chrome}
               style={{
                 // meta, not caption — these are navigation labels (rulebook pass)
                 fontSize: type.meta,
@@ -73,6 +74,7 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             </Text>
             {seg.count != null ? (
               <Text
+                maxFontSizeMultiplier={fontScaleCaps.chrome}
                 style={{
                   fontSize: type.segCount,
                   color: active ? t.blueDeep : t.inkFaint2,

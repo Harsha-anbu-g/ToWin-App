@@ -6,7 +6,7 @@ import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function TextLink({ label, onPress, muted = false, disabled = false, style, textStyle }) {
-  const { t, type } = useTheme();
+  const { t, type, fontScaleCaps } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -27,6 +27,7 @@ export default function TextLink({ label, onPress, muted = false, disabled = fal
       ]}
     >
       <Text
+        maxFontSizeMultiplier={fontScaleCaps.body}
         style={[
           {
             fontSize: type.body,

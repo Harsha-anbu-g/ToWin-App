@@ -23,7 +23,7 @@ export default function Screen({
   style,
   contentStyle,
 }) {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, spacing, text, fontFamily, fontScaleCaps } = useTheme();
   const router = useRouter();
 
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -62,6 +62,7 @@ export default function Screen({
           {headerLeft ?? (
             <Text
               accessibilityRole="header"
+              maxFontSizeMultiplier={fontScaleCaps.body}
               style={{
                 fontFamily: fontFamily.display,
                 fontSize: text.xl,
