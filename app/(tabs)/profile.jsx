@@ -31,6 +31,7 @@ import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { switchToFullWebsite } from '../../src/lib/fullWebsite';
 import { isHapticsEnabled, setHapticsEnabled, subscribeHaptics } from '../../src/lib/haptics';
+import { MY_DATA, saveMyDataCopy } from '../../src/lib/myDataCopy';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 function Stat({ value, label, gold }) {
@@ -169,14 +170,30 @@ export default function ProfileScreen() {
   };
 
   const [exporting, setExporting] = useState(false);
+
+  /**
+   * "Send me a copy of my data", and it has to actually arrive.
+   *
+   * GET /account/export returns everything in the response body and no email is
+   * sent anywhere. This used to await the call, throw the body away and say
+   * "check your email", so nothing ever reached the person who asked (audit
+   * finding V2). The body now goes to saveMyDataCopy, which downloads it on the
+   * web build and offers the share sheet on a phone, and the message she reads
+   * afterwards is whichever of those actually happened.
+   */
   const exportData = async () => {
     if (exporting) return; // double-taps must not fire double exports (HCI rule 1)
     setExporting(true);
     try {
-      await api.get('/account/export');
-      showToast('Your data export is ready — check your email.', 'success');
+      const { data } = await api.get('/account/export');
+      const kept = await saveMyDataCopy(data);
+      // She closed the share sheet without keeping it anywhere. Claiming a save
+      // there would be the same lie in a smaller font.
+      if (kept !== 'dismissed') {
+        showToast(kept === 'saved' ? MY_DATA.saved : MY_DATA.shared, 'success');
+      }
     } catch {
-      showToast('Could not start the export. Please try again.', 'error');
+      showToast(MY_DATA.failed, 'error');
     } finally {
       setExporting(false);
     }

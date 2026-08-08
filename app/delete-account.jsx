@@ -17,11 +17,13 @@
 // Public on purpose: this is a top-level route with no auth guard, exactly like
 // terms.jsx and privacy.jsx. Someone who has already lost access to their
 // account still has to be able to ask.
+import { useState } from 'react';
 import { Linking, Text, View } from 'react-native';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
 import { useToast } from '../src/context/ToastContext';
+import { announce } from '../src/lib/announce';
 import {
   DELETE_ACCOUNT_PAGE,
   deletionContactEmail,
@@ -34,13 +36,29 @@ export default function DeleteAccount() {
   const { showToast } = useToast();
   const email = deletionContactEmail();
 
+  // What the press did, said on the page rather than only in a toast (HCI 1,
+  // audit finding V11). A mail app opens OVER this page and a toast is gone by
+  // the time the person comes back, so the answer has to still be here when
+  // they return. Both endings say something; neither leaves the press silent.
+  const [outcome, setOutcome] = useState(null);
+
+  /** On the page for the eye, through the root live region for the ear. */
+  const say = (sentence) => {
+    setOutcome(sentence);
+    announce(sentence);
+  };
+
   // A browser with no mail client handles nothing and reports nothing, so the
   // address is also rendered as selectable text below (HCI 9) and the failure
   // is spoken rather than swallowed.
   const writeToUs = () =>
-    Linking.openURL(deletionMailto(email)).catch(() =>
-      showToast(`Write to ${email} and ask us to delete your account.`, 'info')
-    );
+    Linking.openURL(deletionMailto(email))
+      .then(() => say(DELETE_ACCOUNT_PAGE.started(email)))
+      .catch(() => {
+        say(DELETE_ACCOUNT_PAGE.noMailApp(email));
+        showToast(`Write to ${email} and ask us to delete your account.`, 'info');
+      });
+
 
   return (
     // One heading on the page, in the header row, exactly like terms.jsx and
@@ -75,6 +93,23 @@ export default function DeleteAccount() {
           >
             {`Or write to ${email} yourself.`}
           </Text>
+
+          {/* The visible result of the press, held on the page so it is still
+              there when the person comes back from their mail app. A screen
+              reader hears it through the always-mounted LiveRegion instead of
+              a live region on this block: one that appears at the same moment
+              as its text is frequently missed (see src/lib/announce.js). */}
+          {outcome ? (
+            <View
+              style={{
+                borderTopWidth: 1,
+                borderTopColor: t.hairline,
+                paddingTop: spacing[3],
+              }}
+            >
+              <Text style={{ fontSize: text.sm, color: t.ink, lineHeight: 24 }}>{outcome}</Text>
+            </View>
+          ) : null}
         </View>
       </Card>
     </Screen>
