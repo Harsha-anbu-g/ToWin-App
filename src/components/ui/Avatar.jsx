@@ -17,7 +17,7 @@ function initialsOf(name = '') {
 }
 
 export default function Avatar({ name, uri, size = 44, style }) {
-  const { t } = useTheme();
+  const { t, fontScaleCaps } = useTheme();
   const base = {
     width: size,
     height: size,
@@ -42,6 +42,7 @@ export default function Avatar({ name, uri, size = 44, style }) {
         <Text
           accessibilityElementsHidden
           importantForAccessibility="no-hide-descendants"
+          maxFontSizeMultiplier={fontScaleCaps.chrome}
           style={{
             color: t.inkSlate,
             fontSize: Math.max(13, size * 0.38),

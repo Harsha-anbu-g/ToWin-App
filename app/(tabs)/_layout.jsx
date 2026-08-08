@@ -17,7 +17,7 @@ import {
   UserRound,
   UsersRound,
 } from 'lucide-react-native';
-import { Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
@@ -26,9 +26,15 @@ import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
 import { useTheme } from '../../src/theme/ThemeContext';
 
-const tabIcon = (Icon) =>
+// `badge` renders the count ourselves instead of via tabBarBadge: the library's
+// Badge Text exposes no maxFontSizeMultiplier, so at large OS text an uncapped
+// count would balloon out of the bar (UX-701). tone 'new' is the red "new
+// activity" storm (web b37420d); 'unread' is the gentle deep sky — a badge is
+// not an action, and its 11px numeral needs the real 4.5:1 (badgeFill waiver).
+const tabIcon = (Icon, badge) =>
   function TabIcon({ color, focused }) {
-    const { t } = useTheme();
+    const { t, fontScaleCaps } = useTheme();
+    const count = badge && badge.count > 0 ? badge.count : null;
     return (
       <View
         style={{
@@ -39,11 +45,50 @@ const tabIcon = (Icon) =>
         }}
       >
         <Icon size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />
+        {count != null ? (
+          // Hidden from assistive tech: the icon renders twice (stacked
+          // active/inactive crossfade copies), so a focusable count here would
+          // be announced twice — the count lives in the tab's own label.
+          <Text
+            numberOfLines={1}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            maxFontSizeMultiplier={fontScaleCaps.chrome}
+            style={{
+              position: 'absolute',
+              top: -4,
+              right: 6,
+              minWidth: 16,
+              height: 16,
+              lineHeight: 15,
+              borderRadius: 8,
+              paddingHorizontal: 4,
+              overflow: 'hidden',
+              textAlign: 'center',
+              fontSize: 11,
+              fontWeight: '600',
+              backgroundColor: badge.tone === 'unread' ? t.badgeFill : t.red,
+              color: badge.tone === 'unread' ? t.actionInk : t.canvas,
+            }}
+          >
+            {count}
+          </Text>
+        ) : null}
       </View>
     );
   };
 
-function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type }) {
+// The spoken name of a tab, count folded in ("Messages, 3 unread"): a badge
+// number read on its own means nothing to a screen reader user. iOS also gets
+// the ", tab" the library only adds to plain string labels; Android announces
+// the role natively, and with no count the default children reading is right.
+function tabA11yLabel(label, count = 0, noun = '') {
+  const withCount = count > 0 ? `${label}, ${count} ${noun}` : label;
+  if (Platform.OS === 'ios') return `${withCount}, tab`;
+  return count > 0 ? withCount : undefined;
+}
+
+function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps }) {
   // The ONE filled primary of the shell. The whole slot is the target (>=44pt).
   // Rulebook pass 2026-07-27: the circle used marginTop:-18 to poke above the
   // bar — outside its Pressable's bounds, where Android drops touches, so the
@@ -80,6 +125,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type 
       </View>
       <Text
         numberOfLines={1}
+        maxFontSizeMultiplier={fontScaleCaps.chrome}
         style={{ fontSize: type.tabLabel, fontWeight: '600', color: t.blueDeep, marginTop: 2 }}
       >
         {label}
@@ -89,7 +135,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type 
 }
 
 export default function TabsLayout() {
-  const { t, type } = useTheme();
+  const { t, type, fontScaleCaps } = useTheme();
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -115,10 +161,6 @@ export default function TabsLayout() {
   );
   const connBadge = useUnseenBadge(user?.userId, 'connections', connTokens);
   const applicantsBadge = useUnseenBadge(user?.userId, 'applicants', applicantTokens);
-  // Red, unlike the gentle sky on Messages: a new person on your ladder or a
-  // new applicant is the count worth standing out (web b37420d). Text is
-  // t.canvas — white-on-red by day, dark-on-soft-red at night (web --canvas).
-  const newBadgeStyle = { backgroundColor: t.red, color: t.canvas, fontSize: 11 };
 
   // Unread conversations badge — backend returns a plain integer (NavBar.jsx parity)
   const { data: unread } = useQuery({
@@ -147,8 +189,18 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,
         tabBarInactiveTintColor: t.inkSlate,
-        // 11 is the hard platform floor for tab labels — never lower (rulebook).
-        tabBarLabelStyle: { fontSize: type.tabLabel, fontWeight: '600' },
+        // Custom label, not tabBarLabelStyle: the library's Label offers no
+        // maxFontSizeMultiplier, and at large OS text an uncapped 11px label
+        // wraps the whole bar (UX-701). 11 stays the hard platform floor.
+        tabBarLabel: ({ color, children }) => (
+          <Text
+            numberOfLines={1}
+            maxFontSizeMultiplier={fontScaleCaps.chrome}
+            style={{ fontSize: type.tabLabel, fontWeight: '600', color }}
+          >
+            {children}
+          </Text>
+        ),
         tabBarStyle: {
           backgroundColor: t.canvas,
           borderTopWidth: 1,
@@ -167,19 +219,17 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: homeTab.label,
-          tabBarIcon: tabIcon(UsersRound),
-          tabBarBadge: connBadge > 0 ? connBadge : undefined,
-          tabBarBadgeStyle: newBadgeStyle,
+          tabBarIcon: tabIcon(UsersRound, { count: connBadge, tone: 'new' }),
+          tabBarAccessibilityLabel: tabA11yLabel(homeTab.label, connBadge, 'new'),
         }}
       />
       <Tabs.Screen
         name="posted-help"
         options={{
           title: 'Posted Help',
-          tabBarIcon: tabIcon(FileText),
+          tabBarIcon: tabIcon(FileText, { count: applicantsBadge, tone: 'new' }),
           href: second?.name === 'posted-help' ? undefined : null,
-          tabBarBadge: applicantsBadge > 0 ? applicantsBadge : undefined,
-          tabBarBadgeStyle: newBadgeStyle,
+          tabBarAccessibilityLabel: tabA11yLabel('Posted Help', applicantsBadge, 'new'),
         }}
       />
       {/* Old helper second tab — the hub moved to slot one; route redirects */}
@@ -200,6 +250,7 @@ export default function TabsLayout() {
                     accessibilityState={props.accessibilityState}
                     t={t}
                     type={type}
+                    fontScaleCaps={fontScaleCaps}
                   />
                 ),
               }
@@ -210,20 +261,17 @@ export default function TabsLayout() {
         name="messages"
         options={{
           title: 'Messages',
-          tabBarIcon: tabIcon(MessageCircle),
-          tabBarBadge: unread > 0 ? unread : undefined,
-          tabBarBadgeStyle: {
-            // Deep sky, not the action fill: gentle rather than a red storm
-            // (HCI-RULES), but 11px white needs the real 4.5:1.
-            backgroundColor: t.badgeFill,
-            color: t.actionInk,
-            fontSize: 11,
-          },
+          tabBarIcon: tabIcon(MessageCircle, { count: unread, tone: 'unread' }),
+          tabBarAccessibilityLabel: tabA11yLabel('Messages', unread, 'unread'),
         }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ title: 'Profile', tabBarIcon: tabIcon(UserRound) }}
+        options={{
+          title: 'Profile',
+          tabBarIcon: tabIcon(UserRound),
+          tabBarAccessibilityLabel: tabA11yLabel('Profile'),
+        }}
       />
     </Tabs>
     {/* Ask-AI floating helper — tabs only; chat thread + feedback pin their own bottom UI */}

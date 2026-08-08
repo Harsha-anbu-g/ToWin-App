@@ -297,6 +297,14 @@ export const type = {
   wordmark: 19, // 'Towinly' SF 600, color blueTeal
 };
 
+// Elder-first font scaling (UX-701): never allowFontScaling={false} — large
+// text is exactly who Towinly serves. Growth is CAPPED instead, so text wraps
+// and breathes without exploding the frame around it. Two caps only:
+//   body   — reading text, buttons, rows, form fields: scale generously
+//   chrome — tab labels, badges, wordmark, segment pills: frames can't grow,
+//            so these take a gentler ride (HIG: tab bars don't scale freely)
+export const fontScaleCaps = { body: 1.5, chrome: 1.2 };
+
 export const fontFamily = {
   display: 'Newsreader_400Regular', // headings + tagline — weight 400 ONLY
   displayItalic: 'Newsreader_400Regular_Italic', // the italic "two" in the tagline

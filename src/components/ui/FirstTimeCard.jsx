@@ -9,7 +9,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from './Button';
 
 export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, style }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontScaleCaps } = useTheme();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -42,10 +42,19 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
         style,
       ]}
     >
-      <Text accessibilityRole="header" style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
+      <Text
+        accessibilityRole="header"
+        maxFontSizeMultiplier={fontScaleCaps.body}
+        style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}
+      >
         {title}
       </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 6 }}>{body}</Text>
+      <Text
+        maxFontSizeMultiplier={fontScaleCaps.body}
+        style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 6 }}
+      >
+        {body}
+      </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 }}>
         {onLink ? <Button title={linkTitle} variant="text" size="small" onPress={onLink} /> : null}
         <Button title="Got it" variant="secondary" size="small" onPress={dismiss} />

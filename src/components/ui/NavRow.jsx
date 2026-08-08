@@ -10,7 +10,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 function IconTarget({ label, caption, captionColor, onPress, children }) {
-  const { type } = useTheme();
+  const { type, fontScaleCaps } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,7 +26,10 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
       })}
     >
       {children}
-      <Text style={{ fontSize: type.tabLabel, fontWeight: '600', color: captionColor, marginTop: 1 }}>
+      <Text
+        maxFontSizeMultiplier={fontScaleCaps.chrome}
+        style={{ fontSize: type.tabLabel, fontWeight: '600', color: captionColor, marginTop: 1 }}
+      >
         {caption}
       </Text>
     </Pressable>
@@ -34,7 +37,7 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
 }
 
 export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontScaleCaps } = useTheme();
   const router = useRouter();
 
   return (
@@ -56,6 +59,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
           <Menu size={22} color={t.ink} strokeWidth={1.8} />
         </IconTarget>
         <Text
+          maxFontSizeMultiplier={fontScaleCaps.chrome}
           style={{
             fontSize: type.wordmark,
             fontWeight: '600',
@@ -90,6 +94,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             })}
           >
             <Text
+              maxFontSizeMultiplier={fontScaleCaps.chrome}
               style={{
                 fontSize: type.meta,
                 fontWeight: '600',
@@ -99,7 +104,9 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             >
               {trustScore}
             </Text>
-            <Text style={{ fontSize: type.caption, color: t.trustGold }}>trust</Text>
+            <Text maxFontSizeMultiplier={fontScaleCaps.chrome} style={{ fontSize: type.caption, color: t.trustGold }}>
+              trust
+            </Text>
           </Pressable>
         ) : null}
         {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)

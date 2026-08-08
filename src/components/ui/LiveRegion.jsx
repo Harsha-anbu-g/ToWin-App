@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import { Platform, Text, View } from 'react-native';
 import { setAnnouncer } from '../../lib/announce';
+import { fontScaleCaps } from '../../theme/tokens';
 
 export default function LiveRegion() {
   const [message, setMessage] = useState('');
@@ -28,7 +29,7 @@ export default function LiveRegion() {
       accessibilityRole="status"
       style={{ position: 'absolute', width: 1, height: 1, left: -1, overflow: 'hidden' }}
     >
-      <Text>{message}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.body}>{message}</Text>
     </View>
   );
 }

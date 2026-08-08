@@ -18,7 +18,7 @@ const parseList = (s) =>
     .filter(Boolean);
 
 export default function ChipsField({ label, value, onChangeText, helper, style }) {
-  const { t, type, radius } = useTheme();
+  const { t, type, radius, fontScaleCaps } = useTheme();
   const items = parseList(value);
   const [draft, setDraft] = useState('');
 
@@ -67,7 +67,9 @@ export default function ChipsField({ label, value, onChangeText, helper, style }
                 backgroundColor: pressed ? t.surface2 : t.blueWash,
               })}
             >
-              <Text style={{ fontSize: type.meta, color: t.ink }}>{item}</Text>
+              <Text maxFontSizeMultiplier={fontScaleCaps.body} style={{ fontSize: type.meta, color: t.ink }}>
+                {item}
+              </Text>
               <X size={14} color={t.inkSlate} strokeWidth={2} />
             </Pressable>
           ))}

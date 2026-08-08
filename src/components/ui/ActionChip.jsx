@@ -8,7 +8,7 @@ import { useTheme } from '../../theme/ThemeContext';
 // every tap shows progress); `style` lets rows stretch chips (flex:1) so
 // paired actions split the width like the website's side-by-side ghosts.
 export default function ActionChip({ label, onPress, tonal = false, destructive = false, disabled = false, style }) {
-  const { t, radius, type } = useTheme();
+  const { t, radius, type, fontScaleCaps } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -35,6 +35,7 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       ]}
     >
       <Text
+        maxFontSizeMultiplier={fontScaleCaps.body}
         style={{
           fontSize: type.meta,
           fontWeight: '600',

@@ -20,7 +20,7 @@ export default memo(function Input({
   rightSlot,
   ...rest
 }) {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius, text, fontScaleCaps } = useTheme();
 
   return (
     <View style={style}>
@@ -29,6 +29,7 @@ export default memo(function Input({
           mode="outlined"
           label={label}
           accessibilityLabel={label}
+          maxFontSizeMultiplier={fontScaleCaps.body}
           value={value}
           onChangeText={onChangeText}
           error={!!error}
@@ -65,12 +66,18 @@ export default memo(function Input({
           style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing[1], marginTop: spacing[2] }}
         >
           <AlertCircle size={16} color={t.redError} strokeWidth={2} style={{ marginTop: 2 }} />
-          <Text style={{ flex: 1, color: t.redError, fontSize: text.sm, lineHeight: 21 }}>
+          <Text
+            maxFontSizeMultiplier={fontScaleCaps.body}
+            style={{ flex: 1, color: t.redError, fontSize: text.sm, lineHeight: 21 }}
+          >
             {error}
           </Text>
         </View>
       ) : helper ? (
-        <Text style={{ color: t.inkSlate, fontSize: text.sm, marginTop: spacing[2] }}>
+        <Text
+          maxFontSizeMultiplier={fontScaleCaps.body}
+          style={{ color: t.inkSlate, fontSize: text.sm, marginTop: spacing[2] }}
+        >
           {helper}
         </Text>
       ) : null}

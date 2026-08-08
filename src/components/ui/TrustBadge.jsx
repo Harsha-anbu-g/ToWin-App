@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function TrustBadge({ score, label = 'trust', style }) {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius, text, fontScaleCaps } = useTheme();
   return (
     <View
       accessibilityLabel={`Trust score ${score}`}
@@ -24,10 +24,15 @@ export default function TrustBadge({ score, label = 'trust', style }) {
         style,
       ]}
     >
-      <Text style={{ color: t.trustGold, fontSize: text.sm, fontWeight: '600', fontVariant: ['tabular-nums'] }}>
+      <Text
+        maxFontSizeMultiplier={fontScaleCaps.chrome}
+        style={{ color: t.trustGold, fontSize: text.sm, fontWeight: '600', fontVariant: ['tabular-nums'] }}
+      >
         {score}
       </Text>
-      <Text style={{ color: t.trustGold, fontSize: text.sm }}>{label}</Text>
+      <Text maxFontSizeMultiplier={fontScaleCaps.chrome} style={{ color: t.trustGold, fontSize: text.sm }}>
+        {label}
+      </Text>
     </View>
   );
 }

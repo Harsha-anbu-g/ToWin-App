@@ -8,10 +8,10 @@ import Button from './Button';
 import Card from './Card';
 
 export default function LoadError({ what = 'this', onRetry, style, bare = false }) {
-  const { t, spacing, text } = useTheme();
+  const { t, spacing, text, fontScaleCaps } = useTheme();
   const body = (
     <>
-      <Text style={{ fontSize: text.base, lineHeight: 27, color: t.ink2 }}>
+      <Text maxFontSizeMultiplier={fontScaleCaps.body} style={{ fontSize: text.base, lineHeight: 27, color: t.ink2 }}>
         We couldn't load {what} right now. Please check your connection and try again.
       </Text>
       {onRetry ? (
