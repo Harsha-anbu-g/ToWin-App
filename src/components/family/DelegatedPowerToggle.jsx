@@ -51,7 +51,7 @@ function PowerSwitch({ power, name, isOn, busy, onFlip }) {
       accessibilityState={{ checked: isOn, disabled: busy, busy }}
       disabled={busy}
       onPress={onFlip}
-      style={{
+      style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
@@ -62,7 +62,8 @@ function PowerSwitch({ power, name, isOn, busy, onFlip }) {
         borderWidth: 1,
         borderColor: t.skyLine2,
         borderRadius: radius.input,
-      }}
+        opacity: pressed ? 0.7 : 1,
+      })}
     >
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 21 }}>

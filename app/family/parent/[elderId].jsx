@@ -308,7 +308,12 @@ export default function FamilyParentScreen() {
                   onPress={() => router.push(`/user/${h.helperUserId}`)}
                   accessibilityRole="button"
                   accessibilityLabel={`See ${h.helperName}'s full profile`}
-                  style={{ minHeight: 44, justifyContent: 'center', marginTop: spacing[3] }}
+                  style={({ pressed }) => ({
+                    minHeight: 44,
+                    justifyContent: 'center',
+                    marginTop: spacing[3],
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
                   <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
                     See their full profile →
@@ -328,13 +333,14 @@ export default function FamilyParentScreen() {
                   onPress={() => router.push(`/chat/${h.connectionId}?channel=family`)}
                   accessibilityRole="button"
                   accessibilityLabel={`Open the updates thread with ${elderName} and ${h.helperName}`}
-                  style={{
+                  style={({ pressed }) => ({
                     flexDirection: 'row',
                     alignItems: 'center',
                     gap: spacing[2],
                     minHeight: 44,
                     marginTop: spacing[3],
-                  }}
+                    opacity: pressed ? 0.6 : 1,
+                  })}
                 >
                   <MessageCircle size={15} color={t.blueDeep} strokeWidth={2} />
                   <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>

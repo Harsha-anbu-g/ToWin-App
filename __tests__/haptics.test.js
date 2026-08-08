@@ -45,15 +45,28 @@ describe('haptic causal map', () => {
     expect(Haptics.selectionAsync).toHaveBeenCalledTimes(1);
   });
 
+  test('impact fires the light tap and warning fires the warning pattern (UX-703)', () => {
+    lib.haptic.impact();
+    lib.haptic.warning();
+
+    expect(Haptics.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
+    expect(Haptics.notificationAsync).toHaveBeenCalledWith(
+      Haptics.NotificationFeedbackType.Warning
+    );
+  });
+
   test('turning haptics off silences every event and persists the choice', async () => {
     await lib.setHapticsEnabled(false);
 
     lib.haptic.success();
     lib.haptic.error();
     lib.haptic.selection();
+    lib.haptic.impact();
+    lib.haptic.warning();
 
     expect(Haptics.notificationAsync).not.toHaveBeenCalled();
     expect(Haptics.selectionAsync).not.toHaveBeenCalled();
+    expect(Haptics.impactAsync).not.toHaveBeenCalled();
     expect(SecureStore.setItemAsync).toHaveBeenCalledWith('towin-haptics', 'off', KEYCHAIN);
     expect(lib.isHapticsEnabled()).toBe(false);
   });

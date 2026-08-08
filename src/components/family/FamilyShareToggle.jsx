@@ -93,7 +93,7 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
       accessibilityState={{ checked: shared, disabled: save.isPending, busy: save.isPending }}
       disabled={save.isPending}
       onPress={flip}
-      style={{
+      style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
@@ -104,7 +104,8 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
         borderWidth: 1,
         borderColor: t.skyLine2,
         borderRadius: radius.input,
-      }}
+        opacity: pressed ? 0.7 : 1,
+      })}
     >
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 21 }}>

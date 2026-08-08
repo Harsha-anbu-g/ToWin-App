@@ -66,7 +66,13 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           accessibilityLabel={`Trust score ${card.total} of ${card.totalMax}. Open your Trust Score page`}
           onPress={() => router.push('/trust')}
           hitSlop={10}
-          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={({ pressed }) => ({
+            minWidth: 44,
+            minHeight: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
             {card.total}

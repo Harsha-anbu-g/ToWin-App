@@ -22,6 +22,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
+import { haptic } from '../../src/lib/haptics';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -185,6 +186,12 @@ export default function TabsLayout() {
   return (
     <View style={{ flex: 1 }}>
     <Tabs
+      // UX-703: every tab press answers back. The bar emits tabPress from every
+      // slot's onPress (the center FAB's custom button included), so one
+      // listener gives the whole shell the same light impact. Visible feedback
+      // is the library's own press state (opacity dip on iOS/web, ripple on
+      // Android) plus the FAB's pressed opacity below.
+      screenListeners={{ tabPress: () => haptic.impact() }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,

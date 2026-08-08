@@ -118,7 +118,13 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
                 accessibilityLabel={`View ${app.helperName}'s profile`}
                 onPress={() => router.push(`/user/${app.helperId}`)}
                 hitSlop={6}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 }}
+                style={({ pressed }) => ({
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 12,
+                  flex: 1,
+                  opacity: pressed ? 0.7 : 1,
+                })}
               >
                 <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
                 <View style={{ flex: 1 }}>

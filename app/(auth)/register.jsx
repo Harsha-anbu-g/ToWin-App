@@ -65,7 +65,13 @@ function EyeToggle({ shown, onToggle, color }) {
       accessibilityLabel={shown ? 'Hide password' : 'Show password'}
       onPress={onToggle}
       hitSlop={8}
-      style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+      style={({ pressed }) => ({
+        minWidth: 44,
+        minHeight: 44,
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: pressed ? 0.7 : 1,
+      })}
     >
       {shown ? <EyeOff size={18} color={color} /> : <Eye size={18} color={color} />}
     </Pressable>
@@ -369,7 +375,13 @@ export default function Register() {
           accessibilityLabel="I agree to the Terms of Service and Privacy Policy"
           onPress={() => setAgreed((v) => !v)}
           hitSlop={{ top: 6, bottom: 6 }}
-          style={{ flexDirection: 'row', alignItems: 'flex-start', gap: spacing[3], marginTop: spacing[5] }}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: spacing[3],
+            marginTop: spacing[5],
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <View
             style={{
@@ -400,7 +412,11 @@ export default function Register() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setLegalOpen('terms')}
-            style={{ minHeight: 44, justifyContent: 'center' }}
+            style={({ pressed }) => ({
+              minHeight: 44,
+              justifyContent: 'center',
+              opacity: pressed ? 0.6 : 1,
+            })}
           >
             <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
               Read the Terms
@@ -409,7 +425,11 @@ export default function Register() {
           <Pressable
             accessibilityRole="button"
             onPress={() => setLegalOpen('privacy')}
-            style={{ minHeight: 44, justifyContent: 'center' }}
+            style={({ pressed }) => ({
+              minHeight: 44,
+              justifyContent: 'center',
+              opacity: pressed ? 0.6 : 1,
+            })}
           >
             <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
               Read the Privacy Policy

@@ -31,7 +31,13 @@ function StarPicker({ value, onChange }) {
           accessibilityLabel={`${n} star${n === 1 ? '' : 's'}`}
           accessibilityState={{ selected: n <= value }}
           onPress={() => onChange(n)}
-          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={({ pressed }) => ({
+            minWidth: 44,
+            minHeight: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <Star
             size={26}

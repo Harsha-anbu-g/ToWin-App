@@ -90,7 +90,11 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
               accessibilityLabel={descExpanded ? 'Show less of the request' : 'Read the full request'}
               onPress={() => setDescExpanded((v) => !v)}
               hitSlop={8}
-              style={{ minHeight: 44, justifyContent: 'center' }}
+              style={({ pressed }) => ({
+                minHeight: 44,
+                justifyContent: 'center',
+                opacity: pressed ? 0.6 : 1,
+              })}
             >
               <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
                 {descExpanded ? 'Show less' : 'Read more'}

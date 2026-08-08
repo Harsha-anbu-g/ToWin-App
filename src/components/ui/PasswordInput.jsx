@@ -22,12 +22,13 @@ export default function PasswordInput({ autoComplete = 'current-password', ...re
           accessibilityLabel={shown ? 'Hide password' : 'Show password'}
           onPress={() => setShown((v) => !v)}
           hitSlop={4}
-          style={{
+          style={({ pressed }) => ({
             minWidth: 44,
             minHeight: 44,
             alignItems: 'center',
             justifyContent: 'center',
-          }}
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           {shown ? <EyeOff size={18} color={t.ink3} /> : <Eye size={18} color={t.ink3} />}
         </Pressable>

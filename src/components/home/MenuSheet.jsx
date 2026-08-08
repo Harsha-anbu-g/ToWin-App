@@ -155,7 +155,7 @@ export default function MenuSheet({ visible, onClose }) {
     >
       {/* Scrim — tap anywhere outside the drawer to close */}
       <Animated.View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
-        <Pressable accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
+        <Pressable testID="menu-scrim" accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
       </Animated.View>
 
       <Animated.View
@@ -193,7 +193,13 @@ export default function MenuSheet({ visible, onClose }) {
             accessibilityLabel="Close menu"
             onPress={close}
             hitSlop={8}
-            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            style={({ pressed }) => ({
+              minWidth: 44,
+              minHeight: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
             <X size={24} color={t.ink3} />
           </Pressable>

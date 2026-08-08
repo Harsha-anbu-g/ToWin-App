@@ -35,7 +35,7 @@ export default function AuthSwitcher({ active }) {
             accessibilityState={{ selected: isActive }}
             disabled={isActive}
             onPress={() => router.replace(href)}
-            style={{
+            style={({ pressed }) => ({
               flex: 1,
               // minHeight, not height: 44 is the tap floor, and the label has to
               // grow the pill instead of clipping at large OS text.
@@ -48,7 +48,8 @@ export default function AuthSwitcher({ active }) {
               backgroundColor: isActive ? t.segActive : 'transparent',
               borderWidth: isActive ? 1 : 0,
               borderColor: t.border,
-            }}
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
             <Text
               style={{
