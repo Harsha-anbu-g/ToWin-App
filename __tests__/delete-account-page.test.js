@@ -45,6 +45,10 @@ const renderedCopy = () =>
     DELETE_ACCOUNT_PAGE.actionLabel,
     DELETE_ACCOUNT_PAGE.mailSubject,
     DELETE_ACCOUNT_PAGE.mailBody,
+    // The two sentences the press can produce. They are words a stranger reads
+    // like any other, so they are swept for em dashes with everything else.
+    DELETE_ACCOUNT_PAGE.started(DELETION_CONTACT_FALLBACK),
+    DELETE_ACCOUNT_PAGE.noMailApp(DELETION_CONTACT_FALLBACK),
   ].join('\n');
 
 const section = (heading) => DELETE_ACCOUNT_PAGE.sections.find((s) => s.h === heading);
@@ -170,18 +174,64 @@ describe('delete-account page: what it promises', () => {
     // Arrange / Act
     const { p } = section('What stays');
 
-    // Assert - another member's own words, and the undecided backup window.
+    // Assert - another member's own words, both ways they can survive.
+    // purgeUserData deletes pass-on items by owner id only, so an item another
+    // member owns lives on whether it merely mentions this person (a story) or
+    // was written to them by name (a letter). Naming only the first was audit
+    // finding V13: the second is the one a bereaved reader actually cares about.
     expect(p).toContain('their words and they stay');
-    expect(p).toContain('backups');
+    expect(p).toContain('addressed to you stays too');
   });
 
-  test('tells people to take a copy before they delete', () => {
+  test('answers how soon, and does not invent the number it does not have', () => {
+    // Arrange / Act - Play's data-deletion requirement asks the page to say how
+    // long (audit finding V10). Half of that is checkable and is stated as fact;
+    // the backup window is an open owner decision and is said to be open rather
+    // than filled with a plausible number.
+    const { p } = section('How soon it happens');
+
+    // Assert
+    expect(p).toContain('at that moment');
+    expect(p).toContain('no waiting period');
+    expect(p).toMatch(/backups/i);
+    expect(p).toMatch(/have not fixed how long/);
+    // No invented retention period anywhere on the page.
+    expect(renderedCopy()).not.toMatch(/\b\d+\s*(days?|months?|years?)\b.*backup/i);
+    expect(p).not.toMatch(/\b\d+\s*(days?|months?|years?)\b/);
+  });
+
+  test('tells people to take a copy before they delete, and the copy is now real', () => {
     // Arrange / Act
     const { p } = section('Take a copy first if you want one');
 
-    // Assert
+    // Assert - the old wording sent people to a button that toasted "check your
+    // email" and sent nothing (audit finding V2). It must never say that again.
     expect(p).toContain('cannot be undone');
     expect(p).toContain('Send me a copy of my data');
+    expect(p).toContain('made there and then');
+    expect(renderedCopy()).not.toMatch(/check your email/i);
+  });
+
+  test('says plainly that the copy cannot carry the Sealed box', () => {
+    // Arrange / Act - the page used to imply the opposite while the very next
+    // section said the Sealed box is deleted forever (audit finding V6).
+    const { p } = section('What your copy cannot include');
+
+    // Assert - matches AccountService.addPassOnSections: metadata leaves, and
+    // nothing readable does, because the export never asks for the password.
+    expect(p).toContain('does not contain what is inside them');
+    expect(p).toContain('password');
+    expect(p).toContain('save each thing yourself');
+  });
+
+  test('the write-in path says how long a reply takes and what to do without one', () => {
+    // Arrange / Act - audit finding V11: a promise that a human does this by
+    // hand, with no timeframe, and no recovery if the reply never comes.
+    const { p } = section('If you do not have the app');
+
+    // Assert
+    expect(p).toContain('within seven days');
+    expect(p).toContain('write again');
   });
 });
 
@@ -251,5 +301,42 @@ describe('delete-account screen: what a stranger actually sees', () => {
     await findByText(
       `Write to ${deletionContactEmail()} and ask us to delete your account.`
     );
+  });
+
+  // Audit finding V11. Pressing the button used to change nothing on the page:
+  // a mail app opens OVER it, and a toast is gone by the time a person comes
+  // back. Both endings now leave an answer behind, on the page, that survives
+  // the trip to the mail app and back.
+  test('nothing claims to have happened before the button is pressed', async () => {
+    const { queryByText } = await wrap();
+
+    expect(queryByText(DELETE_ACCOUNT_PAGE.started(deletionContactEmail()))).toBeNull();
+    expect(queryByText(DELETE_ACCOUNT_PAGE.noMailApp(deletionContactEmail()))).toBeNull();
+  });
+
+  test('a started message leaves a visible result on the page', async () => {
+    // Arrange
+    jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    const { getByRole, findByText } = await wrap();
+
+    // Act
+    await fireEvent.press(getByRole('button', { name: DELETE_ACCOUNT_PAGE.actionLabel }));
+
+    // Assert - it names the address and how long a reply takes.
+    const result = await findByText(DELETE_ACCOUNT_PAGE.started(deletionContactEmail()));
+    expect(result).toBeTruthy();
+    expect(DELETE_ACCOUNT_PAGE.started(deletionContactEmail())).toContain('within seven days');
+  });
+
+  test('a browser with no mail app leaves a visible result too, not only a toast', async () => {
+    // Arrange
+    jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
+    const { getByRole, findByText } = await wrap();
+
+    // Act
+    await fireEvent.press(getByRole('button', { name: DELETE_ACCOUNT_PAGE.actionLabel }));
+
+    // Assert
+    await findByText(DELETE_ACCOUNT_PAGE.noMailApp(deletionContactEmail()));
   });
 });
