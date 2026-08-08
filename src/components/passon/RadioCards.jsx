@@ -24,7 +24,8 @@ export default function RadioCards({ prompt, options, value, onChange }) {
               key={o.key}
               accessibilityRole="radio"
               accessibilityLabel={o.blurb ? `${o.title}. ${o.blurb}` : o.title}
-              accessibilityState={{ checked: chosen, disabled: !!o.disabled }}
+              aria-checked={chosen}
+              aria-disabled={!!o.disabled}
               disabled={o.disabled}
               onPress={() => onChange(o.key)}
               style={({ pressed }) => ({

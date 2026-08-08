@@ -42,7 +42,7 @@ export default function PersonPicker({ people, value, onChange, label, emptyMess
               key={person.id}
               accessibilityRole="radio"
               accessibilityLabel={person.note ? `${person.name}, ${person.note}` : person.name}
-              accessibilityState={{ checked: chosen }}
+              aria-checked={chosen}
               onPress={() => onChange(person.id)}
               style={({ pressed }) => ({
                 flexDirection: 'row',

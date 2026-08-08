@@ -261,7 +261,7 @@ export default function SealedSetup({ family, setup, already = [], saving, onFin
                     key={n}
                     accessibilityRole="radio"
                     accessibilityLabel={`${n}`}
-                    accessibilityState={{ checked: on }}
+                    aria-checked={on}
                     onPress={() => setApprovals(n)}
                     style={({ pressed }) => ({
                       minWidth: 60,
