@@ -52,7 +52,20 @@ export const LEGAL_CONTACT = {
  * quotes it, and deleteAccountPage.js already imports from this module: putting
  * it the other way round would make the two files import each other.
  */
-export const DELETION_PAGE_URL = 'https://towinly.com/app/delete-account';
+export const DELETION_PAGE_URL = 'https://www.towinly.com/app/delete-account';
+
+/**
+ * The apex form. It works, and it is the address the brand uses everywhere else,
+ * but it answers 308 and hands the browser to the www host above. Observed:
+ *
+ *   $ curl -sI https://towinly.com/app/delete-account
+ *   HTTP/2 308   location: https://www.towinly.com/app/delete-account
+ *
+ * A store console gets the address that does not move. One hop fewer, and it
+ * cannot be broken by a redirect rule changing on the website side. Kept here so
+ * the choice is written down rather than remembered, and so a test can pin it.
+ */
+export const DELETION_PAGE_URL_APEX = 'https://towinly.com/app/delete-account';
 
 /**
  * The address every legal surface writes to. A deploy that configures one wins;

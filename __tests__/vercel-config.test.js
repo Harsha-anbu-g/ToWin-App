@@ -48,10 +48,36 @@ test('builds the same export the verification steps run', () => {
   expect(config.outputDirectory).toBe('dist');
 });
 
-test('the raw *.vercel.app address is never indexed', () => {
-  // Only towinly.com should appear in search results. Two copies of the same
-  // product competing for the same queries helps nobody.
-  expect(headersFor('/(.*)')['X-Robots-Tag']).toBe('noindex');
+// Vercel compiles `source` with path-to-regexp and anchors it. These two rules
+// are plain enough that an anchored RegExp is a faithful model of the match, and
+// modelling it is the only way to check the intent without a deploy.
+const matches = (source, pathname) => new RegExp(`^${source}$`).test(pathname);
+
+const NOINDEX = '/((?!delete-account$|privacy$|terms$).*)';
+const PUBLIC_PAGES = '/(delete-account|privacy|terms)';
+
+test('the signed-in shell is never indexed', () => {
+  // Only towinly.com should appear in search results, and none of the app's own
+  // screens should appear at all. Two copies of the same product competing for
+  // the same queries helps nobody.
+  expect(headersFor(NOINDEX)['X-Robots-Tag']).toBe('noindex');
+  for (const p of ['/', '/login', '/user/42', '/privacy-notice', '/delete-account-x']) {
+    expect(`${p} noindex:${matches(NOINDEX, p)}`).toBe(`${p} noindex:true`);
+  }
+});
+
+test('the three public pages ARE indexed, because search is how a stranger finds them', () => {
+  // Audit finding, LOW: /app/ was blanket noindex, which made the account
+  // deletion page unfindable by search. That is the route a person without the
+  // app actually takes, and Play requires the page to be publicly reachable.
+  // The policy and the terms are public documents for the same reason.
+  expect(headersFor(PUBLIC_PAGES)['X-Robots-Tag']).toBe('index, follow');
+  for (const p of ['/delete-account', '/privacy', '/terms']) {
+    expect(`${p} public:${matches(PUBLIC_PAGES, p)}`).toBe(`${p} public:true`);
+    // Exactly one rule may match, or the two headers fight and the winner is
+    // whatever Vercel's merge order happens to be that release.
+    expect(`${p} noindex:${matches(NOINDEX, p)}`).toBe(`${p} noindex:false`);
+  }
 });
 
 test('content-hashed bundles are cached forever', () => {

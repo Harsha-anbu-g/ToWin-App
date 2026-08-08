@@ -2,14 +2,14 @@
 //
 // Google Play needs a web address where somebody can ask for deletion without
 // installing anything, alongside the in-app flow. That address is
-// https://towinly.com/app/delete-account, which is this route in the phone web
+// https://www.towinly.com/app/delete-account, which is this route in the phone web
 // export. See docs/audit/2026-08-07-presubmission-audit.md for why the page
 // lives here rather than on the website.
 //
 // Two rules carried over from legalContent.js: nothing here overclaims, and
 // every in-app label quoted below is the exact string app/(tabs)/profile.jsx
-// renders. __tests__/delete-account-page.test.js reads that screen off disk and
-// fails if either drifts.
+// renders. __tests__/profile-label-drift.test.js RENDERS that screen and fails
+// if either drifts.
 import { DELETION_PAGE_URL, LEGAL_CONTACT_FALLBACK, legalContactEmail } from './legalContent';
 
 /**
@@ -68,6 +68,20 @@ export const DELETE_ACCOUNT_PAGE = {
   noMailApp: (email) =>
     `This browser could not open a mail app. Write to ${email} yourself, from the email address `
     + 'you joined with, and a person here will write back within seven days.',
+
+  /**
+   * The same answer, for the web, where the two above cannot be told apart.
+   *
+   * On react-native-web Linking.openURL resolves whether or not the browser has
+   * a mail handler, so the failure branch can never run in the one environment
+   * this page actually ships in. The old test only passed because its own mock
+   * rejected. Rather than keep a promise the platform cannot check, the web says
+   * something true of both endings.
+   */
+  startedOnWeb: (email) =>
+    `If a mail app opened, send the message we started. If nothing opened, write to ${email} `
+    + 'yourself, from the email address you joined with. Either way, a person here will write '
+    + 'back within seven days.',
 
   mailSubject: 'Please delete my Towinly account',
 
