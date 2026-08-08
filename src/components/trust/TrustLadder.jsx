@@ -13,7 +13,7 @@ export default function TrustLadder({ stageIndex, style }) {
   // different position than sighted users (HCI rule 6).
   const label =
     stageIndex >= 6
-      ? 'Trust ladder: Stage 7 of 7 — full trust reached'
+      ? 'Trust ladder: Stage 7 of 7, full trust reached'
       : `Trust ladder: Stage ${Math.min(stageIndex + 1, 7)} of 7`;
   return (
     <View

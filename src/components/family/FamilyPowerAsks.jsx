@@ -68,10 +68,10 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
                 {isGranted
                   ? `${parent} lets you do this.`
                   : isWaiting
-                    ? `You asked. Waiting for ${parent} to decide — they answer on their My Family page.`
+                    ? `You asked. Waiting for ${parent} to decide. They answer on their My Family page.`
                     : p.key === 'LEAVE_REVIEWS'
-                      ? `Not on yet — you can ask ${parent}. Reviews unlock when a friendship is fully trusted.`
-                      : `Not on yet — you can ask ${parent}.`}
+                      ? `Not on yet. You can ask ${parent}. Reviews unlock when a friendship is fully trusted.`
+                      : `Not on yet. You can ask ${parent}.`}
               </Text>
             </View>
             {isGranted ? (

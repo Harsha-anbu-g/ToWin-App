@@ -82,12 +82,12 @@ export const ANYONE_CHECK = {
 
 /** The Story box's own warning — those details are what a bank asks for. */
 export const NOT_HERE =
-  'Please keep things a bank would ask you — your first pet, the street you grew up on, '
-  + 'your mother’s family name — out of here. Those belong in the Sealed box.';
+  'Please keep things a bank would ask you out of here: your first pet, the street you grew up on, '
+  + 'your mother’s family name. Those belong in the Sealed box.';
 
 export const STORY_BOX = {
   empty:
-    'Nothing here yet. A story can be a small one — how you met, what you learned the hard way, '
+    'Nothing here yet. A story can be a small one: how you met, what you learned the hard way, '
     + 'the recipe nobody else has.',
   start: 'Tell a story',
   save: 'Save this story',
@@ -156,7 +156,7 @@ export const SEALED_BOX = {
   after:
     'We are building the part where your Keyholders can ask to open this. It is not ready, and we '
     + 'will not switch it on until it is. So today you do two things: name the people you trust, '
-    + 'so they know this exists — and save the one-page sheet and keep it with your will.',
+    + 'so they know this exists, and save the one-page sheet and keep it with your will.',
 };
 
 /** "Sarah, David and Ruth" — no serial comma; a sentence about her family. */
@@ -194,8 +194,8 @@ export const SETUP = {
     title: 'How many must agree?',
     blurb:
       'One day, when your Keyholders ask to open this, this many of them must agree. It is '
-      + 'never all of them, so that one person who is far away — or who has passed on '
-      + 'themselves — can never keep it shut forever.',
+      + 'never all of them, so that one person who is far away, or who has passed on '
+      + 'themselves, can never keep it shut forever.',
     inRealTerms: (agree, names, of) =>
       `So: any ${agree} of ${names}. That means ${agree} of them can open it even if the `
       + `${of - agree === 1 ? 'other one says' : 'others say'} no.`,
@@ -370,7 +370,7 @@ export const SHEET = {
       'These are the names of the things inside. What any of them says is not written here, and '
       + 'it is not written down anywhere outside Towinly.',
     empty: 'There is nothing in the box yet.',
-    line: (label, kind) => `${label} — ${kind}`,
+    line: (label, kind) => `${label}, ${kind}`,
   },
 
   whoCanOpen: {

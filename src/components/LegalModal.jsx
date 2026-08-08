@@ -1,5 +1,6 @@
-// Legal document sheet — port of Register.jsx's LegalModal (draft legal copy).
+// Legal document sheet. Port of Register.jsx's LegalModal (draft legal copy).
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import LegalSections from './legal/LegalSections';
 import Button from './ui/Button';
 import { DRAFT } from '../data/legalContent';
 import { useReducedMotion } from '../lib/useReducedMotion';
@@ -88,7 +89,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
             >
               {DRAFT.eyebrow}
             </Text>
-            {/* Said in full at signup — this is the document somebody is
+            {/* Said in full at signup. This is the document somebody is
                 about to tick a box against. */}
             <Text style={{ fontSize: text.sm, color: t.inkSlate2, lineHeight: 22, marginBottom: 6 }}>
               {DRAFT.body}
@@ -96,14 +97,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
             <Text style={{ fontSize: 12, color: t.ink4, marginBottom: spacing[4] }}>
               {DRAFT.asOf}
             </Text>
-            {sections.map((s) => (
-              <View key={s.h} style={{ marginBottom: spacing[5] }}>
-                <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.ink, marginBottom: 6 }}>
-                  {s.h}
-                </Text>
-                <Text style={{ fontSize: text.sm, color: t.inkSlate2, lineHeight: 22 }}>{s.p}</Text>
-              </View>
-            ))}
+            <LegalSections sections={sections} />
           </ScrollView>
 
           <View

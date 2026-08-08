@@ -84,7 +84,7 @@ test('elder with family: header mentions the point, card and per-customer row re
     'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.'
   );
   await r.findByText('Family connected');
-  r.getByText('One point for having your family connected — however many family members you add.');
+  r.getByText('One point for having your family connected, however many family members you add.');
   r.getByLabelText('+1 of 1');
 
   // Per-customer meter row (familyMax > 0) sits with the other meters.
@@ -123,7 +123,7 @@ test('FAMILY: profile-only copy — no elder scoring rules, no add-someone dead 
   stubScore({ totalScore: 1, tier: 'Getting Started', family: null, customers: [] });
   const r = await wrap(<TrustScreen />);
 
-  r.getByText('Your score comes from your profile — fill it in to earn your first points.');
+  r.getByText('Your score comes from your profile. Fill it in to earn your first points.');
   await r.findByText(
     'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
   );

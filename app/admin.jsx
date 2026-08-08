@@ -23,7 +23,7 @@ export default function AdminScreen() {
         </Text>
         <Text style={{ fontSize: text.base, lineHeight: 27, color: t.inkSlate, marginTop: spacing[3] }}>
           You're signed in as an admin. Managing users, reports, and reviews happens on the Towinly
-          website — open it on a computer and log in with this same account.
+          website. Open it on a computer and log in with this same account.
         </Text>
         <Button title="Log out" variant="secondary" onPress={logout} style={{ marginTop: spacing[6] }} />
       </Card>

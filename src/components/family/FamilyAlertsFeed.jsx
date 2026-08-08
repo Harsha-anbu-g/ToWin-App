@@ -32,7 +32,7 @@ const alertKindsFor = (t) => ({
   FIRST_MEET: {
     label: 'First meeting',
     explain:
-      "They're meeting a friend in person for the first time — a friendship they chose to share with you.",
+      "They're meeting a friend in person for the first time. A friendship they chose to share with you.",
     color: t.trustGold,
     line: t.greenLine,
     wash: t.greenTint,
@@ -124,7 +124,7 @@ export default function FamilyAlertsFeed() {
         News about your family
       </Text>
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 4 }}>
-        Alerts appear here when something needs your attention — nothing is sent by text or email.
+        Alerts appear here when something needs your attention. Nothing is sent by text or email.
       </Text>
 
       {isLoading ? (
@@ -157,7 +157,7 @@ export default function FamilyAlertsFeed() {
               textAlign: 'center',
             }}
           >
-            That's good news — you'll see it here if your parent asks for help, goes quiet for a
+            That's good news. You'll see it here if your parent asks for help, goes quiet for a
             while, or shares a first meeting with a friend.
           </Text>
         </View>

@@ -107,7 +107,7 @@ function FamilyCard({ family }) {
             Family connected
           </Text>
           <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 3 }}>
-            One point for having your family connected — however many family members you add.
+            One point for having your family connected, however many family members you add.
           </Text>
         </View>
         <Dots earned={earned} max={max} color={t.trustGold} />
@@ -210,7 +210,7 @@ export default function TrustScreen() {
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
         {isFamily
           ? // Honest, profile-only framing — never the elder scoring rules.
-            'Your score comes from your profile — fill it in to earn your first points.'
+            'Your score comes from your profile. Fill it in to earn your first points.'
           : helping
           ? 'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
           : // Elder split (FAM-405): elders score 7+5+2+1 — the family point

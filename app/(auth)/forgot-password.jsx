@@ -100,7 +100,7 @@ export default function ForgotPassword() {
             if (error) setError('');
           }}
           error={error}
-          helper={email.trim() ? undefined : 'Enter your email first — then the button below wakes up.'}
+          helper={email.trim() ? undefined : 'Enter your email first. Then the button below wakes up.'}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="email-address"

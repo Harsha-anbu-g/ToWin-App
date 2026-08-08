@@ -218,7 +218,7 @@ export default function CheckinCard() {
                 <Check size={16} color={t.greenDeep} strokeWidth={2.5} />
                 <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
                   {justCheckedIn
-                    ? `Day ${current} — see you tomorrow`
+                    ? `Day ${current} . See you tomorrow`
                     : 'Checked in for today'}
                 </Text>
               </View>

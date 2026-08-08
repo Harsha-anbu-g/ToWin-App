@@ -397,7 +397,7 @@ export default function FriendsScreen() {
                       {/* Requests can't be withdrawn yet (backend has no
                           cancel) — at least say plainly what waiting means. */}
                       <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
-                        Waiting for {conn.otherUserName} to accept — they'll see your request in their invites.
+                        Waiting for {conn.otherUserName} to accept. They'll see your request in their invites.
                       </Text>
                     </View>
                   ))}

@@ -133,7 +133,7 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   r.getByText('They added you as family');
   r.getByText("wants you as their family here (as their niece). It's your choice.");
   r.getByText('Requests you sent');
-  r.getByText('Waiting for rose to accept — only they can say yes. You can cancel any time.');
+  r.getByText('Waiting for rose to accept. Only they can say yes. You can cancel any time.');
 
   await r.findByText('Urgent help');
   r.getByText('Pressed the SOS button and may need help right away.');
@@ -208,7 +208,7 @@ test('empty states carry the exact web sub-copy', async () => {
 
   await r.findByText('No alerts right now');
   r.getByText(
-    "That's good news — you'll see it here if your parent asks for help, goes quiet for a while, or shares a first meeting with a friend."
+    "That's good news. You'll see it here if your parent asks for help, goes quiet for a while, or shares a first meeting with a friend."
   );
 });
 

@@ -102,7 +102,7 @@ export default function MyFamilyScreen() {
   const respondToAsk = useMutation({
     mutationFn: ({ id, accept }) => api.post(`/family/power-requests/${id}/respond`, { accept }),
     onSuccess: (_r, { accept }) => {
-      showToast(accept ? 'Done — they can do this for you now.' : 'Okay — nothing changes.', 'success');
+      showToast(accept ? 'Done. They can do this for you now.' : 'Okay. Nothing changes.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
     },
     onError: (err) =>
@@ -166,7 +166,7 @@ export default function MyFamilyScreen() {
     const ok = await confirm({
       title: `Remove ${link.otherUserName} from your family?`,
       message:
-        "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again.",
+        "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again.",
       cancelLabel: 'Keep',
       confirmLabel: 'Remove from family',
       destructive: true,
@@ -266,7 +266,7 @@ export default function MyFamilyScreen() {
               marginTop: spacing[3],
             }}
           >
-            Family connected gives you +1 trust point — one point total, however many family
+            Family connected gives you +1 trust point. One point total, however many family
             members you add (up to 5 people).
           </Text>
         </View>
@@ -391,7 +391,7 @@ export default function MyFamilyScreen() {
                 <LinkRow
                   key={r.id}
                   name={r.otherUserName}
-                  line={`${r.relationship ? `${r.relationship} · ` : ''}Waiting for ${r.otherUserName} to accept — only they can say yes. You can cancel any time.`}
+                  line={`${r.relationship ? `${r.relationship} · ` : ''}Waiting for ${r.otherUserName} to accept. Only they can say yes. You can cancel any time.`}
                   first={i === 0}
                 >
                   <ActionChip
@@ -544,7 +544,7 @@ export default function MyFamilyScreen() {
                     </View>
                   ))}
                   <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[3] }}>
-                    Turn a friendship off any time — your family loses all of this straight away.
+                    Turn a friendship off any time. Your family loses all of this straight away.
                   </Text>
                   {connections.map((c) => (
                     <View key={c.id} style={{ marginTop: spacing[4] }}>

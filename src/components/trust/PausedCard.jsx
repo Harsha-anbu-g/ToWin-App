@@ -15,7 +15,7 @@ export default function PausedCard({ conn, onResume, resuming }) {
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{conn.otherUserName}</Text>
           <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1, lineHeight: 18 }}>
-            On a break — trust steps and messages are paused.
+            On a break. Trust steps and messages are paused.
           </Text>
         </View>
       </View>

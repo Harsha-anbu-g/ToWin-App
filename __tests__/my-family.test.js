@@ -147,7 +147,7 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
   r.getByText('They can never post or act for you.');
   r.getByText('You can remove anyone at any time.');
   r.getByText(
-    'Family connected gives you +1 trust point — one point total, however many family members you add (up to 5 people).'
+    'Family connected gives you +1 trust point. One point total, however many family members you add (up to 5 people).'
   );
 
   await openMembersTab(r);
@@ -162,7 +162,7 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
   r.getByText('They want to join your family');
   r.getByText("Niece · wants to join as your family. It's your choice.");
   r.getByText('Requests you sent');
-  r.getByText('Waiting for raj to accept — only they can say yes. You can cancel any time.');
+  r.getByText('Waiting for raj to accept. Only they can say yes. You can cancel any time.');
 
   expect(r.queryByText('shadow')).toBeNull();
 });
@@ -198,7 +198,7 @@ test('remove: confirm quotes the web danger message; DELETE fires only on confir
 
   await r.findByText('Remove sarah from your family?');
   r.getByText(
-    "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later — they would need to accept again."
+    "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again."
   );
   r.getByLabelText('Keep');
   // Opening the dialog must not delete anything on its own.
@@ -363,7 +363,7 @@ test('power ask: Yes and Not now post the respond payloads and toast', async () 
 
   await fireEvent.press(r.getByRole('button', { name: 'Yes' }));
   expect(api.post).toHaveBeenCalledWith('/family/power-requests/pr1/respond', { accept: true });
-  await r.findByText('Done — they can do this for you now.');
+  await r.findByText('Done. They can do this for you now.');
 });
 
 // ── FAM-510 (elder side): the private chat with a family member. ─────────

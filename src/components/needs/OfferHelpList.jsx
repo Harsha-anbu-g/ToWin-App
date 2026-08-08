@@ -280,7 +280,7 @@ export default function OfferHelpList() {
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Distance ${radiusKm} kilometres — tap to change`}
+                accessibilityLabel={`Distance ${radiusKm} kilometres, tap to change`}
                 onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
                 hitSlop={{ top: 7, bottom: 7 }}
                 style={({ pressed }) => ({
@@ -329,7 +329,7 @@ export default function OfferHelpList() {
                   ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
                   : seg === 'applied'
                     ? "You haven't offered to help yet."
-                    : 'No completed help yet — it will show here.'}
+                    : 'No completed help yet. It will show here.'}
               </Text>
               {/* A real starter action — never "open the Available tab"
                   (rulebook: empty states carry their own action). */}

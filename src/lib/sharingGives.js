@@ -8,7 +8,7 @@
 export const SHARING_GIVES = [
   {
     key: 'SEE',
-    elder: () => 'See how the friendship is going, step by step — they cannot change anything.',
+    elder: () => 'See how the friendship is going, step by step. They cannot change anything.',
     family: () => 'See how it is going, step by step.',
   },
   {
@@ -23,7 +23,7 @@ export const SHARING_GIVES = [
   },
   {
     key: 'POWERS',
-    elder: () => 'Use anything you allow on the Act for me tab — those powers only work on friendships you share.',
-    family: name => `Use anything ${name} lets you do for them — those powers only work on shared friendships.`,
+    elder: () => 'Use anything you allow on the Act for me tab. Those powers only work on friendships you share.',
+    family: name => `Use anything ${name} lets you do for them. Those powers only work on shared friendships.`,
   },
 ];

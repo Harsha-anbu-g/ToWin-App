@@ -59,7 +59,7 @@ export default function BlockedPeople() {
         <Card>
           <Text style={{ fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
             You haven't blocked anyone. If someone ever makes you uncomfortable, open their
-            profile and choose "Block this person" — their requests and messages will
+            profile and choose "Block this person". Their requests and messages will
             disappear for you.
           </Text>
         </Card>

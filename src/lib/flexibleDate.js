@@ -21,7 +21,7 @@ const valid = (y, m, d) => {
 
 const checked = (y, m, d) => {
   const value = valid(y, m, d);
-  return value ? { value } : { error: 'That date does not exist — please check it.' };
+  return value ? { value } : { error: 'That date does not exist. Please check it.' };
 };
 
 /**
@@ -47,7 +47,7 @@ export function parseFlexibleDate(input) {
     const day = Number.isNaN(+first) ? +second : +first;
     const monthWord = (Number.isNaN(+first) ? first : second).toLowerCase();
     const month = MONTHS[monthWord.slice(0, 4)] ?? MONTHS[monthWord.slice(0, 3)];
-    if (!month) return { error: "We couldn't read the month — try like 14 May 1953." };
+    if (!month) return { error: "We couldn't read the month. Try like 14 May 1953." };
     return checked(y, month, day);
   }
 
@@ -59,9 +59,9 @@ export function parseFlexibleDate(input) {
     const y = +m[3];
     if (a > 12 && b <= 12) return checked(y, b, a); // day first
     if (b > 12 && a <= 12) return checked(y, a, b); // month first
-    if (a > 12 && b > 12) return { error: 'That date does not exist — please check it.' };
-    return { error: 'That date reads two ways — please write the month, like 14 May 1953.' };
+    if (a > 12 && b > 12) return { error: 'That date does not exist. Please check it.' };
+    return { error: 'That date reads two ways. Please write the month, like 14 May 1953.' };
   }
 
-  return { error: "We couldn't read that date — try like 1953-05-14 or 14 May 1953." };
+  return { error: "We couldn't read that date. Try like 1953-05-14 or 14 May 1953." };
 }

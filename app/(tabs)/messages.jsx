@@ -262,7 +262,7 @@ export default function MessagesInbox() {
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>{g.title}</Text>
                         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-                          Small updates thread — everyone sharing it reads along
+                          Small updates thread. Everyone sharing it reads along
                         </Text>
                       </View>
                       <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />

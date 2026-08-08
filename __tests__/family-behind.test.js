@@ -94,7 +94,7 @@ test('family rows nest under the elder they stand behind, with the relationship'
 
   await r.findByText("Margaret's family");
   r.getByText(/Sarah/);
-  r.getByText(/— Margaret's daughter/);
+  r.getByText(/, Margaret's daughter/);
   r.getByText('Can see how this friendship is going and may message you.');
   // No coordination connection yet → no Message chip on the family row.
   expect(r.queryByText('You can message each other while this friendship stays shared.')).toBeNull();

@@ -10,19 +10,19 @@
 // every in-app label quoted below is the exact string app/(tabs)/profile.jsx
 // renders. __tests__/delete-account-page.test.js reads that screen off disk and
 // fails if either drifts.
-import { legalContactEmail } from './legalContent';
+import { DELETION_PAGE_URL, LEGAL_CONTACT_FALLBACK, legalContactEmail } from './legalContent';
 
 /**
  * Where a deletion request goes when the deploy sets no address.
  *
- * legalContent.js deliberately refuses to hardcode a mailbox, because an
- * invented address loses somebody's request in silence. That reasoning does not
- * reach this page. This mailbox is real, it is already the value eas.json ships
- * to both store profiles, and this page IS the Vercel web build, where
- * EXPO_PUBLIC_LEGAL_CONTACT_EMAIL is not set. Without the fallback, the one URL
- * Play Console points at would render "no address set yet".
+ * This used to be a second literal, written here because legalContent.js
+ * refused to hardcode a mailbox. That left the deletion page saying one thing
+ * while the privacy policy and the terms on the SAME deployment said there was
+ * no address at all (audit finding V5). The fallback now lives once, in
+ * legalContent.js, and every legal surface resolves through it. This name stays
+ * so the tests and the page keep reading the way they did.
  */
-export const DELETION_CONTACT_FALLBACK = 'help@towinly.com';
+export const DELETION_CONTACT_FALLBACK = LEGAL_CONTACT_FALLBACK;
 
 /**
  * The address typed into Play Console: Data safety, Data deletion.
@@ -30,14 +30,15 @@ export const DELETION_CONTACT_FALLBACK = 'help@towinly.com';
  * Three things have to agree for it to resolve, and a test pins all three:
  * app.json's experiments.baseUrl ("/app"), this route's filename, and the
  * website's /app/:path* rewrite. Change any one of them and the URL sitting in
- * a store console quietly stops working.
+ * a store console quietly stops working. The literal itself lives in
+ * legalContent.js, because the privacy policy links to it too.
  */
 export const DELETION_PAGE_PATH = '/delete-account';
-export const DELETION_PAGE_URL = 'https://towinly.com/app/delete-account';
+export { DELETION_PAGE_URL };
 
 /** The configured address if a deploy sets one, otherwise the real mailbox. */
 export function deletionContactEmail() {
-  return legalContactEmail() || DELETION_CONTACT_FALLBACK;
+  return legalContactEmail();
 }
 
 export const DELETE_ACCOUNT_PAGE = {

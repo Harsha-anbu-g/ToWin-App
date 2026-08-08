@@ -168,7 +168,7 @@ export default function FamilyHomePanel() {
                 <LinkRow
                   key={r.id}
                   name={r.otherUserName}
-                  line={`Waiting for ${r.otherUserName} to accept — only they can say yes. You can cancel any time.`}
+                  line={`Waiting for ${r.otherUserName} to accept. Only they can say yes. You can cancel any time.`}
                   first={i === 0}
                 >
                   <ActionChip

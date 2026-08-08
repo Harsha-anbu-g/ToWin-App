@@ -6,7 +6,7 @@ import { announce } from '../lib/announce';
 import useIsOffline from '../lib/useIsOffline';
 import { useTheme } from '../theme/ThemeContext';
 
-const MESSAGE = "You're offline — we'll retry as soon as you're back.";
+const MESSAGE = "You're offline. We'll retry as soon as you're back.";
 
 export default function OfflineBanner() {
   const { t, spacing, text } = useTheme();

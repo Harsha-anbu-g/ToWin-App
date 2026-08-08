@@ -166,7 +166,7 @@ export default function ChatThread() {
       }
       showToast(
         refusedByTrustGate
-          ? 'Your trust level is too low to message yet — take the next trust step together first.'
+          ? 'Your trust level is too low to message yet. Take the next trust step together first.'
           : friendlyWriteError(err, "Message didn't send. Tap send to try again."),
         'error'
       );
@@ -181,8 +181,8 @@ export default function ChatThread() {
     onSuccess: () => {
       showToast(
         conn && !conn.confirmedByOther
-          ? `Step confirmed — waiting for ${conn.otherUserName} to agree too.`
-          : 'You both agreed — one step up the ladder!',
+          ? `Step confirmed. Waiting for ${conn.otherUserName} to agree too.`
+          : 'You both agreed. One step up the ladder!',
         'success'
       );
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
@@ -220,7 +220,7 @@ export default function ChatThread() {
   const resume = useMutation({
     mutationFn: () => api.post(`/trust/${connectionId}/resume`),
     onSuccess: () => {
-      showToast('Welcome back — trust steps and messages are on again.', 'success');
+      showToast('Welcome back. Trust steps and messages are on again.', 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
@@ -332,7 +332,7 @@ export default function ChatThread() {
             </Text>
             {isFamilyChannel ? (
               <Text style={{ fontSize: text.xs, color: t.inkSlate, marginTop: 1 }}>
-                Small updates thread — family reads along
+                Small updates thread. Family reads along
               </Text>
             ) : null}
           </View>
@@ -374,7 +374,7 @@ export default function ChatThread() {
                   lineHeight: 26,
                 }}
               >
-                Say hello — every friendship starts with one message.
+                Say hello. Every friendship starts with one message.
               </Text>
             )
           }
@@ -392,7 +392,7 @@ export default function ChatThread() {
             }}
           >
             <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
-              You two are on a break — messages are paused.
+              You two are on a break. Messages are paused.
             </Text>
             {/* The action lives WHERE the state is announced — never "go find
                 Resume on another screen" (rulebook: recognition over recall). */}
@@ -425,7 +425,7 @@ export default function ChatThread() {
             }}
           >
             <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
-              You're connected — messages unlock at the next trust step.
+              You're connected. Messages unlock at the next trust step.
             </Text>
             {conn.confirmedByMe ? (
               <Text
@@ -437,7 +437,7 @@ export default function ChatThread() {
                   marginTop: spacing[1],
                 }}
               >
-                You've started the next step — waiting for {conn.otherUserName} to accept.
+                You've started the next step. Waiting for {conn.otherUserName} to accept.
               </Text>
             ) : actsAsElder || accepting ? (
               <Pressable
@@ -468,7 +468,7 @@ export default function ChatThread() {
                   marginTop: spacing[1],
                 }}
               >
-                {conn.otherUserName} starts each trust step — you'll get a tap here to accept.
+                {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
               </Text>
             )}
           </View>

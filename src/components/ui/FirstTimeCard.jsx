@@ -31,7 +31,7 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
   const dismiss = () => {
     setShow(false);
     Store.setItemAsync(flag, '1').catch(() => {}); // best-effort — worst case the note shows again
-    announce('Got it — this note will not show again.');
+    announce('Got it. This note will not show again.');
   };
 
   if (!show) return null;

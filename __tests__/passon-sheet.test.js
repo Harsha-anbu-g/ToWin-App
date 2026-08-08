@@ -23,8 +23,8 @@ const DATA = {
 test('the sheet carries names and chips, never a body', () => {
   const text = sheetAsText(buildSheet(DATA));
   expect(text).toContain('What Margaret passes on');
-  expect(text).toContain('- Where the money is — Money');
-  expect(text).toContain('- The blue folder — Papers');
+  expect(text).toContain('- Where the money is, Money');
+  expect(text).toContain('- The blue folder, Papers');
   expect(text).not.toContain('MUST NEVER APPEAR');
 });
 

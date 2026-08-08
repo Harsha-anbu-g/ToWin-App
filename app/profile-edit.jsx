@@ -134,7 +134,7 @@ export default function ProfileEdit() {
   const pickImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      showToast('Towinly needs photo access — you can allow it in Settings.', 'error');
+      showToast('Towinly needs photo access. You can allow it in Settings.', 'error');
       return null;
     }
     const picked = await ImagePicker.launchImageLibraryAsync({
@@ -325,7 +325,7 @@ export default function ProfileEdit() {
             if (dobError) setDobError('');
           }}
           error={dobError}
-          helper="Any way you like — 1953-05-14 or 14 May 1953. Only your age shows to others."
+          helper="Any way you like: 1953-05-14 or 14 May 1953. Only your age shows to others."
           autoCapitalize="none"
           style={FIELD_GAP}
         />
@@ -380,8 +380,8 @@ export default function ProfileEdit() {
           onChangeText={set('extraTags')}
           helper={
             isHelper
-              ? 'Things you love doing — one at a time, press return after each.'
-              : 'Like "company" or "a walking friend" — press return after each.'
+              ? 'Things you love doing. One at a time, press return after each.'
+              : 'Like "company" or "a walking friend". Press return after each.'
           }
           style={FIELD_GAP}
         />
@@ -440,7 +440,7 @@ export default function ProfileEdit() {
         >
           <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 21 }}>
             {me?.idVerified
-              ? 'Your ID is verified — it earns profile trust points.'
+              ? 'Your ID is verified. It earns profile trust points.'
               : 'A one-time ID check earns profile trust points. A person reviews it; your ID is never shown to others.'}
           </Text>
           {!me?.idVerified ? (

@@ -53,7 +53,7 @@ export default function Checkin() {
       <FirstTimeCard
         flag={KEYS.checkinExplained}
         title="What's a check-in?"
-        body="One tap on “I'm here today” tells your trusted people you're okay. Skipping a day is fine — it's a gentle signal, never a duty."
+        body="One tap on “I'm here today” tells your trusted people you're okay. Skipping a day is fine. It's a gentle signal, never a duty."
         linkTitle="Read the Guide"
         onLink={() => router.push('/guide')}
       />
@@ -62,7 +62,7 @@ export default function Checkin() {
       {/* A real 44pt exit — this screen opens unrequested once a day, so its
           way out must never be a 13pt underline (rulebook). */}
       <TextLink
-        label={done ? 'Take me home' : 'Not now — take me home'}
+        label={done ? 'Take me home' : 'Not now, take me home'}
         muted={!done}
         onPress={toHome}
       />
