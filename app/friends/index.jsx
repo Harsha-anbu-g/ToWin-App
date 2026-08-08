@@ -7,7 +7,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
 import { useState } from 'react';
-import { FlatList, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -176,7 +177,7 @@ export default function FriendsScreen() {
   };
 
   const refreshControl = (
-    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />
+    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   );
 
   // failed/retry: a dropped network must read as "couldn't load", never as

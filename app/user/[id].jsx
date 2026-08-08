@@ -81,6 +81,15 @@ export default function UserProfile() {
   const { data: blockedList } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
   const userIsBlocked = isBlocked(blockedList, id);
 
+  // Pull-to-refresh (UX-704): reload exactly what this screen shows.
+  const reload = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['profile', id] }),
+      queryClient.invalidateQueries({ queryKey: ['reviews', id] }),
+      queryClient.invalidateQueries({ queryKey: ['connections'] }),
+      queryClient.invalidateQueries({ queryKey: ['block-list'] }),
+    ]);
+
   const request = useMutation({
     mutationFn: () => api.post('/connections/request', { targetUserId: id }),
     onSuccess: () => {
@@ -159,7 +168,7 @@ export default function UserProfile() {
   };
 
   return (
-    <Screen back title={profile?.name ?? 'Profile'}>
+    <Screen back title={profile?.name ?? 'Profile'} onRefresh={reload}>
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (

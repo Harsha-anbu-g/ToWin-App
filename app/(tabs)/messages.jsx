@@ -11,7 +11,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import RefreshControl from '../../src/components/ui/RefreshControl';
 import { ChevronRight, MessageCircle, Users } from 'lucide-react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
@@ -141,7 +142,7 @@ export default function MessagesInbox() {
   return (
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.blue} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         // 120: the Ask-AI pill floats over this tab — the last row must clear it.
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: 120 }}
       >

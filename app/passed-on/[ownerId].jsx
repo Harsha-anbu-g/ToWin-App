@@ -78,7 +78,13 @@ export default function PassOnFrom() {
   return (
     // keyboard: the report-a-story form opens inline on a card, and the
     // keyboard must never cover the field being typed into (UX-702).
-    <Screen back keyboard title={name ? FROM_PAGE.title(name) : ' '} contentStyle={{ gap: spacing[4] }}>
+    <Screen
+      back
+      keyboard
+      title={name ? FROM_PAGE.title(name) : ' '}
+      onRefresh={refetch}
+      contentStyle={{ gap: spacing[4] }}
+    >
       {isError ? (
         <LoadError what="this page" onRetry={refetch} />
       ) : isLoading ? (

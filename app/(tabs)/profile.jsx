@@ -2,7 +2,7 @@
 // shaped), my reviews, then quiet settings rows. Night mode is opt-in here
 // (never OS-driven); destructive account actions live at the very bottom,
 // clearly separated (HCI: destructive-nav-separation).
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, Switch, Text, View } from 'react-native';
@@ -140,6 +140,16 @@ export default function ProfileScreen() {
 
   const friendsCount = (connections ?? []).filter((c) => c.status === 'ACTIVE').length;
 
+  // Pull-to-refresh (UX-704): reload exactly the feeds this tab shows — a
+  // blanket invalidateQueries() would stampede every mounted screen at once.
+  const queryClient = useQueryClient();
+  const reload = () =>
+    Promise.all(
+      ['profile-me', 'trust-my-score', 'connections', 'streak-me', 'reviews-mine'].map((key) =>
+        queryClient.invalidateQueries({ queryKey: [key] })
+      )
+    );
+
   const deleteAccount = useMutation({
     mutationFn: () => api.delete('/account'),
     onSuccess: async () => {
@@ -203,7 +213,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <Screen fab>
+    <Screen fab onRefresh={reload}>
       <Text
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
