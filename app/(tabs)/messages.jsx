@@ -10,8 +10,8 @@
 // Groups, then Family — and an empty tab explains itself.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { memo, useCallback, useState } from 'react';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import { ChevronRight, MessageCircle, Users } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -65,8 +65,153 @@ const timeAgo = (iso) => {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
+// Rows are memoized so a list-level render (tab switch, refresh tick) does
+// not re-render every row the inbox holds (UX-705).
+const GroupThreadRow = memo(function GroupThreadRow({ id, title }) {
+  const { t, spacing, type } = useTheme();
+  const router = useRouter();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Updates thread: ${title}`}
+      onPress={() => router.push(`/chat/${id}?channel=family`)}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        paddingVertical: 14,
+        marginHorizontal: -spacing[4],
+        paddingHorizontal: spacing[4],
+        backgroundColor: pressed ? t.surfaceFill : 'transparent',
+      })}
+    >
+      {/* A thread of people, not a person — the icon says so. */}
+      <View
+        style={{
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          backgroundColor: t.blueWash,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Users size={22} color={t.blueDeep} strokeWidth={2} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>{title}</Text>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
+          Small updates thread. Everyone sharing it reads along
+        </Text>
+      </View>
+      <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
+    </Pressable>
+  );
+});
+
+const ConversationRow = memo(function ConversationRow({ conn }) {
+  const { t, spacing } = useTheme();
+  const router = useRouter();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Chat with ${conn.otherUserName}`}
+      onPress={() => router.push(`/chat/${conn.id}`)}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+        paddingVertical: 14,
+        // Full-bleed press highlight; text stays column-aligned
+        marginHorizontal: -spacing[4],
+        paddingHorizontal: spacing[4],
+        backgroundColor: pressed ? t.surfaceFill : 'transparent',
+      })}
+    >
+      <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={48} />
+      <View style={{ flex: 1 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: spacing[2],
+          }}
+        >
+          <Text
+            numberOfLines={1}
+            style={{ flexShrink: 1, fontSize: 16, fontWeight: '600', color: t.ink }}
+          >
+            {conn.otherUserName}
+          </Text>
+          {conn.lastMessageAt ? (
+            <Text
+              style={{
+                fontSize: 13,
+                color: conn.unreadCount > 0 ? t.blueDeep : t.inkSlate,
+                fontWeight: conn.unreadCount > 0 ? '600' : '400',
+                fontVariant: ['tabular-nums'],
+              }}
+            >
+              {timeAgo(conn.lastMessageAt)}
+            </Text>
+          ) : null}
+        </View>
+        {/* The scanline: last message beats a static prompt;
+            "Margaret's family" rides here when there's no
+            conversation yet (rulebook: glanceable rows). */}
+        <Text
+          numberOfLines={1}
+          style={{
+            fontSize: 14,
+            color: conn.unreadCount > 0 ? t.ink : t.inkSlate,
+            fontWeight: conn.unreadCount > 0 ? '600' : '400',
+            marginTop: 2,
+          }}
+        >
+          {conn.lastMessagePreview || conn.otherUserContext || 'Say hello'}
+        </Text>
+      </View>
+      {conn.unreadCount > 0 ? (
+        <View
+          style={{
+            minWidth: 22,
+            height: 22,
+            borderRadius: 11,
+            paddingHorizontal: 6,
+            backgroundColor: t.badgeFill,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 12,
+              fontWeight: '700',
+              color: t.actionInk,
+              fontVariant: ['tabular-nums'],
+            }}
+          >
+            {conn.unreadCount}
+          </Text>
+        </View>
+      ) : (
+        <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
+      )}
+    </Pressable>
+  );
+});
+
+// Inset separator aligned with the text column, not full-bleed
+function RowSeparator() {
+  const { t } = useTheme();
+  return <View style={{ height: 1, backgroundColor: t.hairline, marginLeft: 62 }} />;
+}
+
+const keyId = (item) => item.id;
+
 export default function MessagesInbox() {
-  const { t, spacing, text, type, fontFamily, radius } = useTheme();
+  const { t, spacing, text, fontFamily, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -139,234 +284,123 @@ export default function MessagesInbox() {
     setRefreshing(false);
   };
 
+  // A settled screen with something to show; loading, failure and the two
+  // empty shapes all render through ListEmptyComponent instead.
+  const settled = !isLoading && !isError;
+  const displayed = settled && hasAnyConversation
+    ? (currentTab === 'groups' ? groupThreads : rows)
+    : [];
+
+  const renderRow = useCallback(
+    ({ item }) =>
+      currentTab === 'groups' ? (
+        <GroupThreadRow id={item.id} title={item.title} />
+      ) : (
+        <ConversationRow conn={item} />
+      ),
+    [currentTab]
+  );
+
   return (
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
-      <ScrollView
+      <FlatList
+        testID="inbox-list"
+        data={displayed}
+        keyExtractor={keyId}
+        renderItem={renderRow}
+        // ~76pt rows: a dozen fills any phone screen with headroom.
+        initialNumToRender={12}
+        ItemSeparatorComponent={RowSeparator}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         // 120: the Ask-AI pill floats over this tab — the last row must clear it.
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[3], paddingBottom: 120 }}
-      >
-        <Text
-          accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
-        >
-          Messages
-        </Text>
-
-        {isLoading ? (
-          // A skeleton, not a sentence — the row shape is known (rulebook).
-          <SkeletonCard lines={3} />
-        ) : isError ? (
-          // Never dress a network failure up as "no conversations yet"
-          <LoadError what="your conversations" onRetry={refetch} />
-        ) : !hasAnyConversation ? (
-          <View style={{ paddingVertical: spacing[6] }}>
+        ListHeaderComponent={
+          <View>
             <Text
               accessibilityRole="header"
-              style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
+              style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
             >
-              No conversations yet
+              Messages
             </Text>
-            <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
-              Chats open up once you're friends with someone. Find people near you in Friends.
-            </Text>
-            {user?.role !== 'FAMILY' ? (
-              <Button
-                title="Find friends"
-                variant="primary"
-                onPress={() => router.push('/friends')}
-                style={{ marginTop: spacing[5] }}
+            {settled && hasAnyConversation ? (
+              // The tabs stay on screen for every account (web f6e5e84) —
+              // an empty one explains itself below instead of vanishing.
+              <SegmentedControl
+                segments={sections}
+                value={currentTab}
+                onChange={setActiveTab}
+                style={{ marginBottom: spacing[3] }}
               />
             ) : null}
           </View>
-        ) : (
-          <View>
-            {/* The tabs stay on screen for every account (web f6e5e84) —
-                an empty one explains itself below instead of vanishing. */}
-            <SegmentedControl
-              segments={sections}
-              value={currentTab}
-              onChange={setActiveTab}
-              style={{ marginBottom: spacing[3] }}
-            />
-
-            {(currentTab === 'groups' ? groupThreads : rows).length === 0 ? (
+        }
+        ListEmptyComponent={
+          isLoading ? (
+            // A skeleton, not a sentence — the row shape is known (rulebook).
+            <SkeletonCard lines={3} />
+          ) : isError ? (
+            // Never dress a network failure up as "no conversations yet"
+            <LoadError what="your conversations" onRetry={refetch} />
+          ) : !hasAnyConversation ? (
+            <View style={{ paddingVertical: spacing[6] }}>
+              <Text
+                accessibilityRole="header"
+                style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
+              >
+                No conversations yet
+              </Text>
+              <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
+                Chats open up once you're friends with someone. Find people near you in Friends.
+              </Text>
+              {user?.role !== 'FAMILY' ? (
+                <Button
+                  title="Find friends"
+                  variant="primary"
+                  onPress={() => router.push('/friends')}
+                  style={{ marginTop: spacing[5] }}
+                />
+              ) : null}
+            </View>
+          ) : (
+            <View
+              style={{
+                backgroundColor: t.canvas,
+                borderWidth: 1,
+                borderColor: t.border,
+                borderRadius: radius.card,
+                paddingVertical: 40,
+                paddingHorizontal: 24,
+                alignItems: 'center',
+              }}
+            >
               <View
                 style={{
-                  backgroundColor: t.canvas,
-                  borderWidth: 1,
-                  borderColor: t.border,
-                  borderRadius: radius.card,
-                  paddingVertical: 40,
-                  paddingHorizontal: 24,
+                  width: 52,
+                  height: 52,
+                  borderRadius: 26,
+                  backgroundColor: t.blueWash,
                   alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 14,
                 }}
               >
-                <View
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                    backgroundColor: t.blueWash,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 14,
-                  }}
-                >
-                  <MessageCircle size={24} color={t.blueDeep} strokeWidth={2} />
-                </View>
-                <Text
-                  style={{
-                    fontSize: text.base,
-                    color: t.inkSlate,
-                    lineHeight: 26,
-                    textAlign: 'center',
-                    maxWidth: 380,
-                  }}
-                >
-                  {EMPTY_TAB_COPY[currentTab]}
-                </Text>
+                <MessageCircle size={24} color={t.blueDeep} strokeWidth={2} />
               </View>
-            ) : currentTab === 'groups'
-              ? groupThreads.map((g, i) => (
-                  <View key={g.id}>
-                    {i > 0 ? (
-                      <View style={{ height: 1, backgroundColor: t.hairline, marginLeft: 62 }} />
-                    ) : null}
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Updates thread: ${g.title}`}
-                      onPress={() => router.push(`/chat/${g.id}?channel=family`)}
-                      style={({ pressed }) => ({
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 14,
-                        paddingVertical: 14,
-                        marginHorizontal: -spacing[4],
-                        paddingHorizontal: spacing[4],
-                        backgroundColor: pressed ? t.surfaceFill : 'transparent',
-                      })}
-                    >
-                      {/* A thread of people, not a person — the icon says so. */}
-                      <View
-                        style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 24,
-                          backgroundColor: t.blueWash,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <Users size={22} color={t.blueDeep} strokeWidth={2} />
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>{g.title}</Text>
-                        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-                          Small updates thread. Everyone sharing it reads along
-                        </Text>
-                      </View>
-                      <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
-                    </Pressable>
-                  </View>
-                ))
-              : rows.map((conn, i) => (
-                  <View key={conn.id}>
-                    {i > 0 ? (
-                      // Inset separator aligned with the text column, not full-bleed
-                      <View style={{ height: 1, backgroundColor: t.hairline, marginLeft: 62 }} />
-                    ) : null}
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel={`Chat with ${conn.otherUserName}`}
-                      onPress={() => router.push(`/chat/${conn.id}`)}
-                      style={({ pressed }) => ({
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 14,
-                        paddingVertical: 14,
-                        // Full-bleed press highlight; text stays column-aligned
-                        marginHorizontal: -spacing[4],
-                        paddingHorizontal: spacing[4],
-                        backgroundColor: pressed ? t.surfaceFill : 'transparent',
-                      })}
-                    >
-                      <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={48} />
-                      <View style={{ flex: 1 }}>
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: spacing[2],
-                          }}
-                        >
-                          <Text
-                            numberOfLines={1}
-                            style={{ flexShrink: 1, fontSize: 16, fontWeight: '600', color: t.ink }}
-                          >
-                            {conn.otherUserName}
-                          </Text>
-                          {conn.lastMessageAt ? (
-                            <Text
-                              style={{
-                                fontSize: 13,
-                                color: conn.unreadCount > 0 ? t.blueDeep : t.inkSlate,
-                                fontWeight: conn.unreadCount > 0 ? '600' : '400',
-                                fontVariant: ['tabular-nums'],
-                              }}
-                            >
-                              {timeAgo(conn.lastMessageAt)}
-                            </Text>
-                          ) : null}
-                        </View>
-                        {/* The scanline: last message beats a static prompt;
-                            "Margaret's family" rides here when there's no
-                            conversation yet (rulebook: glanceable rows). */}
-                        <Text
-                          numberOfLines={1}
-                          style={{
-                            fontSize: 14,
-                            color: conn.unreadCount > 0 ? t.ink : t.inkSlate,
-                            fontWeight: conn.unreadCount > 0 ? '600' : '400',
-                            marginTop: 2,
-                          }}
-                        >
-                          {conn.lastMessagePreview || conn.otherUserContext || 'Say hello'}
-                        </Text>
-                      </View>
-                      {conn.unreadCount > 0 ? (
-                        <View
-                          style={{
-                            minWidth: 22,
-                            height: 22,
-                            borderRadius: 11,
-                            paddingHorizontal: 6,
-                            backgroundColor: t.badgeFill,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              fontWeight: '700',
-                              color: t.actionInk,
-                              fontVariant: ['tabular-nums'],
-                            }}
-                          >
-                            {conn.unreadCount}
-                          </Text>
-                        </View>
-                      ) : (
-                        <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
-                      )}
-                    </Pressable>
-                  </View>
-                ))}
-          </View>
-        )}
-      </ScrollView>
+              <Text
+                style={{
+                  fontSize: text.base,
+                  color: t.inkSlate,
+                  lineHeight: 26,
+                  textAlign: 'center',
+                  maxWidth: 380,
+                }}
+              >
+                {EMPTY_TAB_COPY[currentTab]}
+              </Text>
+            </View>
+          )
+        }
+      />
     </Screen>
   );
 }

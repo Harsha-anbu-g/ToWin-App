@@ -8,8 +8,8 @@
 // screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, useState } from 'react';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
@@ -46,7 +46,17 @@ function StatusPill({ status }) {
   );
 }
 
-function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
+// Memoized with primitive pending props, so one card's Accept spinner or a
+// list-level render never re-renders every other card (UX-705).
+const NeedCard = memo(function NeedCard({
+  need,
+  onAccept,
+  onComplete,
+  onRemove,
+  acceptingHelperId,
+  completing,
+  removing,
+}) {
   const { t, radius, type } = useTheme();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -140,7 +150,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
               <Button
                 title="Accept"
                 variant="secondary"
-                loading={pending.acceptingHelperId === app.helperId}
+                loading={acceptingHelperId === app.helperId}
                 onPress={() => onAccept(need, app)}
               />
             </View>
@@ -166,7 +176,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
               title="Mark completed"
               variant="secondary"
               size="small"
-              loading={pending.completing}
+              loading={completing}
               onPress={() => onComplete(need)}
             />
           ) : null}
@@ -175,7 +185,7 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
               title="Remove"
               variant="text"
               size="small"
-              loading={pending.removing}
+              loading={removing}
               onPress={() => onRemove(need)}
             />
           ) : null}
@@ -183,7 +193,9 @@ function NeedCard({ need, onAccept, onComplete, onRemove, pending }) {
       ) : null}
     </View>
   );
-}
+});
+
+const keyId = (need) => need.id;
 
 export default function PostedHelpList({ initialSegment = 'open' }) {
   const { t, type } = useTheme();
@@ -252,107 +264,139 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   });
 
   // The row clamps long applications to 2 lines — the confirm dialog carries
-  // the FULL message so the elder reads it all before deciding.
-  const confirmAccept = async (need, app) => {
-    const ok = await confirm({
-      title: 'Accept this helper?',
-      message:
-        `${app.helperName} will be your helper for "${need.title}".` +
-        (app.message ? `\n\nTheir message:\n“${app.message}”` : ''),
-      cancelLabel: 'Not now',
-      confirmLabel: 'Accept',
-    });
-    if (ok) accept.mutate({ needId: need.id, helperId: app.helperId });
-  };
-  const confirmComplete = async (need) => {
-    const ok = await confirm({
-      title: 'Mark as completed?',
-      message: `"${need.title}" will move to your finished requests.`,
-      cancelLabel: 'Not yet',
-      // A verb, not an adjective (rulebook alert-button audit).
-      confirmLabel: 'Mark completed',
-    });
-    if (ok) complete.mutate(need.id);
-  };
-  const confirmRemove = async (need) => {
-    const ok = await confirm({
-      title: 'Remove this request?',
-      message: `"${need.title}" will be taken down. This cannot be undone.`,
-      cancelLabel: 'Keep it',
-      confirmLabel: 'Remove',
-      destructive: true,
-    });
-    if (ok) remove.mutate(need.id);
-  };
+  // the FULL message so the elder reads it all before deciding. Stable
+  // references (confirm and mutate never change) keep the memoized cards
+  // from re-rendering when the list does.
+  const { mutate: acceptMutate } = accept;
+  const { mutate: completeMutate } = complete;
+  const { mutate: removeMutate } = remove;
+  const confirmAccept = useCallback(
+    async (need, app) => {
+      const ok = await confirm({
+        title: 'Accept this helper?',
+        message:
+          `${app.helperName} will be your helper for "${need.title}".` +
+          (app.message ? `\n\nTheir message:\n“${app.message}”` : ''),
+        cancelLabel: 'Not now',
+        confirmLabel: 'Accept',
+      });
+      if (ok) acceptMutate({ needId: need.id, helperId: app.helperId });
+    },
+    [confirm, acceptMutate]
+  );
+  const confirmComplete = useCallback(
+    async (need) => {
+      const ok = await confirm({
+        title: 'Mark as completed?',
+        message: `"${need.title}" will move to your finished requests.`,
+        cancelLabel: 'Not yet',
+        // A verb, not an adjective (rulebook alert-button audit).
+        confirmLabel: 'Mark completed',
+      });
+      if (ok) completeMutate(need.id);
+    },
+    [confirm, completeMutate]
+  );
+  const confirmRemove = useCallback(
+    async (need) => {
+      const ok = await confirm({
+        title: 'Remove this request?',
+        message: `"${need.title}" will be taken down. This cannot be undone.`,
+        cancelLabel: 'Keep it',
+        confirmLabel: 'Remove',
+        destructive: true,
+      });
+      if (ok) removeMutate(need.id);
+    },
+    [confirm, removeMutate]
+  );
 
   const looking = needs.filter((n) => n.status === 'OPEN');
   const inProgress = needs.filter((n) => n.status === 'ASSIGNED');
   const finished = needs.filter((n) => n.status === 'COMPLETED' || n.status === 'CANCELLED');
   const shown = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
+  const settled = !isLoading && !isError;
+
+  const renderNeed = useCallback(
+    ({ item: need }) => (
+      <NeedCard
+        need={need}
+        onAccept={confirmAccept}
+        onComplete={confirmComplete}
+        onRemove={confirmRemove}
+        acceptingHelperId={
+          accept.isPending && accept.variables?.needId === need.id
+            ? accept.variables.helperId
+            : null
+        }
+        completing={complete.isPending && complete.variables === need.id}
+        removing={remove.isPending && remove.variables === need.id}
+      />
+    ),
+    [
+      confirmAccept,
+      confirmComplete,
+      confirmRemove,
+      accept.isPending,
+      accept.variables,
+      complete.isPending,
+      complete.variables,
+      remove.isPending,
+      remove.variables,
+    ]
+  );
 
   return (
-    <ScrollView
+    <FlatList
+      data={settled ? shown : []}
+      keyExtractor={keyId}
+      renderItem={renderNeed}
+      // ~150pt cards: eight covers the tallest phone before the first scroll.
+      initialNumToRender={8}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingBottom: 120 }} // clears the Ask-AI FAB band on the posted-help tab
-    >
-      <SegmentedControl
-        segments={[
-          { key: 'open', label: 'Looking for Help', count: looking.length },
-          { key: 'progress', label: 'In Progress', count: inProgress.length },
-          { key: 'done', label: 'Completed', count: finished.length },
-        ]}
-        value={seg}
-        onChange={setSeg}
-        style={{ marginTop: 14 }}
-      />
-
-      {isLoading ? (
-        <SkeletonCard />
-      ) : isError ? (
-        <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
-      ) : shown.length === 0 ? (
-        <View style={{ paddingVertical: 24 }}>
-          <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-            {seg === 'open'
-              ? 'Nothing here yet. Ask your neighbors for a hand. It takes a minute.'
-              : seg === 'progress'
-                ? 'No requests in progress. When you accept a helper, it moves here.'
-                : 'No completed requests yet.'}
-          </Text>
-          {/* A real starter action — never "tap the blue button below"
-              (rulebook: no color-and-position references; empty states carry
-              their own action). */}
-          {seg === 'open' ? (
-            <Button
-              title="Post a help request"
-              variant="secondary"
-              onPress={() => router.push('/(tabs)/action')}
-              style={{ marginTop: 16 }}
-            />
-          ) : null}
-        </View>
-      ) : (
-        <View style={{ marginTop: 2 }}>
-          {shown.map((need) => (
-            <View key={need.id}>
-              <NeedCard
-                need={need}
-                onAccept={confirmAccept}
-                onComplete={confirmComplete}
-                onRemove={confirmRemove}
-                pending={{
-                  acceptingHelperId:
-                    accept.isPending && accept.variables?.needId === need.id
-                      ? accept.variables.helperId
-                      : null,
-                  completing: complete.isPending && complete.variables === need.id,
-                  removing: remove.isPending && remove.variables === need.id,
-                }}
+      ListHeaderComponent={
+        <SegmentedControl
+          segments={[
+            { key: 'open', label: 'Looking for Help', count: looking.length },
+            { key: 'progress', label: 'In Progress', count: inProgress.length },
+            { key: 'done', label: 'Completed', count: finished.length },
+          ]}
+          value={seg}
+          onChange={setSeg}
+          // marginBottom 2 restores the old list container's top offset so
+          // the first card sits exactly where it always has.
+          style={{ marginTop: 14, marginBottom: settled && shown.length > 0 ? 2 : 0 }}
+        />
+      }
+      ListEmptyComponent={
+        isLoading ? (
+          <SkeletonCard />
+        ) : isError ? (
+          <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
+        ) : (
+          <View style={{ paddingVertical: 24 }}>
+            <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
+              {seg === 'open'
+                ? 'Nothing here yet. Ask your neighbors for a hand. It takes a minute.'
+                : seg === 'progress'
+                  ? 'No requests in progress. When you accept a helper, it moves here.'
+                  : 'No completed requests yet.'}
+            </Text>
+            {/* A real starter action — never "tap the blue button below"
+                (rulebook: no color-and-position references; empty states carry
+                their own action). */}
+            {seg === 'open' ? (
+              <Button
+                title="Post a help request"
+                variant="secondary"
+                onPress={() => router.push('/(tabs)/action')}
+                style={{ marginTop: 16 }}
               />
-            </View>
-          ))}
-        </View>
-      )}
-    </ScrollView>
+            ) : null}
+          </View>
+        )
+      }
+    />
   );
 }

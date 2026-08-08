@@ -6,8 +6,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from 'lucide-react-native';
-import { useState } from 'react';
-import { FlatList, Pressable, ScrollView, Text, View } from 'react-native';
+import { memo, useCallback, useState } from 'react';
+import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
@@ -55,7 +55,8 @@ function TonalChip({ label, onPress, neutral = false }) {
   );
 }
 
-function PersonRow({ person, trailing, onPress }) {
+// Memoized so a list-level render doesn't re-render every card (UX-705).
+const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
   const { t, radius, type } = useTheme();
   return (
     <Pressable
@@ -100,7 +101,85 @@ function PersonRow({ person, trailing, onPress }) {
       {trailing}
     </Pressable>
   );
-}
+});
+
+// One pending invite, with its accept/decline pair. Pending flags arrive as
+// primitives so memo() comparison stays shallow and honest (UX-705).
+const InviteCard = memo(function InviteCard({
+  conn,
+  onAccept,
+  onDecline,
+  acceptPending,
+  declinePending,
+  disabled,
+}) {
+  const { t, type } = useTheme();
+  const router = useRouter();
+  return (
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
+      <PersonRow
+        person={{
+          name: conn.otherUserName,
+          age: conn.otherUserAge,
+          photoUrl: conn.otherUserPhotoUrl,
+          trustScore: conn.otherUserTrustScore,
+        }}
+        onPress={() => router.push(`/user/${conn.otherUserId}`)}
+      />
+      {conn.requestMessage ? (
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
+          “{conn.requestMessage}”
+        </Text>
+      ) : null}
+      {/* Tonal, not filled — several invites would mean several
+          "primaries" on one screen (HCI rule 8) */}
+      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
+        <Button
+          title="Accept"
+          variant="secondary"
+          loading={acceptPending}
+          disabled={disabled}
+          onPress={() => onAccept(conn)}
+          style={{ flex: 1 }}
+        />
+        <Button
+          title="Decline"
+          variant="text"
+          loading={declinePending}
+          disabled={disabled}
+          onPress={() => onDecline(conn)}
+          style={{ flex: 1 }}
+        />
+      </View>
+    </View>
+  );
+});
+
+const RequestedCard = memo(function RequestedCard({ conn }) {
+  const { t, type } = useTheme();
+  const router = useRouter();
+  return (
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
+      <PersonRow
+        person={{
+          name: conn.otherUserName,
+          age: conn.otherUserAge,
+          photoUrl: conn.otherUserPhotoUrl,
+          trustScore: conn.otherUserTrustScore,
+        }}
+        onPress={() => router.push(`/user/${conn.otherUserId}`)}
+        trailing={<TonalChip label="Requested" neutral />}
+      />
+      {/* Requests can't be withdrawn yet (backend has no
+          cancel) — at least say plainly what waiting means. */}
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
+        Waiting for {conn.otherUserName} to accept. They'll see your request in their invites.
+      </Text>
+    </View>
+  );
+});
+
+const keyId = (item) => item.id;
 
 export default function FriendsScreen() {
   const { t, spacing, type, fontFamily } = useTheme();
@@ -176,6 +255,48 @@ export default function FriendsScreen() {
     setRefreshing(false);
   };
 
+  const { mutate: respondMutate } = respond;
+  const acceptInvite = useCallback(
+    (conn) => respondMutate({ id: conn.id, accept: true }),
+    [respondMutate]
+  );
+  const declineInvite = useCallback(
+    async (conn) => {
+      // Declining is permanent on the backend — the label must not promise
+      // "later", and it confirms first.
+      const ok = await confirm({
+        title: 'Decline this invite?',
+        message: `${conn.otherUserName} will be told you declined. They can invite you again later.`,
+        cancelLabel: 'Keep invite',
+        confirmLabel: 'Decline',
+        destructive: true,
+      });
+      if (ok) respondMutate({ id: conn.id, accept: false });
+    },
+    [confirm, respondMutate]
+  );
+
+  const renderPendingRow = useCallback(
+    ({ item }) =>
+      seg === 'invites' ? (
+        <InviteCard
+          conn={item}
+          onAccept={acceptInvite}
+          onDecline={declineInvite}
+          acceptPending={
+            respond.isPending && respond.variables?.id === item.id && !!respond.variables?.accept
+          }
+          declinePending={
+            respond.isPending && respond.variables?.id === item.id && !respond.variables?.accept
+          }
+          disabled={respond.isPending}
+        />
+      ) : (
+        <RequestedCard conn={item} />
+      ),
+    [seg, acceptInvite, declineInvite, respond.isPending, respond.variables]
+  );
+
   const refreshControl = (
     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
   );
@@ -220,6 +341,7 @@ export default function FriendsScreen() {
           <FlatList
             data={isLoading ? [] : people}
             keyExtractor={(p) => p.userId}
+            initialNumToRender={8}
             refreshControl={refreshControl}
             contentContainerStyle={{ paddingBottom: 64, gap: 10 }}
             ListHeaderComponent={
@@ -320,89 +442,27 @@ export default function FriendsScreen() {
             }}
           />
         ) : (
-          <ScrollView refreshControl={refreshControl} contentContainerStyle={{ paddingBottom: 64, gap: 10 }}>
-            {seg === 'invites'
-              ? invites.length === 0
+          <FlatList
+            data={seg === 'invites' ? invites : requested}
+            keyExtractor={keyId}
+            renderItem={renderPendingRow}
+            initialNumToRender={8}
+            refreshControl={refreshControl}
+            contentContainerStyle={{ paddingBottom: 64, gap: 10 }}
+            ListEmptyComponent={
+              seg === 'invites'
                 ? emptyCard('No new invites. When someone asks to connect, they appear here.', {
                     failed: connsFailed,
                     what: 'your invites',
                     retry: refetchConns,
                   })
-                : invites.map((conn) => (
-                    <View key={conn.id} style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
-                      <PersonRow
-                        person={{
-                          name: conn.otherUserName,
-                          age: conn.otherUserAge,
-                          photoUrl: conn.otherUserPhotoUrl,
-                          trustScore: conn.otherUserTrustScore,
-                        }}
-                        onPress={() => router.push(`/user/${conn.otherUserId}`)}
-                      />
-                      {conn.requestMessage ? (
-                        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
-                          “{conn.requestMessage}”
-                        </Text>
-                      ) : null}
-                      {/* Tonal, not filled — several invites would mean several
-                          "primaries" on one screen (HCI rule 8) */}
-                      <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
-                        <Button
-                          title="Accept"
-                          variant="secondary"
-                          loading={respond.isPending && respond.variables?.id === conn.id && respond.variables?.accept}
-                          disabled={respond.isPending}
-                          onPress={() => respond.mutate({ id: conn.id, accept: true })}
-                          style={{ flex: 1 }}
-                        />
-                        <Button
-                          title="Decline"
-                          variant="text"
-                          loading={respond.isPending && respond.variables?.id === conn.id && !respond.variables?.accept}
-                          disabled={respond.isPending}
-                          // Declining is permanent on the backend — the label
-                          // must not promise "later", and it confirms first.
-                          onPress={async () => {
-                            const ok = await confirm({
-                              title: 'Decline this invite?',
-                              message: `${conn.otherUserName} will be told you declined. They can invite you again later.`,
-                              cancelLabel: 'Keep invite',
-                              confirmLabel: 'Decline',
-                              destructive: true,
-                            });
-                            if (ok) respond.mutate({ id: conn.id, accept: false });
-                          }}
-                          style={{ flex: 1 }}
-                        />
-                      </View>
-                    </View>
-                  ))
-              : requested.length === 0
-                ? emptyCard('No requests waiting. People you ask to connect with appear here.', {
+                : emptyCard('No requests waiting. People you ask to connect with appear here.', {
                     failed: connsFailed,
                     what: 'your requests',
                     retry: refetchConns,
                   })
-                : requested.map((conn) => (
-                    <View key={conn.id} style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14 }}>
-                      <PersonRow
-                        person={{
-                          name: conn.otherUserName,
-                          age: conn.otherUserAge,
-                          photoUrl: conn.otherUserPhotoUrl,
-                          trustScore: conn.otherUserTrustScore,
-                        }}
-                        onPress={() => router.push(`/user/${conn.otherUserId}`)}
-                        trailing={<TonalChip label="Requested" neutral />}
-                      />
-                      {/* Requests can't be withdrawn yet (backend has no
-                          cancel) — at least say plainly what waiting means. */}
-                      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
-                        Waiting for {conn.otherUserName} to accept. They'll see your request in their invites.
-                      </Text>
-                    </View>
-                  ))}
-          </ScrollView>
+            }
+          />
         )}
       </View>
     </Screen>
