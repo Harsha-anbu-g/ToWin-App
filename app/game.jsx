@@ -304,7 +304,11 @@ export default function GameScreen() {
           accessibilityLabel="Skip to Home"
           onPress={toHome}
           hitSlop={{ top: 8, bottom: 8 }}
-          style={{ alignSelf: 'center', paddingVertical: 10 }}
+          style={({ pressed }) => ({
+            alignSelf: 'center',
+            paddingVertical: 10,
+            opacity: pressed ? 0.6 : 1,
+          })}
         >
           <Text style={{ fontSize: type.meta, color: t.inkSlate, textDecorationLine: 'underline' }}>
             Skip to Home

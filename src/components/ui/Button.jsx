@@ -7,6 +7,7 @@
 // are MINIMUMS so large OS text (elder-first) wraps to 2 lines instead of
 // clipping inside a fixed pill.
 import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function Button({
@@ -25,6 +26,14 @@ export default function Button({
   const { t, radius, text, fontScaleCaps } = useTheme();
   const blocked = disabled || loading;
   const small = size === 'small';
+
+  // UX-703: real actions answer back. A primary press gets the light impact,
+  // a destructive press the warning pattern; quiet variants stay silent.
+  const handlePress = (e) => {
+    if (variant === 'primary') haptic.impact();
+    else if (variant === 'destructive') haptic.warning();
+    onPress?.(e);
+  };
 
   const shell = {
     primary: {
@@ -68,7 +77,7 @@ export default function Button({
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: blocked, busy: loading }}
       disabled={blocked}
-      onPress={onPress}
+      onPress={handlePress}
       hitSlop={small ? { top: 4, bottom: 4 } : undefined}
       style={({ pressed }) => [
         {

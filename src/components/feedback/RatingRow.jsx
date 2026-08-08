@@ -24,7 +24,13 @@ export default function RatingRow({ label, value, onChange }) {
               haptic.selection();
               onChange(value === n ? 0 : n);
             }}
-            style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+            style={({ pressed }) => ({
+              minWidth: 44,
+              minHeight: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
           >
             <Star
               size={20}

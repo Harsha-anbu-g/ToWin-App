@@ -27,6 +27,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
         {/* The dimmed parent is its own control: tapping outside the sheet is a
             third way out, alongside the × and the Close button. */}
         <Pressable
+          testID="legal-scrim"
           accessibilityRole="button"
           accessibilityLabel="Close"
           onPress={onClose}
@@ -62,7 +63,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
               accessibilityLabel="Close"
               onPress={onClose}
               hitSlop={8}
-              style={{
+              style={({ pressed }) => ({
                 width: 32,
                 height: 32,
                 borderRadius: 16,
@@ -70,7 +71,8 @@ export default function LegalModal({ title, sections, visible, onClose }) {
                 borderColor: t.border,
                 alignItems: 'center',
                 justifyContent: 'center',
-              }}
+                opacity: pressed ? 0.7 : 1,
+              })}
             >
               <Text style={{ fontSize: text.base, color: t.ink3, lineHeight: 20 }}>×</Text>
             </Pressable>

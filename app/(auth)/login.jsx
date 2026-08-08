@@ -52,7 +52,13 @@ export default function Login() {
         accessibilityLabel={showPwd ? 'Hide password' : 'Show password'}
         onPress={togglePwd}
         hitSlop={8}
-        style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+        style={({ pressed }) => ({
+          minWidth: 44,
+          minHeight: 44,
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: pressed ? 0.7 : 1,
+        })}
       >
         {showPwd ? <EyeOff size={18} color={t.ink3} /> : <Eye size={18} color={t.ink3} />}
       </Pressable>

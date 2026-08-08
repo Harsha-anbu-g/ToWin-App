@@ -148,7 +148,13 @@ export default function EmergencyContacts() {
                 accessibilityLabel={`Remove ${c.name}`}
                 onPress={() => remove.mutate(c)}
                 hitSlop={8}
-                style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+                style={({ pressed }) => ({
+                  minWidth: 44,
+                  minHeight: 44,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.7 : 1,
+                })}
               >
                 <Trash2 size={20} color={t.redDeep} />
               </Pressable>

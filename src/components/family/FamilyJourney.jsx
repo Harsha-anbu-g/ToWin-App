@@ -136,7 +136,12 @@ function SharedHelperRow({ helper, first }) {
         onPress={openProfile}
         accessibilityRole="button"
         accessibilityLabel={`See ${helper.helperName}'s full profile`}
-        style={{ minHeight: 44, justifyContent: 'center', marginTop: spacing[2] }}
+        style={({ pressed }) => ({
+          minHeight: 44,
+          justifyContent: 'center',
+          marginTop: spacing[2],
+          opacity: pressed ? 0.6 : 1,
+        })}
       >
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
           See their full profile →

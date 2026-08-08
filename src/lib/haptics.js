@@ -1,7 +1,9 @@
-// The haptic layer (rulebook §11): system patterns used strictly by their
-// documented meanings — notification haptics for task outcomes, the selection
-// tick for values changing. One event, one haptic, forever. Restraint is the
-// budget: no haptic on ordinary button presses, and the whole layer can be
+// The haptic layer (rulebook §11, widened by UX-703): system patterns used
+// strictly by their documented meanings — notification haptics for task
+// outcomes, the selection tick for values changing, the light impact for a
+// real action leaving the finger (primary button, tab change, chat send) and
+// the warning pattern for a destructive press. One event, one haptic,
+// forever; scrolls and minor touches stay silent. The whole layer can be
 // switched off (Profile → Vibration feedback) with the app fully usable
 // without it. Failures no-op silently — feedback must never become an error.
 import { Platform } from 'react-native';
@@ -70,4 +72,8 @@ export const haptic = {
   error: () => fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)),
   // A value changing under the finger (stars, segments, chips) — the tick.
   selection: () => fire(() => Haptics.selectionAsync()),
+  // A real action leaving the finger (primary press, tab change, chat send).
+  impact: () => fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
+  // A destructive press — the pattern that says "this one has consequences".
+  warning: () => fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
 };

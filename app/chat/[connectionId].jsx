@@ -17,6 +17,7 @@ import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { announce } from '../../src/lib/announce';
 import { getDraft, setDraft } from '../../src/lib/chatDrafts';
+import { haptic } from '../../src/lib/haptics';
 import { MESSAGING_STAGE, stageIndexOf } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -210,6 +211,7 @@ export default function ChatThread() {
   const handleSend = () => {
     const content = input.trim();
     if (!content || send.isPending) return;
+    haptic.impact(); // the message left the finger (UX-703)
     setInput('');
     setDraft(draftKey, '');
     send.mutate(content);
@@ -315,7 +317,13 @@ export default function ChatThread() {
           accessibilityLabel="Back to messages"
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))}
           hitSlop={8}
-          style={{ minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}
+          style={({ pressed }) => ({
+            minWidth: 44,
+            minHeight: 44,
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <ArrowLeft size={24} color={t.blueDeep} />
         </Pressable>
@@ -323,7 +331,13 @@ export default function ChatThread() {
           accessibilityRole="button"
           accessibilityLabel={`${conn?.otherUserName ?? 'Friend'}'s profile`}
           onPress={() => conn && router.push(`/user/${conn.otherUserId}`)}
-          style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3], flex: 1 }}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: spacing[3],
+            flex: 1,
+            opacity: pressed ? 0.7 : 1,
+          })}
         >
           <Avatar name={conn?.otherUserName} uri={conn?.otherUserPhotoUrl} size={38} />
           <View style={{ flex: 1 }}>
