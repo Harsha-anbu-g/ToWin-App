@@ -336,7 +336,9 @@ export default function ChatThread() {
         <Text
           style={{
             fontSize: 13,
-            color: item.failed ? t.redDeep : t.ink4,
+            // ink3, not ink4: ink4 measures 4.35:1 on the tinted bubbles (AA
+            // needs 4.5). contrast-tokens.test.js pins ink3 on both bubbles.
+            color: item.failed ? t.redDeep : t.ink3,
             marginTop: 3,
             alignSelf: 'flex-end',
             fontVariant: ['tabular-nums'],
@@ -420,6 +422,9 @@ export default function ChatThread() {
           accessibilityRole="button"
           accessibilityLabel={`${conn?.otherUserName ?? 'Friend'}'s profile`}
           onPress={() => conn && router.push(`/user/${conn.otherUserId}`)}
+          // The avatar row is 38px tall — hitSlop tops the target up to 44
+          // effective without growing the header (UX-714 browser measure).
+          hitSlop={{ top: 3, bottom: 3 }}
           style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
