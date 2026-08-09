@@ -55,7 +55,9 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
         >
           <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={44} />
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
+            {/* Serif 400 name, like ElderCard and the web hub cards (UX-711):
+                sans 600 here broke the one-app rhythm between the two hubs. */}
+            <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.ink }}>{card.customerName}</Text>
             <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
               Stage {Math.min(card.stageIndex + 1, 7)} of 7 · {SHORT_STAGES[Math.min(card.stageIndex, 6)]}
             </Text>
