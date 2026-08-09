@@ -29,7 +29,7 @@ export default function Screen({
   style,
   contentStyle,
 }) {
-  const { t, spacing, text, fontFamily, fontScaleCaps } = useTheme();
+  const { t, spacing, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
   const router = useRouter();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -73,6 +73,7 @@ export default function Screen({
               accessibilityRole="button"
               accessibilityLabel="Back"
               onPress={goBack}
+              android_ripple={pressRipple}
               hitSlop={8}
               style={({ pressed }) => ({
                 minWidth: 44,

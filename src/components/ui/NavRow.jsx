@@ -10,12 +10,13 @@ import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 function IconTarget({ label, caption, captionColor, onPress, children }) {
-  const { type, fontScaleCaps } = useTheme();
+  const { type, fontScaleCaps, pressRipple } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      android_ripple={pressRipple}
       hitSlop={{ top: 2, bottom: 2, left: 4, right: 4 }}
       style={({ pressed }) => ({
         minWidth: 44,
@@ -37,7 +38,7 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
 }
 
 export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
-  const { t, radius, type, fontScaleCaps } = useTheme();
+  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
   const router = useRouter();
 
   return (
@@ -78,6 +79,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             accessibilityRole="button"
             accessibilityLabel={`${trustScore} trust. Open your Trust Score page`}
             onPress={() => router.push('/trust')}
+            android_ripple={pressRipple}
             hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
             style={({ pressed }) => ({
               flexDirection: 'row',

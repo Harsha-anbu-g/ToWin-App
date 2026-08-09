@@ -35,7 +35,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import TortoiseMark from '../TortoiseMark';
 
 function Row({ icon: Icon, label, sublabel, onPress, first }) {
-  const { t, spacing, text } = useTheme();
+  const { t, spacing, text, pressRipple } = useTheme();
   // Plain arrow fns render a custom leading slot (the brand tortoise);
   // lucide icons (forwardRef objects, $$typeof set) get the standard look.
   const leading =
@@ -49,6 +49,7 @@ function Row({ icon: Icon, label, sublabel, onPress, first }) {
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      android_ripple={pressRipple}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
@@ -91,7 +92,7 @@ function Group({ children }) {
 }
 
 export default function MenuSheet({ visible, onClose }) {
-  const { t, spacing, text, fontFamily } = useTheme();
+  const { t, spacing, text, fontFamily, pressRipple } = useTheme();
   const { user, logout } = useAuth();
   const confirm = useConfirm();
   const router = useRouter();
@@ -147,6 +148,8 @@ export default function MenuSheet({ visible, onClose }) {
     <Modal
       visible={visible}
       transparent
+      statusBarTranslucent
+      navigationBarTranslucent
       animationType="none"
       onRequestClose={close}
       // Android Modal doesn't relocate TalkBack focus on its own — without
@@ -192,6 +195,7 @@ export default function MenuSheet({ visible, onClose }) {
             accessibilityRole="button"
             accessibilityLabel="Close menu"
             onPress={close}
+            android_ripple={pressRipple}
             hitSlop={8}
             style={({ pressed }) => ({
               minWidth: 44,
@@ -209,7 +213,9 @@ export default function MenuSheet({ visible, onClose }) {
             2026-08-02): Post Help, Posted Help, My Helpers, Offer Help,
             My Elders, My Parents and Add Friends all live on screen, so
             only the extra surfaces get rows here. */}
-        <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[12] }}>
+        {/* + insets.bottom: the drawer now runs under the translucent nav bar,
+            so the last row (Log out) needs its clearance back. */}
+        <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[12] + insets.bottom }}>
           {isHelper ? (
             // The one surface with no tab of its own — /my-jobs would be
             // unreachable without this row (orphan fix, kept on purpose).

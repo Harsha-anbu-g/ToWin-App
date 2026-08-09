@@ -61,6 +61,8 @@ export function ConfirmProvider({ children }) {
           testID="confirm-modal"
           visible
           transparent
+          statusBarTranslucent
+          navigationBarTranslucent
           animationType={reducedMotion ? 'none' : 'fade'}
           // Android hardware back and web Escape both land here. Without it an
           // elder can be stuck in a dialog with no obvious way out.

@@ -1,5 +1,6 @@
 // Legal document sheet. Port of Register.jsx's LegalModal (draft legal copy).
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LegalSections from './legal/LegalSections';
 import Button from './ui/Button';
 import { DRAFT } from '../data/legalContent';
@@ -7,13 +8,17 @@ import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function LegalModal({ title, sections, visible, onClose }) {
-  const { t, spacing, radius, text, fontFamily } = useTheme();
+  const { t, spacing, radius, text, fontFamily, pressRipple } = useTheme();
   const reducedMotion = useReducedMotion();
+  const insets = useSafeAreaInsets();
 
   return (
     <Modal
+      testID="legal-modal"
       visible={visible}
       transparent
+      statusBarTranslucent
+      navigationBarTranslucent
       animationType={reducedMotion ? 'none' : 'slide'}
       onRequestClose={onClose}
     >
@@ -22,6 +27,9 @@ export default function LegalModal({ title, sections, visible, onClose }) {
           flex: 1,
           justifyContent: 'flex-end',
           padding: spacing[5],
+          // The scrim now runs under the gesture bar, so the sheet itself must
+          // keep clear of it (profile-edit's footer pattern).
+          paddingBottom: Math.max(insets.bottom, spacing[5]),
         }}
       >
         {/* The dimmed parent is its own control: tapping outside the sheet is a
@@ -62,6 +70,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
               accessibilityRole="button"
               accessibilityLabel="Close"
               onPress={onClose}
+              android_ripple={pressRipple}
               hitSlop={8}
               style={({ pressed }) => ({
                 width: 32,

@@ -10,7 +10,7 @@ import { useTheme } from '../../theme/ThemeContext';
 
 // memo'd so a keystroke elsewhere in a form doesn't re-render every chip row.
 export default memo(function Chip({ label, selected = false, neutral = false, onPress, style }) {
-  const { t, radius, type, fontScaleCaps } = useTheme();
+  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
 
   const backgroundColor = selected ? t.blueWash : neutral ? t.surfaceFill : t.canvas;
   const borderColor = selected ? t.blueSoft : t.border;
@@ -23,6 +23,7 @@ export default memo(function Chip({ label, selected = false, neutral = false, on
       accessibilityState={{ selected }}
       onPress={onPress}
       disabled={!onPress}
+      android_ripple={pressRipple}
       // Pressed feedback (rulebook: no silent taps) — chips are among the
       // most-tapped controls and previously gave none.
       style={({ pressed }) => [

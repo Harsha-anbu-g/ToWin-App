@@ -89,7 +89,7 @@ function tabA11yLabel(label, count = 0, noun = '') {
   return count > 0 ? withCount : undefined;
 }
 
-function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps }) {
+function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps, pressRipple }) {
   // The ONE filled primary of the shell. The whole slot is the target (>=44pt).
   // Rulebook pass 2026-07-27: the circle used marginTop:-18 to poke above the
   // bar — outside its Pressable's bounds, where Android drops touches, so the
@@ -102,6 +102,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type,
       accessibilityLabel={label}
       accessibilityState={accessibilityState}
       onPress={onPress}
+      android_ripple={pressRipple}
       style={({ pressed }) => ({
         flex: 1,
         alignItems: 'center',
@@ -136,7 +137,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type,
 }
 
 export default function TabsLayout() {
-  const { t, type, fontScaleCaps } = useTheme();
+  const { t, type, fontScaleCaps, pressRipple } = useTheme();
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -258,6 +259,7 @@ export default function TabsLayout() {
                     t={t}
                     type={type}
                     fontScaleCaps={fontScaleCaps}
+                    pressRipple={pressRipple}
                   />
                 ),
               }

@@ -8,7 +8,7 @@ import { useTheme } from '../../theme/ThemeContext';
 // every tap shows progress); `style` lets rows stretch chips (flex:1) so
 // paired actions split the width like the website's side-by-side ghosts.
 export default function ActionChip({ label, onPress, tonal = false, destructive = false, disabled = false, style }) {
-  const { t, radius, type, fontScaleCaps } = useTheme();
+  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -16,6 +16,7 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      android_ripple={pressRipple}
       hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       style={({ pressed }) => [
         {

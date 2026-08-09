@@ -18,7 +18,7 @@ const parseList = (s) =>
     .filter(Boolean);
 
 export default function ChipsField({ label, value, onChangeText, helper, style }) {
-  const { t, type, radius, fontScaleCaps } = useTheme();
+  const { t, type, radius, fontScaleCaps, pressRipple } = useTheme();
   const items = parseList(value);
   const [draft, setDraft] = useState('');
 
@@ -51,6 +51,7 @@ export default function ChipsField({ label, value, onChangeText, helper, style }
               accessibilityRole="button"
               accessibilityLabel={`Remove ${item}`}
               onPress={() => remove(idx)}
+              android_ripple={pressRipple}
               // No hitSlop: the box itself clears 44pt both ways, and removal is
               // destructive — slop would eat the 8pt wrap gap and let a
               // near-miss delete the neighbouring entry.

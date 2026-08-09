@@ -120,6 +120,9 @@ export const light = {
   btnDisabled: '#94a3b8',
   shadowMenu: '0 8px 24px rgba(0,0,0,0.12)', // dropdowns/drawers (web string; RN uses elevation)
   scrim: 'rgba(0,0,0,0.2)', // drawer backdrop
+  // Android press ripple (UX-712) — ink as a subtle bounded state layer.
+  // Android-only by construction: android_ripple is ignored on iOS and web.
+  ripple: 'rgba(29, 29, 31, 0.10)',
 
   // One-off role aliases
   dotIdle: '#dfe6ec',
@@ -232,6 +235,8 @@ export const dark = {
   btnDisabled: '#55534f',
   shadowMenu: '0 8px 24px rgba(0, 0, 0, 0.5)',
   scrim: 'rgba(0, 0, 0, 0.45)',
+  // Night flips the state layer to light-on-dark; still a whisper, not a flash.
+  ripple: 'rgba(255, 255, 255, 0.12)',
 
   dotIdle: '#4a4e55',
   chipNeutral: '#33363b',
