@@ -4,7 +4,7 @@
 // length message sits under the field it names, autofill hints, and a
 // scrollable body so large OS text can't clip the button.
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Text } from 'react-native';
 import api from '../src/api/client';
 import Button from '../src/components/ui/Button';
@@ -24,6 +24,9 @@ export default function ChangePassword() {
   const [confirm, setConfirm] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  // Return-key path (UX-708): Next walks the three fields, Done submits.
+  const nextRef = useRef(null);
+  const confirmRef = useRef(null);
 
   const submit = async () => {
     const errs = {};
@@ -62,9 +65,13 @@ export default function ChangePassword() {
           error={fieldErrors.current}
           textContentType="password"
           autoComplete="current-password"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => nextRef.current?.focus()}
           style={{ marginBottom: spacing[4] }}
         />
         <PasswordInput
+          ref={nextRef}
           label="New password (at least 8 characters)"
           value={next}
           onChangeText={(v) => {
@@ -74,9 +81,13 @@ export default function ChangePassword() {
           error={fieldErrors.next}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => confirmRef.current?.focus()}
           style={{ marginBottom: spacing[4] }}
         />
         <PasswordInput
+          ref={confirmRef}
           label="Re-enter new password"
           value={confirm}
           onChangeText={(v) => {
@@ -86,6 +97,10 @@ export default function ChangePassword() {
           error={fieldErrors.confirm}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="done"
+          onSubmitEditing={() => {
+            if (!loading) submit();
+          }}
           style={{ marginBottom: spacing[5] }}
         />
         <Button

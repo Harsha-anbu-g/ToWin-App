@@ -140,10 +140,15 @@ export default function SealedItemCard({ item, releaseContactEmail, onRemove, on
           <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.ink }}>
             {SEALED_ITEMS.askPassword}
           </Text>
+          {/* A family passphrase, not an account credential: textContentType
+              "none" + autoComplete "off" keep password managers from saving
+              it over the person's real Towinly login. */}
           <PasswordInput
             label={SEALED_ITEMS.passwordLabel}
             value={password}
             onChangeText={setPassword}
+            textContentType="none"
+            autoComplete="off"
           />
           {problem ? (
             <Text

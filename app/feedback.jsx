@@ -4,7 +4,7 @@
 // src/components/feedback/ (rulebook pass follow-up: the screen file keeps
 // only the form). POST /feedback carries the same keys the website sends.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../src/api/client';
@@ -64,6 +64,13 @@ export default function Feedback() {
     setForm((f) => ({ ...f, message: v }));
     setFieldError('');
   }, []);
+
+  // Return-key path (UX-708): Next walks name → email → message; the message
+  // is multiline, so its return key types newlines and Submit stays a button.
+  const emailRef = useRef(null);
+  const messageRef = useRef(null);
+  const focusEmail = useCallback(() => emailRef.current?.focus(), []);
+  const focusMessage = useCallback(() => messageRef.current?.focus(), []);
 
   const submit = async () => {
     if (!form.message.trim()) {
@@ -127,18 +134,32 @@ export default function Feedback() {
           label="Name"
           value={form.name}
           onChangeText={setName}
+          autoCapitalize="words"
+          textContentType="name"
+          autoComplete="name"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusEmail}
           style={FIELD_GAP}
         />
         <Input
+          ref={emailRef}
           label="Email"
           value={form.email}
           onChangeText={setEmail}
           autoCapitalize="none"
+          autoCorrect={false}
           keyboardType="email-address"
+          textContentType="emailAddress"
+          autoComplete="email"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusMessage}
           style={FIELD_GAP}
         />
 
         <Input
+          ref={messageRef}
           label="Message"
           value={form.message}
           onChangeText={setMessage}

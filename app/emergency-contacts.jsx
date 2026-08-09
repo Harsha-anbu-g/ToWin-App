@@ -2,7 +2,7 @@
 // (create/read/delete only — no edit endpoint exists). The SOS button is
 // hidden app-wide for now (user call 2026-07-17); contacts remain manageable.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import api, { friendlyWriteError } from '../src/api/client';
@@ -47,6 +47,16 @@ export default function EmergencyContacts() {
       ),
     []
   );
+
+  // Return-key path (UX-708): Next walks name → phone → who they are, Done
+  // adds the contact. Stable callbacks (memo'd Inputs); the keyboard submit
+  // reads fresh form state through a latest-ref.
+  const phoneRef = useRef(null);
+  const relationshipRef = useRef(null);
+  const focusPhone = useCallback(() => phoneRef.current?.focus(), []);
+  const focusRelationship = useCallback(() => relationshipRef.current?.focus(), []);
+  const submitRef = useRef(null);
+  const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] });
 
@@ -97,6 +107,11 @@ export default function EmergencyContacts() {
     }
     add.mutate({ name: form.name.trim(), phone: digits, relationship: form.relationship.trim() || 'Contact' });
   };
+  useEffect(() => {
+    submitRef.current = () => {
+      if (!add.isPending) submit();
+    };
+  });
 
   return (
     <Screen back title="Emergency contacts" keyboard onRefresh={refresh}>
@@ -185,24 +200,37 @@ export default function EmergencyContacts() {
             <Text style={{ fontSize: text.sm, color: t.redError }}>{formError}</Text>
           </View>
         ) : null}
+        {/* No autofill hints on purpose: this is ANOTHER person's name and
+            number, and autofill would offer the elder their own. */}
         <Input
           label="Name"
           value={form.name}
           onChangeText={fieldHandlers.name}
+          autoCapitalize="words"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusPhone}
           style={FIELD_GAP}
         />
         <Input
+          ref={phoneRef}
           label="Phone number"
           value={form.phone}
           onChangeText={fieldHandlers.phone}
           keyboardType="phone-pad"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusRelationship}
           style={FIELD_GAP}
         />
         <Input
+          ref={relationshipRef}
           label="Who they are to you"
           value={form.relationship}
           onChangeText={fieldHandlers.relationship}
           helper='Like "daughter", "neighbor", or "family friend".'
+          returnKeyType="done"
+          onSubmitEditing={submitFromKeyboard}
           style={FIELD_GAP_LG}
         />
         <Button

@@ -3,7 +3,7 @@
 // NOTE: no account exists until the emailed link is opened — success routes
 // to check-email, never logs in (mirrors web).
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle, Check, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -132,6 +132,22 @@ export default function Register() {
   }, []);
   const togglePwd = useCallback(() => setShowPwd((v) => !v), []);
   const toggleConfirm = useCallback(() => setShowConfirm((v) => !v), []);
+
+  // Return-key path (UX-708): Next walks username → email → date of birth →
+  // password → re-enter, Done on the last field submits. Stable callbacks
+  // (memo'd Inputs); the submit goes through a latest-ref because it reads
+  // fresh form state, and it mirrors the Create Account button's disabled
+  // gate so the keyboard can never skip the role or terms consent.
+  const emailRef = useRef(null);
+  const dobRef = useRef(null);
+  const passwordRef = useRef(null);
+  const confirmRef = useRef(null);
+  const focusEmail = useCallback(() => emailRef.current?.focus(), []);
+  const focusDob = useCallback(() => dobRef.current?.focus(), []);
+  const focusPassword = useCallback(() => passwordRef.current?.focus(), []);
+  const focusConfirm = useCallback(() => confirmRef.current?.focus(), []);
+  const submitRef = useRef(null);
+  const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
   const pwdEye = useMemo(
     () => <EyeToggle shown={showPwd} onToggle={togglePwd} color={t.ink3} />,
     [showPwd, togglePwd, t.ink3]
@@ -181,6 +197,13 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    submitRef.current = () => {
+      if (!agreed || !form.role) return;
+      handleSubmit();
+    };
+  });
 
   const strength = pwdStrength(form.password);
   // Good/Strong read green, not blue: blue on this screen means "tap me" (role
@@ -289,10 +312,14 @@ export default function Register() {
           autoCorrect={false}
           textContentType="username"
           autoComplete="username-new"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusEmail}
           style={FIELD_GAP}
         />
 
         <Input
+          ref={emailRef}
           label="Email"
           value={form.email}
           onChangeText={setEmail}
@@ -303,6 +330,9 @@ export default function Register() {
           keyboardType="email-address"
           textContentType="emailAddress"
           autoComplete="email"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusDob}
           style={FIELD_GAP}
         />
 
@@ -310,6 +340,7 @@ export default function Register() {
             an 80-year-old, and parseFlexibleDate already accepts "14 May 1953",
             "May 14, 1953" and "1953-05-14" alike. */}
         <Input
+          ref={dobRef}
           label="Date of birth"
           value={form.dateOfBirth}
           onChangeText={setDateOfBirth}
@@ -318,10 +349,15 @@ export default function Register() {
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="birthdate"
+          autoComplete="birthdate-full"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusPassword}
           style={FIELD_GAP}
         />
 
         <Input
+          ref={passwordRef}
           label="Password"
           value={form.password}
           onChangeText={setPassword}
@@ -329,6 +365,9 @@ export default function Register() {
           secureTextEntry={!showPwd}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusConfirm}
           rightSlot={pwdEye}
         />
         {form.password ? (
@@ -351,6 +390,7 @@ export default function Register() {
         ) : null}
 
         <Input
+          ref={confirmRef}
           label="Re-enter password"
           value={form.confirmPassword}
           onChangeText={setConfirmPassword}
@@ -358,6 +398,8 @@ export default function Register() {
           secureTextEntry={!showConfirm}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="done"
+          onSubmitEditing={submitFromKeyboard}
           rightSlot={confirmEye}
           style={FIELD_GAP_TOP}
         />

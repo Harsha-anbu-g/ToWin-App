@@ -6,7 +6,14 @@ import { Eye, EyeOff } from 'lucide-react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import Input from './Input';
 
-export default function PasswordInput({ autoComplete = 'current-password', ...rest }) {
+// textContentType defaults to 'password' so iOS offers the saved credential;
+// call sites override with 'newPassword' (set-a-new-one forms) or 'none'
+// (the sealed-box passphrase, which is not an account credential).
+export default function PasswordInput({
+  autoComplete = 'current-password',
+  textContentType = 'password',
+  ...rest
+}) {
   const { t } = useTheme();
   const [shown, setShown] = useState(false);
 
@@ -16,6 +23,7 @@ export default function PasswordInput({ autoComplete = 'current-password', ...re
       autoCapitalize="none"
       autoCorrect={false}
       autoComplete={autoComplete}
+      textContentType={textContentType}
       rightSlot={
         <Pressable
           accessibilityRole="button"
