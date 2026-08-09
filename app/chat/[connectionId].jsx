@@ -80,6 +80,25 @@ export default function ChatThread() {
     setDraft(draftKey, input);
   }, [draftKey, input]);
 
+  // Failed sends stay on screen as bubbles marked "Didn't send" with retry in
+  // place (UX-710) — never dumped back into the composer over whatever the
+  // user typed since. Newest failure first, matching the inverted list.
+  const [failedSends, setFailedSends] = useState([]);
+  const failedRef = useRef(failedSends);
+  useEffect(() => {
+    failedRef.current = failedSends;
+  }, [failedSends]);
+  useEffect(
+    () => () => {
+      // Leaving the chat must not eat failed text (HCI rule 9): fold it into
+      // the draft, oldest first, ahead of whatever is sitting in the composer.
+      if (!failedRef.current.length) return;
+      const unsent = [...failedRef.current].reverse().map((f) => f.content);
+      setDraft(draftKey, [...unsent, getDraft(draftKey) ?? ''].filter(Boolean).join('\n'));
+    },
+    [draftKey]
+  );
+
   // Only poll while this thread is the focused screen — pushing the friend's
   // profile on top (or backgrounding) must stop the 5s cycle. Also keeps the
   // mark-seen effect honest: unseen messages aren't "seen" by a buried screen.
@@ -173,8 +192,6 @@ export default function ChatThread() {
     // is on screen (the just-sent message must exist SOMEWHERE at all times).
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', connectionId, channel] }),
     onError: (err, content) => {
-      // Restore the failed text without eating anything typed since (HCI rule 9)
-      setInput((cur) => (cur ? `${content} ${cur}` : content));
       // The server's trust gate answers 409 "Trust level too low to message" —
       // name that reason instead of the generic retry line, and resync so the
       // lock panel takes over the composer: this only happens when the cached
@@ -184,14 +201,20 @@ export default function ChatThread() {
         err?.response?.status === 409 &&
         /trust level too low/i.test(err?.response?.data?.message ?? '');
       if (refusedByTrustGate) {
+        // The lock panel is about to replace the composer, so a retry bubble
+        // would only re-refuse — the draft keeps the words instead (HCI rule 9).
+        setInput((cur) => (cur ? `${content} ${cur}` : content));
         queryClient.invalidateQueries({ queryKey: ['connections'] });
+        showToast(
+          'Your trust level is too low to message yet. Take the next trust step together first.',
+          'error'
+        );
+        return;
       }
-      showToast(
-        refusedByTrustGate
-          ? 'Your trust level is too low to message yet. Take the next trust step together first.'
-          : friendlyWriteError(err, "Message didn't send. Tap send to try again."),
-        'error'
-      );
+      // Every other failure marks the bubble in place with retry (UX-710) —
+      // the message never silently vanishes and never overwrites the composer.
+      setFailedSends((cur) => [{ id: `failed-${Date.now()}`, content }, ...cur]);
+      showToast(friendlyWriteError(err, "Message didn't send. Tap the message to try again."), 'error');
     },
   });
 
@@ -252,18 +275,81 @@ export default function ChatThread() {
 
   // The just-sent message must exist SOMEWHERE on screen while the server
   // works — a local bubble with a "Sending…" caption (HCI rules 1 + 9). It
-  // resolves into the real message on success and vanishes on error (the
-  // text goes back into the composer).
+  // resolves into the real message on success and becomes a "Didn't send"
+  // bubble with retry on error (UX-710).
   const listData = useMemo(() => {
-    if (!send.isPending || typeof send.variables !== 'string') return messages;
-    return [
-      { id: '__sending__', senderId: user?.userId, content: send.variables, sending: true, showDay: false },
-      ...messages,
-    ];
-  }, [messages, send.isPending, send.variables, user?.userId]);
+    const pending =
+      send.isPending && typeof send.variables === 'string'
+        ? [{ id: '__sending__', senderId: user?.userId, content: send.variables, sending: true, showDay: false }]
+        : [];
+    const failed = failedSends.map((f) => ({
+      id: f.id,
+      senderId: user?.userId,
+      content: f.content,
+      failed: true,
+      showDay: false,
+    }));
+    return [...pending, ...failed, ...messages];
+  }, [messages, send.isPending, send.variables, user?.userId, failedSends]);
+
+  // Latest-ref pattern (UX-708 precedent): retrySend stays stable across
+  // renders so the memoized renderItem never changes identity per keystroke.
+  const { mutate: sendMutate } = send;
+  const sendPendingRef = useRef(false);
+  useEffect(() => {
+    sendPendingRef.current = send.isPending;
+  }, [send.isPending]);
+  const retrySend = useCallback(
+    (item) => {
+      if (sendPendingRef.current) return;
+      haptic.impact(); // the retry is the message leaving the finger again (UX-703)
+      setFailedSends((cur) => cur.filter((f) => f.id !== item.id));
+      sendMutate(item.content);
+    },
+    [sendMutate]
+  );
 
   const renderItem = useCallback(({ item }) => {
     const mine = item.senderId === user?.userId;
+    const bubbleStyle = {
+      alignSelf: mine ? 'flex-end' : 'flex-start',
+      maxWidth: '80%',
+      backgroundColor: mine ? t.blueTint : t.bubbleIn,
+      borderRadius: radius.lg,
+      paddingHorizontal: spacing[4],
+      paddingVertical: spacing[3],
+      marginBottom: spacing[2],
+    };
+    const bubbleInner = (
+      <>
+        {/* Group thread: several people write here — every incoming bubble
+            names its speaker (senderLabel carries "Sarah, for Margaret"
+            style attribution when someone acts for the parent). */}
+        {isFamilyChannel && !mine && (item.senderLabel || item.senderName) ? (
+          <Text
+            style={{ fontSize: text.xs, fontWeight: '600', color: t.blueDeep, marginBottom: 2 }}
+          >
+            {item.senderLabel || item.senderName}
+          </Text>
+        ) : null}
+        <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
+        <Text
+          style={{
+            fontSize: 13,
+            color: item.failed ? t.redDeep : t.ink4,
+            marginTop: 3,
+            alignSelf: 'flex-end',
+            fontVariant: ['tabular-nums'],
+          }}
+        >
+          {item.failed
+            ? "Didn't send. Tap to try again."
+            : item.sending
+              ? 'Sending…'
+              : `${timeLabel(item.createdAt)}${mine ? (item.seenAt ? ' · Seen' : ' · Sent') : ''}`}
+        </Text>
+      </>
+    );
     return (
       <View>
         {item.showDay ? (
@@ -278,45 +364,23 @@ export default function ChatThread() {
             {dayLabel(item.createdAt)}
           </Text>
         ) : null}
-        <View
-          style={{
-            alignSelf: mine ? 'flex-end' : 'flex-start',
-            maxWidth: '80%',
-            backgroundColor: mine ? t.blueTint : t.bubbleIn,
-            borderRadius: radius.lg,
-            paddingHorizontal: spacing[4],
-            paddingVertical: spacing[3],
-            marginBottom: spacing[2],
-          }}
-        >
-          {/* Group thread: several people write here — every incoming bubble
-              names its speaker (senderLabel carries "Sarah, for Margaret"
-              style attribution when someone acts for the parent). */}
-          {isFamilyChannel && !mine && (item.senderLabel || item.senderName) ? (
-            <Text
-              style={{ fontSize: text.xs, fontWeight: '600', color: t.blueDeep, marginBottom: 2 }}
-            >
-              {item.senderLabel || item.senderName}
-            </Text>
-          ) : null}
-          <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
-          <Text
-            style={{
-              fontSize: 13,
-              color: t.ink4,
-              marginTop: 3,
-              alignSelf: 'flex-end',
-              fontVariant: ['tabular-nums'],
-            }}
+        {item.failed ? (
+          // The failed bubble IS the retry control — the fix lives where the
+          // problem is shown (HCI rules 6 + 9).
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Didn't send: ${item.content}. Tap to try again.`}
+            onPress={() => retrySend(item)}
+            style={({ pressed }) => ({ ...bubbleStyle, opacity: pressed ? 0.7 : 1 })}
           >
-            {item.sending
-              ? 'Sending…'
-              : `${timeLabel(item.createdAt)}${mine ? (item.seenAt ? ' · Seen' : ' · Sent') : ''}`}
-          </Text>
-        </View>
+            {bubbleInner}
+          </Pressable>
+        ) : (
+          <View style={bubbleStyle}>{bubbleInner}</View>
+        )}
       </View>
     );
-  }, [user?.userId, t, spacing, radius, text, isFamilyChannel]);
+  }, [user?.userId, t, spacing, radius, text, isFamilyChannel, retrySend]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: t.surface }}>

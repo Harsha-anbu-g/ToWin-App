@@ -207,7 +207,7 @@ test('a send refused by the server trust gate names the real reason, not the gen
       'Your trust level is too low to message yet. Take the next trust step together first.'
     )
   ).toBeTruthy();
-  expect(r.queryByText("Message didn't send. Tap send to try again.")).toBeNull();
+  expect(r.queryByText("Message didn't send. Tap the message to try again.")).toBeNull();
 });
 
 test("the family chat-closed 409 also says 'shared trust' but must NOT show the trust-step words", async () => {
@@ -226,7 +226,7 @@ test("the family chat-closed 409 also says 'shared trust' but must NOT show the 
   await fireEvent.changeText(await r.findByLabelText('Message'), 'hello there');
   await fireEvent.press(r.getByLabelText('Send message'));
 
-  expect(await r.findByText("Message didn't send. Tap send to try again.")).toBeTruthy();
+  expect(await r.findByText("Message didn't send. Tap the message to try again.")).toBeTruthy();
   expect(
     r.queryByText(
       'Your trust level is too low to message yet. Take the next trust step together first.'

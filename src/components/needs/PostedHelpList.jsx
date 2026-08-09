@@ -8,7 +8,7 @@
 // screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
@@ -226,6 +226,21 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     useCallback(() => {
       if (applicantTokens.length) markSeen(seenKey(user?.userId, 'applicants'), applicantTokens);
     }, [user?.userId, applicantTokens])
+  );
+
+  // Coming back to this screen re-checks for new applicants (UX-710, closing
+  // the react-review finding: tab screens stay mounted, so without this only
+  // a pull-to-refresh or a mutation ever refetched). The first focus is the
+  // mount — the query's own fetch already covers it.
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) {
+        firstFocus.current = false;
+        return;
+      }
+      refetch();
+    }, [refetch])
   );
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['needs-mine'] });
