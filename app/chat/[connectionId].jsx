@@ -322,6 +322,7 @@ export default function ChatThread() {
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: t.surface }}>
       {/* Header: back + who you're talking to (chat shows ONLY the conversation) */}
       <View
+        testID="chat-header"
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -330,7 +331,10 @@ export default function ChatThread() {
           paddingVertical: spacing[3],
           borderBottomWidth: 1,
           borderBottomColor: t.border,
-          backgroundColor: t.canvas,
+          // t.surface, not t.canvas: the website's header is its PAGE colour
+          // (--canvas is white there); in this app's tokens the page is
+          // t.surface and t.canvas is the card parchment (UX-707).
+          backgroundColor: t.surface,
         }}
       >
         <Pressable

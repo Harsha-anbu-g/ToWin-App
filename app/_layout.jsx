@@ -74,7 +74,19 @@ function ThemedShell() {
           headerShown: false,
           contentStyle: { backgroundColor: t.surface },
         }}
-      />
+      >
+        {/* iOS swipe-back stays ON everywhere it is safe — chat included,
+            because drafts survive leaving the thread. It goes OFF only where
+            the screen IS a form and a half-swipe would eat typed text without
+            warning; leaving those is an explicit tap on Back or Cancel
+            (UX-707). pass-on/index qualifies through its letter and story
+            composers — the heaviest text an elder types anywhere. */}
+        <Stack.Screen name="profile-edit" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="feedback" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="change-password" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="emergency-contacts" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="pass-on/index" options={{ gestureEnabled: false }} />
+      </Stack>
     </PaperProvider>
   );
 }

@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
@@ -68,6 +69,7 @@ function SectionTitle({ children }) {
 
 export default function ProfileEdit() {
   const { t, type } = useTheme();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { showToast } = useToast();
   const confirm = useConfirm();
@@ -505,7 +507,16 @@ export default function ProfileEdit() {
       </ScrollView>
 
       {/* Pinned Save Changes + Cancel (3i) */}
-      <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[3], gap: spacing[2] }}>
+      <View
+        style={{
+          paddingHorizontal: spacing[4],
+          paddingTop: spacing[2],
+          // Clear the home-indicator gesture zone (rulebook: never pin the
+          // primary under the system bar) — same pattern as feedback.
+          paddingBottom: Math.max(insets.bottom, spacing[3]),
+          gap: spacing[2],
+        }}
+      >
         <Button
           title={save.isPending ? 'Saving…' : 'Save Changes'}
           variant="primary"
