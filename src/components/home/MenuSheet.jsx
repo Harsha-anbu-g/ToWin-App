@@ -1,12 +1,11 @@
 // The ☰ menu — a drawer that slides in from the LEFT (where the button
 // lives), grouped rows inside. One feature per row, one feature per screen.
-// Motion: transform only — 240ms ease-out in, 200ms accelerate out; reduced
-// motion renders in place.
+// Motion: transform and opacity only — base ease-out in, fast accelerate
+// out (exits snap); reduced motion renders in place.
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import {
   Animated,
-  Easing,
   Modal,
   Pressable,
   ScrollView,
@@ -31,6 +30,7 @@ import { useAuth } from '../../context/AuthContext';
 import focusForScreenReader from '../../lib/focusForScreenReader';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
+import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 import TortoiseMark from '../TortoiseMark';
 
@@ -115,8 +115,8 @@ export default function MenuSheet({ visible, onClose }) {
     slide.setValue(-drawerW);
     scrim.setValue(0);
     Animated.parallel([
-      Animated.timing(slide, { toValue: 0, duration: 240, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-      Animated.timing(scrim, { toValue: 1, duration: 240, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: DURATION.base, easing: EASE.out, useNativeDriver: true }),
+      Animated.timing(scrim, { toValue: 1, duration: DURATION.base, easing: EASE.out, useNativeDriver: true }),
     ]).start();
   }, [visible, reducedMotion, drawerW, slide, scrim]);
 
@@ -127,9 +127,9 @@ export default function MenuSheet({ visible, onClose }) {
       return;
     }
     Animated.parallel([
-      // Exits accelerate away (entrances decelerate in) — Material emphasized-accelerate
-      Animated.timing(slide, { toValue: -drawerW, duration: 200, easing: Easing.bezier(0.3, 0, 0.8, 0.15), useNativeDriver: true }),
-      Animated.timing(scrim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      // Exits accelerate away (entrances decelerate in), and faster than they entered
+      Animated.timing(slide, { toValue: -drawerW, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: true }),
+      Animated.timing(scrim, { toValue: 0, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: true }),
     ]).start(() => onClose());
   };
 

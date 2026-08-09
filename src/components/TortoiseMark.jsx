@@ -21,16 +21,18 @@ import Animated, {
   withDelay,
   withTiming,
 } from 'react-native-reanimated';
+import { motion } from '../theme/tokens';
 import { useTheme } from '../theme/ThemeContext';
 import { TORTOISE_CELL_GREEN } from '../theme/parity';
 import { CELLS, DRAW, STROKE, VIEWBOX } from './tortoiseMarkPaths';
 
 const APath = Animated.createAnimatedComponent(Path);
 
-// Curves from the web's motion standards: DRAW beats use a strong ease-in-out
-// (a pen accelerating then settling); everything that ARRIVES uses ease-out.
-const EASE_DRAW = Easing.bezier(0.77, 0, 0.175, 1);
-const EASE_ARRIVE = Easing.bezier(0.23, 1, 0.32, 1);
+// The theme's shared curves, built with Reanimated's own Easing so they run
+// as worklets: DRAW beats use the strong ease-in-out (a pen accelerating
+// then settling); everything that ARRIVES uses the strong ease-out.
+const EASE_DRAW = Easing.bezier(...motion.easing.inOut);
+const EASE_ARRIVE = Easing.bezier(...motion.easing.out);
 
 // [delay, duration, easing] per drawn part — verbatim from index.css.
 const BEATS = {

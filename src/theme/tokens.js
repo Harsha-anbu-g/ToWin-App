@@ -316,6 +316,25 @@ export const type = {
 //            so these take a gentler ride (HIG: tab bars don't scale freely)
 export const fontScaleCaps = { body: 1.5, chrome: 1.2 };
 
+// Motion beats (UX-713): every UI tween picks a named beat — never a magic
+// number, never a library default. Durations all sit under the 300ms law:
+//   fast — switch knobs, exits, anything that answers a tap
+//   base — drawers, pops, on-screen travel
+//   slow — the largest surfaces only; nothing uses it yet, it is the ceiling
+// Easing ships as cubic-bezier control points, PURE DATA, because two
+// animation systems live here: RN Animated and Reanimated each build their
+// own Easing.bezier from the same numbers (src/theme/motion.js holds the
+// Animated build). TortoiseMark's intro draw keeps its own web-verbatim
+// durations (a brand beat, documented there) but draws on these curves.
+export const motion = {
+  duration: { fast: 150, base: 220, slow: 280 },
+  easing: {
+    out: [0.23, 1, 0.32, 1], // strong ease-out — everything that arrives
+    inOut: [0.77, 0, 0.175, 1], // strong ease-in-out — on-screen draw/morph
+    exit: [0.3, 0, 0.8, 0.15], // accelerate-away (Material emphasized) — exits only
+  },
+};
+
 export const fontFamily = {
   display: 'Newsreader_400Regular', // headings + tagline — weight 400 ONLY
   displayItalic: 'Newsreader_400Regular_Italic', // the italic "two" in the tagline

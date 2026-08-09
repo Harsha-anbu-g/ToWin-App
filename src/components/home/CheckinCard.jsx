@@ -10,12 +10,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Check } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { Animated, Easing, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
 import { familyNamesLabel } from '../../lib/copy';
 import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
+import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
@@ -158,8 +159,8 @@ export default function CheckinCard() {
         pop.setValue(0.92);
         Animated.timing(pop, {
           toValue: 1,
-          duration: 240,
-          easing: Easing.out(Easing.cubic),
+          duration: DURATION.base,
+          easing: EASE.out,
           useNativeDriver: true,
         }).start();
       }
