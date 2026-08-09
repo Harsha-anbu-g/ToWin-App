@@ -151,6 +151,12 @@ test('chat header: same page background and hairline, 44px labelled back', async
   );
   expect(backStyle.minWidth).toBeGreaterThanOrEqual(44);
   expect(backStyle.minHeight).toBeGreaterThanOrEqual(44);
+
+  // UX-714: the profile target beside it wraps a 38px avatar row — hitSlop
+  // tops it up to 44 effective (38 + 3 + 3), the SegmentedControl pattern.
+  // findBy: the label reads "Friend's profile" until /connections resolves.
+  const profileTarget = await r.findByLabelText(/'s profile$/);
+  expect(profileTarget.props.hitSlop).toEqual({ top: 3, bottom: 3 });
 });
 
 // ---------- source scans: coverage that survives new screens ----------

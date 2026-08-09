@@ -57,3 +57,42 @@ test('night mode deep sky ink clears 4.5:1 on the night surfaces', () => {
     expect(ratio(dark.blueDeep, bg)).toBeGreaterThanOrEqual(4.5);
   }
 });
+
+// UX-714: the final browser sweep measured in-bubble chat timestamps (ink4)
+// at 4.35-4.36:1 on the tinted bubbles by day and 4.03:1 by night — the one
+// real contrast failure left. Chat's in-bubble meta line now uses ink3;
+// these pin the math on every bubble surface so the fix cannot rot.
+const compositeOver = (rgba, bgHex) => {
+  const m = rgba.match(/rgba\(([\d.]+),\s*([\d.]+),\s*([\d.]+),\s*([\d.]+)\)/);
+  const [r, g, b, a] = [+m[1], +m[2], +m[3], +m[4]];
+  const [br, bg2, bb] = hexToRgb(bgHex);
+  const mix = (f, bk) => Math.round(f * a + bk * (1 - a));
+  return (
+    '#' +
+    [mix(r, br), mix(g, bg2), mix(b, bb)]
+      .map((v) => v.toString(16).padStart(2, '0'))
+      .join('')
+  );
+};
+
+test('chat bubble meta ink (ink3) clears 4.5:1 inside both bubbles, day and night', () => {
+  // Day: incoming bubble + own-message blue tint are both solid hexes.
+  expect(ratio(light.ink3, light.bubbleIn)).toBeGreaterThanOrEqual(4.5);
+  expect(ratio(light.ink3, light.blueTint)).toBeGreaterThanOrEqual(4.5);
+  // Night: blueTint is an alpha wash — composite it over the page first.
+  const nightMine = compositeOver(dark.blueTint, dark.surface);
+  expect(ratio(dark.ink3, dark.bubbleIn)).toBeGreaterThanOrEqual(4.5);
+  expect(ratio(dark.ink3, nightMine)).toBeGreaterThanOrEqual(4.5);
+});
+
+test('chat renders its in-bubble meta line with ink3, not the failing ink4', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const chatSrc = fs.readFileSync(
+    path.join(__dirname, '..', 'app', 'chat', '[connectionId].jsx'),
+    'utf8'
+  );
+  // The timestamp/Sending/failed line inside the bubble: its non-failed ink
+  // must be ink3. A regression back to ink4 re-fails AA on the tints.
+  expect(chatSrc).toMatch(/item\.failed \? t\.redDeep : t\.ink3/);
+});
