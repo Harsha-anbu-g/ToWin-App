@@ -106,6 +106,11 @@ export default function ForgotPassword() {
           keyboardType="email-address"
           textContentType="emailAddress"
           autoComplete="email"
+          returnKeyType="send"
+          onSubmitEditing={() => {
+            // Mirrors the button's disabled gate: no email, no request.
+            if (email.trim() && !loading) submit();
+          }}
           style={{ marginBottom: spacing[5] }}
         />
         <Button

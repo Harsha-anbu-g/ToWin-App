@@ -82,7 +82,7 @@ export default function ChipsField({ label, value, onChangeText, helper, style }
         helper={helper}
         onSubmitEditing={() => commit(draft)}
         onBlur={() => commit(draft)}
-        blurOnSubmit={false}
+        submitBehavior="submit"
         returnKeyType="done"
         autoCapitalize="none"
       />

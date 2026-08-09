@@ -2,7 +2,7 @@
 // demo accounts first (they bypass the login rate limiter), then the form card.
 // Login body field is `identifier` (username/email/phone), NOT `email`.
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -45,6 +45,15 @@ export default function Login() {
     setFieldErrors((f) => ({ ...f, password: '' }));
   }, []);
   const togglePwd = useCallback(() => setShowPwd((v) => !v), []);
+
+  // Return-key path (UX-708): Next on the identifier lands in the password,
+  // Go on the password submits. The handlers must be stable (memo'd Inputs),
+  // but handleSubmit reads fresh form state every render, so the keyboard
+  // submit goes through a latest-ref instead of a new closure per keystroke.
+  const passwordRef = useRef(null);
+  const focusPassword = useCallback(() => passwordRef.current?.focus(), []);
+  const submitRef = useRef(null);
+  const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
   const pwdEye = useMemo(
     () => (
       <Pressable
@@ -94,6 +103,9 @@ export default function Login() {
       setLoading(false);
     }
   };
+  useEffect(() => {
+    submitRef.current = handleSubmit;
+  });
 
   return (
     // Wider side margin than the app default (user call 2026-07-26: the fields
@@ -175,10 +187,14 @@ export default function Login() {
           autoCorrect={false}
           textContentType="username"
           autoComplete="username"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusPassword}
           style={FIELD_GAP}
         />
 
         <Input
+          ref={passwordRef}
           label="Password"
           value={form.password}
           onChangeText={setPassword}
@@ -186,6 +202,8 @@ export default function Login() {
           secureTextEntry={!showPwd}
           textContentType="password"
           autoComplete="current-password"
+          returnKeyType="go"
+          onSubmitEditing={submitFromKeyboard}
           rightSlot={pwdEye}
         />
 

@@ -3,7 +3,7 @@
 // OAuth itself is deferred to the release phase, so this screen is only
 // reachable once that lands — the no-token guard mirrors web behavior.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle } from 'lucide-react-native';
 import api from '../../src/api/client';
@@ -37,6 +37,8 @@ export default function FinishSetup() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Return-key path (UX-708): Next on the username lands in the phone field.
+  const phoneRef = useRef(null);
 
   // Guard: only reachable right after signing in with Google (mirrors web)
   if (!onboardingToken) {
@@ -194,10 +196,14 @@ export default function FinishSetup() {
           autoCorrect={false}
           textContentType="username"
           autoComplete="username-new"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => phoneRef.current?.focus()}
           style={{ marginBottom: spacing[4] }}
         />
 
         <Input
+          ref={phoneRef}
           label="Phone number"
           value={phone}
           onChangeText={(v) => {
@@ -210,6 +216,12 @@ export default function FinishSetup() {
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
           autoComplete="tel"
+          returnKeyType="done"
+          onSubmitEditing={() => {
+            // Mirrors the Sign In button's role gate; the keyboard is not a
+            // way around choosing who you are joining as.
+            if (role && !loading) handleSubmit();
+          }}
           style={{ marginBottom: spacing[5] }}
         />
 

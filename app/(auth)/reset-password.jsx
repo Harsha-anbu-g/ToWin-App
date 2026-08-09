@@ -2,7 +2,7 @@
 // Reached from the emailed link (/reset-password?token=…) — the token comes off
 // the query string, so the URL scheme is irrelevant here.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Text } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
@@ -23,6 +23,8 @@ export default function ResetPassword() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
+  // Return-key path (UX-708): Next lands in the re-enter field, Done submits.
+  const confirmRef = useRef(null);
 
   const heading = { fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink };
   const centerBody = { fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[3], lineHeight: 26 };
@@ -102,9 +104,13 @@ export default function ResetPassword() {
           error={fieldErrors.pw}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={() => confirmRef.current?.focus()}
           style={{ marginTop: spacing[5], marginBottom: spacing[4] }}
         />
         <PasswordInput
+          ref={confirmRef}
           label="Re-enter new password"
           value={confirm}
           onChangeText={(v) => {
@@ -114,6 +120,10 @@ export default function ResetPassword() {
           error={fieldErrors.confirm}
           textContentType="newPassword"
           autoComplete="new-password"
+          returnKeyType="done"
+          onSubmitEditing={() => {
+            if (!loading) submit();
+          }}
           style={{ marginBottom: spacing[5] }}
         />
         <Button

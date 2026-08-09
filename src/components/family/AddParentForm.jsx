@@ -4,7 +4,7 @@
 // seat rule — never flip it): 'elder' = a FAMILY user adding their parent
 // (FamilyHome), 'family' = an elder adding a family member (MyFamily).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
@@ -38,6 +38,8 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
   const [identifier, setIdentifier] = useState('');
   const [relationship, setRelationship] = useState('');
   const [formError, setFormError] = useState('');
+  // Return-key path (UX-708): Next lands in the relationship field.
+  const relationshipRef = useRef(null);
 
   const copy = COPY[side];
 
@@ -91,6 +93,8 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
         {copy.helper}
       </Text>
 
+      {/* Autofill is told to stand down: this identifies the OTHER person,
+          and iOS/Android would otherwise offer the user's own handle. */}
       <Input
         label="Username, email or phone"
         value={identifier}
@@ -98,13 +102,21 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
         placeholder="Exactly as they use it on Towinly"
         autoCapitalize="none"
         autoCorrect={false}
+        textContentType="none"
+        autoComplete="off"
+        returnKeyType="next"
+        submitBehavior="submit"
+        onSubmitEditing={() => relationshipRef.current?.focus()}
         style={{ marginTop: spacing[4] }}
       />
       <Input
+        ref={relationshipRef}
         label={copy.relationshipLabel}
         value={relationship}
         onChangeText={setRelationship}
         placeholder="Daughter, Son, Niece…"
+        autoCapitalize="words"
+        returnKeyType="done"
         style={{ marginTop: spacing[4] }}
       />
 

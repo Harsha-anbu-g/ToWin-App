@@ -5,7 +5,7 @@
 // (recognition over recall); pinned Save Changes + Cancel (3i).
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { friendlyWriteError } from '../src/api/client';
@@ -276,6 +276,15 @@ export default function ProfileEdit() {
     []
   );
   const set = (key) => fieldHandlers[key];
+
+  // Return-key path (UX-708): only the two adjacent text pairs chain
+  // (name → date of birth, city → phone). The other fields sit next to chip
+  // groups or multiline boxes, where a forced focus jump scrolls the form
+  // out from under the reader.
+  const dobRef = useRef(null);
+  const phoneRef = useRef(null);
+  const focusDob = useCallback(() => dobRef.current?.focus(), []);
+  const focusPhone = useCallback(() => phoneRef.current?.focus(), []);
   const genderHandlers = useMemo(
     () =>
       Object.fromEntries(
@@ -338,8 +347,20 @@ export default function ProfileEdit() {
         </View>
 
         <SectionTitle>About you</SectionTitle>
-        <Input label="Full name" value={form.name} onChangeText={set('name')} style={FIELD_GAP} />
         <Input
+          label="Full name"
+          value={form.name}
+          onChangeText={set('name')}
+          autoCapitalize="words"
+          textContentType="name"
+          autoComplete="name"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusDob}
+          style={FIELD_GAP}
+        />
+        <Input
+          ref={dobRef}
           label="Date of birth"
           value={form.dateOfBirth}
           onChangeText={(v) => {
@@ -349,6 +370,8 @@ export default function ProfileEdit() {
           error={dobError}
           helper="Any way you like: 1953-05-14 or 14 May 1953. Only your age shows to others."
           autoCapitalize="none"
+          textContentType="birthdate"
+          autoComplete="birthdate-full"
           style={FIELD_GAP}
         />
         <Input
@@ -370,6 +393,8 @@ export default function ProfileEdit() {
           value={form.occupation}
           onChangeText={set('occupation')}
           helper={isHelper ? 'What you do or study.' : 'What you did or still do.'}
+          textContentType="jobTitle"
+          autoComplete="organization-title"
           style={FIELD_GAP}
         />
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 8 }}>
@@ -421,14 +446,22 @@ export default function ProfileEdit() {
           value={form.city}
           onChangeText={set('city')}
           helper="Used only to match you with people nearby."
+          autoCapitalize="words"
+          textContentType="addressCity"
+          autoComplete="postal-address-locality"
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusPhone}
           style={FIELD_GAP}
         />
         <Input
+          ref={phoneRef}
           label="Phone number"
           value={form.phone}
           onChangeText={set('phone')}
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
+          autoComplete="tel"
           helper="Only shared after both people reach the Phone Ready trust stage."
           style={FIELD_GAP}
         />
@@ -437,6 +470,8 @@ export default function ProfileEdit() {
           value={form.facebookUrl}
           onChangeText={set('facebookUrl')}
           autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="URL"
           keyboardType="url"
           style={FIELD_GAP}
         />
