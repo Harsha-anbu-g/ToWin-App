@@ -51,6 +51,7 @@ export default function Screen({
   const header =
     title || headerLeft || headerRight || back ? (
       <View
+        testID="screen-header"
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -58,6 +59,12 @@ export default function Screen({
           paddingHorizontal: spacing[5],
           paddingVertical: spacing[3],
           minHeight: 56,
+          // One header treatment everywhere (UX-707): page colour with the
+          // warm hairline underneath — the website NavBar ported (background
+          // var(--canvas) = its page colour, borderBottom var(--border)).
+          backgroundColor: t.surface,
+          borderBottomWidth: 1,
+          borderBottomColor: t.border,
         }}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', flexShrink: 1, gap: spacing[2] }}>
