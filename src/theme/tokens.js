@@ -12,7 +12,13 @@ export const light = {
   blueFocus: '#0071e3',
   blueDark: '#004499',
   blueOnDark: '#4FA3CE',
-  blueDeep: '#2E7DA6', // text/icons on light
+  // UX-709 audit 2026-08-08: the website's #2E7DA6 measured 4.15:1 on the
+  // parchment page and 4.12:1 on the blue tints, under AA for the 11-16px
+  // labels it carries (active tab, quiet actions, Ask-AI chip). Same hue and
+  // saturation, darkened until every surface clears 4.5:1 (guarded by
+  // contrast-tokens.test.js). badgeFill below deliberately keeps #2E7DA6:
+  // white-on-fill needs a different equation and the owner locked that pair.
+  blueDeep: '#2A7298', // text/icons on light
   blueTeal: '#3D8AB0',
   blueMid: '#7BB8D6', // loading / disabled
   blueSoft: '#BFD9EA', // soft borders
