@@ -12,6 +12,7 @@ import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
 import LoadError from '../../src/components/ui/LoadError';
+import { SkeletonLine } from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -35,6 +36,26 @@ const dayLabel = (iso) => {
 
 const timeLabel = (iso) =>
   new Date(iso).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+
+// Loading sketch in the thread's own shape: a few quiet bubble blocks where
+// the messages will land (UX-706: never a blank thread, never a spinner).
+// Static like every Skeleton, so reduced motion has nothing to strip.
+function ChatSkeleton() {
+  const { spacing, radius } = useTheme();
+  return (
+    <View
+      testID="chat-skeleton"
+      accessibilityRole="progressbar"
+      accessibilityLabel="Loading"
+      // Un-flip inside the inverted list, same trick as LoadError above.
+      style={{ transform: [{ scaleY: -1 }], gap: spacing[3] }}
+    >
+      <SkeletonLine width="55%" height={44} style={{ borderRadius: radius.lg }} />
+      <SkeletonLine width="68%" height={44} style={{ borderRadius: radius.lg, alignSelf: 'flex-end' }} />
+      <SkeletonLine width="45%" height={44} style={{ borderRadius: radius.lg }} />
+    </View>
+  );
+}
 
 export default function ChatThread() {
   const { t, spacing, radius, text } = useTheme();
@@ -366,7 +387,8 @@ export default function ChatThread() {
             isLoading ? (
               // A pending load must never masquerade as an empty chat — the
               // "Say hello" prompt was flashing on full threads (rulebook).
-              null
+              // And it must never be a blank screen either (UX-706).
+              <ChatSkeleton />
             ) : isError ? (
               // A failed load must never masquerade as an empty chat (HCI rule 9)
               <LoadError

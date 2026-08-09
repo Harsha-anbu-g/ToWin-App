@@ -71,7 +71,7 @@ export default function FamilyParentScreen() {
   const router = useRouter();
   const [tab, setTab] = useState('friendships');
 
-  const { data: family, isLoading: linksLoading } = useQuery({
+  const { data: family, isLoading: linksLoading, isError: linksFailed, refetch: refetchLinks } = useQuery({
     queryKey: ['family-links'],
     queryFn: async () => (await api.get('/family/links')).data,
   });
@@ -161,7 +161,15 @@ export default function FamilyParentScreen() {
     // keyboard: the needs form and the review form live down this page, and
     // the keyboard must never cover the field being typed into (UX-702).
     <Screen back keyboard onRefresh={reload}>
-      {!loaded ? (
+      {linksFailed && !family ? (
+        // A dropped links fetch used to hold the skeleton forever (UX-706).
+        // It must also never wear "this parent is no longer linked to you".
+        <LoadError
+          what="your parent's page"
+          onRetry={refetchLinks}
+          style={{ marginTop: spacing[4] }}
+        />
+      ) : !loaded ? (
         <View style={{ marginTop: spacing[4] }}>
           <SkeletonCard lines={4} />
         </View>

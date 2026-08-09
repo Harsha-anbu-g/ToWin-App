@@ -13,7 +13,9 @@ import Button from '../src/components/ui/Button';
 import ChipsField from '../src/components/ui/ChipsField';
 import Chip from '../src/components/ui/Chip';
 import Input from '../src/components/ui/Input';
+import LoadError from '../src/components/ui/LoadError';
 import Screen from '../src/components/ui/Screen';
+import SkeletonCard from '../src/components/ui/Skeleton';
 import { useAuth } from '../src/context/AuthContext';
 import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
@@ -77,7 +79,7 @@ export default function ProfileEdit() {
   // (web ElderOnly guard on /family; FAM-403).
   const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
 
-  const { data: me } = useQuery({
+  const { data: me, isError: meFailed, refetch: refetchMe } = useQuery({
     queryKey: ['profile-me'],
     queryFn: async () => (await api.get('/profile/me')).data,
   });
@@ -279,6 +281,24 @@ export default function ProfileEdit() {
       ),
     []
   );
+
+  // Until the profile is here there is no form to show (UX-706). An empty
+  // form would be worse than a wait: saving it would overwrite the real
+  // profile with blanks. Skeleton while loading, LoadError with retry on
+  // failure. The cached profile normally makes both invisible.
+  if (!me) {
+    return (
+      <Screen back title="Edit Profile">
+        {meFailed ? (
+          <LoadError what="your profile" onRetry={refetchMe} />
+        ) : (
+          <View testID="profile-edit-loading" style={{ marginTop: spacing[2] }}>
+            <SkeletonCard lines={6} />
+          </View>
+        )}
+      </Screen>
+    );
+  }
 
   return (
     <Screen back title="Edit Profile" scroll={false} keyboard contentStyle={{ padding: 0 }}>
