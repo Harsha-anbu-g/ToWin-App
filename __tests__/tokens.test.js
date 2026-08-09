@@ -2,7 +2,11 @@ import { light, dark, spacing, radius, text, type, fontFamily } from '../src/the
 
 test('core brand tokens match index.css exactly', () => {
   expect(light.blue).toBe('#4FA3CE');
-  expect(light.blueDeep).toBe('#2E7DA6');
+  // UX-709 machine audit 2026-08-08: the website's #2E7DA6 measured 4.15:1 on
+  // the parchment page and 4.12:1 on the blue tints (needs 4.5:1): same hue,
+  // darkened until every real background clears AA. Same precedent as
+  // inkFaint2 below: audited AA fixes supersede raw parity.
+  expect(light.blueDeep).toBe('#2A7298');
   expect(light.greenDeep).toBe('#1a5c2e');
   expect(light.canvas).toBe('#f6f4ef'); // all boxes warm parchment (user 2026-07-12)
   expect(light.border).toBe('#e5e1d9');
