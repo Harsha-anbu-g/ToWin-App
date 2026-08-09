@@ -24,13 +24,14 @@ import {
   Video,
 } from 'lucide-react-native';
 import { useRef, useState } from 'react';
-import { Animated, Easing, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TortoiseMark, { IntroBrandLockup } from '../../src/components/TortoiseMark';
 import Button from '../../src/components/ui/Button';
 import { COPY, CHAPTERS, STAGES } from '../../src/data/landingSlides';
 import { markOnboarded } from '../../src/lib/onboarding';
 import { useReducedMotion } from '../../src/lib/useReducedMotion';
+import { DURATION, EASE } from '../../src/theme/motion';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 const STAGE_ICONS = {
@@ -319,8 +320,8 @@ export default function Landing() {
     else {
       Animated.timing(walk, {
         toValue: i / last,
-        duration: 240,
-        easing: Easing.out(Easing.cubic),
+        duration: DURATION.base,
+        easing: EASE.out,
         useNativeDriver: true, // transform-only (scaleY + translateY) — UI thread
       }).start();
     }

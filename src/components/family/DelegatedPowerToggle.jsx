@@ -7,11 +7,12 @@
 // half-on. Optimistic flip; the server's answer is the record that decides.
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, Text, View } from 'react-native';
+import { Animated, Pressable, Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
 import { useReducedMotion } from '../../lib/useReducedMotion';
+import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 
 // Track/knob geometry — same numbers as FamilyShareToggle (the web control's
@@ -38,8 +39,8 @@ function PowerSwitch({ power, name, isOn, busy, onFlip }) {
     }
     Animated.timing(slide, {
       toValue: dest,
-      duration: 160,
-      easing: Easing.bezier(0.23, 1, 0.32, 1),
+      duration: DURATION.fast,
+      easing: EASE.out,
       useNativeDriver: true,
     }).start();
   }, [isOn, reducedMotion, slide]);
