@@ -20,6 +20,7 @@ import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
+import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
@@ -99,11 +100,8 @@ export default function PassOnSheet() {
       <Text style={{ fontSize: text.sm, color: t.ink3, lineHeight: 24 }}>{SHEET.pageLead}</Text>
 
       {isError ? (
-        <Card>
-          <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 24 }}>
-            {SHEET.failed}
-          </Text>
-        </Card>
+        // With retry in place, never a dead-end sentence (UX-706 / HCI 9).
+        <LoadError what="your one-page copy" onRetry={refetch} />
       ) : !sheet ? (
         <SkeletonCard lines={3} />
       ) : (

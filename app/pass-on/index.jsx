@@ -21,6 +21,7 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
@@ -210,7 +211,9 @@ export default function PassOn() {
   const [settingUp, setSettingUp] = useState(false);
 
   const enabled = !!user;
-  const { data: mine, isLoading } = useQuery({
+  // isError + refetch on the content queries (UX-706): a failed load must
+  // show LoadError with retry, never "Nothing in your boxes yet".
+  const { data: mine, isLoading, isError: mineFailed, refetch: refetchMine } = useQuery({
     queryKey: ['passon-mine'],
     queryFn: async () => (await api.get('/passon/mine')).data,
     enabled,
@@ -225,7 +228,7 @@ export default function PassOn() {
     queryFn: async () => (await api.get('/connections')).data,
     enabled,
   });
-  const { data: setup } = useQuery({
+  const { data: setup, isLoading: setupLoading, isError: setupFailed, refetch: refetchSetup } = useQuery({
     queryKey: ['passon-setup'],
     queryFn: async () => (await api.get('/passon/setup')).data,
     enabled,
@@ -438,8 +441,9 @@ export default function PassOn() {
             />
           )}
 
+          {mineFailed ? <LoadError what="your stories" onRetry={refetchMine} /> : null}
           {isLoading && !mine ? <SkeletonCard lines={3} /> : null}
-          {!isLoading && stories.length === 0 && !writingHere('STORY') ? (
+          {!isLoading && !mineFailed && stories.length === 0 && !writingHere('STORY') ? (
             <Empty>{STORY_BOX.empty}</Empty>
           ) : null}
 
@@ -487,7 +491,9 @@ export default function PassOn() {
             />
           )}
 
-          {!isLoading && letters.length === 0 && !writingHere('LETTER') ? (
+          {mineFailed ? <LoadError what="your letters" onRetry={refetchMine} /> : null}
+          {isLoading && !mine ? <SkeletonCard lines={3} /> : null}
+          {!isLoading && !mineFailed && letters.length === 0 && !writingHere('LETTER') ? (
             <Empty>{LETTERS.empty}</Empty>
           ) : null}
 
@@ -506,7 +512,11 @@ export default function PassOn() {
         <View accessibilityLabel="Your sealed box" style={{ gap: spacing[4] }}>
           {/* Three states, one at a time: the teaching card before she has
               decided anything, the three steps while she is deciding, and who
-              holds a key once she has. */}
+              holds a key once she has. A failed or pending setup fetch says
+              so honestly first (UX-706): without this, a network drop wore
+              the teaching card and Start led nowhere. */}
+          {setupFailed ? <LoadError what="your Sealed box" onRetry={refetchSetup} /> : null}
+          {setupLoading && !setup ? <SkeletonCard lines={3} /> : null}
           {settingUp && setup ? (
             <SealedSetup
               family={family}
@@ -543,7 +553,7 @@ export default function PassOn() {
             />
           ) : null}
 
-          {!settingUp && !setup?.armed ? (
+          {!settingUp && !setupLoading && !setupFailed && !setup?.armed ? (
             <>
               <SealedBoxTeaching />
               <Button
