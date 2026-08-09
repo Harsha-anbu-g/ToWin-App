@@ -23,7 +23,7 @@ export default function Button({
   accessibilityLabel,
   accessibilityHint,
 }) {
-  const { t, radius, text, fontScaleCaps } = useTheme();
+  const { t, radius, text, fontScaleCaps, pressRipple } = useTheme();
   const blocked = disabled || loading;
   const small = size === 'small';
 
@@ -78,6 +78,7 @@ export default function Button({
       accessibilityState={{ disabled: blocked, busy: loading }}
       disabled={blocked}
       onPress={handlePress}
+      android_ripple={pressRipple}
       hitSlop={small ? { top: 4, bottom: 4 } : undefined}
       style={({ pressed }) => [
         {

@@ -42,10 +42,23 @@ export function ThemeProvider({ children }) {
 
   // Stable value: useTheme() is consumed by nearly every component, so a fresh
   // object here would re-render the whole tree on every provider render.
-  const value = useMemo(
-    () => ({ mode, toggle, t: mode === 'dark' ? dark : light, spacing, radius, text, type, fontFamily, fontScaleCaps }),
-    [mode, toggle]
-  );
+  const value = useMemo(() => {
+    const t = mode === 'dark' ? dark : light;
+    return {
+      mode,
+      toggle,
+      t,
+      spacing,
+      radius,
+      text,
+      type,
+      fontFamily,
+      fontScaleCaps,
+      // UX-712: the one android_ripple config every shared touchable passes —
+      // bounded, themed, subtle. One object so call sites can't drift.
+      pressRipple: { color: t.ripple },
+    };
+  }, [mode, toggle]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

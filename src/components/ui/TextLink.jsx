@@ -6,7 +6,7 @@ import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function TextLink({ label, onPress, muted = false, disabled = false, style, textStyle }) {
-  const { t, type, fontScaleCaps } = useTheme();
+  const { t, type, fontScaleCaps, pressRipple } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -14,6 +14,7 @@ export default function TextLink({ label, onPress, muted = false, disabled = fal
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      android_ripple={pressRipple}
       hitSlop={{ left: 8, right: 8 }}
       style={({ pressed }) => [
         {

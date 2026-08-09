@@ -7,7 +7,7 @@ import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default function SegmentedControl({ segments, value, onChange, style }) {
-  const { t, radius, type, fontScaleCaps } = useTheme();
+  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
 
   return (
     <View
@@ -38,6 +38,7 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
               if (seg.key !== value) haptic.selection();
               onChange(seg.key);
             }}
+            android_ripple={pressRipple}
             hitSlop={{ top: 5, bottom: 5 }}
             // Pressed feedback (rulebook: no silent taps) — this is the primary
             // in-screen filter control on 8+ screens and previously gave none.

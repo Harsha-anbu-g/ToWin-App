@@ -14,7 +14,7 @@ export default function PasswordInput({
   textContentType = 'password',
   ...rest
 }) {
-  const { t } = useTheme();
+  const { t, pressRipple } = useTheme();
   const [shown, setShown] = useState(false);
 
   return (
@@ -29,6 +29,7 @@ export default function PasswordInput({
           accessibilityRole="button"
           accessibilityLabel={shown ? 'Hide password' : 'Show password'}
           onPress={() => setShown((v) => !v)}
+          android_ripple={pressRipple}
           hitSlop={4}
           style={({ pressed }) => ({
             minWidth: 44,

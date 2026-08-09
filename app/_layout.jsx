@@ -64,7 +64,9 @@ function ThemedShell() {
 
   return (
     <PaperProvider theme={paperTheme}>
-      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} backgroundColor={t.surface} />
+      {/* Style only: SDK 54 is edge-to-edge on Android, where backgroundColor
+          is ignored (and warns) — the bar sits over the screen's own surface. */}
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       {/* Mounted once, always, and empty until something is announced — a live
           region created at the same moment as its text is routinely missed. */}
       <LiveRegion />

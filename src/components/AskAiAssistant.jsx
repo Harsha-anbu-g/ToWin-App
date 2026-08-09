@@ -46,7 +46,7 @@ const SUGGESTIONS = [
 const mascot = require('../../assets/ai-tortoise-small.png');
 
 export default function AskAiAssistant() {
-  const { t, spacing, radius, type, text } = useTheme();
+  const { t, spacing, radius, type, text, pressRipple } = useTheme();
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
@@ -173,6 +173,7 @@ export default function AskAiAssistant() {
         accessibilityRole="button"
         accessibilityLabel="Ask AI, your Towinly helper"
         onPress={() => setOpen(true)}
+        android_ripple={pressRipple}
         style={({ pressed }) => ({
           position: 'absolute',
           right: 16,
@@ -197,6 +198,8 @@ export default function AskAiAssistant() {
       <Modal
         visible={open}
         transparent
+        statusBarTranslucent
+        navigationBarTranslucent
         animationType={reducedMotion ? 'none' : 'slide'}
         onRequestClose={close}
         // Android Modal doesn't relocate TalkBack focus on its own — hand it to
@@ -231,6 +234,7 @@ export default function AskAiAssistant() {
                 accessibilityRole="button"
                 accessibilityLabel="Close"
                 onPress={close}
+                android_ripple={pressRipple}
                 hitSlop={8}
                 style={({ pressed }) => ({
                   minWidth: 44,
@@ -273,6 +277,7 @@ export default function AskAiAssistant() {
                       accessibilityRole="button"
                       accessibilityLabel="Read the greeting aloud"
                       onPress={() => speak(GREETING)}
+                      android_ripple={pressRipple}
                       hitSlop={{ top: 7, bottom: 7 }}
                       style={({ pressed }) => ({
                         flexDirection: 'row',
@@ -303,6 +308,7 @@ export default function AskAiAssistant() {
                           accessibilityRole="button"
                           accessibilityLabel={s}
                           onPress={() => send(s)}
+                          android_ripple={pressRipple}
                           style={({ pressed }) => ({
                             backgroundColor: t.canvas,
                             borderWidth: 1,
@@ -355,6 +361,7 @@ export default function AskAiAssistant() {
                           accessibilityRole="button"
                           accessibilityLabel="Read this answer aloud"
                           onPress={() => speak(item.content)}
+                          android_ripple={pressRipple}
                           hitSlop={{ left: 8, right: 8 }}
                           style={({ pressed }) => ({
                             flexDirection: 'row',
@@ -378,6 +385,7 @@ export default function AskAiAssistant() {
                           accessibilityRole="button"
                           accessibilityLabel="Report this answer"
                           onPress={() => reportAnswer(item.content)}
+                          android_ripple={pressRipple}
                           hitSlop={{ left: 8, right: 8 }}
                           style={({ pressed }) => ({
                             flexDirection: 'row',
@@ -420,6 +428,7 @@ export default function AskAiAssistant() {
                   accessibilityRole="button"
                   accessibilityLabel="Speak your question"
                   onPress={startVoice}
+                  android_ripple={pressRipple}
                   style={({ pressed }) => ({
                     width: 44,
                     height: 44,
@@ -460,6 +469,7 @@ export default function AskAiAssistant() {
                   accessibilityState={{ disabled: !input.trim() || thinking }}
                   disabled={!input.trim() || thinking}
                   onPress={() => send(input)}
+                  android_ripple={pressRipple}
                   style={({ pressed }) => ({
                     width: 44,
                     height: 44,
