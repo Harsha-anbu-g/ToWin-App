@@ -95,11 +95,11 @@ const NeedCard = memo(function NeedCard({
             accessibilityLabel={open ? 'Hide helpers' : 'View helpers'}
             accessibilityState={{ expanded: open }}
             onPress={() => setOpen((v) => !v)}
-            hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
-              // minHeight, not height: the label must grow with the user's text
-              // size instead of clipping (34 is the default-size look).
-              minHeight: 34,
+              // A real 44pt box, not 34 plus hitSlop the web build throws away
+              // (DEEP-08). min, not fixed: the label grows with the user's text
+              // size instead of clipping.
+              minHeight: 44,
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: radius.pill,
@@ -134,6 +134,10 @@ const NeedCard = memo(function NeedCard({
                   alignItems: 'center',
                   gap: 12,
                   flex: 1,
+                  // A helper who wrote no message leaves this row at the 40pt
+                  // avatar, and hitSlop was carrying the last 4 (DEEP-08 again,
+                  // one line below). The slop stays as a native-only bonus.
+                  minHeight: 44,
                   opacity: pressed ? 0.7 : 1,
                 })}
               >

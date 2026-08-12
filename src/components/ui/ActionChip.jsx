@@ -1,6 +1,8 @@
 // Hairline action chip (Message · View Profile · End) — shared by both trust
-// panels. 36pt visual; hitSlop tops the target past 44pt. tonal = sky outline
-// for the lead action, destructive = red outline (red is semantic only).
+// panels. The 44pt target is a real box, not hitSlop: react-native-web drops
+// hitSlop, so the web build got a 36pt chip (DEEP-08), and chips sit in rows
+// with an 8pt gap that slop would eat (Chip.jsx). tonal = sky outline for the
+// lead action, destructive = red outline (red is semantic only).
 import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -17,11 +19,10 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       disabled={disabled}
       onPress={onPress}
       android_ripple={pressRipple}
-      hitSlop={{ top: 6, bottom: 6, left: 4, right: 4 }}
       style={({ pressed }) => [
         {
           // min, not fixed — the label must wrap at large OS text, never clip
-          minHeight: 36,
+          minHeight: 44,
           paddingVertical: 8,
           paddingHorizontal: 16,
           borderRadius: radius.pill,

@@ -272,12 +272,20 @@ export default function MyEldersPanel() {
   const building = active.filter((c) => stageOf(c) < 6);
   const shown = seg === 'trusted' ? trusted : building;
   // A paused friendship leaves the ACTIVE list — surface it here so the way
-  // back (Resume) stays visible (HCI rule 3).
-  const paused = filterBlocked(
+  // back (Resume) stays visible (HCI rule 3), in the SAME segment it was paused
+  // from. The pause toast promises nothing is lost, so a trusted elder must not
+  // drop out of Trusted Elders into Building Trust (deep audit; MyHelpersPanel
+  // already splits this way). /trust/my-score covers ACTIVE only, so the level
+  // comes from the connection's own currentTrustLevel — the backend enum name
+  // (common/enums/TrustLevel.java), where TRUSTED is the top rung.
+  const pausedAll = filterBlocked(
     (connections ?? []).filter((c) => c.status === 'PAUSED'),
     blocked,
     (c) => c.otherUserId
   );
+  const pausedTrusted = pausedAll.filter((c) => c.currentTrustLevel === 'TRUSTED');
+  const pausedBuilding = pausedAll.filter((c) => c.currentTrustLevel !== 'TRUSTED');
+  const paused = seg === 'trusted' ? pausedTrusted : pausedBuilding;
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['connections'] });
@@ -370,8 +378,8 @@ export default function MyEldersPanel() {
 
       <SegmentedControl
         segments={[
-          { key: 'trusted', label: 'Trusted Elders', count: trusted.length },
-          { key: 'building', label: 'Building Trust', count: building.length },
+          { key: 'trusted', label: 'Trusted Elders', count: trusted.length + pausedTrusted.length },
+          { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
         ]}
         value={seg}
         onChange={setSeg}
@@ -382,7 +390,7 @@ export default function MyEldersPanel() {
         <SkeletonCard lines={4} />
       ) : isError ? (
         <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 16 }} />
-      ) : shown.length === 0 && (seg !== 'building' || paused.length === 0) ? (
+      ) : shown.length === 0 && paused.length === 0 ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 16, marginTop: 16 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
@@ -409,7 +417,7 @@ export default function MyEldersPanel() {
           />
         ))
       )}
-      {!isLoading && !isError && seg === 'building'
+      {!isLoading && !isError
         ? paused.map((c) => (
             <PausedCard
               key={c.id}

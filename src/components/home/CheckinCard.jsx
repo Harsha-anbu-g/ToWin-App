@@ -138,10 +138,12 @@ export default function CheckinCard() {
   });
 
   // Who sees this check-in. Only links where she sits in the elder seat — the
-  // family she watches over herself are on the other side and see nothing. A
-  // failure leaves the list empty, which shows the invitation instead; the
-  // check-in itself never waits on this call.
-  const { data: familyLinks } = useQuery({
+  // family she watches over herself are on the other side and see nothing. The
+  // check-in itself never waits on this call, and on a failure the whole line
+  // goes quiet: an empty list would render "Add your family", telling an elder
+  // whose daughter IS linked that she is not (deep audit). Saying nothing is
+  // honest; inviting a duplicate request is a claim.
+  const { data: familyLinks, isError: familyFailed } = useQuery({
     queryKey: ['family-links'],
     queryFn: async () => (await api.get('/family/links')).data,
   });
@@ -231,7 +233,7 @@ export default function CheckinCard() {
                 loading={checkin.isPending}
               />
             )}
-            <FamilyNote names={familyNames} checkedIn={done} />
+            {familyFailed ? null : <FamilyNote names={familyNames} checkedIn={done} />}
           </View>
 
           {/* The run of days behind it — the reward, not the reason. */}

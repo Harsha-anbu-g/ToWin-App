@@ -8,12 +8,16 @@ import { svgButtonA11y } from '../src/lib/svgA11y';
 describe('svgButtonA11y', () => {
   afterEach(() => jest.restoreAllMocks());
 
-  test('on web: label only — no role, so the SVG tag survives', () => {
+  test('on web: no role, so the SVG tag survives', () => {
     jest.replaceProperty(Platform, 'OS', 'web');
-    expect(svgButtonA11y('Hidden cell')).toEqual({
-      accessible: true,
-      accessibilityLabel: 'Hidden cell',
-    });
+    const props = svgButtonA11y('Hidden cell');
+    expect(props.accessible).toBe(true);
+    expect(props.accessibilityLabel).toBe('Hidden cell');
+    expect(props.accessibilityRole).toBeUndefined();
+    expect(props.role).toBeUndefined();
+    // The label is no longer all the web build gets: focus and keyboard
+    // activation carry no role and so cannot trigger the tag swap. Their
+    // behaviour is pinned in ui-web-parity.test.js (DEEP-35).
   });
 
   test('on native: full button semantics for TalkBack/VoiceOver', () => {

@@ -76,7 +76,13 @@ export default function Login() {
   );
 
   const finishLogin = async (token) => {
-    await login(token);
+    // login() returns false when this device rejects the token (malformed, or
+    // already expired against a clock set far ahead). Navigating anyway sent
+    // the person back to this same screen with nothing said at all.
+    if (!(await login(token))) {
+      setError("Could not sign you in on this device. Please check your phone's date and time.");
+      return;
+    }
     router.replace('/'); // index routes by role/verification state
   };
 

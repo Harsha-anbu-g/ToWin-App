@@ -4,6 +4,7 @@
 // color never fills an action and Submit stays the screen's only filled button.
 import { Image, Linking, Pressable, Text, View } from 'react-native';
 import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone } from '../icons';
+import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 
 // Verbatim from the website's Feedback.jsx
@@ -22,7 +23,22 @@ const founder = require('../../../assets/founder.jpg');
 
 export default function CreatorCard() {
   const { t, type } = useTheme();
-  const open = (href) => href && Linking.openURL(href).catch(() => {});
+  const { showToast } = useToast();
+  // A phone with no mail app rejects mailto: and the tap used to do nothing at
+  // all — the person is trying to reach a human, so the failure has to speak
+  // and hand back the address (same ending as delete-account.jsx). On
+  // react-native-web openURL resolves either way, so this only ever runs on a
+  // real device.
+  const open = (href) =>
+    href &&
+    Linking.openURL(href).catch(() =>
+      showToast(
+        href.startsWith('mailto:')
+          ? `No mail app opened. Write to ${href.slice('mailto:'.length)} from your own email.`
+          : 'Could not open that address. You can type it into your browser.',
+        'error'
+      )
+    );
   return (
     <>
       <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 18, padding: 20, marginTop: 12 }}>
@@ -39,17 +55,19 @@ export default function CreatorCard() {
             <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Harsha</Text>
           </View>
         </View>
-        <Text style={{ fontSize: 14, color: t.blueDeep, fontWeight: '600', marginTop: 16, lineHeight: 20 }}>
+        <Text style={{ fontSize: type.meta, color: t.blueDeep, fontWeight: '600', marginTop: 16, lineHeight: 20 }}>
           Full-Stack Engineer · Aspiring Entrepreneur · AI-Driven Developer
         </Text>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
           Master's in Applied Computer Science · Concordia University, Montreal
         </Text>
         <View style={{ height: 1, backgroundColor: t.border, marginVertical: 16 }} />
-        <Text style={{ fontSize: 14, fontWeight: '600', lineHeight: 21, color: t.ink }}>
+        {/* Running text, so it sits on the 16 floor like every other paragraph
+            in the app (tokens.js: never below 16). */}
+        <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 23, color: t.ink }}>
           This isn't a university project. Towinly is my future startup.
         </Text>
-        <Text style={{ fontSize: 14, color: t.inkSlate, lineHeight: 21, marginTop: 8 }}>
+        <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 23, marginTop: 8 }}>
           I'm building something real, and your feedback is what shapes it. Love the idea? Want to
           connect? Let's talk!
         </Text>
@@ -70,7 +88,9 @@ export default function CreatorCard() {
               })}
             >
               <Icon size={16} color={t.blue} strokeWidth={1.8} />
-              <Text style={{ fontSize: 14, color: href ? t.blueDeep : t.inkSlate }}>{label}</Text>
+              {/* These labels ARE the addresses — a mis-read one is a failed
+                  attempt to reach a person, so they get the body size. */}
+              <Text style={{ fontSize: type.body, color: href ? t.blueDeep : t.inkSlate }}>{label}</Text>
             </Pressable>
           ))}
         </View>
@@ -100,7 +120,7 @@ export default function CreatorCard() {
           <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Want to know more?</Text>
           <Text
             style={{
-              fontSize: 14,
+              fontSize: type.body,
               fontWeight: '700',
               // blueDeep: links wear the action color; the trust accent is a
               // semantic, never a link (rulebook + HCI rule 4).

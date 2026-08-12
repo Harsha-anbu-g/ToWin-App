@@ -5,12 +5,20 @@
 // SOS→red (semantic), FIRST_MEET→trust green (a trust milestone),
 // INACTIVITY→neutral slate, unknown→grey.
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import { friendlyDate } from '../../lib/copy';
 import { useTheme } from '../../theme/ThemeContext';
+import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+
+// The feed sits inside the Home tab's plain ScrollView, so every row it
+// renders is mounted and laid out at once. The backend returns the whole
+// history and never trims it — a year of quiet spells is hundreds of rows on
+// the handed-down phones family members use. Show the newest, offer the rest.
+const NEWEST_SHOWN = 20;
 
 // Plain-words framing for each alert type — the body carries the details,
 // this line explains what kind of news it is (web ALERT_KINDS).
@@ -112,8 +120,23 @@ export default function FamilyAlertsFeed() {
     refetchInterval: 30_000,
   });
 
+  const [showingAll, setShowingAll] = useState(false);
+
   const kinds = alertKindsFor(t);
   const fallbackKind = { label: 'Update', explain: '', color: t.greyText, line: t.greyLine, wash: t.chipNeutral };
+
+  const all = alerts ?? [];
+  const shown = showingAll ? all : all.slice(0, NEWEST_SHOWN);
+  const older = all.length - shown.length;
+
+  // Which rows carry the plain-words explanation: the first of each kind,
+  // marked in one pass. A findIndex inside the row made this O(n squared).
+  const kindsSeen = new Set();
+  const rows = shown.map((alert) => {
+    const firstOfKind = !kindsSeen.has(alert.type);
+    kindsSeen.add(alert.type);
+    return { alert, firstOfKind };
+  });
 
   return (
     <View style={{ marginTop: spacing[6] }}>
@@ -133,7 +156,7 @@ export default function FamilyAlertsFeed() {
         </View>
       ) : isError ? (
         <LoadError what="your family news" onRetry={refetch} style={{ marginTop: spacing[4] }} />
-      ) : (alerts ?? []).length === 0 ? (
+      ) : all.length === 0 ? (
         <View
           style={{
             backgroundColor: t.canvas,
@@ -163,19 +186,27 @@ export default function FamilyAlertsFeed() {
         </View>
       ) : (
         <View style={{ marginTop: spacing[2] }}>
-          {(alerts ?? []).map((a, i, list) => (
+          {rows.map(({ alert, firstOfKind }, i) => (
             <AlertRow
-              key={a.id}
-              alert={a}
-              kind={kinds[a.type] ?? fallbackKind}
+              key={alert.id}
+              alert={alert}
+              kind={kinds[alert.type] ?? fallbackKind}
               first={i === 0}
-              showExplain={list.findIndex((x) => x.type === a.type) === i}
+              showExplain={firstOfKind}
               t={t}
               spacing={spacing}
               radius={radius}
               type={type}
             />
           ))}
+          {older > 0 ? (
+            <Button
+              title={`Show ${older} older ${older === 1 ? 'alert' : 'alerts'}`}
+              variant="secondary"
+              onPress={() => setShowingAll(true)}
+              style={{ alignSelf: 'flex-start', marginTop: spacing[4] }}
+            />
+          ) : null}
         </View>
       )}
     </View>

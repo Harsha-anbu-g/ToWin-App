@@ -228,17 +228,16 @@ export default function MessagesInbox() {
   });
 
   // Family updates threads a linked family member can read (their parents'
-  // shared friendships). Errors fold to empty — the inbox must keep working
-  // for people with no family at all.
-  const { data: journeyData } = useQuery({
+  // shared friendships). A failure must surface as a failure: folding it to
+  // an empty list told family members they had no group chats when the
+  // request simply dropped. The person tabs carry on regardless.
+  const {
+    data: journeyData,
+    isError: journeyError,
+    refetch: refetchJourney,
+  } = useQuery({
     queryKey: ['family-journey'],
-    queryFn: async () => {
-      try {
-        return (await api.get('/family/journey')).data;
-      } catch {
-        return { elders: [] };
-      }
-    },
+    queryFn: async () => (await api.get('/family/journey')).data,
   });
 
   // Blocked people never resurface in the inbox (UGC 1.2)
@@ -276,7 +275,10 @@ export default function MessagesInbox() {
     : (sections.find((s) => rowsOf(s.key).length > 0) ?? sections[0]).key;
 
   const rows = currentTab === 'groups' ? [] : rowsOf(currentTab);
-  const hasAnyConversation = active.length > 0 || groupThreads.length > 0;
+  // A failed journey fetch leaves the group threads UNKNOWN, not empty — the
+  // tabs stay up so Groups can say so and offer a retry, instead of the whole
+  // inbox claiming "No conversations yet" to a family member who has plenty.
+  const hasAnyConversation = active.length > 0 || groupThreads.length > 0 || journeyError;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -364,6 +366,10 @@ export default function MessagesInbox() {
                 />
               ) : null}
             </View>
+          ) : currentTab === 'groups' && journeyError ? (
+            // Same rule as the main list one branch up: a dropped request is
+            // never dressed up as "no group chats yet".
+            <LoadError what="your group chats" onRetry={refetchJourney} />
           ) : (
             <View
               style={{

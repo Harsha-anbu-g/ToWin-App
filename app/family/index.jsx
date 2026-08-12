@@ -62,13 +62,21 @@ export default function MyFamilyScreen() {
   // My own friendships — each one carries its own Sharing switch. FAMILY-type
   // connections are the family chats themselves (e.g. with a daughter), not
   // friendships to share, so they get no switch here (web rule).
-  const { data: allConnections } = useQuery({
+  const {
+    data: allConnections,
+    isError: connectionsFailed,
+    refetch: refetchConnections,
+  } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
   const connections = (Array.isArray(allConnections) ? allConnections : []).filter(
     (c) => c.status === 'ACTIVE' && c.type !== 'FAMILY'
   );
+  // Failed AND nothing to show. Saying "you have no friendships yet" to an
+  // elder who has several is a false statement about her own relationships,
+  // and it makes every sharing switch vanish as if she had lost them.
+  const friendshipsUnknown = connectionsFailed && connections.length === 0;
 
   // Pull-to-refresh (UX-704): reload exactly what this screen shows.
   const reload = () =>
@@ -527,7 +535,13 @@ export default function MyFamilyScreen() {
             />
 
             {controlsTab === 'watching' ? (
-              connections.length === 0 ? (
+              friendshipsUnknown ? (
+                <LoadError
+                  what="your friendships"
+                  onRetry={refetchConnections}
+                  style={{ marginTop: spacing[4] }}
+                />
+              ) : connections.length === 0 ? (
                 <View style={{ ...card, alignItems: 'center', marginTop: spacing[4] }}>
                   <Text
                     style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, textAlign: 'center' }}
@@ -569,8 +583,15 @@ export default function MyFamilyScreen() {
               // Acting inherits watching: a family member can only act on a
               // friendship you let them watch. With nothing shared there is
               // nothing to act on, so the switches wait rather than promise
-              // a power that would reach nothing.
-              !connections.some((c) => c.sharedWithFamily) ? (
+              // a power that would reach nothing. With the list unread we
+              // cannot know what she shares, so we say that instead.
+              friendshipsUnknown ? (
+                <LoadError
+                  what="your friendships"
+                  onRetry={refetchConnections}
+                  style={{ marginTop: spacing[4] }}
+                />
+              ) : !connections.some((c) => c.sharedWithFamily) ? (
                 <View style={{ ...card, alignItems: 'center', marginTop: spacing[4] }}>
                   <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
                     Share a friendship first

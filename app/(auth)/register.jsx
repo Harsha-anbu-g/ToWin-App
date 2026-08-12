@@ -267,8 +267,10 @@ export default function Register() {
                   {label}
                 </Text>
                 {/* blueDeep/inkSlate, not teal/ink4 — this copy decides an
-                    identity; it must clear 4.5:1 (rulebook). */}
-                <Text style={{ fontSize: text.xs, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 18 }}>
+                    identity; it must clear 4.5:1 (rulebook). Body size, not
+                    meta: it is read rather than scanned, and misreading it
+                    signs the person up as the wrong person. */}
+                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 22 }}>
                   {desc}
                 </Text>
               </Pressable>
@@ -404,7 +406,10 @@ export default function Register() {
           style={FIELD_GAP_TOP}
         />
         {form.confirmPassword && form.password && form.confirmPassword === form.password ? (
-          <Text style={{ fontSize: text.xs, color: MATCH_GREEN, marginTop: 4 }}>Passwords match</Text>
+          /* greenDeep at body size: the web's MATCH_GREEN measured 2.93:1 at
+             13px, so the one line confirming the two passwords agree was the
+             hardest thing on the page to read. */
+          <Text style={{ fontSize: type.body, color: t.greenDeep, marginTop: 4 }}>Passwords match</Text>
         ) : null}
 
         {/* Terms agreement — submit stays disabled until checked (HCI rule 5).

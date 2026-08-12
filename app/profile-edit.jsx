@@ -79,7 +79,7 @@ function SectionTitle({ children }) {
 }
 
 export default function ProfileEdit() {
-  const { t, type } = useTheme();
+  const { t, type, fontScaleCaps } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -148,19 +148,33 @@ export default function ProfileEdit() {
     }
   }, [me, isHelper, prefilled]);
 
+  // One picker at a time. A second tap while the sheet is opening is what an
+  // elder does when nothing seems to happen, and Android answers it with
+  // "Different ImagePicker is already in use" — a rejection that used to
+  // escape the async onPress with no handler, so the tap died in silence.
+  const pickingRef = useRef(false);
   const pickImage = async () => {
-    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!perm.granted) {
-      showToast('Towinly needs photo access. You can allow it in Settings.', 'error');
+    if (pickingRef.current) return null;
+    pickingRef.current = true;
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        showToast('Towinly needs photo access. You can allow it in Settings.', 'error');
+        return null;
+      }
+      const picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.7,
+      });
+      if (picked.canceled || !picked.assets?.length) return null;
+      return picked.assets[0];
+    } catch {
+      showToast('Could not open your photos. Please try again.', 'error');
       return null;
+    } finally {
+      pickingRef.current = false;
     }
-    const picked = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 0.7,
-    });
-    if (picked.canceled || !picked.assets?.length) return null;
-    return picked.assets[0];
   };
 
   // Same shape the website sends: PUT /profile/photo multipart `file`.
@@ -290,6 +304,25 @@ export default function ProfileEdit() {
   );
   const set = (key) => fieldHandlers[key];
 
+  // These two also clear their own inline error, so they cannot be plain
+  // fieldHandlers entries — but they must still be stable, or every keystroke
+  // anywhere in the form re-renders the bio box and the date field with them.
+  // Clearing unconditionally is safe: React bails out on an unchanged value.
+  const setDateOfBirth = useCallback(
+    (v) => {
+      fieldHandlers.dateOfBirth(v);
+      setDobError('');
+    },
+    [fieldHandlers]
+  );
+  const setBio = useCallback(
+    (v) => {
+      fieldHandlers.bio(v);
+      setBioError('');
+    },
+    [fieldHandlers]
+  );
+
   // Return-key path (UX-708): only the two adjacent text pairs chain
   // (name → date of birth, city → phone). The other fields sit next to chip
   // groups or multiline boxes, where a forced focus jump scrolls the form
@@ -348,11 +381,15 @@ export default function ProfileEdit() {
             accessibilityState={{ busy: uploadingPhoto }}
             onPress={changePhoto}
             disabled={uploadingPhoto}
-            hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
-              height: 34,
+              // minHeight, not height — at large OS text the label is taller
+              // than the pill and a fixed height clips it (same rule as
+              // profile.jsx). 44 as a real box, not 34 plus hitSlop: the web
+              // build drops hitSlop, so it was a 34pt target there (DEEP-08).
+              minHeight: 44,
+              paddingVertical: spacing[2],
               paddingHorizontal: 16,
-              borderRadius: 17,
+              borderRadius: 22,
               backgroundColor: 'transparent',
               borderWidth: 1,
               borderColor: t.blueSoft,
@@ -362,7 +399,10 @@ export default function ProfileEdit() {
               opacity: pressed || uploadingPhoto ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: 14, fontWeight: '600', color: t.blueDeep }}>
+            <Text
+              maxFontSizeMultiplier={fontScaleCaps.body}
+              style={{ fontSize: 14, fontWeight: '600', color: t.blueDeep }}
+            >
               {uploadingPhoto ? 'Uploading…' : 'Change photo'}
             </Text>
           </Pressable>
@@ -385,10 +425,7 @@ export default function ProfileEdit() {
           ref={dobRef}
           label="Date of birth"
           value={form.dateOfBirth}
-          onChangeText={(v) => {
-            set('dateOfBirth')(v);
-            if (dobError) setDobError('');
-          }}
+          onChangeText={setDateOfBirth}
           error={dobError}
           helper="Any way you like: 1953-05-14 or 14 May 1953. Only your age shows to others."
           autoCapitalize="none"
@@ -399,10 +436,7 @@ export default function ProfileEdit() {
         <Input
           label="About you"
           value={form.bio}
-          onChangeText={(v) => {
-            if (bioError) setBioError('');
-            set('bio')(v);
-          }}
+          onChangeText={setBio}
           error={bioError}
           multiline
           numberOfLines={4}

@@ -250,13 +250,14 @@ export default function ProfileScreen() {
             accessibilityRole="button"
             accessibilityLabel="Edit profile"
             onPress={() => router.push('/profile-edit')}
-            hitSlop={{ top: 6, bottom: 6 }}
             style={({ pressed }) => ({
-              // minHeight, not height — the label has to grow at 200% text scale
-              minHeight: 36,
+              // minHeight, not height — the label has to grow at 200% text
+              // scale. 44 as a real box, not 36 plus hitSlop: the web build
+              // drops hitSlop, so the pill was a 36pt target there (DEEP-08).
+              minHeight: 44,
               paddingVertical: spacing[2],
               paddingHorizontal: 15,
-              borderRadius: 18,
+              borderRadius: 22,
               backgroundColor: t.canvas,
               borderWidth: 1,
               borderColor: t.border,
@@ -326,23 +327,29 @@ export default function ProfileScreen() {
             </View>
           }
         />
-        <Row
-          icon={Vibrate}
-          label="Vibration feedback"
-          onPress={() => setHapticsEnabled(!hapticsOn)}
-          divider
-          a11yRole="switch"
-          a11yState={{ checked: hapticsOn }}
-          right={
-            // Visual-only, same as Night mode: the row is the single control.
-            <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Switch
-                value={hapticsOn}
-                trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
-              />
-            </View>
-          }
-        />
+        {/* Phones only. expo-haptics has no web implementation and the haptic
+            layer returns early on web, so in the browser this switch would
+            turn nothing on or off — a control that does nothing, sitting right
+            under a night-mode row that works (DEEP-31). */}
+        {Platform.OS === 'web' ? null : (
+          <Row
+            icon={Vibrate}
+            label="Vibration feedback"
+            onPress={() => setHapticsEnabled(!hapticsOn)}
+            divider
+            a11yRole="switch"
+            a11yState={{ checked: hapticsOn }}
+            right={
+              // Visual-only, same as Night mode: the row is the single control.
+              <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                <Switch
+                  value={hapticsOn}
+                  trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
+                />
+              </View>
+            }
+          />
+        )}
         {/* Not destructive — red on a benign navigation row mis-signals danger
             and burns the channel Delete-account needs (rulebook). */}
         <Row

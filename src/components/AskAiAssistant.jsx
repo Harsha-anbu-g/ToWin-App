@@ -9,7 +9,7 @@
 import * as Speech from 'expo-speech';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -45,8 +45,192 @@ const SUGGESTIONS = [
 
 const mascot = require('../../assets/ai-tortoise-small.png');
 
+// Module scope so the list's key function never changes identity (see the
+// memoization note in AskAiAssistant).
+const keyOf = (m) => String(m.id);
+
+// The empty state: greeting bubble, a Read-aloud chip, three suggested
+// questions. Its own component so the sheet can hand FlatList one element whose
+// identity survives a keystroke in the composer.
+function AskAiIntro({ onSpeak, onAsk }) {
+  const { t, spacing, radius, type, fontScaleCaps, pressRipple } = useTheme();
+  return (
+    <View>
+      {/* Greeting bubble (16/16/16/4) + Read aloud chip */}
+      <View
+        style={{
+          alignSelf: 'flex-start',
+          maxWidth: '90%',
+          backgroundColor: t.blueWash,
+          borderWidth: 1,
+          borderColor: t.blueSoft,
+          borderTopLeftRadius: 16,
+          borderTopRightRadius: 16,
+          borderBottomRightRadius: 16,
+          borderBottomLeftRadius: 4,
+          paddingHorizontal: spacing[4],
+          paddingVertical: spacing[3],
+        }}
+      >
+        <Text style={{ fontSize: type.body, lineHeight: 22, color: t.ink }}>{GREETING}</Text>
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Read the greeting aloud"
+        onPress={() => onSpeak(GREETING)}
+        android_ripple={pressRipple}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 5,
+          alignSelf: 'flex-start',
+          // A real 44pt box, min not fixed: React Native Web drops hitSlop, so
+          // the 30pt chip this replaced was a 30pt target on phone web, and a
+          // fixed height would clip the label at the large-text cap.
+          minHeight: 44,
+          paddingVertical: 6,
+          paddingHorizontal: 12,
+          borderRadius: radius.pill,
+          backgroundColor: t.surfaceFill,
+          borderWidth: 1,
+          borderColor: t.border,
+          marginTop: 8,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
+        <Text
+          maxFontSizeMultiplier={fontScaleCaps.body}
+          style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
+        >
+          Read aloud
+        </Text>
+      </Pressable>
+
+      {/* Three suggested questions */}
+      <View style={{ gap: 8, marginTop: spacing[5] }}>
+        {SUGGESTIONS.map((s) => (
+          <Pressable
+            key={s}
+            accessibilityRole="button"
+            accessibilityLabel={s}
+            onPress={() => onAsk(s)}
+            android_ripple={pressRipple}
+            style={({ pressed }) => ({
+              backgroundColor: t.canvas,
+              borderWidth: 1,
+              borderColor: t.border,
+              borderRadius: radius.input,
+              paddingHorizontal: spacing[4],
+              paddingVertical: 12,
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Text style={{ fontSize: type.body, color: t.blueDeep, fontWeight: '500' }}>{s}</Text>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// One bubble. Memoized so appending an answer redraws the new bubble only,
+// instead of every bubble already on screen.
+const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
+  const { t, spacing, radius, type, text, fontScaleCaps, pressRipple } = useTheme();
+  return (
+    <View
+      style={{
+        alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
+        maxWidth: '85%',
+        backgroundColor: item.role === 'user' ? t.blueTint : t.canvas,
+        borderWidth: item.role === 'user' ? 0 : 1,
+        borderColor: t.border,
+        borderRadius: radius.card,
+        paddingHorizontal: spacing[4],
+        paddingVertical: spacing[3],
+      }}
+    >
+      <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
+      {/* Measured at 320pt (iPhone SE): the two labels together are wider
+          than an 85% bubble allows, and React Native never shrinks a row
+          child, so `nowrap` pushed "Report this answer" clean through the
+          bubble's right padding. Wrapping lets it take its own line on the
+          narrowest phone and keeps both on one line everywhere wider. The
+          44pt height is a real box rather than hitSlop, which React Native
+          Web drops entirely. */}
+      {item.role === 'assistant' ? (
+        <View
+          testID="ai-answer-actions"
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            columnGap: spacing[4],
+            rowGap: spacing[1],
+          }}
+        >
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Read this answer aloud"
+            onPress={() => onSpeak(item.content)}
+            android_ripple={pressRipple}
+            hitSlop={{ left: 8, right: 8 }}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 44,
+              gap: 5,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
+            {/* meta, not caption: this is the control a low-vision elder taps to
+                have the answer read out. tokens.js keeps caption for text that
+                does nothing when you touch it. */}
+            <Text
+              maxFontSizeMultiplier={fontScaleCaps.body}
+              style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
+            >
+              Read aloud
+            </Text>
+          </Pressable>
+          {/* Google Play's AI-Generated Content policy requires an in-app way to
+              flag offensive AI output. The /reports endpoint needs a
+              reportedUserId and there is no user behind a Groq answer, so this
+              carries the answer into the feedback form instead. */}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Report this answer"
+            onPress={() => onReport(item.content)}
+            android_ripple={pressRipple}
+            hitSlop={{ left: 8, right: 8 }}
+            style={({ pressed }) => ({
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: 44,
+              gap: 5,
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Flag size={13} color={t.inkSlate} strokeWidth={1.8} />
+            <Text
+              maxFontSizeMultiplier={fontScaleCaps.body}
+              style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
+            >
+              Report this answer
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
+  );
+});
+
 export default function AskAiAssistant() {
-  const { t, spacing, radius, type, text, pressRipple } = useTheme();
+  const { t, spacing, type, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
@@ -109,18 +293,25 @@ export default function AskAiAssistant() {
   // Hand a bad AI answer to the feedback form, with the answer already quoted so
   // the person only has to say what was wrong with it. Closes the sheet first:
   // it is a Modal, and navigating underneath it would leave it covering the form.
-  const reportAnswer = (content) => {
-    Speech.stop();
-    setOpen(false);
-    router.push({ pathname: '/feedback', params: { reportedAnswer: content } });
-  };
+  // useCallback throughout this section: every one of these reaches the message
+  // list, and the list only skips a redraw when all its props keep their
+  // identity. useRouter() hands back a module-level singleton, so router is a
+  // safe dependency.
+  const reportAnswer = useCallback(
+    (content) => {
+      Speech.stop();
+      setOpen(false);
+      router.push({ pathname: '/feedback', params: { reportedAnswer: content } });
+    },
+    [router]
+  );
 
   // Read a message out loud (web parity: speechSynthesis → expo-speech).
   // A fresh tap always restarts from the top.
-  const speak = (content) => {
+  const speak = useCallback((content) => {
     Speech.stop();
     Speech.speak(content, { rate: 0.95 });
-  };
+  }, []);
 
   const close = () => {
     Speech.stop();
@@ -161,6 +352,36 @@ export default function AskAiAssistant() {
       if (mounted.current) setThinking(false);
     }
   };
+
+  // Everything the message list is handed has to survive a keystroke. The
+  // composer's text lives in this component, so each keystroke renders the whole
+  // sheet; FlatList is a PureComponent, and a single rebuilt prop (an inline
+  // renderItem, a fresh style object) re-renders every mounted bubble, each with
+  // two Pressables. That was visible keyboard lag on an old phone after a few
+  // exchanges. `send` closes over the messages, so the suggestions read it
+  // through a ref rather than carrying its identity (the chat thread's UX-708
+  // latest-ref pattern).
+  const sendRef = useRef(send);
+  useEffect(() => {
+    sendRef.current = send;
+  });
+  const askSuggestion = useCallback((question) => sendRef.current(question), []);
+  const listContent = useMemo(() => ({ padding: spacing[4], gap: spacing[2] }), [spacing]);
+  const intro = useMemo(
+    () => <AskAiIntro onSpeak={speak} onAsk={askSuggestion} />,
+    [speak, askSuggestion]
+  );
+  const renderItem = useCallback(
+    ({ item }) => <MessageBubble item={item} onSpeak={speak} onReport={reportAnswer} />,
+    [speak, reportAnswer]
+  );
+  const listFooter = useMemo(
+    () =>
+      thinking ? (
+        <Text style={{ fontSize: text.sm, color: t.ink4, marginTop: spacing[2] }}>Thinking…</Text>
+      ) : null,
+    [thinking, t, text, spacing]
+  );
 
   // The action screen pins its own bottom UI (elder: the one filled Post Help
   // primary) in the exact band the FAB floats in — never cover it (HCI rule 8).
@@ -225,7 +446,14 @@ export default function AskAiAssistant() {
             >
               <Image source={mascot} style={{ width: 34, height: 34 }} resizeMode="contain" />
               <View style={{ flex: 1 }}>
-                <Text ref={headerRef} accessibilityRole="header" style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
+                {/* A declared heading, so it dresses like every other heading in
+                    the app: Newsreader, weight 400 only, never a fontWeight. */}
+                <Text
+                  ref={headerRef}
+                  accessibilityRole="header"
+                  maxFontSizeMultiplier={fontScaleCaps.body}
+                  style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}
+                >
                   Ask AI
                 </Text>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your Towinly helper</Text>
@@ -251,165 +479,11 @@ export default function AskAiAssistant() {
             <KeyboardAvoider>
               <FlatList
                 data={messages}
-                keyExtractor={(m) => String(m.id)}
-                contentContainerStyle={{ padding: spacing[4], gap: spacing[2] }}
-                ListEmptyComponent={
-                  <View>
-                    {/* Greeting bubble (16/16/16/4) + Read aloud chip */}
-                    <View
-                      style={{
-                        alignSelf: 'flex-start',
-                        maxWidth: '90%',
-                        backgroundColor: t.blueWash,
-                        borderWidth: 1,
-                        borderColor: t.blueSoft,
-                        borderTopLeftRadius: 16,
-                        borderTopRightRadius: 16,
-                        borderBottomRightRadius: 16,
-                        borderBottomLeftRadius: 4,
-                        paddingHorizontal: spacing[4],
-                        paddingVertical: spacing[3],
-                      }}
-                    >
-                      <Text style={{ fontSize: type.body, lineHeight: 22, color: t.ink }}>{GREETING}</Text>
-                    </View>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityLabel="Read the greeting aloud"
-                      onPress={() => speak(GREETING)}
-                      android_ripple={pressRipple}
-                      hitSlop={{ top: 7, bottom: 7 }}
-                      style={({ pressed }) => ({
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        gap: 5,
-                        alignSelf: 'flex-start',
-                        height: 30,
-                        paddingHorizontal: 12,
-                        borderRadius: radius.pill,
-                        backgroundColor: t.surfaceFill,
-                        borderWidth: 1,
-                        borderColor: t.border,
-                        marginTop: 8,
-                        opacity: pressed ? 0.7 : 1,
-                      })}
-                    >
-                      <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
-                      <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
-                        Read aloud
-                      </Text>
-                    </Pressable>
-
-                    {/* Three suggested questions */}
-                    <View style={{ gap: 8, marginTop: spacing[5] }}>
-                      {SUGGESTIONS.map((s) => (
-                        <Pressable
-                          key={s}
-                          accessibilityRole="button"
-                          accessibilityLabel={s}
-                          onPress={() => send(s)}
-                          android_ripple={pressRipple}
-                          style={({ pressed }) => ({
-                            backgroundColor: t.canvas,
-                            borderWidth: 1,
-                            borderColor: t.border,
-                            borderRadius: radius.input,
-                            paddingHorizontal: spacing[4],
-                            paddingVertical: 12,
-                            opacity: pressed ? 0.7 : 1,
-                          })}
-                        >
-                          <Text style={{ fontSize: type.body, color: t.blueDeep, fontWeight: '500' }}>{s}</Text>
-                        </Pressable>
-                      ))}
-                    </View>
-                  </View>
-                }
-                renderItem={({ item }) => (
-                  <View
-                    style={{
-                      alignSelf: item.role === 'user' ? 'flex-end' : 'flex-start',
-                      maxWidth: '85%',
-                      backgroundColor: item.role === 'user' ? t.blueTint : t.canvas,
-                      borderWidth: item.role === 'user' ? 0 : 1,
-                      borderColor: t.border,
-                      borderRadius: radius.card,
-                      paddingHorizontal: spacing[4],
-                      paddingVertical: spacing[3],
-                    }}
-                  >
-                    <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
-                    {/* Measured at 320pt (iPhone SE): the two labels together are wider
-                        than an 85% bubble allows, and React Native never shrinks a row
-                        child, so `nowrap` pushed "Report this answer" clean through the
-                        bubble's right padding. Wrapping lets it take its own line on the
-                        narrowest phone and keeps both on one line everywhere wider. The
-                        44pt height is a real box rather than hitSlop, which React Native
-                        Web drops entirely. */}
-                    {item.role === 'assistant' ? (
-                      <View
-                        testID="ai-answer-actions"
-                        style={{
-                          flexDirection: 'row',
-                          flexWrap: 'wrap',
-                          alignItems: 'center',
-                          columnGap: spacing[4],
-                          rowGap: spacing[1],
-                        }}
-                      >
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel="Read this answer aloud"
-                          onPress={() => speak(item.content)}
-                          android_ripple={pressRipple}
-                          hitSlop={{ left: 8, right: 8 }}
-                          style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minHeight: 44,
-                            gap: 5,
-                            opacity: pressed ? 0.6 : 1,
-                          })}
-                        >
-                          <Volume2 size={13} color={t.inkSlate} strokeWidth={1.8} />
-                          <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
-                            Read aloud
-                          </Text>
-                        </Pressable>
-                        {/* Google Play's AI-Generated Content policy requires an in-app way to
-                            flag offensive AI output. The /reports endpoint needs a
-                            reportedUserId and there is no user behind a Groq answer, so this
-                            carries the answer into the feedback form instead. */}
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel="Report this answer"
-                          onPress={() => reportAnswer(item.content)}
-                          android_ripple={pressRipple}
-                          hitSlop={{ left: 8, right: 8 }}
-                          style={({ pressed }) => ({
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minHeight: 44,
-                            gap: 5,
-                            opacity: pressed ? 0.6 : 1,
-                          })}
-                        >
-                          <Flag size={13} color={t.inkSlate} strokeWidth={1.8} />
-                          <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.inkSlate }}>
-                            Report this answer
-                          </Text>
-                        </Pressable>
-                      </View>
-                    ) : null}
-                  </View>
-                )}
-                ListFooterComponent={
-                  thinking ? (
-                    <Text style={{ fontSize: text.sm, color: t.ink4, marginTop: spacing[2] }}>Thinking…</Text>
-                  ) : null
-                }
+                keyExtractor={keyOf}
+                contentContainerStyle={listContent}
+                ListEmptyComponent={intro}
+                renderItem={renderItem}
+                ListFooterComponent={listFooter}
               />
 
               {/* Composer: mic circle · pill input · send circle */}

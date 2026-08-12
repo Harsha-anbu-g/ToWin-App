@@ -75,11 +75,21 @@ export default function UserProfile() {
     enabled: !!id,
   });
 
-  const { data: connections } = useQuery({
+  // Until this resolves there is no answer to "are we already friends?", and a
+  // missing answer is not the same as "no". Offering "Add as friend" to an
+  // existing friend fires a request the server refuses (deep audit), so the
+  // action slot waits and says why instead.
+  const {
+    data: connections,
+    isLoading: connsLoading,
+    isError: connsFailed,
+    refetch: refetchConns,
+  } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
   const conn = (connections ?? []).find((c) => c.otherUserId === id);
+  const connUnknown = !conn && (connsLoading || connsFailed);
 
   const { data: blockedList } = useQuery({
     queryKey: ['block-list', user?.userId],
@@ -267,7 +277,13 @@ export default function UserProfile() {
             <ChipRow items={profile.languages} />
 
             <View style={{ gap: spacing[3], marginTop: spacing[5] }}>
-              {conn?.status === 'ACTIVE' ? (
+              {connUnknown ? (
+                connsFailed ? (
+                  <LoadError bare what="your friendships" onRetry={refetchConns} />
+                ) : (
+                  <SkeletonCard lines={1} />
+                )
+              ) : conn?.status === 'ACTIVE' ? (
                 <Button
                   title="Message"
                   variant="primary"

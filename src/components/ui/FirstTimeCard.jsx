@@ -9,7 +9,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from './Button';
 
 export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, style }) {
-  const { t, radius, type, fontScaleCaps } = useTheme();
+  const { t, radius, type, fontFamily, fontScaleCaps } = useTheme();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -42,16 +42,20 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
         style,
       ]}
     >
+      {/* A card title, so it takes the card-title grammar: Newsreader at 400,
+          never the system font at 600 (DEEP-33). */}
       <Text
         accessibilityRole="header"
         maxFontSizeMultiplier={fontScaleCaps.body}
-        style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}
+        style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}
       >
         {title}
       </Text>
+      {/* This is the paragraph that explains a feature to someone meeting it
+          for the first time. Running text, so the 16pt floor applies. */}
       <Text
         maxFontSizeMultiplier={fontScaleCaps.body}
-        style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 6 }}
+        style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 6 }}
       >
         {body}
       </Text>

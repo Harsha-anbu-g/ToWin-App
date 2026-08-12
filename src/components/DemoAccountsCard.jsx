@@ -30,7 +30,13 @@ export default function DemoAccountsCard({ onError }) {
     try {
       const { identifier, password } = DEMO[role];
       const { data } = await api.post('/auth/login', { identifier, password });
-      await login(data.token);
+      // login() returns false when this device rejects the token (malformed, or
+      // already expired against a clock set far ahead). Navigating anyway put
+      // the person back on Login with nothing said. Same handling as login.jsx.
+      if (!(await login(data.token))) {
+        onError?.("Could not sign you in on this device. Please check your phone's date and time.");
+        return;
+      }
       router.replace('/'); // index routes by role/verification state
     } catch (err) {
       onError?.(

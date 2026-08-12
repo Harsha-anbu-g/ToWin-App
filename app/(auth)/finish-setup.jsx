@@ -25,7 +25,7 @@ const ROLES = [
 ];
 
 export default function FinishSetup() {
-  const { t, spacing, radius, text, fontFamily } = useTheme();
+  const { t, spacing, radius, text, type, fontFamily } = useTheme();
   const { login } = useAuth();
   const router = useRouter();
   const { onboardingToken, email: googleEmail, name: googleName } = useLocalSearchParams();
@@ -76,7 +76,14 @@ export default function FinishSetup() {
         phone: digits,
         username,
       });
-      await login(data.token);
+      // login() returns false when this device rejects the token (malformed, or
+      // already expired against a clock set far ahead). Navigating anyway left
+      // the person back at Login with the whole form done and nothing said.
+      // Same handling as login.jsx.
+      if (!(await login(data.token))) {
+        setError("Could not sign you in on this device. Please check your phone's date and time.");
+        return;
+      }
       router.replace('/');
     } catch (err) {
       setError(err?.response?.data?.message || 'Something went wrong. Please try again.');
@@ -140,7 +147,9 @@ export default function FinishSetup() {
           </View>
         ) : null}
 
-        <Text style={{ fontSize: 14, fontWeight: '600', color: t.ink, marginBottom: spacing[3] }}>
+        {/* Same size and weight as register's prompt: the twins ask one
+            question and had drifted to two different sizes. */}
+        <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
           {ROLE_PROMPT}
         </Text>
         {/* The two cards were loose Pressables with no group around them, so a
@@ -174,7 +183,10 @@ export default function FinishSetup() {
                 <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
                   {label}
                 </Text>
-                <Text style={{ fontSize: text.xs, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 18 }}>
+                {/* Body size, not meta (register.jsx): this copy is read rather
+                    than scanned, and misreading it signs the person up as the
+                    wrong person. */}
+                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 22 }}>
                   {desc}
                 </Text>
               </Pressable>
