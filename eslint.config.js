@@ -7,7 +7,10 @@ const expoConfig = require('eslint-config-expo/flat');
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['node_modules/**'],
+    // Build output, not source. All three are gitignored; eslint needs telling
+    // separately, and without it `npm run lint` drowns in thousands of errors
+    // from a web export and hides the real ones.
+    ignores: ['node_modules/**', 'dist/**', 'android/**', 'ios/**'],
   },
   {
     rules: {
