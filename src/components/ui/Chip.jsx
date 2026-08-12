@@ -3,7 +3,7 @@
 // blueSoft border, blueDeep label with a leading check. `neutral` renders the
 // quiet surfaceFill status pill (3f). The 44pt target is real box, not hitSlop:
 // chips wrap in grids with an 8pt gap, and slop would eat that inert space.
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { memo } from 'react';
 import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';

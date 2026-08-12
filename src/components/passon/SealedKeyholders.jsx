@@ -9,7 +9,7 @@
 //
 // Every status is the real one. "David has not answered yet" is a sentence an
 // elder may act on, so it is never softened into "pending".
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SETUP, SHEET, keyholderLine, listOfNames } from '../../lib/passOnLocks';

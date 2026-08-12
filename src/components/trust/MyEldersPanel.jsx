@@ -4,10 +4,11 @@
 // Data: ACTIVE connections merged with /trust/my-score for stage/points.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Phone } from 'lucide-react-native';
+import { Phone } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
@@ -220,6 +221,8 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
 
 export default function MyEldersPanel() {
   const { t, type, fontFamily } = useTheme();
+  // Blocks are per account (blockList.js), so the read is keyed by who is in.
+  const { user } = useAuth();
   const { showToast } = useToast();
   const askConfirm = useConfirm();
   const queryClient = useQueryClient();
@@ -235,7 +238,10 @@ export default function MyEldersPanel() {
     queryFn: async () => (await api.get('/trust/my-score')).data,
   });
 
-  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blocked } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
 
   // Who stands behind each elder friendship — derived server-side from the
   // elder's sharing, so it names exactly the people who could already reach

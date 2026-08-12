@@ -6,6 +6,19 @@
 import { Redirect, useLocalSearchParams } from 'expo-router';
 
 export default function MessagesByConnection() {
-  const { connectionId } = useLocalSearchParams();
-  return <Redirect href={`/chat/${connectionId}`} />;
+  const { connectionId, ...rest } = useLocalSearchParams();
+  // The query string is part of which thread was asked for: the website links
+  // the family updates group as /messages/:id?channel=family (web
+  // FamilyThreadLink.jsx), and /chat reads that channel to open the shared
+  // thread instead of the private one. Forwarding the id alone would drop a
+  // family reader into a conversation the server refuses them, so everything
+  // riding alongside the id travels with it.
+  const query = Object.entries(rest)
+    .flatMap(([key, value]) =>
+      (Array.isArray(value) ? value : [value])
+        .filter((v) => v !== undefined && v !== null && v !== '')
+        .map((v) => `${encodeURIComponent(key)}=${encodeURIComponent(v)}`)
+    )
+    .join('&');
+  return <Redirect href={query ? `/chat/${connectionId}?${query}` : `/chat/${connectionId}`} />;
 }

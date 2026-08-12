@@ -11,6 +11,7 @@ import {
   ChevronRight,
   FileText,
   KeyRound,
+  Mail,
   MessageSquareHeart,
   Moon,
   PhoneCall,
@@ -18,7 +19,7 @@ import {
   ShieldCheck,
   UserX,
   Vibrate,
-} from 'lucide-react-native';
+} from '../../src/components/icons';
 import api from '../../src/api/client';
 import TortoiseMark from '../../src/components/TortoiseMark';
 import Avatar from '../../src/components/ui/Avatar';
@@ -303,6 +304,10 @@ export default function ProfileScreen() {
         />
         <Row icon={() => <TortoiseMark size={18} />} label="Peekaboo" onPress={() => router.push('/game')} divider />
         <Row icon={BookOpen} label="Guide" onPress={() => router.push('/guide')} divider />
+        {/* The same page App Store Connect's Support URL points at. A reviewer
+            reaches it by address; everyone else needs it here, because a person
+            who cannot work something out does not go looking for a URL. */}
+        <Row icon={Mail} label="Get help" onPress={() => router.push('/support')} divider />
         <Row
           icon={Moon}
           label="Night mode"

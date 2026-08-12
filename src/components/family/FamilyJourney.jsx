@@ -11,7 +11,7 @@
 // Seeing is not a power. Everything here is read-only; acting on any of it
 // belongs to guardian mode and is gated separately.
 import { useRouter } from 'expo-router';
-import { Check, Clock, UserRound } from 'lucide-react-native';
+import { Check, Clock, UserRound } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { SHORT_STAGES, stageIndexOf } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';

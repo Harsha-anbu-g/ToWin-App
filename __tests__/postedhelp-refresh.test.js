@@ -62,7 +62,16 @@ const wrap = (ui) =>
       {/* gcTime: Infinity — the default 5-min gc timer is scheduled at unmount
           and keeps the Jest worker alive until force-exit (the teardown warning) */}
       <QueryClientProvider
-        client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })}
+        client={
+          new QueryClient({
+            defaultOptions: {
+              queries: { retry: false, gcTime: Infinity },
+              // Mutations need it too: this is the first suite here to run one,
+              // and the mutation cache's own gc timer outlives the test.
+              mutations: { gcTime: Infinity },
+            },
+          })
+        }
       >
         <ToastProvider>
           <ConfirmProvider>{ui}</ConfirmProvider>

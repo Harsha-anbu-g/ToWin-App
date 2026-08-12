@@ -12,7 +12,7 @@
 // alright?" answer never hides behind a tab.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Check, Clock, MessageCircle, UserRound } from 'lucide-react-native';
+import { Check, Clock, MessageCircle, UserRound } from '../../../src/components/icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../../src/api/client';

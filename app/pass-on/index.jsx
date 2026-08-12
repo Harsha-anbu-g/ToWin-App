@@ -9,7 +9,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Lock, ScrollText } from 'lucide-react-native';
+import { Lock, ScrollText } from '../../src/components/icons';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../src/api/client';
 import PassOnItemCard from '../../src/components/passon/PassOnItemCard';

@@ -1,16 +1,17 @@
 // Offer Help (4b/4c) — the helper's center-FAB screen: Available / Applied /
 // Completed segments with a radius row. Cards follow the website's NeedCard:
 // serif 17 title, 13 description, neutral category chip + Urgent chip (red
-// dot), "1 km · Posted by Eleanor, 2 hours ago" meta, and a tonal bold
+// dot), "1 km · Posted 2 hours ago by Eleanor" meta, and a tonal bold
 // "Offer to Help". Applied: "Waiting to hear back" + underlined Withdraw;
 // accepted: green "You're helping"; completed cards sit at 65% opacity.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from '../icons';
 import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
 import api from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
@@ -128,34 +129,62 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
         {completed ? <Pill label="Completed" tone="green" /> : null}
       </View>
 
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 12 }}>
-        {distance ? `${distance} · ` : ''}
-        {need.elderName ? (
-          <>
-            Posted by{' '}
-            {need.elderId ? (
-              // button, not link: this opens the elder's profile inside the
-              // app, and "link" tells a screen reader they are being handed
-              // off somewhere else. Same control, same word as the elder's
-              // side in PostedHelpList.
-              <Text
-                accessibilityRole="button"
-                suppressHighlighting
-                onPress={() => router.push(`/user/${need.elderId}`)}
-                style={{ color: t.blueDeep, textDecorationLine: 'underline' }}
-              >
-                {need.elderName}
-              </Text>
-            ) : (
-              // no profile to open — never dress a name as a link it isn't
-              <Text style={{ fontWeight: '600' }}>{need.elderName}</Text>
-            )}
-          </>
-        ) : (
-          'Posted'
-        )}
-        {when ? `, ${when}` : ''}
-      </Text>
+      {/* The poster's name is a real 44pt box, not a Text inside a Text:
+          opening their profile is how a helper checks who they would be
+          helping, and a nested Text takes neither minHeight nor hitSlop
+          (Chip.jsx: a target in a wrapping row has to be a box, and
+          react-native-web drops hitSlop anyway). The time moved ahead of the
+          name so the box ends the line and no wrap can start on a comma. */}
+      <View
+        style={{
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          // On the row, not only on the button: a card with no profile to open
+          // keeps the same meta rhythm as one that has it.
+          minHeight: 44,
+          marginTop: 4,
+        }}
+      >
+        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
+          {distance ? `${distance} · ` : ''}
+          {when ? `Posted ${when}` : 'Posted'}
+          {need.elderName ? ' by ' : ''}
+        </Text>
+        {need.elderName && need.elderId ? (
+          // button, not link: this opens the elder's profile inside the app,
+          // and "link" tells a screen reader they are being handed off
+          // somewhere else. Same control, same word as the elder's side in
+          // PostedHelpList.
+          <Pressable
+            accessibilityRole="button"
+            accessibilityHint={`Opens ${need.elderName}'s profile`}
+            onPress={() => router.push(`/user/${need.elderId}`)}
+            style={({ pressed }) => ({
+              minHeight: 44,
+              minWidth: 44,
+              justifyContent: 'center',
+              opacity: pressed ? 0.6 : 1,
+            })}
+          >
+            <Text
+              style={{
+                fontSize: type.meta,
+                fontWeight: '600',
+                color: t.blueDeep,
+                textDecorationLine: 'underline',
+              }}
+            >
+              {need.elderName}
+            </Text>
+          </Pressable>
+        ) : need.elderName ? (
+          // no profile to open — never dress a name as a link it isn't
+          <Text style={{ fontSize: type.meta, color: t.inkSlate, fontWeight: '600' }}>
+            {need.elderName}
+          </Text>
+        ) : null}
+      </View>
 
       {completed ? null : mine === 'PENDING' ? (
         <View style={{ marginTop: 12 }}>
@@ -197,6 +226,8 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
 
 export default function OfferHelpList() {
   const { t, spacing, type, fontFamily } = useTheme();
+  // Blocks are per account (blockList.js), so the read is keyed by who is in.
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { apply, withdraw } = useApplyMutations();
   const [seg, setSeg] = useState('available');
@@ -212,7 +243,10 @@ export default function OfferHelpList() {
     queryFn: async () => (await api.get('/needs/applications')).data,
   });
 
-  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blocked } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
 
   const radiusKm = RADIUS_STEPS[radiusIdx];
   // Blocked elders' requests never show in Available (UGC 1.2); Applied and

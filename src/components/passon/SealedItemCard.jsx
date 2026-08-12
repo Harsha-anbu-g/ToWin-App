@@ -10,7 +10,7 @@
 // Every refusal is the server's own sentence — the seven-day freeze carries a
 // real date she may act on. The screen adds one thing to the freeze: somebody
 // to write to.
-import { Lock } from 'lucide-react-native';
+import { Lock } from '../icons';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { FROZEN, SEALED_ITEMS, SEALED_KINDS } from '../../lib/passOnLocks';

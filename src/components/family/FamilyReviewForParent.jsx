@@ -7,7 +7,7 @@
 // at the top of the ladder, so this only appears on a fully trusted
 // friendship, exactly as it does for the parent themselves.
 import { useMutation } from '@tanstack/react-query';
-import { Star } from 'lucide-react-native';
+import { Star } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../api/client';

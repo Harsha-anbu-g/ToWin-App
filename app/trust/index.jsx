@@ -6,7 +6,7 @@
 // Climbing the ladder lives on the Dashboard (3d); this screen explains.
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Star } from 'lucide-react-native';
+import { Star } from '../../src/components/icons';
 import { Text, View } from 'react-native';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';

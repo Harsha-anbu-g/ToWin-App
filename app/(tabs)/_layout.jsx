@@ -16,7 +16,7 @@ import {
   Search,
   UserRound,
   UsersRound,
-} from 'lucide-react-native';
+} from '../../src/components/icons';
 import { Platform, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';

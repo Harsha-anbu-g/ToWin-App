@@ -6,7 +6,7 @@
 // logic in the caller never changes.
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { X } from 'lucide-react-native';
+import { X } from '../icons';
 import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 import Input from './Input';

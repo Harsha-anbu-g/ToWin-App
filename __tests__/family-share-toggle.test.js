@@ -26,6 +26,12 @@ jest.mock('../src/api/client', () => ({
   friendlyWriteError: (err, fallback) => fallback,
 }));
 
+// The trust panels read the block list, which is scoped to the signed-in
+// account (src/lib/blockList.js), so they need an account in context.
+jest.mock('../src/context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'ELDER', userId: 'me', emailVerified: true }, booted: true }),
+}));
+
 // Pin the reduced-motion path: AccessibilityInfo's real promise resolves
 // outside act under Jest (same call as my-family.test.js); under reduce
 // motion the knob SNAPS via setValue — the app convention (FAM-407).

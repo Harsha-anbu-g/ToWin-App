@@ -11,7 +11,7 @@
 // in, so the card is never on screen saying nothing.
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Archive } from 'lucide-react-native';
+import { Archive } from '../icons';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import { MY_BOXES } from '../../lib/passOnLocks';

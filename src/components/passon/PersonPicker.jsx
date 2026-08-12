@@ -3,7 +3,7 @@
 // Deliberately a list of large, plainly labelled rows rather than a native
 // wheel: the people on this list are the elder's daughter and the helper she
 // trusts — they are worth a whole row each.
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 

@@ -3,7 +3,7 @@
 // end-friendship / report actions. Trust climbing lives on the Trust screen.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { BookOpen } from 'lucide-react-native';
+import { BookOpen } from '../../src/components/icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -16,6 +16,7 @@ import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import TrustBadge from '../../src/components/ui/TrustBadge';
+import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
@@ -49,6 +50,8 @@ const REPORT_REASONS = ['Unsafe behavior', 'Harassment', 'Scam or fraud', 'Somet
 
 export default function UserProfile() {
   const { t, spacing, text, type, fontFamily } = useTheme();
+  // Blocks belong to the signed-in account, not the phone (blockList.js).
+  const { user } = useAuth();
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
@@ -78,7 +81,10 @@ export default function UserProfile() {
   });
   const conn = (connections ?? []).find((c) => c.otherUserId === id);
 
-  const { data: blockedList } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blockedList } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
   const userIsBlocked = isBlocked(blockedList, id);
 
   // Pull-to-refresh (UX-704): reload exactly what this screen shows.
@@ -140,7 +146,7 @@ export default function UserProfile() {
   const doBlock = async () => {
     setBlocking(true);
     try {
-      await blockUser({ id, name: profile?.name ?? '' });
+      await blockUser(user?.userId, { id, name: profile?.name ?? '' });
       if (conn?.status === 'ACTIVE') endFriendship.mutate();
       queryClient.invalidateQueries({ queryKey: ['block-list'] });
       showToast("Blocked. You won't see this person anymore.", 'info');
@@ -162,7 +168,7 @@ export default function UserProfile() {
   };
 
   const doUnblock = async () => {
-    await unblockUser(id);
+    await unblockUser(user?.userId, id);
     queryClient.invalidateQueries({ queryKey: ['block-list'] });
     showToast('Unblocked.', 'info');
   };

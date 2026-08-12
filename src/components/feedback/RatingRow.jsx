@@ -2,7 +2,7 @@
 // the screen file keeps only the form's shape). 44pt targets with real gaps:
 // five 38pt stars sharing edges made 3★-vs-4★ mis-taps certain (rulebook).
 import { Pressable, Text, View } from 'react-native';
-import { Star } from 'lucide-react-native';
+import { Star } from '../icons';
 import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 
