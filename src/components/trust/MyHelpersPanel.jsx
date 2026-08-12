@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
@@ -171,6 +172,8 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
 
 export default function MyHelpersPanel() {
   const { t, type, fontFamily } = useTheme();
+  // Blocks are per account (blockList.js), so the read is keyed by who is in.
+  const { user } = useAuth();
   const { showToast } = useToast();
   const askConfirm = useConfirm();
   const queryClient = useQueryClient();
@@ -186,7 +189,10 @@ export default function MyHelpersPanel() {
     queryFn: async () => (await api.get('/connections')).data,
   });
   const connOf = (id) => (connections ?? []).find((c) => c.id === id);
-  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blocked } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
 
   const confirm = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),

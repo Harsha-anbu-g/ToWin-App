@@ -10,7 +10,7 @@
 // **The two ticked sentences come from the server and go straight back.** The
 // server stores a hash of the exact wording shown and refuses any wording it
 // does not publish, so this file must never hold its own copy of them.
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';

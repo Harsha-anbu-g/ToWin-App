@@ -8,7 +8,7 @@
 // sits underneath: the reward, not the reason.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { useRef, useState } from 'react';
 import { Animated, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';

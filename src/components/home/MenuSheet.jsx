@@ -25,7 +25,7 @@ import {
   Puzzle,
   Users,
   X,
-} from 'lucide-react-native';
+} from '../icons';
 import { useAuth } from '../../context/AuthContext';
 import focusForScreenReader from '../../lib/focusForScreenReader';
 import { useConfirm } from '../../context/ConfirmContext';

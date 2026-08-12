@@ -3,7 +3,7 @@
 // rows are 44pt links; the portfolio pill stays a neutral ghost — the trust
 // color never fills an action and Submit stays the screen's only filled button.
 import { Image, Linking, Pressable, Text, View } from 'react-native';
-import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone } from 'lucide-react-native';
+import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
 
 // Verbatim from the website's Feedback.jsx

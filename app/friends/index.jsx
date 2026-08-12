@@ -5,7 +5,7 @@
 // Elder-first wording: always "friends", never "connections" (HCI rule 2).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { MapPin } from 'lucide-react-native';
+import { MapPin } from '../../src/components/icons';
 import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
@@ -206,7 +206,10 @@ export default function FriendsScreen() {
     queryFn: async () => (await api.get('/connections')).data,
   });
 
-  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blocked } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
 
   // Blocked people never appear — not in Find, and their invites vanish (UGC 1.2)
   const conns = filterBlocked(connections ?? [], blocked, (c) => c.otherUserId);

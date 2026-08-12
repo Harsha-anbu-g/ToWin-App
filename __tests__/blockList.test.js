@@ -1,4 +1,5 @@
-// STORE-204 (Apple UGC 1.2): device-side block list contract.
+// STORE-204 (Apple UGC 1.2): device-side block list contract. Every call
+// carries the account the list belongs to — see block-list-scoping.test.js.
 import * as SecureStore from 'expo-secure-store';
 import { blockUser, filterBlocked, getBlocked, isBlocked, unblockUser } from '../src/lib/blockList';
 
@@ -9,7 +10,12 @@ jest.mock('expo-secure-store', () => ({
   setItemAsync: jest.fn(async (key, value) => {
     mockStore[key] = value;
   }),
+  deleteItemAsync: jest.fn(async (key) => {
+    delete mockStore[key];
+  }),
 }));
+
+const ME = 'user-7';
 
 beforeEach(() => {
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
@@ -17,40 +23,40 @@ beforeEach(() => {
 });
 
 test('returns empty list when nothing is stored', async () => {
-  expect(await getBlocked()).toEqual([]);
+  expect(await getBlocked(ME)).toEqual([]);
 });
 
 test('returns empty list when the stored value is corrupt', async () => {
-  await SecureStore.setItemAsync('towin-blocked-users', 'not json {');
-  expect(await getBlocked()).toEqual([]);
+  await SecureStore.setItemAsync('towin-blocked-user-7', 'not json {');
+  expect(await getBlocked(ME)).toEqual([]);
 });
 
 test('blockUser adds a person and persists them', async () => {
   // Arrange + Act
-  const next = await blockUser({ id: 'u-1', name: 'Pat' });
+  const next = await blockUser(ME, { id: 'u-1', name: 'Pat' });
 
   // Assert — returned list and a fresh read agree
   expect(next).toEqual([{ id: 'u-1', name: 'Pat' }]);
-  expect(await getBlocked()).toEqual([{ id: 'u-1', name: 'Pat' }]);
+  expect(await getBlocked(ME)).toEqual([{ id: 'u-1', name: 'Pat' }]);
 });
 
 test('blockUser ignores duplicates and missing ids', async () => {
-  await blockUser({ id: 'u-1', name: 'Pat' });
-  const afterDuplicate = await blockUser({ id: 'u-1', name: 'Pat again' });
-  const afterMissingId = await blockUser({ name: 'Nobody' });
+  await blockUser(ME, { id: 'u-1', name: 'Pat' });
+  const afterDuplicate = await blockUser(ME, { id: 'u-1', name: 'Pat again' });
+  const afterMissingId = await blockUser(ME, { name: 'Nobody' });
 
   expect(afterDuplicate).toHaveLength(1);
   expect(afterMissingId).toHaveLength(1);
 });
 
 test('unblockUser removes only that person', async () => {
-  await blockUser({ id: 'u-1', name: 'Pat' });
-  await blockUser({ id: 'u-2', name: 'Sam' });
+  await blockUser(ME, { id: 'u-1', name: 'Pat' });
+  await blockUser(ME, { id: 'u-2', name: 'Sam' });
 
-  const next = await unblockUser('u-1');
+  const next = await unblockUser(ME, 'u-1');
 
   expect(next).toEqual([{ id: 'u-2', name: 'Sam' }]);
-  expect(await getBlocked()).toEqual([{ id: 'u-2', name: 'Sam' }]);
+  expect(await getBlocked(ME)).toEqual([{ id: 'u-2', name: 'Sam' }]);
 });
 
 test('isBlocked matches by id and tolerates empty input', () => {

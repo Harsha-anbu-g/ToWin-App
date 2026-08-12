@@ -4,7 +4,7 @@
 // The 7-day re-ask cooldown lives server-side — its message is surfaced, not
 // duplicated here.
 import { useMutation } from '@tanstack/react-query';
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';

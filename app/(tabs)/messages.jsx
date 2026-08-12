@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router';
 import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
-import { ChevronRight, MessageCircle, Users } from 'lucide-react-native';
+import { ChevronRight, MessageCircle, Users } from '../../src/components/icons';
 import api from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -222,7 +222,10 @@ export default function MessagesInbox() {
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
-  const { data: blocked } = useQuery({ queryKey: ['block-list'], queryFn: getBlocked });
+  const { data: blocked } = useQuery({
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
+  });
 
   // Family updates threads a linked family member can read (their parents'
   // shared friendships). Errors fold to empty — the inbox must keep working

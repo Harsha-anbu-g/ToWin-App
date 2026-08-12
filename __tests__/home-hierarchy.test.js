@@ -31,6 +31,12 @@ jest.mock('../src/api/client', () => ({
   friendlyWriteError: (err, fallback) => fallback,
 }));
 
+// The trust panels read the block list, which is scoped to the signed-in
+// account (src/lib/blockList.js), so they need an account in context.
+jest.mock('../src/context/AuthContext', () => ({
+  useAuth: () => ({ user: { role: 'ELDER', userId: 'me', emailVerified: true }, booted: true }),
+}));
+
 // Reduce motion pins FamilyShareToggle's knob to setValue (the app
 // convention) so HelperCard renders without pending Animated timers.
 jest.mock('../src/lib/useReducedMotion', () => ({ useReducedMotion: () => true }));

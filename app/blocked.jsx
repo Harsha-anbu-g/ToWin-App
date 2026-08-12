@@ -13,6 +13,7 @@ import Card from '../src/components/ui/Card';
 import LoadError from '../src/components/ui/LoadError';
 import Screen from '../src/components/ui/Screen';
 import SkeletonCard from '../src/components/ui/Skeleton';
+import { useAuth } from '../src/context/AuthContext';
 import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
 import { getBlocked, unblockUser } from '../src/lib/blockList';
@@ -20,18 +21,20 @@ import { useTheme } from '../src/theme/ThemeContext';
 
 export default function BlockedPeople() {
   const { t, spacing, text } = useTheme();
+  // The list is this account's, never the phone's — see src/lib/blockList.js.
+  const { user } = useAuth();
   const { showToast } = useToast();
   const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const { data: blocked, isLoading, isError, refetch } = useQuery({
-    queryKey: ['block-list'],
-    queryFn: getBlocked,
+    queryKey: ['block-list', user?.userId],
+    queryFn: () => getBlocked(user?.userId),
   });
   const list = blocked ?? [];
 
   const doUnblock = async (person) => {
-    await unblockUser(person.id);
+    await unblockUser(user?.userId, person.id);
     queryClient.invalidateQueries({ queryKey: ['block-list'] });
     showToast(`${person.name || 'They'} can appear again.`, 'info');
   };

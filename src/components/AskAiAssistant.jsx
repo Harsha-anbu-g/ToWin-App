@@ -19,7 +19,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Flag, Mic, Send, Volume2, X } from 'lucide-react-native';
+import { Flag, Mic, Send, Volume2, X } from './icons';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useConfirm } from '../context/ConfirmContext';

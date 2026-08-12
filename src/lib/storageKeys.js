@@ -20,6 +20,9 @@ export const KEYS = {
   haptics: 'towin-haptics',
   checkinPrompted: 'towin-checkin-prompted',
   checkinExplained: 'towin-checkin-explained',
+  // LEGACY device-wide block list, from before blocks were scoped per account.
+  // Read once, moved into the signed-in account's key, then deleted — see
+  // blockList.js. Never written again.
   blockedUsers: 'towin-blocked-users',
   onboarded: 'towin-onboarded',
   oauthState: 'towin-oauth-state',
@@ -30,6 +33,10 @@ export const KEYS = {
   // prefix (registered below as website-owned): the web build shares the
   // website's localStorage, so the app keeps its own seen-state.
   seenPrefix: 'towin-seen-',
+  // Per-user, so it is a prefix rather than a key — see blockedKey(). A block
+  // belongs to the person, not to the phone: the next account signed in on a
+  // shared phone must not be able to read, or undo, an elder's blocks.
+  blockedPrefix: 'towin-blocked-',
   // READ-ONLY fallback. Returning visitors who set night mode on the old
   // website still have this; we honour it once and then write KEYS.theme.
   // Writing it is forbidden — see the test.
@@ -45,6 +52,13 @@ export const aiConsentKey = (userId) => `${KEYS.aiConsentPrefix}${userId ?? 'ano
  * @param {string} category e.g. 'connections' | 'applicants'
  */
 export const seenKey = (userId, category) => `${KEYS.seenPrefix}${userId ?? 'anon'}-${category}`;
+
+/**
+ * Block-list key for one account. A signed-out read gets its own empty scope
+ * rather than whatever the last person on this phone blocked.
+ * @param {string|undefined|null} userId
+ */
+export const blockedKey = (userId) => `${KEYS.blockedPrefix}${userId ?? 'anon'}`;
 
 /**
  * Every key the app writes. The disjointness contract is asserted against
@@ -63,6 +77,7 @@ export const APP_WRITTEN_KEYS = [
   KEYS.oauthVerifier,
   aiConsentKey('example'),
   seenKey('example', 'connections'),
+  blockedKey('example'),
 ];
 
 /**

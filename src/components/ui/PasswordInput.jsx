@@ -2,7 +2,7 @@
 // (44pt target, labelled for screen readers). Wraps the kit Input.
 import { useState } from 'react';
 import { Pressable } from 'react-native';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
 import Input from './Input';
 

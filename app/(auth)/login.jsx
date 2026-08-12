@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AlertCircle, Eye, EyeOff } from 'lucide-react-native';
+import { AlertCircle, Eye, EyeOff } from '../../src/components/icons';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';

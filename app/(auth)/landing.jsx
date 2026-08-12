@@ -22,7 +22,7 @@ import {
   TrendingUp,
   Users,
   Video,
-} from 'lucide-react-native';
+} from '../../src/components/icons';
 import { useRef, useState } from 'react';
 import { Animated, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

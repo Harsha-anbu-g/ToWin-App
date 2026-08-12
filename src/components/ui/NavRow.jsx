@@ -5,7 +5,7 @@
 // elders; captions use the tab-bar label size, same convention).
 // Trust pill only renders once the score is known — no flash of "undefined".
 import { useRouter } from 'expo-router';
-import { Menu, UserRoundPlus } from 'lucide-react-native';
+import { Menu, UserRoundPlus } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 

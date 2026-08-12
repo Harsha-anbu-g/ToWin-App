@@ -1,7 +1,7 @@
 // Horizontal 7-node trust ladder (3d/4a): blue check circles for climbed
 // steps, a ring for the current one, the tortoise in a wash circle as the
 // goal, 2px connectors. Shared by Dashboard (elder) and My Elders (helper).
-import { Check } from 'lucide-react-native';
+import { Check } from '../icons';
 import { View } from 'react-native';
 import TortoiseMark from '../TortoiseMark';
 import { useTheme } from '../../theme/ThemeContext';

@@ -62,7 +62,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Towinly uses your photo library so you can choose a profile picture.",
+          "photosPermission": "Towinly uses your photo library so you can choose a profile picture, and so you can send a photo of your ID if you choose to verify who you are.",
           "cameraPermission": false,
           "microphonePermission": false
         }

@@ -16,6 +16,33 @@ module.exports = defineConfig([
       // benefit (React escapes text nodes itself). Decided at adoption, not to
       // dodge a failing gate.
       'react/no-unescaped-entities': 'off',
+
+      // Icons come from src/components/icons. The lucide barrel re-exports
+      // 1,745 icon modules and Metro does not tree-shake, so one barrel import
+      // puts the whole library in the download (DEEP-06).
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'lucide-react-native',
+              message: "Import icons from 'src/components/icons' instead: the barrel bundles all 1,745 icons.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Build-time scripts run under Node, never in the app bundle
+    files: ['scripts/**'],
+    languageOptions: {
+      globals: {
+        __dirname: 'readonly',
+        module: 'readonly',
+        process: 'readonly',
+        require: 'readonly',
+      },
     },
   },
   {

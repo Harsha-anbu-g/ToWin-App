@@ -3,7 +3,7 @@
 // (used for the password eye toggles). Elder rules: >=48pt, 18px text.
 // memo'd: Paper inputs animate a floating label, so sibling fields skipping
 // re-renders per keystroke is what keeps slow typists free of keyboard lag.
-import { AlertCircle } from 'lucide-react-native';
+import { AlertCircle } from '../icons';
 import { memo } from 'react';
 import { Text, View } from 'react-native';
 import { TextInput as PaperInput } from 'react-native-paper';
