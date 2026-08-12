@@ -97,6 +97,14 @@ test('register: selecting FAMILY submits role FAMILY and routes to check-email',
 });
 
 test('demo card: Try as Family logs in with the seeded Sarah credentials and lands on /', async () => {
+  // A token the app can really use. The card now checks what login() gives
+  // back, so a 200 carrying no token is a refusal, not a landing — this seat is
+  // what Apple App Review taps, and it has to be the real happy path.
+  const payload = { sub: 'sarah', role: 'FAMILY', ev: true, exp: Math.floor(Date.now() / 1000) + 3600 };
+  api.post.mockResolvedValue({
+    data: { token: `h.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.s` },
+  });
+
   const { getByRole, getByText } = await wrap(<DemoAccountsCard />);
   getByText("Sarah, Margaret's daughter");
 

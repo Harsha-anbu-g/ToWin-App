@@ -361,7 +361,15 @@ export default function Landing() {
             accessibilityLabel="Skip the story and sign up"
             onPress={() => go('/(auth)/register')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: 8 })}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              // A real 44pt box. These two are the only ways out of the
+              // story, and the web build drops hitSlop, so padding alone
+              // left them at about 38pt there (DEEP-08).
+              minHeight: 44,
+              justifyContent: 'center',
+              paddingHorizontal: 4,
+            })}
           >
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.inkSlate }}>Skip</Text>
           </Pressable>
@@ -370,7 +378,15 @@ export default function Landing() {
             accessibilityLabel="Log in"
             onPress={() => go('/(auth)/login')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1, paddingVertical: 8 })}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.6 : 1,
+              // A real 44pt box. These two are the only ways out of the
+              // story, and the web build drops hitSlop, so padding alone
+              // left them at about 38pt there (DEEP-08).
+              minHeight: 44,
+              justifyContent: 'center',
+              paddingHorizontal: 4,
+            })}
           >
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>Log in</Text>
           </Pressable>

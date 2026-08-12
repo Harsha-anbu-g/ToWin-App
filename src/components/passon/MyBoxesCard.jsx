@@ -29,26 +29,29 @@ export default function MyBoxesCard() {
   // can never open a door that bounces them straight back.
   const canPassOn = user?.role === 'ELDER' || user?.role === 'BOTH';
 
-  const { data: boxes } = useQuery({
-    queryKey: ['passon-boxes-summary'],
-    queryFn: async () => {
-      const [mine, setup] = await Promise.all([
-        api.get('/passon/mine').then((r) => r.data),
-        api
-          .get('/passon/setup')
-          .then((r) => r.data)
-          .catch(() => null),
-      ]);
-      return {
-        stories: mine?.stories?.length || 0,
-        letters: mine?.letters?.length || 0,
-        shut: !!setup?.armed,
-      };
-    },
+  // The pass-on page's own two keys, not a private summary key: everything
+  // that changes these counts happens on that page, and its reload() already
+  // refreshes exactly these. A key of our own went stale for the whole
+  // session, because nothing anywhere invalidated it.
+  const { data: mine } = useQuery({
+    queryKey: ['passon-mine'],
+    queryFn: async () => (await api.get('/passon/mine')).data,
+    enabled: canPassOn,
+  });
+  const { data: setup } = useQuery({
+    queryKey: ['passon-setup'],
+    queryFn: async () => (await api.get('/passon/setup')).data,
     enabled: canPassOn,
   });
 
-  if (!canPassOn || !boxes) return null;
+  // Held back until the counts are really in. A failed setup call does not
+  // take the card down on its own: "your box is shut" is simply left unsaid.
+  if (!canPassOn || !mine) return null;
+  const boxes = {
+    stories: mine.stories?.length || 0,
+    letters: mine.letters?.length || 0,
+    shut: !!setup?.armed,
+  };
 
   return (
     <Card>

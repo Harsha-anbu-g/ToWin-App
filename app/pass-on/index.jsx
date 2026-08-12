@@ -218,12 +218,19 @@ export default function PassOn() {
     queryFn: async () => (await api.get('/passon/mine')).data,
     enabled,
   });
-  const { data: links } = useQuery({
+  // The two lists this page borrows from other features carry the same rule:
+  // an empty array from a dropped fetch must never be read back to her as
+  // "there is nobody" (UX-706, same as the content queries above).
+  const { data: links, isError: linksFailed, refetch: refetchLinks } = useQuery({
     queryKey: ['family-links'],
     queryFn: async () => (await api.get('/family/links')).data,
     enabled,
   });
-  const { data: connections } = useQuery({
+  const {
+    data: connections,
+    isError: connectionsFailed,
+    refetch: refetchConnections,
+  } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
     enabled,
@@ -233,7 +240,7 @@ export default function PassOn() {
     queryFn: async () => (await api.get('/passon/setup')).data,
     enabled,
   });
-  const { data: keyholders } = useQuery({
+  const { data: keyholders, isError: keysFailed, refetch: refetchKeys } = useQuery({
     queryKey: ['passon-keyholders'],
     queryFn: async () => (await api.get('/passon/keyholders')).data,
     enabled,
@@ -261,6 +268,14 @@ export default function PassOn() {
   const people = peopleSheKnows(links?.activeLinks, connections);
   const family = herFamilyList(links?.activeLinks);
   const keys = keyholders || [];
+
+  // Failed AND nothing to show. A list left over from an earlier success is
+  // still true, and replacing it with an error would take away the letter she
+  // is part-way through writing or the setup she is part-way through.
+  const peopleUnknown = (linksFailed || connectionsFailed) && people.length === 0;
+  const familyUnknown = linksFailed && family.length === 0;
+  const keysUnknown = keysFailed && keys.length === 0;
+  const retryPeople = () => Promise.all([refetchLinks(), refetchConnections()]);
 
   const reload = () =>
     Promise.all(
@@ -483,6 +498,11 @@ export default function PassOn() {
               onCancel={() => setWriting(null)}
               onGoToSealedBox={() => changeTab('sealed')}
             />
+          ) : peopleUnknown ? (
+            // The picker inside the form would hold nobody and her Save could
+            // never pass, so the way in waits for the retry rather than
+            // telling her she has nobody left to write to.
+            <LoadError what="the people you can write to" onRetry={retryPeople} />
           ) : (
             <Button
               title={LETTERS.start}
@@ -518,16 +538,22 @@ export default function PassOn() {
           {setupFailed ? <LoadError what="your Sealed box" onRetry={refetchSetup} /> : null}
           {setupLoading && !setup ? <SkeletonCard lines={3} /> : null}
           {settingUp && setup ? (
-            <SealedSetup
-              family={family}
-              setup={setup}
-              already={keys
-                .filter((k) => k.status === 'INVITED' || k.status === 'ACTIVE')
-                .map((k) => k.personId)}
-              saving={saving}
-              onFinish={arm}
-              onCancel={() => setSettingUp(false)}
-            />
+            familyUnknown ? (
+              // Step one would otherwise say "You need at least three people
+              // on your family list first" to an elder who has five.
+              <LoadError what="your family list" onRetry={refetchLinks} />
+            ) : (
+              <SealedSetup
+                family={family}
+                setup={setup}
+                already={keys
+                  .filter((k) => k.status === 'INVITED' || k.status === 'ACTIVE')
+                  .map((k) => k.personId)}
+                saving={saving}
+                onFinish={arm}
+                onCancel={() => setSettingUp(false)}
+              />
+            )
           ) : null}
 
           {/* What is inside comes before who can open it one day — she reads
@@ -544,13 +570,19 @@ export default function PassOn() {
           ) : null}
 
           {!settingUp && setup?.armed ? (
-            <SealedKeyholders
-              setup={setup}
-              keyholders={keys}
-              undoing={saving}
-              onUndo={undo}
-              onChange={() => setSettingUp(true)}
-            />
+            keysUnknown ? (
+              // An armed box always has Keyholders, so an empty list here is
+              // the fetch failing — never "nobody is holding a key".
+              <LoadError what="your keyholders" onRetry={refetchKeys} />
+            ) : (
+              <SealedKeyholders
+                setup={setup}
+                keyholders={keys}
+                undoing={saving}
+                onUndo={undo}
+                onChange={() => setSettingUp(true)}
+              />
+            )
           ) : null}
 
           {!settingUp && !setupLoading && !setupFailed && !setup?.armed ? (

@@ -92,7 +92,9 @@ export default function HomeScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     // Refresh what Home actually shows — a blanket invalidateQueries() would
-    // stampede every mounted screen's queries at once.
+    // stampede every mounted screen's queries at once. The cost of a hand-kept
+    // list is that a card added to Home later stays stale all session unless
+    // its key is added here too, so home-refresh.test.js reads these back.
     const homeKeys = isFamily
       ? [
           ['family-links'],
@@ -101,6 +103,7 @@ export default function HomeScreen() {
           ['family-standings'],
           ['trust-my-score'],
           ['profile-me'],
+          ['passon-asked-of-me'], // KeyholderAsk, inside FamilyHomePanel
         ]
       : [
           ['connections'],
@@ -110,6 +113,9 @@ export default function HomeScreen() {
           ['needs-open'],
           ['needs-applications'],
           ['block-list'],
+          ['passon-mine'], // MyBoxesCard's two counts (elder seat)
+          ['passon-setup'],
+          ['family-behind'], // who stands behind each elder (MyEldersPanel)
         ];
     await Promise.all(homeKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
     setRefreshing(false);

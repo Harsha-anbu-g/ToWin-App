@@ -58,7 +58,7 @@ function ChatSkeleton() {
 }
 
 export default function ChatThread() {
-  const { t, spacing, radius, text } = useTheme();
+  const { t, spacing, radius, text, type } = useTheme();
   const { connectionId, channel: channelParam } = useLocalSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -111,15 +111,21 @@ export default function ChatThread() {
   );
 
   const askConfirm = useConfirm();
-  const { data: connections, isLoading: connsLoading } = useQuery({
+  const {
+    data: connections,
+    isLoading: connsLoading,
+    isError: connsError,
+    refetch: refetchConns,
+  } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
   });
   const conn = (connections ?? []).find((c) => c.id === connectionId);
   // Until the list resolves, the locked/paused state is UNKNOWN — render no
   // footer rather than flashing an open composer at a below-Messaging chat
-  // (a deep link lands here with a cold cache).
-  const connUnknown = !conn && connsLoading;
+  // (a deep link lands here with a cold cache). A FAILED fetch is just as
+  // unknown: an open composer there only produces a send the server refuses.
+  const connUnknown = !conn && (connsLoading || connsError);
 
   // The backend send() gate, mirrored: a MAIN-channel, non-family connection
   // below Messaging is refused server-side — so say it in place instead of
@@ -170,7 +176,14 @@ export default function ChatThread() {
         .post(`/messages/${connectionId}/seen`)
         // Refresh the badge only AFTER the seen-write commits — invalidating
         // first races the server and the refetch returns the stale count.
-        .then(() => queryClient.invalidateQueries({ queryKey: ['unread-count'] }))
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+          // The inbox row draws its bold text and count pill from
+          // conn.unreadCount in ['connections'], and tab screens stay mounted
+          // — without this the row a person just read stays unread all
+          // session, sending them back into an empty thread again and again.
+          queryClient.invalidateQueries({ queryKey: ['connections'] });
+        })
         .catch((e) => {
           if (__DEV__) console.warn(`mark-seen failed for ${connectionId}:`, e?.message);
         });
@@ -335,7 +348,10 @@ export default function ChatThread() {
         <Text style={{ fontSize: text.base, lineHeight: 25, color: t.ink }}>{item.content}</Text>
         <Text
           style={{
-            fontSize: 13,
+            // A timestamp is glanceable at 13; "Didn't send. Tap to try again."
+            // is the ONLY instruction for rescuing the message, so it takes the
+            // type.meta floor for actionable secondary text.
+            fontSize: item.failed ? type.meta : 13,
             // ink3, not ink4: ink4 measures 4.35:1 on the tinted bubbles (AA
             // needs 4.5). contrast-tokens.test.js pins ink3 on both bubbles.
             color: item.failed ? t.redDeep : t.ink3,
@@ -382,7 +398,7 @@ export default function ChatThread() {
         )}
       </View>
     );
-  }, [user?.userId, t, spacing, radius, text, isFamilyChannel, retrySend]);
+  }, [user?.userId, t, spacing, radius, text, type, isFamilyChannel, retrySend]);
 
   return (
     <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: t.surface }}>
@@ -491,7 +507,23 @@ export default function ChatThread() {
 
         {/* Paused friendships block sending server-side — say so plainly
             instead of letting a send fail (HCI rules 3 + 9) */}
-        {connUnknown ? null : conn?.status === 'PAUSED' ? (
+        {connUnknown ? (
+          // Still loading: nothing to say yet. Failed: a missing composer with
+          // no explanation is its own silent failure — name it and offer the
+          // way back (HCI rules 1 + 9).
+          connsError ? (
+            <View
+              style={{
+                padding: spacing[4],
+                borderTopWidth: 1,
+                borderTopColor: t.border,
+                backgroundColor: t.canvas,
+              }}
+            >
+              <LoadError what="this friendship" onRetry={refetchConns} bare />
+            </View>
+          ) : null
+        ) : conn?.status === 'PAUSED' ? (
           <View
             style={{
               padding: spacing[4],

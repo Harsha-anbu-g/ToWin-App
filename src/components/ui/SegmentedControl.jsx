@@ -1,7 +1,14 @@
 // Segmented control — the canvas's pill track (3d/3f/3g/4a…): surfaceFill
 // track, active chip lifted to segActive (white by day, lighter charcoal by
 // night — border-free, the brand's no-shadow elevation), label + tabular
-// count. Segments are 34pt visually; hitSlop tops every target up to >=44pt.
+// count.
+//
+// The chip stays 34pt to the eye; the target around it is a real 44pt box
+// (DEEP-08). It used to be 34pt plus hitSlop, which the web build drops
+// entirely — so the app's most-used filter, on 8+ screens, was a 34pt target
+// at towinly.com/app/ while the design law promises 44. The extra height is
+// taken out of the track's vertical padding, so the control lands within 2pt
+// of the height it has always drawn.
 import { Pressable, Text, View } from 'react-native';
 import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
@@ -17,7 +24,7 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
           flexDirection: 'row',
           backgroundColor: t.surfaceFill,
           borderRadius: radius.pill,
-          padding: 4,
+          paddingHorizontal: 4,
         },
         style,
       ]}
@@ -45,52 +52,59 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
               onChange(seg.key);
             }}
             android_ripple={pressRipple}
-            hitSlop={{ top: 5, bottom: 5 }}
             // Pressed feedback (rulebook: no silent taps) — this is the primary
             // in-screen filter control on 8+ screens and previously gave none.
             style={({ pressed }) => ({
               flex: 1,
-              minHeight: 34, // min, not fixed — grows with the OS large-text setting
-              paddingVertical: 4,
-              borderRadius: radius.pill,
-              backgroundColor: active ? t.segActive : 'transparent',
-              flexDirection: 'row',
-              alignItems: 'center',
+              minHeight: 44, // min, not fixed — grows with the OS large-text setting
               justifyContent: 'center',
-              gap: 4,
-              paddingHorizontal: 4,
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text
-              numberOfLines={1}
-              maxFontSizeMultiplier={fontScaleCaps.chrome}
+            {/* The chip the eye sees, inside the box the finger gets. */}
+            <View
               style={{
-                // meta, not caption — these are navigation labels (rulebook pass)
-                fontSize: type.meta,
-                fontWeight: '600',
-                color: active ? t.blueDeep : t.inkSlate,
-                // Without flexShrink a long label ("Looking for Help") measures
-                // at its full intrinsic width and pushes the count past the
-                // chip's rounded edge, so the number reads as if it sat outside
-                // the button (user report 2026-07-26).
-                flexShrink: 1,
+                minHeight: 34,
+                paddingVertical: 4,
+                borderRadius: radius.pill,
+                backgroundColor: active ? t.segActive : 'transparent',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 4,
+                paddingHorizontal: 4,
               }}
             >
-              {seg.label}
-            </Text>
-            {seg.count != null ? (
               <Text
+                numberOfLines={1}
                 maxFontSizeMultiplier={fontScaleCaps.chrome}
                 style={{
-                  fontSize: type.segCount,
-                  color: active ? t.blueDeep : t.inkFaint2,
-                  fontVariant: ['tabular-nums'],
+                  // meta, not caption — these are navigation labels (rulebook pass)
+                  fontSize: type.meta,
+                  fontWeight: '600',
+                  color: active ? t.blueDeep : t.inkSlate,
+                  // Without flexShrink a long label ("Looking for Help") measures
+                  // at its full intrinsic width and pushes the count past the
+                  // chip's rounded edge, so the number reads as if it sat outside
+                  // the button (user report 2026-07-26).
+                  flexShrink: 1,
                 }}
               >
-                {seg.count}
+                {seg.label}
               </Text>
-            ) : null}
+              {seg.count != null ? (
+                <Text
+                  maxFontSizeMultiplier={fontScaleCaps.chrome}
+                  style={{
+                    fontSize: type.segCount,
+                    color: active ? t.blueDeep : t.inkFaint2,
+                    fontVariant: ['tabular-nums'],
+                  }}
+                >
+                  {seg.count}
+                </Text>
+              ) : null}
+            </View>
           </Pressable>
         );
       })}

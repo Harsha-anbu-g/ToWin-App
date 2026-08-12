@@ -4,7 +4,7 @@
 // Port of Towinly/frontend/src/pages/VerifyEmail.jsx: confirms the token with the
 // backend and shows the result. No auth required.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text } from 'react-native';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
@@ -16,8 +16,19 @@ export default function VerifyEmail() {
   const { t, spacing, text, fontFamily } = useTheme();
   const { token } = useLocalSearchParams();
   const router = useRouter();
-  const [state, setState] = useState('verifying'); // verifying | success | error
+  const [state, setState] = useState('verifying'); // verifying | success | error | offline
   const ran = useRef(false);
+
+  const verify = useCallback(() => {
+    setState('verifying');
+    api
+      .post('/auth/verify-email', { token })
+      .then(() => setState('success'))
+      // No reply at all is a connection problem, not a dead link. Collapsing
+      // the two told an elder on flaky wifi to sign up again and throw away a
+      // link that still works (HCI rule 9, same split as forgot-password).
+      .catch((err) => setState(err?.response ? 'error' : 'offline'));
+  }, [token]);
 
   useEffect(() => {
     if (ran.current) return; // guard against double-invoke
@@ -26,11 +37,8 @@ export default function VerifyEmail() {
       setState('error');
       return;
     }
-    api
-      .post('/auth/verify-email', { token })
-      .then(() => setState('success'))
-      .catch(() => setState('error'));
-  }, [token]);
+    verify();
+  }, [token, verify]);
 
   const heading = { fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, textAlign: 'center' };
   const body = { fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[3], lineHeight: 26 };
@@ -57,6 +65,23 @@ export default function VerifyEmail() {
               title="Go to log in"
               variant="primary"
               onPress={() => router.replace('/(auth)/login')}
+              style={{ marginTop: spacing[6] }}
+            />
+          </>
+        ) : null}
+        {state === 'offline' ? (
+          <>
+            <Text accessibilityRole="header" style={heading}>
+              Couldn't reach Towinly
+            </Text>
+            <Text style={body}>
+              Your link is still good. We just couldn't get through to check it. Please check your
+              connection and try again.
+            </Text>
+            <Button
+              title="Try again"
+              variant="primary"
+              onPress={verify}
               style={{ marginTop: spacing[6] }}
             />
           </>

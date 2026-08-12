@@ -225,7 +225,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
 });
 
 export default function OfferHelpList() {
-  const { t, spacing, type, fontFamily } = useTheme();
+  const { t, radius, spacing, type, fontFamily } = useTheme();
   // Blocks are per account (blockList.js), so the read is keyed by who is in.
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -325,14 +325,14 @@ export default function OfferHelpList() {
                 accessibilityRole="button"
                 accessibilityLabel={`Distance ${radiusKm} kilometres, tap to change`}
                 onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
-                hitSlop={{ top: 7, bottom: 7 }}
                 style={({ pressed }) => ({
-                  // minHeight, not height: the label must grow with the user's
-                  // text size instead of clipping (30 is the default-size look).
-                  minHeight: 30,
+                  // A real 44pt box, not 30 propped up by hitSlop: the web build
+                  // drops hitSlop (DEEP-08), and this pill is the whole answer to
+                  // an empty list. min, not fixed, so it grows with OS text.
+                  minHeight: 44,
                   paddingHorizontal: 12,
                   paddingVertical: 6,
-                  borderRadius: 15,
+                  borderRadius: radius.pill,
                   backgroundColor: t.surfaceFill,
                   borderWidth: 1,
                   borderColor: t.border,

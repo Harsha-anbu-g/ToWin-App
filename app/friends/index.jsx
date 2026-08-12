@@ -6,7 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from '../../src/components/icons';
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -34,9 +34,11 @@ function TonalChip({ label, onPress, neutral = false }) {
       accessibilityLabel={label}
       onPress={onPress}
       disabled={!onPress}
-      hitSlop={{ top: 6, bottom: 6 }}
       style={({ pressed }) => ({
-        minHeight: 34, // min, not fixed — grows with the OS large-text setting
+        // 44 as a real box, not 34 plus hitSlop — the web build drops hitSlop
+        // (DEEP-08). Min, not fixed, so it grows with the OS large-text
+        // setting; it still sits inside the 48pt avatar that sets row height.
+        minHeight: 44,
         paddingVertical: 6,
         paddingHorizontal: 16,
         borderRadius: radius.pill,
@@ -100,6 +102,36 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
       </View>
       {trailing}
     </Pressable>
+  );
+});
+
+// One person in the Find list. The trailing chip is built INSIDE this memo
+// boundary: handing PersonRow a freshly created element and a fresh arrow on
+// every list render made its memo() comparison fail every time, so a radius tap
+// or a refresh tick re-rendered every mounted card (UX-705, deep audit).
+const FindRow = memo(function FindRow({ person, status, sending, busy, onOpen, onConnect }) {
+  const { t, type } = useTheme();
+  return (
+    <PersonRow
+      person={person}
+      onPress={() => onOpen(person.userId)}
+      trailing={
+        status === 'friends' ? (
+          <Text style={{ fontSize: type.meta, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
+        ) : status === 'requested' ? (
+          <TonalChip label="Requested" neutral />
+        ) : (
+          <TonalChip
+            label={sending ? 'Sending…' : 'Connect'}
+            // A sent request can't be withdrawn (backend has no cancel), so a
+            // mis-tap must not send one — onConnect confirms first (HCI rule 5,
+            // error prevention). While any request is in flight there is no
+            // handler at all, which is what disables the chip.
+            onPress={busy ? undefined : () => onConnect(person)}
+          />
+        )
+      }
+    />
   );
 });
 
@@ -182,7 +214,7 @@ const RequestedCard = memo(function RequestedCard({ conn }) {
 const keyId = (item) => item.id;
 
 export default function FriendsScreen() {
-  const { t, spacing, type, fontFamily } = useTheme();
+  const { t, radius, spacing, type, fontFamily } = useTheme();
   const { user } = useAuth();
   const { showToast } = useToast();
   const confirm = useConfirm();
@@ -212,16 +244,25 @@ export default function FriendsScreen() {
   });
 
   // Blocked people never appear — not in Find, and their invites vanish (UGC 1.2)
-  const conns = filterBlocked(connections ?? [], blocked, (c) => c.otherUserId);
+  // Memoized because statusOf feeds the Find list's renderItem: rebuilding this
+  // array every render would change that callback's identity on every keystroke
+  // of screen state and undo the row memo above.
+  const conns = useMemo(
+    () => filterBlocked(connections ?? [], blocked, (c) => c.otherUserId),
+    [connections, blocked]
+  );
   const invites = conns.filter((c) => c.status === 'PENDING' && !c.initiatedByMe);
   const requested = conns.filter((c) => c.status === 'PENDING' && c.initiatedByMe);
-  const statusOf = (userId) => {
-    const c = conns.find((x) => x.otherUserId === userId);
-    if (!c) return null;
-    if (c.status === 'ACTIVE') return 'friends';
-    if (c.status === 'PENDING') return c.initiatedByMe ? 'requested' : 'invited-me';
-    return null;
-  };
+  const statusOf = useCallback(
+    (userId) => {
+      const c = conns.find((x) => x.otherUserId === userId);
+      if (!c) return null;
+      if (c.status === 'ACTIVE') return 'friends';
+      if (c.status === 'PENDING') return c.initiatedByMe ? 'requested' : 'invited-me';
+      return null;
+    },
+    [conns]
+  );
 
   const radiusKm = RADIUS_STEPS[radiusIdx];
   const people = filterBlocked(discovered ?? [], blocked, (p) => p.userId).filter(
@@ -258,6 +299,21 @@ export default function FriendsScreen() {
     setRefreshing(false);
   };
 
+  const { mutate: requestMutate } = request;
+  const openProfile = useCallback((userId) => router.push(`/user/${userId}`), [router]);
+  const connectTo = useCallback(
+    async (p) => {
+      const ok = await confirm({
+        title: 'Send a friend request?',
+        message: `${p.name} will be asked to connect with you.`,
+        cancelLabel: 'Not now',
+        confirmLabel: 'Send request',
+      });
+      if (ok) requestMutate(p.userId);
+    },
+    [confirm, requestMutate]
+  );
+
   const { mutate: respondMutate } = respond;
   const acceptInvite = useCallback(
     (conn) => respondMutate({ id: conn.id, accept: true }),
@@ -277,6 +333,20 @@ export default function FriendsScreen() {
       if (ok) respondMutate({ id: conn.id, accept: false });
     },
     [confirm, respondMutate]
+  );
+
+  const renderFindRow = useCallback(
+    ({ item: p }) => (
+      <FindRow
+        person={p}
+        status={statusOf(p.userId)}
+        sending={request.isPending && request.variables === p.userId}
+        busy={request.isPending}
+        onOpen={openProfile}
+        onConnect={connectTo}
+      />
+    ),
+    [statusOf, request.isPending, request.variables, openProfile, connectTo]
   );
 
   const renderPendingRow = useCallback(
@@ -372,14 +442,14 @@ export default function FriendsScreen() {
                         accessibilityLabel={`${km} kilometers`}
                         aria-checked={active}
                         onPress={() => setRadiusIdx(i)}
-                        // 36pt visual, hitSlop tops the target up to >=44pt (the
-                        // kit Chip's trick — vertical only, so adjacent pills
-                        // never overlap each other's target).
-                        hitSlop={{ top: 4, bottom: 4 }}
+                        // A real 44pt box, the kit Chip's rule: these wrap with
+                        // an 8pt gap, and slop would both eat that gap and
+                        // vanish on the web build, which never implements it
+                        // (DEEP-08).
                         style={({ pressed }) => ({
-                          minHeight: 36,
+                          minHeight: 44,
                           paddingHorizontal: 14,
-                          borderRadius: 18,
+                          borderRadius: radius.pill,
                           justifyContent: 'center',
                           backgroundColor: active ? t.blueWash : 'transparent',
                           borderWidth: 1,
@@ -407,42 +477,7 @@ export default function FriendsScreen() {
               `Nobody new within ${radiusKm} km right now. Try a wider distance, or check back soon.`,
               { failed: discoverFailed, what: 'people near you', retry: refetchDiscover }
             )}
-            renderItem={({ item: p }) => {
-              const status = statusOf(p.userId);
-              return (
-                <PersonRow
-                  person={p}
-                  onPress={() => router.push(`/user/${p.userId}`)}
-                  trailing={
-                    status === 'friends' ? (
-                      <Text style={{ fontSize: type.meta, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
-                    ) : status === 'requested' ? (
-                      <TonalChip label="Requested" neutral />
-                    ) : (
-                      <TonalChip
-                        label={request.isPending && request.variables === p.userId ? 'Sending…' : 'Connect'}
-                        // A sent request can't be withdrawn (backend has no
-                        // cancel), so a mis-tap must not send one — confirm
-                        // first (HCI rule 5, error prevention).
-                        onPress={
-                          request.isPending
-                            ? undefined
-                            : async () => {
-                                const ok = await confirm({
-                                  title: 'Send a friend request?',
-                                  message: `${p.name} will be asked to connect with you.`,
-                                  cancelLabel: 'Not now',
-                                  confirmLabel: 'Send request',
-                                });
-                                if (ok) request.mutate(p.userId);
-                              }
-                        }
-                      />
-                    )
-                  }
-                />
-              );
-            }}
+            renderItem={renderFindRow}
           />
         ) : (
           <FlatList

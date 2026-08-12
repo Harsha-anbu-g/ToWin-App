@@ -308,7 +308,12 @@ export default function GameScreen() {
           hitSlop={{ top: 8, bottom: 8 }}
           style={({ pressed }) => ({
             alignSelf: 'center',
+            // 44 as a real box: the web build drops the hitSlop above, which
+            // left this at about 40pt there (DEEP-08).
+            minHeight: 44,
+            justifyContent: 'center',
             paddingVertical: 10,
+            paddingHorizontal: 12,
             opacity: pressed ? 0.6 : 1,
           })}
         >
