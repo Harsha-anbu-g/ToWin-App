@@ -313,8 +313,13 @@ export default function Landing() {
     router.replace(href);
   };
 
+  // Fired from onScroll AND onMomentumScrollEnd: react-native-web never
+  // emits momentum events (its ScrollViewBase only dispatches onScroll), so
+  // the phone web build froze the rail on 01/07. Plain scroll drives the
+  // rail on every platform; momentum end stays as the native settle signal.
   const onPage = (e) => {
     const i = Math.min(last, Math.max(0, Math.round(e.nativeEvent.contentOffset.y / slideH)));
+    if (i === index) return; // scroll ticks inside a page must not restart the walk
     setIndex(i);
     if (reduced) walk.setValue(i / last);
     else {
@@ -373,6 +378,7 @@ export default function Landing() {
       </View>
 
       <FlatList
+        testID="landing-pager"
         data={CHAPTERS}
         keyExtractor={(c) => String(c.n)}
         renderItem={({ index: i }) => (
@@ -399,6 +405,8 @@ export default function Landing() {
         )}
         pagingEnabled
         showsVerticalScrollIndicator={false}
+        onScroll={onPage}
+        scrollEventThrottle={16}
         onMomentumScrollEnd={onPage}
         getItemLayout={(_, i) => ({ length: slideH, offset: slideH * i, index: i })}
       />
