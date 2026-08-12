@@ -23,6 +23,15 @@
       "env": {
         "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
       }
+    },
+    "simulator": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
+      }
     }
   },
   "submit": {

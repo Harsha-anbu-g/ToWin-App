@@ -11,13 +11,16 @@ export default function RatingRow({ label, value, onChange }) {
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 }}>
       <Text style={{ fontSize: type.body, color: t.ink }}>{label}</Text>
-      <View style={{ flexDirection: 'row', gap: 8 }}>
+      {/* One rating, so one group and one checked star. `value >= n` is the
+          fill rule and stays a drawing rule: announcing it would say three of
+          the five stars are chosen. */}
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: 'row', gap: 8 }}>
         {[1, 2, 3, 4, 5].map((n) => (
           <Pressable
             key={n}
-            accessibilityRole="button"
+            accessibilityRole="radio"
             accessibilityLabel={`${label}: ${n} star${n > 1 ? 's' : ''}`}
-            accessibilityState={{ selected: value >= n }}
+            aria-checked={value === n}
             onPress={() => {
               // A rating is a value changing under the finger → the selection
               // tick (§11) — same star, same tap, same tick, forever.

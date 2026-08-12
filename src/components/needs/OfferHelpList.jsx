@@ -134,8 +134,12 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
           <>
             Posted by{' '}
             {need.elderId ? (
+              // button, not link: this opens the elder's profile inside the
+              // app, and "link" tells a screen reader they are being handed
+              // off somewhere else. Same control, same word as the elder's
+              // side in PostedHelpList.
               <Text
-                accessibilityRole="link"
+                accessibilityRole="button"
                 suppressHighlighting
                 onPress={() => router.push(`/user/${need.elderId}`)}
                 style={{ color: t.blueDeep, textDecorationLine: 'underline' }}

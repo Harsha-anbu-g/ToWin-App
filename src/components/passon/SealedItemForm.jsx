@@ -75,7 +75,8 @@ export default function SealedItemForm({ saving, onSave, onCancel }) {
             <Chip
               key={key}
               label={SEALED_KINDS[key]}
-              selected={kindHint === key}
+              accessibilityRole="radio"
+              aria-checked={kindHint === key}
               onPress={() => setKindHint(key)}
             />
           ))}

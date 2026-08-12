@@ -300,7 +300,9 @@ export default function GameScreen() {
         </View>
       ) : (
         <Pressable
-          accessibilityRole="link"
+          // button, not link: it goes back to a screen inside the app, and
+          // "link" would promise a screen-reader user they are leaving it.
+          accessibilityRole="button"
           accessibilityLabel="Skip to Home"
           onPress={toHome}
           hitSlop={{ top: 8, bottom: 8 }}

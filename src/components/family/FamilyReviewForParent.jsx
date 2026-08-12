@@ -20,16 +20,19 @@ import Input from '../ui/Input';
 
 // The one place a star glyph is allowed — it IS the rating, not decoration.
 // Same fill convention as the feedback screen: trustGold filled, idleGrey empty.
-function StarPicker({ value, onChange }) {
+function StarPicker({ question, value, onChange }) {
   const { t } = useTheme();
   return (
-    <View style={{ flexDirection: 'row', gap: 4 }}>
+    // The question labels the group (the same words drawn above it), and only
+    // the chosen star is checked — `n <= value` fills the row, it does not
+    // answer it (same rule as the feedback screen's RatingRow).
+    <View accessibilityRole="radiogroup" accessibilityLabel={question} style={{ flexDirection: 'row', gap: 4 }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <Pressable
           key={n}
-          accessibilityRole="button"
+          accessibilityRole="radio"
           accessibilityLabel={`${n} star${n === 1 ? '' : 's'}`}
-          accessibilityState={{ selected: n <= value }}
+          aria-checked={n === value}
           onPress={() => onChange(n)}
           style={({ pressed }) => ({
             minWidth: 44,
@@ -61,6 +64,9 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
 
   const parent = elderName || 'your parent';
   const firstName = (helper?.helperName || 'them').split(' ')[0];
+  // Written once: it is drawn above the stars and it is also what labels them
+  // for a screen reader, and those two must never drift apart.
+  const question = `How has ${firstName} been for ${parent}?`;
 
   const save = useMutation({
     mutationFn: () =>
@@ -123,10 +129,10 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
       }}
     >
       <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 22 }}>
-        How has {firstName} been for {parent}?
+        {question}
       </Text>
 
-      <StarPicker value={rating} onChange={setRating} />
+      <StarPicker question={question} value={rating} onChange={setRating} />
 
       <Input
         label="A few words (optional)"
