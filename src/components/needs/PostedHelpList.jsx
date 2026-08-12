@@ -255,6 +255,13 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     onSuccess: () => {
       showToast('Helper accepted. They can now message you.', 'success');
       refresh();
+      // Accepting also opens the connection that carries the chat (server:
+      // NeedService.acceptHelper), which is why the web dashboard reloads both
+      // lists — `Promise.all([loadNeeds(), loadConnections()])`. Without this the
+      // toast promises messaging while Messages, the friends hub and the tab
+      // badge still show the list from before the tap: tab screens stay mounted,
+      // so nothing remounts to clear it.
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
       showToast(friendlyWriteError(err, 'Could not accept right now. Please try again.'), 'error'),

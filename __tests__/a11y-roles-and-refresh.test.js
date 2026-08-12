@@ -150,8 +150,10 @@ test('no file has radios without a radiogroup to hold them', () => {
 // on register that mismatch sits directly above the signup checkbox, on the
 // two controls a person is most likely to open before agreeing to anything.
 //
-// In-app route changes are left as links on purpose: they do navigate, which
-// is what the role means. Only the open-a-sheet-in-place case is wrong.
+// This pass left in-app route changes alone. The later react review took that
+// back: "link" promises a hand-off out of the app, and every other route
+// change in the repo already says button. The rule now lives in
+// link-role.test.js, which covers the sheet case as well as the route case.
 // ---------------------------------------------------------------------------
 test('nothing announced as a link merely opens a sheet over the current screen', () => {
   const sites = sitesFor('link');

@@ -36,11 +36,22 @@ const toList = (s) =>
 
 const GENDERS = ['Male', 'Female', 'Other'];
 
+// Elders answer this with ONE choice, never a typed list: the backend field is
+// the LookingForType enum (FRIENDSHIP | HELP | BOTH) and /profile/me returns it
+// as a bare string. Labels are the plain words an elder would use.
+const LOOKING_FOR = [
+  { value: 'FRIENDSHIP', label: 'Friendship' },
+  { value: 'HELP', label: 'Help with things' },
+  { value: 'BOTH', label: 'Both' },
+];
+const DEFAULT_LOOKING_FOR = 'BOTH';
+
 const EMPTY_FORM = {
   name: '',
   bio: '',
   tags: '', // interests (elder) / skillsOffered (helper)
-  extraTags: '', // lookingFor (elder) / hobbies (helper)
+  extraTags: '', // hobbies (helper only)
+  lookingFor: DEFAULT_LOOKING_FOR, // elder only, enum not list
   languages: '',
   phone: '',
   city: '',
@@ -107,7 +118,8 @@ export default function ProfileEdit() {
         name: me.name ?? '',
         bio: me.bio ?? '',
         tags: (isHelper ? me.skillsOffered : me.interests)?.join(', ') ?? '',
-        extraTags: (isHelper ? me.hobbies : me.lookingFor)?.join(', ') ?? '',
+        extraTags: isHelper ? (me.hobbies?.join(', ') ?? '') : '',
+        lookingFor: me.lookingFor ?? DEFAULT_LOOKING_FOR,
         languages: me.languages?.join(', ') ?? '',
         phone: me.phone ?? '',
         city: me.city ?? '',
@@ -121,7 +133,8 @@ export default function ProfileEdit() {
         name: me.name ?? '',
         bio: me.bio ?? '',
         tags: (isHelper ? me.skillsOffered : me.interests)?.join(', ') ?? '',
-        extraTags: (isHelper ? me.hobbies : me.lookingFor)?.join(', ') ?? '',
+        extraTags: isHelper ? (me.hobbies?.join(', ') ?? '') : '',
+        lookingFor: me.lookingFor ?? DEFAULT_LOOKING_FOR,
         languages: me.languages?.join(', ') ?? '',
         phone: me.phone ?? '',
         city: me.city ?? '',
@@ -235,7 +248,7 @@ export default function ProfileEdit() {
         await api.put('/profile/elder', {
           ...base,
           interests: toList(form.tags),
-          lookingFor: toList(form.extraTags),
+          lookingFor: form.lookingFor,
         });
       }
       if (form.phone.trim() && form.phone.trim() !== (me?.phone ?? '')) {
@@ -289,6 +302,15 @@ export default function ProfileEdit() {
     () =>
       Object.fromEntries(
         GENDERS.map((g) => [g, () => setForm((f) => ({ ...f, gender: f.gender === g ? '' : g }))])
+      ),
+    []
+  );
+
+  // One choice, never cleared to empty: the backend field is not nullable.
+  const lookingForHandlers = useMemo(
+    () =>
+      Object.fromEntries(
+        LOOKING_FOR.map(({ value }) => [value, () => setForm((f) => ({ ...f, lookingFor: value }))])
       ),
     []
   );
@@ -400,12 +422,17 @@ export default function ProfileEdit() {
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 8 }}>
           Sex (optional)
         </Text>
-        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}>
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Sex (optional)"
+          style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}
+        >
           {GENDERS.map((g) => (
             <Chip
               key={g}
               label={g}
-              selected={form.gender === g}
+              accessibilityRole="radio"
+              aria-checked={form.gender === g}
               onPress={genderHandlers[g]}
             />
           ))}
@@ -421,17 +448,38 @@ export default function ProfileEdit() {
           helper='Type one, like "gardening", then press return. Tap a pill to remove it.'
           style={FIELD_GAP}
         />
-        <ChipsField
-          label={isHelper ? 'My hobbies' : "What I'm looking for"}
-          value={form.extraTags}
-          onChangeText={set('extraTags')}
-          helper={
-            isHelper
-              ? 'Things you love doing. One at a time, press return after each.'
-              : 'Like "company" or "a walking friend". Press return after each.'
-          }
-          style={FIELD_GAP}
-        />
+        {isHelper ? (
+          <ChipsField
+            label="My hobbies"
+            value={form.extraTags}
+            onChangeText={set('extraTags')}
+            helper="Things you love doing. One at a time, press return after each."
+            style={FIELD_GAP}
+          />
+        ) : (
+          // One answer, so one choice. A typed list here sent the wrong shape
+          // to the enum field and blanked the screen on the way back in.
+          <View style={FIELD_GAP}>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, marginBottom: 8 }}>
+              What I&apos;m looking for
+            </Text>
+            <View
+              accessibilityRole="radiogroup"
+              accessibilityLabel="What I'm looking for"
+              style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+            >
+              {LOOKING_FOR.map(({ value, label }) => (
+                <Chip
+                  key={value}
+                  label={label}
+                  accessibilityRole="radio"
+                  aria-checked={form.lookingFor === value}
+                  onPress={lookingForHandlers[value]}
+                />
+              ))}
+            </View>
+          </View>
+        )}
         <ChipsField
           label="Languages I speak"
           value={form.languages}

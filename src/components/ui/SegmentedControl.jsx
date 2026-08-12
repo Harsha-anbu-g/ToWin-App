@@ -31,6 +31,12 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             accessibilityLabel={
               seg.count != null ? `${seg.label}, ${seg.count}` : seg.label
             }
+            // Both spellings on purpose: the web build drops accessibilityState
+            // on Pressable (react-native-web forwards aria-* and role only), so
+            // without aria-selected the app's one filter control read as three
+            // identical tabs at towinly.com/app with no way to hear which
+            // list you were looking at.
+            aria-selected={active}
             accessibilityState={{ selected: active }}
             onPress={() => {
               // The tick fires only when the value actually changes (§11) —

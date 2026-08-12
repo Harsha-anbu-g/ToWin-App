@@ -137,12 +137,20 @@ function PostNeedForm() {
         />
 
         <FieldLabel>Kind of help</FieldLabel>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}>
+        {/* One question, one answer: a labelled radiogroup so a screen reader
+            says what is being asked and which chip answers it, instead of
+            reading five unrelated buttons. */}
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel="Kind of help"
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}
+        >
           {Object.entries(CATEGORY).map(([value, label]) => (
             <Chip
               key={value}
               label={label}
-              selected={form.category === value}
+              accessibilityRole="radio"
+              aria-checked={form.category === value}
               onPress={categoryHandlers[value]}
             />
           ))}
@@ -159,9 +167,23 @@ function PostNeedForm() {
         ) : null}
 
         <FieldLabel>How soon?</FieldLabel>
-        <View style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}>
-          <Chip label="Normal" selected={form.urgency === 'NORMAL'} onPress={setUrgencyNormal} />
-          <Chip label="Urgent" selected={form.urgency === 'URGENT'} onPress={setUrgencyUrgent} />
+        <View
+          accessibilityRole="radiogroup"
+          accessibilityLabel="How soon?"
+          style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}
+        >
+          <Chip
+            label="Normal"
+            accessibilityRole="radio"
+            aria-checked={form.urgency === 'NORMAL'}
+            onPress={setUrgencyNormal}
+          />
+          <Chip
+            label="Urgent"
+            accessibilityRole="radio"
+            aria-checked={form.urgency === 'URGENT'}
+            onPress={setUrgencyUrgent}
+          />
         </View>
 
         <Input

@@ -9,18 +9,36 @@ import { Pressable, Text } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
 // memo'd so a keystroke elsewhere in a form doesn't re-render every chip row.
-export default memo(function Chip({ label, selected = false, neutral = false, onPress, style }) {
+export default memo(function Chip({
+  label,
+  selected = false,
+  neutral = false,
+  onPress,
+  style,
+  // "radio" when the chip row is one exclusive answer, so a screen reader
+  // announces a choice rather than a row of unrelated buttons.
+  accessibilityRole = 'button',
+  // A radio announces CHECKED, not selected, and aria-checked is the one
+  // spelling both builds read: react-native-web forwards aria-* and drops
+  // accessibilityState on Pressable, RN 0.81 folds aria-checked back into
+  // accessibilityState (SHIP-606). A radio chip therefore says which one it
+  // is with this prop, and it doubles as the chosen look so a row of options
+  // has one source of truth, not two that can drift apart.
+  'aria-checked': ariaChecked,
+}) {
   const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
 
-  const backgroundColor = selected ? t.blueWash : neutral ? t.surfaceFill : t.canvas;
-  const borderColor = selected ? t.blueSoft : t.border;
-  const color = selected ? t.blueDeep : neutral ? t.inkSlate : t.ink;
+  const chosen = ariaChecked ?? selected;
+  const backgroundColor = chosen ? t.blueWash : neutral ? t.surfaceFill : t.canvas;
+  const borderColor = chosen ? t.blueSoft : t.border;
+  const color = chosen ? t.blueDeep : neutral ? t.inkSlate : t.ink;
 
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole}
       accessibilityLabel={label}
-      accessibilityState={{ selected }}
+      aria-checked={ariaChecked}
+      accessibilityState={{ selected: chosen }}
       onPress={onPress}
       disabled={!onPress}
       android_ripple={pressRipple}
@@ -44,7 +62,7 @@ export default memo(function Chip({ label, selected = false, neutral = false, on
         style,
       ]}
     >
-      {selected ? <Check size={14} color={t.blueDeep} strokeWidth={2} /> : null}
+      {chosen ? <Check size={14} color={t.blueDeep} strokeWidth={2} /> : null}
       <Text maxFontSizeMultiplier={fontScaleCaps.body} style={{ fontSize: type.meta, fontWeight: '600', color }}>
         {label}
       </Text>
