@@ -100,10 +100,53 @@ a developer website that Play shows to users. Google and Apple ask the question
 separately, so they can disagree. They should not. Pick one identity and use it
 in both stores.
 
-**Needs confirmation on the sign up page:** whether Google asks an organization
-account for a D-U-N-S number as well, and what a Personal account displays
-beside the app once identity verification clears. The repo's Play document only
-records the Personal path, so neither is settled here.
+**Confirmed on 2026-08-15, and it changes the schedule.** Two facts, both from
+Google's own help centre:
+
+1. Google asks an organization account for a D-U-N-S number, exactly as Apple
+   does, plus an organization name, address, phone and website, plus a **publicly
+   displayed verified developer phone number** shown beside the app.
+   (support.google.com/googleplay/android-developer/answer/10788890)
+2. **Organization accounts are exempt from the 12-tester, 14-consecutive-day
+   closed test.** So are personal accounts created before 13 November 2023. The
+   gate applies to personal accounts opened after that date, which is what a new
+   account today would be.
+   (support.google.com/googleplay/android-developer/answer/14151465)
+
+The second fact is the one with weeks on it. Every other document in this folder
+treats that tester gate as the critical path for the whole launch, roughly three
+to four weeks, and unavoidable. It is avoidable, at a price.
+
+**The real trade, once both stores are on the table:**
+
+| | Individual / Personal | Organization |
+|---|---|---|
+| Apple | no D-U-N-S, enrol in a day or two | D-U-N-S, domain-matched website, work email on that domain, signing authority |
+| Play | 12 testers for 14 consecutive days before production | exempt from the tester gate |
+| Waiting | 3 to 4 weeks of tester gate, after the accounts exist | 1 to 4+ weeks for D-U-N-S and verification, before you can pay |
+| Public name | your own legal name | the company name |
+
+So it is not "faster versus slower." It is **where the waiting sits**. Individual
+front-loads nothing and back-loads three to four weeks of recruiting and holding
+twelve testers. Organization front-loads an unpredictable D-U-N-S and
+verification queue that must clear before Apple will even take the 99 USD, then
+walks past the tester gate entirely.
+
+Three things worth weighing before the table tempts you:
+
+- The organization path needs a **real registered legal entity**. If one does not
+  exist yet, incorporating is a much larger decision than a store listing, and it
+  is not reversible on a whim either.
+- The organization wait is **unbounded and invisible**. Apple's forums carry 2026
+  reports of multi-week waits at the post-D-U-N-S verification step with no
+  status visibility. Twelve testers for fourteen days is slow, but you can see it
+  progressing and you control it.
+- The tester gate is **parallelisable**. It runs while the iOS submission is in
+  review, so its three to four weeks overlap with work you are doing anyway. The
+  D-U-N-S wait blocks the start of everything.
+
+That last point is why the recommendation below still holds. But the choice
+should be made knowing the exemption exists, not in ignorance of it.
 
 ### Payments and worker classification, later rather than now
 
@@ -219,8 +262,22 @@ later means a support conversion or an App Transfer over several days.
   surface first, and nothing in the repo records such a requirement today.
 - The founder does not want a personal legal name and address public. This is a
   legitimate reason on its own and it does not need a business case.
+- **Android is the priority market and the launch date is not.** Organization
+  accounts skip Play's 12-tester, 14-consecutive-day gate entirely, per section 2
+  above. If getting onto Play without recruiting and holding twelve testers for
+  two weeks matters more than starting soon, that alone justifies the D-U-N-S
+  wait. India is a majority-Android market, so this deserves real weight in a
+  Towinly-specific way rather than being a generic consideration.
 
 Any one of those is enough. The owner decides.
+
+One trap to name before the decision, because it is the most common paperwork
+mistake a solo founder makes here: **a registered sole proprietorship, a DBA or a
+trade name does not put you on the organization path.** Apple explicitly rejects
+DBAs, fictitious and trade names, and branches for organization enrollment. If
+the business is a single person operating under a business name, the individual
+path is the correct one, and attempting organization enrollment with it costs a
+rejected application and a restart.
 
 ---
 

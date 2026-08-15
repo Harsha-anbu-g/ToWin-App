@@ -143,31 +143,11 @@ Nothing was added, on purpose. A speculative block is worse than none.
 `App/__tests__/privacy-manifest.test.js` pins this decision as a test, so
 removing it is a visible act rather than a quiet one.
 
-## 6. Two honest gaps this static pass cannot close
+## 6. One honest gap this static pass cannot close
 
-Neither is a blocker today. Both are named so nobody reports them as checked.
+Not a blocker today. It is named so nobody reports it as checked.
 
-**1. Hermes is on Apple's list of SDKs that must ship a manifest and a
-signature, and its binary is not in `node_modules`.**
-Apple publishes a list of commonly used third-party SDKs that are required to
-include a privacy manifest and a signature. `hermes` is entry 45 on that list.
-This app uses Hermes: `react-native` 0.81.5, `node_modules/react-native/sdks/`
-holds `hermes-engine` and `.hermesversion` reads
-`hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782`, and
-`app.json` sets no `jsEngine` override so the Expo SDK 54 default applies. The
-hermes-engine artifact is a prebuilt tarball fetched during `pod install`, so it
-is not on disk here and its manifest **could not be checked on this machine**.
-Check it after the first prebuild and pod install:
-
-```bash
-find ios/Pods -path "*hermes*" -name "PrivacyInfo.xcprivacy"
-```
-
-React Native ships hermes-engine as part of its own release, so the manifest is
-React Native's job rather than this repo's. If it is missing, that is a report
-to the React Native project, not a change here.
-
-**2. Seventeen of the twenty native dependencies ship no manifest at all.**
+**Seventeen of the twenty native dependencies ship no manifest at all.**
 `@react-native-community/netinfo`, `expo`, `expo-crypto`, `expo-font`,
 `expo-haptics`, `expo-image`, `expo-image-picker`, `expo-linking`,
 `expo-router`, `expo-secure-store`, `expo-speech`, `expo-updates`,
@@ -183,3 +163,39 @@ One near miss worth writing down so nobody re-checks it: Apple's list includes
 not. netinfo ships its own `RNCConnectionStateWatcher.m` over Apple's
 `SystemConfiguration` framework. The listed `Reachability` is the separate
 tonymillion CocoaPod, which this app does not use.
+
+## 7. Hermes: investigated, closed, do not re-open
+
+An earlier version of this document carried Hermes as an open gap, on the
+grounds that `hermes` is entry 45 on Apple's third-party SDK requirements list
+and the engine binary is a tarball fetched at `pod install` rather than a file in
+`node_modules`. That was the same class of mistake as the `Reachability` near
+miss above, and it is now resolved.
+
+**Apple's `hermes` entry is Imgur's SDK, not Meta's JavaScript engine.** The
+published list carries a bare lowercase `hermes` with no disambiguation. An Apple
+DTS engineer settled it on Apple's own developer forums, thread 759394: the
+listed `hermes` refers to Imgur's SDK. Meta's engine ships to CocoaPods as
+`hermes-engine`, a different name, and Apple gave the React Native community the
+same answer directly.
+
+What follows for this repo:
+
+- Nothing needs checking after prebuild.
+  `node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`
+  (react-native 0.81.5) references no `PrivacyInfo.xcprivacy`, so
+  `find ios/Pods -path "*hermes*" -name "PrivacyInfo.xcprivacy"` returning
+  nothing is the correct result, not a defect.
+- No report to the React Native project is warranted. An earlier draft suggested
+  filing one. Do not.
+- The app still runs on Hermes, and
+  `ios-build-readiness.md` still records that correctly. Using the engine and
+  owing Apple a signed manifest for it are separate questions, and only the first
+  is true.
+
+The general rule this is the second instance of: **a name on Apple's list
+matching a name in this app is not by itself a match.** Confirm the publisher
+before treating an entry as an obligation.
+
+If ITMS-91061 or ITMS-91053 ever arrives after an upload and names hermes,
+revisit this section then. Until that happens it is closed.

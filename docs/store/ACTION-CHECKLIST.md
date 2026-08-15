@@ -232,11 +232,15 @@ hour spent here is an hour not spent on the meter.
   `App/__tests__/privacy-manifest.test.js` re-globs on every run and fails on a
   new API type, reason code, tracking domain or declared collection.
 
-  Two gaps this static pass could not close, named rather than glossed:
-  Hermes is on Apple's list of SDKs that must ship a manifest and its binary
-  arrives at `pod install`, so it is not on disk to check; and 17 of the 20
-  native dependencies ship no manifest at all, which is allowed but is not
-  proof. Both are written up in section 6 of the aggregate.
+  One gap this static pass could not close, named rather than glossed: 17 of the
+  20 native dependencies ship no manifest at all, which is allowed but is not
+  proof. Written up in section 6 of the aggregate.
+
+  A second gap was listed here and has since been closed. Hermes was held open
+  on the reading that Apple's `hermes` list entry meant Meta's JavaScript engine.
+  It means Imgur's SDK. Apple DTS confirmed it on developer forums thread 759394,
+  and Meta's engine ships as `hermes-engine`. This app owes no Hermes manifest.
+  Section 7 of the aggregate keeps the reasoning so it is not re-opened.
 - [x] **Adopt the listings and repin the test.** DONE 2026-08-15. Same item as
   the one above, recorded twice in this file. The pinned blocks of the root
   `docs/store-listing.md` carry the approved fields and the 8-caption
