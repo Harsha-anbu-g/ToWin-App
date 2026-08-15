@@ -26,9 +26,17 @@ and check-in. When the captures are made, update the pinned
 | Play | Feature graphic | 1024 × 500 | 1 | Already exists: `docs/store-images/towinly-play-feature-graphic.png`. |
 | Play | Hi-res icon | 512 × 512 | 1 | Already exists: `docs/store-images/towinly-play-hi-res-icon.png`. |
 
-Both stores want RGB with no alpha channel: 24-bit PNG or JPEG. Save the
-finished files as `docs/store-images/screenshots/ios/01.png` … `08.png` and
-`docs/store-images/screenshots/play/01.png` … `08.png`.
+Both stores want RGB with no alpha channel: 24-bit PNG or JPEG.
+
+> **Corrected 2026-08-15 (APL-801, APL-805).** This paragraph used to end:
+> "Save the finished files as `docs/store-images/screenshots/ios/01.png` …
+> `08.png` and `docs/store-images/screenshots/play/01.png` … `08.png`." That
+> path sits outside version control: `git rev-parse --show-toplevel` returns
+> `.../ToWin App/App`, and the project root is not a repository. The finished
+> files live at **`App/docs/store/screenshots/final/ios/`** and
+> **`.../final/play/`**, named by upload slot,
+> `01-landing-trust-ladder-ios.png` through `08-landing-welcome-ios.png`. There
+> is no second copy. Each folder carries a README saying so.
 
 ### The eight shots
 
