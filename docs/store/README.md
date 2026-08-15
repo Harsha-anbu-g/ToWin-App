@@ -233,10 +233,47 @@ reviewer who opened it would land on a sign in wall. There is no `/support`,
 `raw-13`. None is rendered to a store size yet. **Corrected in that file.**
 
 **7. Is eas-cli available?**
-`play-console-parallel-track.md` says `which eas` returns nothing, which is
-true. `APPLE-DAY-ONE-RUNBOOK.md` verified its commands against eas-cli 21.7.0,
-which is also true, because npx fetched it. Both stand. **Install it properly
-before the day.** Tracked as A5.
+`play-console-parallel-track.md` says `which eas` returns nothing.
+**That is now out of date.** `which eas` returns
+`/Users/aghar/.npm-global/bin/eas`, eas-cli 21.x installed globally, and it
+reports a newer 22.0.0 as available. What is still missing is the account:
+`eas whoami` prints `Not logged in`, and `App/app.json` has no
+`extra.eas.projectId`. **Settled: the CLI is installed, the login and
+`eas init` are not done.** Tracked as A5.
+
+---
+
+## 6. Truth pass of 2026-08-15
+
+Three entries above were re-checked against the code, the live site and the
+production backend, and three of the 16 blockers in section 3 moved. The full
+evidence for each is in `ACTION-CHECKLIST.md` section 4. Where this page and
+that one disagree, the checklist is newer.
+
+**A1, "No Support URL exists", is closed.** `App/app/support.jsx` shipped and
+deployed. `https://www.towinly.com/app/support` answers 200 and renders 1,829
+visible characters of real help in Chromium, starting "Get help", with
+help@towinly.com as selectable text and no auth guard. Contradiction 5 above
+was about `https://www.towinly.com/support` on the website, which is still not
+a page. Use the `/app/support` address. Only the console paste remains.
+
+**A7, "The photo permission sentence is too narrow", is closed.**
+`app.json` line 65 now names both the profile picture and the optional ID
+photo. Contradiction 1 above settled the analysis correctly and the fix landed
+afterwards.
+
+**A6, "The production PostHog flag is unverified", is answered, and the answer
+changes the privacy forms.** `POSTHOG_API_KEY` is **set** on the production
+backend. The server sends the plaintext email address to PostHog as the signup
+event id. See `privacy-labels.md` section 5 item 1 for the two paths and the
+three label rows this decides. Do not submit either privacy form until the
+owner picks one.
+
+**A8, "No final screenshots exist", is partly closed.** Five of the eight
+planned shots are baked to both store sizes under
+`App/docs/store/screenshots/final/`. That clears both store minimums. The
+canonical output path is now that folder and not `docs/store-images/`, because
+the git repository root is `App/` and the project root is not versioned.
 
 Checked and confirmed while resolving the above:
 
