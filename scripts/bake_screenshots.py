@@ -1,15 +1,30 @@
 """Bake store screenshots: raw app capture + caption band on parchment.
 
 Two outputs per shot, because the stores disagree on shape:
-  ios  1320 x 2868  the iPhone 6.9 inch size Apple asks for
-  play 1080 x 1920  Play rejects anything taller than 9:16, and the raw
-                    captures are 1:2.17, so they are fitted rather than cropped
+  ios  1320 x 2868  one of the three iPhone 6.9 inch portrait sizes Apple
+                    accepts (Apple: "1320 x 2868 pixels (portrait)")
+  play 1080 x 1920  Play refuses any image whose long side is more than twice
+                    the short side. The Apple render is 1 to 2.17 and would be
+                    refused; 1080 x 1920 is 1 to 1.78 and passes.
+
+Neither store publishes a per-file byte cap for phone screenshots. Both refuse
+an alpha channel: Apple says "Images can't include alpha channels or
+transparencies", Play asks for "JPEG or 24-bit PNG (no alpha)". PIL writes an
+RGB canvas here, which is a 24-bit PNG with no alpha.
 
 House rules enforced here and not left to the eye: parchment #f6f4ef behind
 every band, ink #1a1a1a type, Newsreader 400 only (never a bold serif), no
 drop shadow anywhere, no sky blue in the band because blue is reserved for
-actions inside the app, and no em dash in any caption.
+actions inside the app, and no em dash in any caption or sub-caption.
+
+The shot is fitted whole, never cropped. An earlier version scaled each
+capture to the full canvas width and cut whatever overflowed the bottom, which
+removed the tab bar from every shot and would have removed the messages and
+the composer from the chat shot, whose content sits at the bottom of the
+screen. Fitting the whole screen costs some width and keeps every screen
+truthful and consistent across all eight.
 """
+import json
 import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
@@ -17,24 +32,29 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "docs/store/screenshots"
 OUT = RAW / "final"
+MANIFEST = RAW / "manifest.json"
 FONT = ROOT / "node_modules/@expo-google-fonts/newsreader/400Regular/Newsreader_400Regular.ttf"
 
 PARCHMENT = (246, 244, 239)
 INK = (26, 26, 26)
+SUB_INK = (90, 90, 90)
 HAIRLINE = (229, 225, 217)
 
-SIZES = {"ios": (1320, 2868), "play": (1080, 1920)}
+EM_DASH = "—"
 
-# raw file -> (caption, sub-caption or None). Only shots whose screen actually
-# supports the sentence are listed. See screenshot-inventory.md for the ones
-# deliberately left out and why.
-SHOTS = [
-    ("raw-13-landing-trust-ladder.png", "Seven steps, climbed together. Slow is the point.", None),
-    ("raw-07-posted-help.png", "Ask for a ride, shopping, cleaning or company.", None),
-    ("raw-10-helper-offer-help.png", "See who needs a hand near you.", None),
-    ("raw-02-checkin.png", "Check in once a day. If you link a family member,\nthey are told when you go quiet.", None),
-    ("raw-12-landing-welcome.png", "It takes two To Win.", None),
-]
+# The slot number, the raw file and the caption all live in manifest.json, so
+# this script and __tests__/store-screenshots.test.js read one source. The slot
+# is the upload order and is baked into the filename, because the stores show
+# roughly the first three shots in search results and a folder that sorted by
+# raw capture number would upload them in the wrong order.
+_manifest = json.loads(MANIFEST.read_text())
+SIZES = {store: tuple(wh) for store, wh in _manifest["sizes"].items()}
+SHOTS = [(s["slot"], s["raw"], s["caption"], s["sub"]) for s in _manifest["shots"]]
+
+
+def slug(raw_name):
+    """raw-13-landing-trust-ladder.png -> landing-trust-ladder"""
+    return raw_name.replace("raw-", "", 1).split("-", 1)[1].replace(".png", "")
 
 
 def wrap(draw, text, font, max_w):
@@ -78,41 +98,44 @@ def bake(raw_path, caption, sub, store):
     if sub:
         y += int(size * 0.3)
         for ln in wrap(draw, sub, sub_font, W - pad * 2):
-            draw.text((W / 2, y), ln, font=sub_font, fill=(90, 90, 90), anchor="ma")
+            draw.text((W / 2, y), ln, font=sub_font, fill=SUB_INK, anchor="ma")
             y += int(sub_size * 1.35)
 
     band_bottom = y + int(H * 0.022)
     draw.line([(pad, band_bottom), (W - pad, band_bottom)], fill=HAIRLINE, width=2)
 
-    # The shot fills the width, keeps its aspect, and is cropped from the
-    # BOTTOM if it overflows: app screens put their meaning at the top, and
-    # squashing the aspect would misrepresent the layout.
+    # The whole screen is fitted into what is left, keeping its aspect and
+    # centred on the parchment. Nothing is cropped and nothing is squashed.
     top = band_bottom + int(H * 0.030)
-    avail_h = H - top
-    scale = W / shot.width
-    new_h = int(shot.height * scale)
-    resized = shot.resize((W, new_h), Image.LANCZOS)
-    if new_h > avail_h:
-        resized = resized.crop((0, 0, W, avail_h))
-    canvas.paste(resized, (0, top))
+    box_w = W - int(W * 0.06) * 2
+    box_h = H - top - int(H * 0.030)
+    scale = min(box_w / shot.width, box_h / shot.height)
+    new_w, new_h = int(shot.width * scale), int(shot.height * scale)
+    resized = shot.resize((new_w, new_h), Image.LANCZOS)
+    canvas.paste(resized, ((W - new_w) // 2, top + (box_h - new_h) // 2))
 
     return canvas
 
 
 def main():
-    for f, caption, sub in SHOTS:
+    missing = 0
+    for slot, f, caption, sub in SHOTS:
         raw = RAW / f
         if not raw.exists():
             print(f"MISSING {f}", file=sys.stderr)
+            missing += 1
             continue
-        assert "—" not in caption, f"em dash in caption for {f}"
+        assert EM_DASH not in caption, f"em dash in caption for {f}"
+        assert sub is None or EM_DASH not in sub, f"em dash in sub-caption for {f}"
         for store in SIZES:
             out_dir = OUT / store
             out_dir.mkdir(parents=True, exist_ok=True)
-            name = f.replace("raw-", "").replace(".png", f"-{store}.png")
+            name = f"{slot:02d}-{slug(f)}-{store}.png"
             img = bake(raw, caption, sub, store)
             img.save(out_dir / name, "PNG")
             print(f"{store}: {name}  {img.size[0]}x{img.size[1]}")
+    if missing:
+        sys.exit(1)
 
 
 if __name__ == "__main__":

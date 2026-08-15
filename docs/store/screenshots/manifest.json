@@ -1,0 +1,57 @@
+{
+  "_comment": "The eight store screenshots, in upload order. scripts/bake_screenshots.py bakes from this file and __tests__/store-screenshots.test.js guards it, so the captions have one home. slot is the upload order: the stores show roughly the first three shots in search results. caption and sub are the pinned set in docs/store/screenshots-and-review.md; the test fails if they drift apart. Newlines in a caption are deliberate line breaks, not wrapping hints.",
+  "sizes": {
+    "ios": [1320, 2868],
+    "play": [1080, 1920]
+  },
+  "shots": [
+    {
+      "slot": 1,
+      "raw": "raw-13-landing-trust-ladder.png",
+      "caption": "Seven steps, climbed together. Slow is the point.",
+      "sub": null
+    },
+    {
+      "slot": 2,
+      "raw": "raw-07-posted-help.png",
+      "caption": "Ask for a ride, shopping, cleaning or company.",
+      "sub": null
+    },
+    {
+      "slot": 3,
+      "raw": "raw-10-helper-offer-help.png",
+      "caption": "See who needs a hand near you.",
+      "sub": null
+    },
+    {
+      "slot": 4,
+      "raw": "raw-14-helper-trust-score.png",
+      "caption": "Up to 15 points from each person you help.",
+      "sub": "7 for the trust steps. 5 for their review. 3 for your profile."
+    },
+    {
+      "slot": 5,
+      "raw": "raw-15-chat-thread.png",
+      "caption": "Chat safely inside the app.\nPhone numbers are shared\nonly when you both agree.",
+      "sub": null
+    },
+    {
+      "slot": 6,
+      "raw": "raw-16-family-parent-checked-in.png",
+      "caption": "Your family can see you're safe.",
+      "sub": null
+    },
+    {
+      "slot": 7,
+      "raw": "raw-02-checkin.png",
+      "caption": "Check in once a day. If you link a family member,\nthey are told when you go quiet.",
+      "sub": null
+    },
+    {
+      "slot": 8,
+      "raw": "raw-12-landing-welcome.png",
+      "caption": "It takes two To Win.",
+      "sub": null
+    }
+  ]
+}

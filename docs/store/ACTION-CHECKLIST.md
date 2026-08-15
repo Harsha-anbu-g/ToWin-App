@@ -60,10 +60,15 @@ hour spent here is an hour not spent on the meter.
   re-run commands: `App/docs/store/ios-build-readiness.md`, section
   "Pre-enrollment dry run, 2026-08-15". `pod install` and a compile could not
   run here: Command Line Tools only, no full Xcode.
-- [ ] **Bake all eight screenshots.** [repo] The three missing captures are
-  DONE 2026-08-15: `raw-14-helper-trust-score.png`, `raw-15-chat-thread.png`
-  and `raw-16-family-parent-checked-in.png`, all measured 1320 x 2868 with no
-  alpha. Baking the full eight is what remains.
+- [x] **Bake all eight screenshots.** DONE 2026-08-15. Sixteen files, eight per
+  store, in `App/docs/store/screenshots/final/ios/` and `.../play/`, named by
+  upload slot so the folder sorts in listing order. Every one measured with
+  `sips`: iOS all 1320 x 2868, Play all 1080 x 1920, `hasAlpha: no` and RGB on
+  all sixteen, 148 KB to 571 KB. Em-dash grep over the captions returns 0.
+  Guarded by `App/__tests__/store-screenshots.test.js`, 23 tests, proven to
+  fail on a wrong size, an alpha channel, a missing shot and an em dash.
+  The three captures from APL-804 were re-shot at phone scale first: see
+  `App/docs/store/screenshots/superseded/README.md`.
 - [ ] **Adopt the listing fields and repin the test.** [repo] The guarded copy
   and the intended copy are two different documents right now.
 - [ ] **Answer every console question that does not need the account open.**
@@ -222,14 +227,15 @@ hour spent here is an hour not spent on the meter.
   console paste: unpinned copy can drift after edits.
 - [x] **Capture the last three planned shots.** DONE 2026-08-15. See the owner
   list above for the evidence.
-- [ ] **Bake the remaining shots to both store sizes.** [repo] Five of eight
-  are baked, into `App/docs/store/screenshots/final/ios/` and `.../play/` by
-  `App/scripts/bake_screenshots.py`, which enforces the parchment band,
-  Newsreader 400, no shadow, no decorative blue, and asserts on any em dash.
-  Apple needs one screenshot and Play needs two, so five clears both minimums
-  today. Verify every baked file by machine: exact pixel size, `sips -g
-  hasAlpha` reporting no, light mode, and no em dash in any caption. Wrong
-  sizes and alpha channels fail at upload time.
+- [x] **Bake the remaining shots to both store sizes.** DONE 2026-08-15. All
+  eight are baked to both sizes by `App/scripts/bake_screenshots.py`, which
+  enforces the parchment band, Newsreader 400, no shadow, no decorative blue,
+  and asserts on any em dash in a caption or sub-caption. Filenames carry the
+  upload slot, `01` to `08`, so each folder sorts in listing order. Machine
+  verification of all sixteen is in section 5 of
+  `App/docs/store/screenshot-inventory.md`, and
+  `App/__tests__/store-screenshots.test.js` re-runs the same checks on every
+  `npx jest`.
 
 ### The one canonical screenshot path
 
