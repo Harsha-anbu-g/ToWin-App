@@ -71,8 +71,19 @@ hour spent here is an hour not spent on the meter.
   `App/docs/store/screenshots/superseded/README.md`.
 - [ ] **Adopt the listing fields and repin the test.** [repo] The guarded copy
   and the intended copy are two different documents right now.
-- [ ] **Answer every console question that does not need the account open.**
-  [repo] Age rating, export compliance, category, review notes, demo seat.
+- [x] **Answer every console question that does not need the account open.**
+  DONE 2026-08-15. One sheet for both stores at
+  `App/docs/store/console-answers.md`: console label on the left, answer on the
+  right. Age rating every question with its reason, export compliance,
+  advertising identifier proved by scan rather than assumed (956 installed
+  packages, 0 hits; 0 IDFA symbols; `NSPrivacyTracking` false in all 8 bundled
+  manifests), category, price, territories, the whole Play IARC questionnaire,
+  and the review notes at 3967 of Apple's 4000 characters. All three demo seats
+  re-verified against the live production backend the same day: 15 requests, 15
+  HTTP 200s, with connection counts, unread counts and trust progress recorded
+  as numbers. Guarded by `App/__tests__/console-answers.test.js`, 12 tests,
+  each proven to fail on a real defect. Section 10 of the sheet lists the 20
+  items that genuinely need an account open.
 - [ ] **Write the pay-day runbook.** [repo] One ordered document for the hour
   the account opens.
 - [ ] **Create a free Expo account and run `eas login` then `eas init`.**

@@ -14,6 +14,12 @@ Verified against commit `af22521`, 11 August 2026. Every claim about the
 Android build comes from the merged release manifest and the repo config, not
 from memory. The commands used are listed in the appendix.
 
+**Paste from `console-answers.md`, not from here.** That sheet, added
+2026-08-15, holds every answerable field for both stores with the console's own
+labels, including the whole IARC questionnaire and the App content forms. This
+file stays as the plan: the order, the calendar, the 12-tester gate and the
+build commands. Where the two disagree, `console-answers.md` wins.
+
 Companion documents:
 
 - `docs/store/listings.md` sections 2 and 4 hold the Play title, short
@@ -240,8 +246,15 @@ Every one of these is free and can be filled the hour the account verifies.
 
 ### Privacy policy
 
-URL: the website's `/privacy` page. It must be live and reachable without
-logging in before the closed track rolls out.
+URL: `https://www.towinly.com/app/privacy`. Corrected 2026-08-15: this row used
+to say "the website's `/privacy` page", and the bare
+`https://www.towinly.com/privacy` is a different, older document with no
+third-party processor section and a location paragraph describing a device
+setting this app does not have. Naming it would put an under-disclosing policy
+in front of Play review. Both addresses answer 200, so a status code will not
+catch the mistake. Use the `/app/` path.
+
+It is live and reachable without logging in: HTTP 200 on 2026-08-15.
 
 ### App access
 
@@ -291,7 +304,7 @@ here is a policy strike later.
 | Personal information shared with other users | **Yes** | Name, photo, bio, and, at the Phone Ready step, phone number |
 | Unrestricted access to the internet | **No** | There is no in-app browser or open web view |
 | Digital purchases | No | Nothing is sold |
-| User-generated content moderation | Describe the real controls: report a person from their profile, block from their profile, a managed block list at Profile > Blocked people, a report button under every AI answer, and `help@towinly.com` for reports |
+| User-generated content moderation | Describe the real controls: report a person from their profile, block from their profile, a managed block list at Profile > Blocked people, a write-time word filter on bios, help requests and Pass On entries, a report button under every AI answer, and `help@towinly.com` for reports. Say plainly that private messages rely on report and block rather than on the word filter |
 
 Expect a Teen level rating rather than Everyone. That is correct and expected
 for an app with open user-to-user messaging. Do not try to argue it down.
