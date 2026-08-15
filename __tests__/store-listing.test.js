@@ -52,15 +52,24 @@ const counts = parseFields('store-field-counts');
 // Both stores, as they stand in 2026. The App Store name and the Play title are
 // separate console fields that happen to share a 30-character ceiling, so one
 // string covers both.
+// Name, subtitle and keywords are per-locale fields in App Store Connect, so the
+// English (U.K.) slot that serves India carries its own three. They are pinned
+// together because a keyword line can only avoid wasting terms if you know which
+// words its OWN name and subtitle already spent.
 const LIMITS = {
   app_name: 30,
   subtitle: 30,
   play_short: 80,
   promo: 170,
   keywords: 100,
+  app_name_en_gb: 30,
+  subtitle_en_gb: 30,
   keywords_en_gb: 100,
   full_description: 4000,
 };
+
+/** The name and subtitle Apple indexes alongside a given keyword field. */
+const localeOf = (keywordField) => (keywordField.endsWith('_en_gb') ? '_en_gb' : '');
 
 const measured = {
   ...Object.fromEntries(
@@ -103,9 +112,17 @@ describe.each(Object.keys(fields).filter((key) => key.startsWith('keywords')))(
       expect([...new Set(tokens)]).toHaveLength(tokens.length);
     });
 
-    test('nothing repeats a word Apple already indexes from the name or subtitle', () => {
+    test("nothing repeats a word Apple already indexes from this locale's name or subtitle", () => {
+      // Checked against the SAME locale's name and subtitle. Checking the U.K.
+      // keyword line against the U.S. name is a false guard in both directions:
+      // it forbids words that locale never spent, and it lets through words it did.
+      const locale = localeOf(key);
+      const name = fields[`app_name${locale}`];
+      const subtitle = fields[`subtitle${locale}`];
+      expect(name).toBeDefined();
+      expect(subtitle).toBeDefined();
       const indexed = new Set(
-        `${fields.app_name} ${fields.subtitle}`
+        `${name} ${subtitle}`
           .toLowerCase()
           .split(/[^a-z]+/)
           .filter(Boolean)
@@ -147,6 +164,36 @@ describe('the screenshot captions describe the product that shipped', () => {
     expect(STAGE_COUNT).toBe(7);
     expect(SHORT_STAGES).toHaveLength(STAGE_COUNT);
     expect(captions).toMatch(/[Ss]even steps/);
+  });
+
+  test('the pinned captions are the ones baked into the eight files', () => {
+    // Three copies of these words exist: this block, the plan in
+    // docs/store/screenshots-and-review.md, and manifest.json, which is what
+    // scripts/bake_screenshots.py actually renders. store-screenshots.test.js
+    // pins the plan against the manifest; this pins the listing against it too,
+    // so a caption cannot be edited in one document and shipped from another.
+    const manifest = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, '..', 'docs', 'store', 'screenshots', 'manifest.json'),
+        'utf8'
+      )
+    );
+    const flatten = (text) => text.replace(/\s+/g, ' ').trim();
+    const pinned = captions
+      .split('\n')
+      .reduce((lines, line) => {
+        // A leading "N." opens a caption; an indented line continues the one above.
+        if (/^\d+\.\s/.test(line)) return [...lines, line.replace(/^\d+\.\s/, '')];
+        if (lines.length === 0) {
+          throw new Error(`screenshot-captions starts with a continuation line: ${line}`);
+        }
+        return [...lines.slice(0, -1), `${lines[lines.length - 1]} ${line.trim()}`];
+      }, [])
+      .map(flatten);
+    const baked = manifest.shots.map((shot) =>
+      flatten([shot.caption, shot.sub].filter(Boolean).join(' '))
+    );
+    expect(pinned).toEqual(baked);
   });
 
   test('the score split is the real 7 + 5 + 3, adding to 15', () => {
