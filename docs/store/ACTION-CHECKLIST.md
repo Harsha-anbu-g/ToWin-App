@@ -47,9 +47,12 @@ hour spent here is an hour not spent on the meter.
   new enrollment and a transfer. The organization path needs a DUNS number
   first, and that wait lands entirely before the payment step. Analysis and a
   recommendation: `App/docs/store/enrollment-decision.md`.
-- [ ] **Aggregate the iOS privacy manifest statically.** [repo] The library
-  `PrivacyInfo.xcprivacy` files are already in `App/node_modules`, so the union
-  is knowable now instead of after the first paid build.
+- [x] **Aggregate the iOS privacy manifest statically.** DONE 2026-08-15.
+  8 manifests found by glob, 4 API categories, 7 reason codes, zero tracking
+  and zero declared collection. No row contradicts the store labels. Full table
+  with Apple's verbatim wording and a plain-English why for each row:
+  `App/docs/store/privacy-manifest-aggregate.md`. Pinned by
+  `App/__tests__/privacy-manifest.test.js`, 8 tests.
 - [ ] **Run the config-plugin dry run.** [repo] `expo-doctor`, `expo config
   --type introspect` and a scratch `expo prebuild` find day-one build failures
   today, for free.
@@ -188,12 +191,22 @@ hour spent here is an hour not spent on the meter.
   `https://www.towinly.com/privacy`: that is an older document with no contact
   address and a location paragraph describing a device setting the app does not
   have.
-- [ ] **Aggregate the iOS privacy manifest, before there is a build.** [repo]
-  `App/app.json` sets no `ios.privacyManifests` and Expo SDK 54 aggregates
-  library manifests at prebuild. The library files are already on disk under
-  `App/node_modules`, so the union can be computed today and diffed against
-  `App/docs/store/privacy-labels.md` section 1. Blocks launch because a
-  manifest that contradicts the entered labels is an App Review rejection.
+- [x] **Aggregate the iOS privacy manifest, before there is a build.** DONE
+  2026-08-15. `App/docs/store/privacy-manifest-aggregate.md` holds the union of
+  the 8 library manifests found under `App/node_modules`: 4 API categories, 7
+  reason codes quoted verbatim from Apple, `NSPrivacyTracking` false and
+  `NSPrivacyCollectedDataTypes` empty in every one. Diffed row by row against
+  `privacy-labels.md` section 1: no contradiction. `ios.privacyManifests` was
+  deliberately NOT added to `app.json`, with the reasoning and the condition
+  that would flip it recorded in section 5 of that document.
+  `App/__tests__/privacy-manifest.test.js` re-globs on every run and fails on a
+  new API type, reason code, tracking domain or declared collection.
+
+  Two gaps this static pass could not close, named rather than glossed:
+  Hermes is on Apple's list of SDKs that must ship a manifest and its binary
+  arrives at `pod install`, so it is not on disk to check; and 17 of the 20
+  native dependencies ship no manifest at all, which is allowed but is not
+  proof. Both are written up in section 6 of the aggregate.
 - [ ] **Adopt the listings and repin the test.** [repo] Copy the approved
   fields from `App/docs/store/listings.md` into the pinned blocks of
   `docs/store-listing.md` at the project root and rerun `npx jest store-listing`
