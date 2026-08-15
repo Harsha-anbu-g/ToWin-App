@@ -7,6 +7,13 @@ Read the value out of the `answer` line, paste it into the console, tick the box
 next to it here. Where a value is not settled, the row says why and what closes
 it.
 
+**Paste from `console-answers.md`, not from here.** That sheet, added
+2026-08-15, is the console-day document: both stores, field label on the left,
+answer on the right, every claim re-verified the day it was written. This file
+stays as the long-form reasoning behind the Apple half of those answers. Where
+the two disagree, `console-answers.md` wins and the difference is recorded in
+its corrections section.
+
 Companion files in this folder, which this sheet points at rather than repeats:
 
 - `listings.md` for the name, subtitle, keywords, description and release notes.
@@ -392,7 +399,7 @@ Ship the still set, add a preview when the app has usage to film.
 | Promotional Text (170) | `listings.md` section 1, `promo` (161 of 170) | READY |
 | Description (4000) | `listings.md`, the block between `apple-us-description:start` and `:end` (1591 chars) | READY |
 | Keywords (100) | `listings.md` section 1, `keywords` (97 of 100) | READY |
-| Support URL | **BLOCKING.** See below. | BLOCKING |
+| Support URL | `https://www.towinly.com/app/support` | READY, corrected 2026-08-15 |
 | Marketing URL | `https://www.towinly.com` | READY |
 | Version | `1.0.0` | READY, matches `app.json` |
 | Copyright | `2026 <legal entity>` | **USER INPUT NEEDED** |
@@ -409,27 +416,29 @@ section 0. If the enrolment is individual, this is the account holder's own lega
 name and it is public. Marked USER INPUT NEEDED because it is a real legal
 identity and this sheet will not guess at it.
 
-**Support URL, blocking.** App Store Connect requires it and guideline 1.5
-requires the address to actually provide support. Nothing exists today: the
-website has no `/support`, `/help` or `/contact` route, and the landing page
-carries no contact address. Guideline 1.2 also requires published contact
-information for an app with user generated content, so the gap costs twice.
+**Support URL, corrected on 2026-08-15. It is built and it is live.** The
+second of the two options below was taken. `https://www.towinly.com/app/support`
+returns HTTP 200 and renders the support page: a contact address, a plain
+sentence about response time, and links to the privacy policy and the terms.
+Verified twice on 2026-08-15, by bundle content and by a real browser render at
+440 x 956, and re-fetched again when `console-answers.md` was written. The
+route lives in this repo at `app/support.jsx`, guarded by
+`__tests__/support-page.test.js`.
 
-Two ways to close it:
+The old wording said "Nothing exists today: the website has no `/support`,
+`/help` or `/contact` route", and offered two ways to close the gap:
 
 1. Fast: point Support URL at `https://www.towinly.com/app/delete-account`. It is
    live, public, names `help@towinly.com` and explains how a person gets an
    answer and how long it takes. It is thin, because it only covers deletion.
 2. Better: build a small support page served at
-   `https://www.towinly.com/app/support`, the same way the deletion page is. It
-   needs a contact address, one plain sentence about response time, and links to
-   the privacy policy and the terms. `ToWin/` is read only, so the route lives in
-   this repo.
+   `https://www.towinly.com/app/support`, the same way the deletion page is.
 
-Either way, send a test message to `help@towinly.com` and confirm a human
-receives it. The domain has MX records on Cloudflare Email Routing, which proves
-mail is accepted, not that anyone reads it. Three public pages, the Play data
-deletion path and both store contact fields all depend on that mailbox.
+What is left is the console paste. Still send a test message to
+`help@towinly.com` and confirm a human receives it. The domain has MX records
+on Cloudflare Email Routing, which proves mail is accepted, not that anyone
+reads it. Three public pages, the Play data deletion path and both store
+contact fields all depend on that mailbox.
 
 ### 6.3 Release notes: the field that is not there
 
@@ -481,12 +490,28 @@ a live backend.
 
 ### 7.3 Notes, ready to paste
 
+**Superseded on 2026-08-15. Do not paste the block below.** The version to
+paste is the `review-notes-v1` block in `console-answers.md`, which is
+3967 characters, guarded by `__tests__/console-answers.test.js`, and corrected
+on one claim this draft got wrong.
+
+The wrong claim, kept here so the correction is visible rather than quiet: the
+bullet below tells Apple there is "a content filter on posts and messages".
+There is no filter on messages. `objectionableError` from
+`src/lib/contentFilter.js` has three call sites, and the chat composer is not
+one of them: `app/profile-edit.jsx:236` for the bio,
+`app/(tabs)/action.jsx:99` to `:101` for a help request, and
+`app/pass-on/index.jsx:299` for a Pass On entry.
+`app/chat/[connectionId].jsx:200` posts to `/messages/{id}/send` with no check,
+and the Spring Boot backend has no filter either. A reviewer can disprove that
+sentence in thirty seconds by typing a slur into a chat.
+
 App Store Connect caps this field at 4000 characters. The draft in
 `screenshots-and-review.md` is 3807 characters on its own, which leaves no room
-for the account deletion path a reviewer will look for. The block below is that
-draft, tightened, with the deletion section added. It is the version to paste.
+for the account deletion path a reviewer will look for. The block below was
+that draft, tightened, with the deletion section added.
 
-<!-- review-notes-v1:start -->
+<!-- review-notes-superseded-2026-08-15:start -->
 WHAT TOWINLY IS
 
 Towinly connects three kinds of people. Elders are older adults who ask for help: a ride, shopping, cleaning, or simply company. Helpers are members who offer that help. Family members are relatives the elder links to their own account so someone they love can see they are safe.
@@ -528,7 +553,7 @@ The family surface is only reachable from a family account, and Sarah's seat is 
 THE AI ASSISTANT: CONSENT AND REPORTING
 
 Tap the "Ask AI" pill with the tortoise on any tab. Before the FIRST question a consent dialog appears. It names Groq, the outside AI service, says what is shared (the question, the chat, first name and trust score, never contact details), warns that answers are machine written and can be wrong, and offers "Not now" and "Yes, that's okay". "Not now" sends nothing. Consent is stored per user on the device, so a different demo account shows the dialog again. Every answer carries "Report this answer", which opens the feedback form with the answer quoted. Reports reach help@towinly.com.
-<!-- review-notes-v1:end -->
+<!-- review-notes-superseded-2026-08-15:end -->
 
 **Before pasting, resolve the spare seat placeholder.** A reviewer will test
 account deletion, because guideline 5.1.1(v) is on their checklist. If they test
@@ -553,7 +578,7 @@ seats immediately before submitting.
 
 | Field | Answer | State |
 |---|---|---|
-| Notes | The block above, once the spare seat is resolved | READY on resolution |
+| Notes | The `review-notes-v1` block in `console-answers.md`, once the spare seat is resolved | READY on resolution |
 | Attachment | Optional. Leave empty. | READY |
 
 The attachment field takes a document for the reviewer. Skip it. Reviewers read
@@ -673,10 +698,10 @@ Listed so nobody hunts for a missing step.
 
 | # | Item | Owner | Blocking? |
 |---|---|---|---|
-| 1 | Support URL: pick the deletion page or build `/app/support` | This repo | **Yes** |
+| 1 | ~~Support URL: pick the deletion page or build `/app/support`~~ CLOSED 2026-08-15. `/app/support` is live and returns 200. | Console paste only | No |
 | 2 | Send a test email to `help@towinly.com` and confirm a human gets it | Account holder | **Yes** |
 | 3 | Spare demo seat for deletion testing, or the backend id fix | Backend | **Yes**, for review safety |
-| 4 | Confirm the backend PostHog flag is off in production | Backend | **Yes**, the privacy labels depend on it |
+| 4 | ~~Confirm the backend PostHog flag is off in production~~ ANSWERED 2026-08-15: `POSTHOG_API_KEY` **is set**. Now a decision, not a check. Keep it and declare Email plus Analytics shared on both forms, or clear the variable. `console-answers.md` section 5. | Account holder | **Yes**, the privacy labels depend on it |
 | 5 | Individual or organization enrolment, which sets the copyright line | Account holder | **Yes** |
 | 6 | Add a content licence sentence to the terms | This repo | No, recommended |
 | 7 | Decide whether the "Draft: a lawyer has not checked this yet" banner stays | Account holder | No, decide before review |
@@ -709,3 +734,13 @@ personal or legal data.
 - 2026-08-11: written. Categories chosen and argued, availability argued, release
   strategy set to manual, reviewer notes rewritten to fit the 4000 character
   field with the account deletion path added.
+- 2026-08-15: three corrections, all evidence-led.
+  1. The Support URL row said BLOCKING and the prose said no support route
+     existed. `https://www.towinly.com/app/support` returns 200 and renders the
+     page. Only the console paste is left.
+  2. The reviewer-notes block was superseded. It told Apple the content filter
+     covered messages, which the three call sites of `objectionableError`
+     disprove. The pasteable version now lives in `console-answers.md` and is
+     guarded by a test that fails if that sentence ever comes back.
+  3. `console-answers.md` was added as the console-day sheet for both stores.
+     This file is now the reasoning behind the Apple half of it.
