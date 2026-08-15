@@ -69,8 +69,11 @@ hour spent here is an hour not spent on the meter.
   fail on a wrong size, an alpha channel, a missing shot and an em dash.
   The three captures from APL-804 were re-shot at phone scale first: see
   `App/docs/store/screenshots/superseded/README.md`.
-- [ ] **Adopt the listing fields and repin the test.** [repo] The guarded copy
-  and the intended copy are two different documents right now.
+- [x] **Adopt the listing fields and repin the test.** DONE 2026-08-15. The
+  approved fields from `App/docs/store/listings.md` are in the pinned blocks of
+  the root `docs/store-listing.md`, and `App/__tests__/store-listing.test.js`
+  now guards the real text at 39 tests, up from 34. Confirmed on 2026-08-15 by
+  re-running `npx jest store-listing`: 39 passed.
 - [x] **Answer every console question that does not need the account open.**
   DONE 2026-08-15. One sheet for both stores at
   `App/docs/store/console-answers.md`: console label on the left, answer on the
@@ -84,8 +87,13 @@ hour spent here is an hour not spent on the meter.
   as numbers. Guarded by `App/__tests__/console-answers.test.js`, 12 tests,
   each proven to fail on a real defect. Section 10 of the sheet lists the 20
   items that genuinely need an account open.
-- [ ] **Write the pay-day runbook.** [repo] One ordered document for the hour
-  the account opens.
+- [x] **Write the pay-day runbook.** DONE 2026-08-15.
+  `App/docs/store/PAY-DAY-RUNBOOK.md`, 309 lines, eight parts in the order the
+  day runs: before you pay, the payment, the first thirty minutes, the listing
+  paste, screenshots, privacy answers, the iOS submit, and the Play track with
+  its own timeline. Every field points at the one file that owns it rather than
+  repeating it. Closes with an honest still-open list and the end-of-run
+  verification table.
 - [ ] **Create a free Expo account and run `eas login` then `eas init`.**
   [owner then repo] Free, no Apple money, but it needs the owner's browser.
   `eas whoami` prints `Not logged in` today. Commands in
@@ -229,13 +237,11 @@ hour spent here is an hour not spent on the meter.
   arrives at `pod install`, so it is not on disk to check; and 17 of the 20
   native dependencies ship no manifest at all, which is allowed but is not
   proof. Both are written up in section 6 of the aggregate.
-- [ ] **Adopt the listings and repin the test.** [repo] Copy the approved
-  fields from `App/docs/store/listings.md` into the pinned blocks of
-  `docs/store-listing.md` at the project root and rerun `npx jest store-listing`
-  so `App/__tests__/store-listing.test.js` guards the real fields. Update the
-  pinned `screenshot-captions` block to the 8-caption set in
-  `App/docs/store/screenshots-and-review.md` at the same time. Blocks a safe
-  console paste: unpinned copy can drift after edits.
+- [x] **Adopt the listings and repin the test.** DONE 2026-08-15. Same item as
+  the one above, recorded twice in this file. The pinned blocks of the root
+  `docs/store-listing.md` carry the approved fields and the 8-caption
+  `screenshot-captions` block, and `npx jest store-listing` passes 39 of 39.
+
 - [x] **Capture the last three planned shots.** DONE 2026-08-15. See the owner
   list above for the evidence.
 - [x] **Bake the remaining shots to both store sizes.** DONE 2026-08-15. All
