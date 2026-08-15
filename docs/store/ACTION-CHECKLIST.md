@@ -60,8 +60,10 @@ hour spent here is an hour not spent on the meter.
   re-run commands: `App/docs/store/ios-build-readiness.md`, section
   "Pre-enrollment dry run, 2026-08-15". `pod install` and a compile could not
   run here: Command Line Tools only, no full Xcode.
-- [ ] **Capture the last three screenshots and bake all eight.** [repo] Three
-  planned captions have no shot that honestly supports them.
+- [ ] **Bake all eight screenshots.** [repo] The three missing captures are
+  DONE 2026-08-15: `raw-14-helper-trust-score.png`, `raw-15-chat-thread.png`
+  and `raw-16-family-parent-checked-in.png`, all measured 1320 x 2868 with no
+  alpha. Baking the full eight is what remains.
 - [ ] **Adopt the listing fields and repin the test.** [repo] The guarded copy
   and the intended copy are two different documents right now.
 - [ ] **Answer every console question that does not need the account open.**
@@ -218,12 +220,8 @@ hour spent here is an hour not spent on the meter.
   pinned `screenshot-captions` block to the 8-caption set in
   `App/docs/store/screenshots-and-review.md` at the same time. Blocks a safe
   console paste: unpinned copy can drift after edits.
-- [ ] **Capture the last three planned shots.** [repo] Three captions in the
-  8-shot plan have no shot that honestly supports them: the HELPER trust split
-  for caption 4, a real chat thread for caption 5, and the family parent page
-  with a green check-in chip for caption 6. Reasons and exact steps are in
-  `App/docs/store/screenshot-inventory.md`. Does not block submission, improves
-  it.
+- [x] **Capture the last three planned shots.** DONE 2026-08-15. See the owner
+  list above for the evidence.
 - [ ] **Bake the remaining shots to both store sizes.** [repo] Five of eight
   are baked, into `App/docs/store/screenshots/final/ios/` and `.../play/` by
   `App/scripts/bake_screenshots.py`, which enforces the parchment band,
