@@ -53,9 +53,13 @@ hour spent here is an hour not spent on the meter.
   with Apple's verbatim wording and a plain-English why for each row:
   `App/docs/store/privacy-manifest-aggregate.md`. Pinned by
   `App/__tests__/privacy-manifest.test.js`, 8 tests.
-- [ ] **Run the config-plugin dry run.** [repo] `expo-doctor`, `expo config
-  --type introspect` and a scratch `expo prebuild` find day-one build failures
-  today, for free.
+- [x] **Run the config-plugin dry run.** DONE 2026-08-15. expo-doctor 18/18,
+  prebuild exit 0 with zero warnings, identity unchanged,
+  `ITSAppUsesNonExemptEncryption` present and false in the generated plist, and
+  the one permission the app can raise has its string. Full output and the
+  re-run commands: `App/docs/store/ios-build-readiness.md`, section
+  "Pre-enrollment dry run, 2026-08-15". `pod install` and a compile could not
+  run here: Command Line Tools only, no full Xcode.
 - [ ] **Capture the last three screenshots and bake all eight.** [repo] Three
   planned captions have no shot that honestly supports them.
 - [ ] **Adopt the listing fields and repin the test.** [repo] The guarded copy

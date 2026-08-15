@@ -471,3 +471,225 @@ None on the app side. Nothing in the code, config, or assets stops a production 
 One file was modified: `eas.json`, adding the `simulator` build profile described in
 section 8E. Nothing else in the repo was touched. All prebuild and export work happened
 in throwaway directories under `/private/tmp`, which were deleted afterwards.
+
+---
+
+# Pre-enrollment dry run, 2026-08-15
+
+Second pass, run on branch `ralph/apple-prepay-readiness` at `aed22c2`, before
+any money reaches Apple. Purpose: find the day-one build failures now, while
+fixing them is free. Every command below can be re-run after enrollment and
+diffed against these outputs.
+
+Environment: Node v24.13.0, Expo SDK 54.0.0, `expo` 54.0.36, `react-native`
+0.81.5, expo-doctor 1.20.2. Command Line Tools only on this machine, no full
+Xcode.
+
+**Verdict: nothing found that would fail a build.** 18 of 18 doctor checks
+pass, prebuild finishes clean with no warnings, the identity is unchanged, the
+encryption flag is present and false in the real generated plist, and the one
+permission the app can trigger has its purpose string. Two facts came out of
+this run that were not known before, both in section D.
+
+## A. expo-doctor
+
+```bash
+cd App && npx expo-doctor
+```
+
+```
+Running 18 checks on your project...
+18/18 checks passed. No issues detected!
+```
+
+Nothing to fix, so nothing was fixed. No check was skipped and no failing check
+was reported as passing.
+
+## B. expo config --type introspect
+
+```bash
+cd App && npx expo config --type introspect --json
+```
+
+**Identity, all three frozen values confirmed unchanged:**
+
+| Field | Value |
+|---|---|
+| `ios.bundleIdentifier` | `com.towinly.app` |
+| `android.package` | `com.towinly.app` |
+| `slug` | `towinly` |
+| `scheme` | `towinly` |
+| `name` | `Towinly` |
+| `version` | `1.0.0` |
+| `sdkVersion` | `54.0.0` |
+
+**Resolved plugin list**, in order: `expo-router`, `expo-secure-store` with
+`faceIDPermission: false`, `expo-font`, `expo-image-picker` with
+`photosPermission` set and `cameraPermission` and `microphonePermission` both
+`false`.
+
+**Purpose strings in the introspected plist:** exactly one,
+`NSPhotoLibraryUsageDescription`. See section C for why that is the right
+number and section D for the check that proves it.
+
+## C. expo prebuild -p ios --no-install
+
+Run in a throwaway directory, never in the repo. The project was copied out with
+`rsync` excluding `node_modules`, `.git`, `ios`, `android`, `dist` and `.expo`,
+then `node_modules` was symlinked back so no install was needed.
+
+```bash
+SCRATCH=/private/tmp/<scratch>/prebuild-dry
+mkdir -p "$SCRATCH"
+cd App && rsync -a --exclude node_modules --exclude .git --exclude ios \
+  --exclude android --exclude dist --exclude .expo ./ "$SCRATCH/"
+ln -sfn "$PWD/node_modules" "$SCRATCH/node_modules"
+cd "$SCRATCH" && npx expo prebuild -p ios --no-install
+```
+
+```
+- Creating native directory (./ios)
+✔ Created native directory
+- Updating package.json
+✔ Updated package.json
+- Running prebuild
+✔ Finished prebuild
+```
+
+Exit code 0. **Zero warnings and zero errors.** No config plugin threw, which
+matters because a plugin that throws at prebuild throws identically on EAS.
+
+Generated: `ios/Podfile`, `ios/Podfile.properties.json`,
+`ios/Towinly.xcodeproj`, and `ios/Towinly/` containing `AppDelegate.swift`,
+`Info.plist`, `SplashScreen.storyboard`, `Images.xcassets`,
+`Towinly-Bridging-Header.h` and `Towinly.entitlements`.
+
+`Towinly.entitlements` is an empty `<dict/>`. The app requests no capability, so
+there is nothing for Apple to provision beyond the signing certificate.
+
+`Podfile.properties.json` reads `{"expo.jsEngine": "hermes",
+"EX_DEV_CLIENT_NETWORK_INSPECTOR": "true"}`. The Hermes line is the empirical
+confirmation that the JS engine is Hermes, which matters for the third-party SDK
+question in `privacy-manifest-aggregate.md` section 6.
+
+**The repo was left clean.** `ls -d ios` in `App/` returns
+`No such file or directory`, and `git status --short` shows no new native
+directory.
+
+## D. The two things this run found that were not known before
+
+**1. `expo config --type introspect` is a preview, not the artifact, and the two
+disagree on exactly the keys a reviewer would ask about.**
+
+| Key | introspect said | the generated `Info.plist` says |
+|---|---|---|
+| `NSAppTransportSecurity` | `NSAllowsArbitraryLoads: true`, plus a localhost exception | `NSAllowsArbitraryLoads: false`, `NSAllowsLocalNetworking: true` |
+| `UIRequiredDeviceCapabilities` | `["armv7"]` | `["arm64"]` |
+
+Both differences run in the app's favour, and both would have read as findings
+if introspect had been trusted as the answer. Arbitrary loads are **off** in the
+built app, so App Transport Security is enforced and there is no exception to
+justify at review. The device capability is `arm64`, which is the only correct
+value for a current iPhone. **Rule for the next person: verify plist claims
+against a prebuild, never against introspect.**
+
+**2. Prebuild generates no app-level `PrivacyInfo.xcprivacy`.**
+
+```bash
+find ios -name PrivacyInfo.xcprivacy   # returns nothing
+```
+
+This confirms the reading of `@expo/config-plugins/build/ios/PrivacyInfo.js`
+recorded in `privacy-manifest-aggregate.md` section 5: the plugin returns the
+config untouched when `ios.privacyManifests` is absent, so no app-target
+manifest is written. The app target is `AppDelegate.swift` plus generated
+bootstrap, and it contains no `UserDefaults` reference, so it calls no
+required-reason API and needs no declaration of its own. Every required-reason
+API in the build comes from a pod, and each of those pods declares it. The
+decision to add nothing stands, and is now backed by the artifact rather than by
+a reading of the plugin source.
+
+## E. ITSAppUsesNonExemptEncryption, confirmed in the real plist
+
+Not in `app.json`, and not in introspect. In the file prebuild actually wrote:
+
+```bash
+plutil -convert json -o - "$SCRATCH/ios/Towinly/Info.plist"
+```
+
+```json
+"ITSAppUsesNonExemptEncryption": false
+```
+
+Present, and false. Export compliance therefore answers itself in App Store
+Connect and no annual self-classification report is triggered.
+
+## F. Permission coverage: every permission the app can trigger
+
+The question is not "does each plist key have a string". It is "can the app
+raise a system prompt that has no string behind it", because that is a hard
+crash on device rather than a warning.
+
+The whole app raises exactly one prompt. Proof:
+
+```bash
+grep -rn "requestPermission\|PermissionsAsync\|getPermissions" app src | grep -v __tests__
+```
+
+```
+app/profile-edit.jsx:160:  const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+```
+
+One call, one prompt, one string:
+
+| Prompt the app can raise | Purpose string in the generated plist | Covered |
+|---|---|---|
+| Photo library, from `profile-edit.jsx:160` | `NSPhotoLibraryUsageDescription`, "Towinly uses your photo library so you can choose a profile picture, and so you can send a photo of your ID if you choose to verify who you are." | Yes, and it names both uses of the picker |
+
+The prompts the app **cannot** raise, and why no string is needed for each:
+
+| Prompt | Why it can never fire |
+|---|---|
+| Camera | `expo-image-picker` plugin sets `cameraPermission: false`, so the key is stripped from the plist and no camera API is reachable |
+| Microphone | `expo-image-picker` plugin sets `microphonePermission: false` |
+| Face ID | `expo-secure-store` plugin sets `faceIDPermission: false` |
+| Location | No `expo-location` in `package.json`. The app geocodes a typed town name on the server |
+| Notifications | No `expo-notifications` in `package.json` |
+| Contacts | No `expo-contacts` in `package.json`. Emergency contacts are typed by hand |
+| Speech recognition | `expo-speech` is text to speech, which is output only and needs no permission |
+
+Confirmed against the generated `Info.plist`: `NSPhotoLibraryUsageDescription`
+is the only `NS...UsageDescription` key present. There is no orphan string for a
+permission the app does not use, and no missing string for one it does.
+
+## G. What could not be checked on this machine
+
+Named rather than glossed, because a skipped check reported as passing is the
+failure this whole pass exists to prevent.
+
+- **`pod install` and a compile.** This machine has Command Line Tools only, no
+  full Xcode, so CocoaPods cannot resolve and nothing was compiled. Prebuild
+  generating a clean project is not the same as the project building. EAS
+  compiles on its own macOS image, so the first real answer arrives with the
+  first build.
+- **The Hermes privacy manifest.** `hermes` is on Apple's list of third-party
+  SDKs that must ship a manifest and a signature, and the hermes-engine artifact
+  is fetched during `pod install`, so it is not on disk here. See
+  `privacy-manifest-aggregate.md` section 6.
+- **Anything needing a signed binary:** the deep-link round trip on a device,
+  the built app's runtime behaviour, and TestFlight.
+
+## H. Re-run this after enrollment and diff
+
+```bash
+cd App
+npx expo-doctor
+npx expo config --type introspect --json > /tmp/introspect-after.json
+# prebuild into a scratch copy, exactly as section C shows, then:
+plutil -convert json -o - "$SCRATCH/ios/Towinly/Info.plist"
+find "$SCRATCH/ios" -name PrivacyInfo.xcprivacy
+```
+
+Expect the same output, with one addition: once `eas init` has run, `app.json`
+gains `extra.eas.projectId` and introspect will show it. Any other difference is
+worth reading before starting a paid build.
