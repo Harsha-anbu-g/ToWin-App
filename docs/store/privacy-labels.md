@@ -109,7 +109,7 @@ Functionality** for all types unless a second purpose is listed.
 | Identifiers | User ID | **Yes** | App Functionality | Username (public), backend account id, session JWT. |
 | Identifiers | Device ID | No | | Nothing reads or sends one. |
 | Purchases | all | No | | No payments in the app. |
-| Usage Data | Product Interaction / Advertising / Other | No | | No analytics SDK. See section 5 pending item: backend PostHog flag must be confirmed OFF before submitting this answer. |
+| Usage Data | Product Interaction / Advertising / Other | **PostHog-blocked** | | No client analytics SDK. The **server** sends a signup event to PostHog and the production key is set, confirmed 2026-08-15. Answer this only after the section 5 item 1 decision. |
 | Diagnostics | Crash / Performance / Other | No | | No crash or performance SDK. |
 | Environment Scanning / Body / Surroundings | all | No | | |
 | Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/register.jsx`), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`). Trust score goes to Groq with AI questions, after consent. |
@@ -157,7 +157,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | Play category | Data type | Collected? | Shared? | Optional? | Purpose(s) |
 |---|---|---|---|---|---|
 | Personal info | Name | **Yes** | **Yes** (first name to Groq, only with the user's one-time consent, only when they use Ask AI) | Optional | App functionality |
-| Personal info | Email address | **Yes** | No (re-check the backend PostHog flag first, section 5) | Required | App functionality, Account management |
+| Personal info | Email address | **Yes** | **PostHog-blocked** (the server sends the plaintext address as the signup event id and the production key is set, confirmed 2026-08-15; section 5 item 1) | Required | App functionality, Account management |
 | Personal info | User IDs | **Yes** | No | Required | App functionality, Account management |
 | Personal info | Address | No | | | |
 | Personal info | Phone number | **Yes** | No (Twilio delivers SMS as a service provider) | Optional | App functionality |
@@ -173,7 +173,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | Files and docs | all | No | | | |
 | Calendar | all | No | | | |
 | Contacts | Contacts | **Yes** | No (Twilio texts them as a service provider) | Optional | App functionality. Hand-typed emergency contacts (name, phone, relationship) and the family-link identifier. No address book permission exists; say so in the free-text box. |
-| App activity | App interactions | No | | | No analytics SDK; see the PostHog check in section 5 before locking this. |
+| App activity | App interactions | **PostHog-blocked** | | | No client analytics SDK. The server sends `user_signup_started` and `user_signed_up` to PostHog and the production key is set, confirmed 2026-08-15. Section 5 item 1. |
 | App activity | In-app search history | No | | | |
 | App activity | Installed apps | No | | | |
 | App activity | Other user-generated content | **Yes** | No | Optional | App functionality. Bio, help requests, reviews, feedback, reports, Pass On stories, letters and Sealed items. |
@@ -239,11 +239,38 @@ No ads. No data brokers. No sale of personal data.
 
 ## 5. Pending checks before the forms are submitted
 
-1. **Backend PostHog flag.** Run `railway variables` on the production
-   backend. If `POSTHOG_API_KEY` is set, the server captures a signup event
-   keyed on the plaintext email: change Apple Usage Data to collected and
-   Play to Email shared with an analytics third party. If unset, the labels
-   above stand. (Also flagged in `docs/store-listing.md`.)
+1. **Backend PostHog flag. ANSWERED 2026-08-15, and the answer is yes.**
+   `railway variable list --project 7c8febeb-a2ff-4ab3-8275-8038c3cd529d
+   --service backend --environment production --json` returned 39 variables and
+   `POSTHOG_API_KEY` is set, 48 characters. Values were not printed.
+
+   Traced through the code:
+   `ToWin/backend/.../auth/service/AuthService.java:92` calls
+   `postHogService.capture("pending:" + request.getEmail(),
+   "user_signup_started", Map.of("role", ...))`. **The distinct id is the
+   plaintext email address**, so the address itself reaches PostHog, a US
+   third-party analytics processor. The mobile app triggers it:
+   `App/app/(auth)/register.jsx:192` posts `/auth/register`, mapped at
+   `AuthController.java:24`. The second event, `user_signed_up` at
+   `AuthService.java:173`, keys on the user UUID, so only the first carries an
+   address.
+
+   **Two honest paths, and the owner picks one before either form is
+   submitted.**
+   - **Keep PostHog on.** Then Apple `Usage Data / Product Interaction` becomes
+     collected and linked, `Identifiers / User ID` stays yes, Play
+     `Personal info / Email address` becomes **shared** with an analytics third
+     party, and Play `App activity / App interactions` becomes collected. Add
+     PostHog to the processor list in `src/data/legalContent.js`, which today
+     names Amazon, Twilio, OpenStreetMap, Groq and Railway but not PostHog.
+   - **Clear `POSTHOG_API_KEY` on the production backend.** One owner command.
+     `PostHogService` is a documented no-op when the key is blank
+     (`PostHogService.java:22-26`), so the labels below stand exactly as
+     written and no legal page changes.
+
+   The three rows this decides are marked **PostHog-blocked** below. Do not
+   submit them until the decision is made. Console answers are tracked in
+   `app-store-connect-fields.md`.
 2. **iOS privacy manifest.** Diff the aggregated `PrivacyInfo.xcprivacy` in
    the first EAS iOS build artifact against section 1.
 3. **Photo purpose string.** `app.json` `photosPermission` names only the
