@@ -672,12 +672,16 @@ failure this whole pass exists to prevent.
   generating a clean project is not the same as the project building. EAS
   compiles on its own macOS image, so the first real answer arrives with the
   first build.
-- **The Hermes privacy manifest.** `hermes` is on Apple's list of third-party
-  SDKs that must ship a manifest and a signature, and the hermes-engine artifact
-  is fetched during `pod install`, so it is not on disk here. See
-  `privacy-manifest-aggregate.md` section 6.
 - **Anything needing a signed binary:** the deep-link round trip on a device,
   the built app's runtime behaviour, and TestFlight.
+
+Removed from this list on 2026-08-15: **the Hermes privacy manifest**. An earlier
+draft held it open, reading Apple's `hermes` list entry as Meta's JavaScript
+engine. It is Imgur's SDK. Apple DTS settled it on developer forums thread
+759394, and Meta's engine ships as `hermes-engine` under a different name. This
+app owes Apple no Hermes manifest and there is nothing to check after
+`pod install`. Reasoning kept in `privacy-manifest-aggregate.md` section 7 so it
+is not re-opened.
 
 ## H. Re-run this after enrollment and diff
 

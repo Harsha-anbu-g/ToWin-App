@@ -231,11 +231,21 @@ Choose **manual release** so both stores can go live on the same day.
 
 ## Part 7. Google Play, starting the same day
 
-Play is the long pole. Google makes a new personal developer account run a
+Play is the long pole. Google makes a new **personal** developer account run a
 closed test with at least **12 testers enrolled for 14 consecutive days** before
 it grants production access. One day below 12 restarts the run. Started on pay
 day it runs beside the iOS work and costs nothing extra. Started after iOS
 ships, it adds about three weeks to the end.
+
+**The gate is escapable, and you should know that before you register.**
+Organization accounts are exempt from it entirely, as are personal accounts
+created before 13 November 2023
+(support.google.com/googleplay/android-developer/answer/14151465). Play
+organization accounts want a D-U-N-S number, a company address and a publicly
+displayed verified phone number, so the waiting moves rather than disappearing.
+The full trade is in `enrollment-decision.md` section 2. Decide it there, before
+you click Personal on the sign-up page, because the account type is not something
+you flip afterwards.
 
 Full detail in `play-console-parallel-track.md`. The order that matters:
 
@@ -276,7 +286,7 @@ evidence in `ralph/progress.txt`.
 | The three submit values, then `npm run submit:config` | Owner, then one command | Fifteen minutes |
 | First production builds, iOS and Android | Owner | EAS queue time, then signing on first run |
 | A reviewer deleting a demo seat can destroy it | Backend, or seed a spare seat | Not started |
-| 12 testers, 14 consecutive days | Owner | Three weeks, and it cannot be shortened |
+| 12 testers, 14 consecutive days | Owner | Three weeks on a personal account, and it cannot be shortened. An organization account skips it: see `enrollment-decision.md` section 2 |
 | Lawyer review of the policy and terms | Owner | Not started, tracked in `ACTION-CHECKLIST.md` |
 | Two checks that need a real build: the deep link and the encryption flag in the built Info.plist | Repo, after the first build | Minutes each |
 | Apple review time | Apple | Not recorded in this repo. Do not plan against a number you have not seen |
