@@ -43,7 +43,8 @@
     "web": "expo start --web",
     "test": "jest",
     "lint": "eslint .",
-    "verify:published": "node scripts/verify-published-page.mjs https://www.towinly.com/app/delete-account --expect \"Write to us and ask\" --expect \"Please delete my Towinly account\""
+    "verify:published": "node scripts/verify-published-page.mjs https://www.towinly.com/app/delete-account --expect \"Write to us and ask\" --expect \"Please delete my Towinly account\"",
+    "submit:config": "node scripts/fill-submit-config.mjs"
   },
   "jest": {
     "preset": "jest-expo",

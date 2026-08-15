@@ -38,6 +38,7 @@ Read them in this order the first time.
 | **app-store-connect-fields.md** | Every field in App Store Connect with the answer to type, plus the paste ready App Review notes at 3432 characters. | You are sitting in the console filling boxes. |
 | **ios-build-readiness.md** | Proof the iOS binary compiles and is store legal. Prebuild, Hermes bundle, icon, purpose strings, encryption flag. | You want evidence the app side is done. |
 | **ios-content-readiness.md** | Everything around the binary: privacy policy URL, support URL, demo accounts, age rating, account deletion. | Before you promise Apple anything in a form. |
+| **submit-config.md** | The three values `eas submit` needs, where each one lives, the paste ready `submit.production` block, and `npm run submit:config` which writes it after validating all three. | The hour the accounts open, before the first submit. |
 | **play-console-parallel-track.md** | The whole Android track, including the 14 day test, the tester roster, and the recruitment messages. | The day the Play account opens. Run it beside the Apple runbook, not after it. |
 | **privacy-labels.md** | Exact answers for the Apple App Privacy questionnaire and the Play Data safety form, each traced to a line of code. | Filling either privacy form. Do not improvise these. |
 | **listings.md** | Title, subtitle, keywords and descriptions for four listings: Apple US, Play US, Apple India, Play India. | Writing the listing. Note the name clash in section 5. |
@@ -80,7 +81,7 @@ Apple or Google, so all of it can close before enrollment.
 | B2 | Google Play developer registration, 25 USD once, plus identity verification. Takes 1 to 3 days. | Human |
 | B3 | `com.towinly.app` has never been checked for global uniqueness. Registering the App ID is the last cheap moment to find a clash. | Human, enrollment day |
 | B4 | iOS signing credentials. EAS makes these on the first production build. | Human, enrollment day |
-| B5 | `eas.json` `submit.production` is empty. iOS needs ascAppId, appleId and appleTeamId. Android needs a service account key. | Human, then repo |
+| B5 | `eas.json` `submit.production` is empty. iOS needs ascAppId, appleId and appleTeamId. Android needs a service account key. The repo side is now done: `submit-config.md` says where each value lives and `npm run submit:config` writes them after validating all three. What remains is the values themselves, which need the accounts. | Human |
 | B6 | Console forms: App Privacy, Data safety, age rating, content ratings, target audience. | Human |
 | B7 | Play closed test: 12 testers, 14 consecutive days. | Human, longest item |
 | B8 | Two checks that only exist after the first build: diff the aggregated `PrivacyInfo.xcprivacy` against `privacy-labels.md`, and confirm `ITSAppUsesNonExemptEncryption` is present and false in the built Info.plist. | Repo, after first build |
