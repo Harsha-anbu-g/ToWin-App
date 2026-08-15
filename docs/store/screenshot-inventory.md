@@ -26,6 +26,9 @@ versions are re-fitted to 1080 x 1920 rather than cropped by hand.
 | `raw-11-family-guardian.png` | Family panel: Margaret's card, alerts | family |
 | `raw-12-landing-welcome.png` | Landing story chapter 1 | signed out |
 | `raw-13-landing-trust-ladder.png` | Landing story chapter 5, the seven rungs | signed out |
+| `raw-14-helper-trust-score.png` | Trust Score, HELPER split: 7 + 5 + 3 | helper |
+| `raw-15-chat-thread.png` | A chat thread with Ethan Cole, no phone number in frame | elder |
+| `raw-16-family-parent-checked-in.png` | Family parent page, check-in chip GREEN | family |
 
 ## Baked, ready to upload
 
@@ -46,31 +49,55 @@ Apple needs at least one screenshot and Play at least two, so five clears both
 minimums today. Eight is the plan in `screenshots-and-review.md` and is worth
 finishing.
 
-## Deliberately NOT baked yet, and why
+## The last three, captured 2026-08-15
 
-Three planned captions have no shot that honestly supports them. Baking them
-anyway would put a sentence over a screen that does not show it.
+The three planned captions that had no shot behind them now have one. Captured
+from the live phone web build at `https://www.towinly.com/app`, driven by
+Playwright 1.62.1 in Chromium at a 1320 x 2868 viewport, `deviceScaleFactor: 1`,
+`colorScheme: 'light'`, signed in through the real demo seats. Every file was
+measured with `sips` after capture, not eyeballed.
 
-- **Caption 4, "Up to 15 points from each person you help. 7 for the trust
-  steps. 5 for their review. 3 for your profile."** `raw-04-trust-score.png` is
-  the ELDER seat, and the elder splits the same 15 as 7 + 5 + 2 + 1. The caption
-  is the helper split. Re-capture Trust Score signed in as `helper`.
-- **Caption 5, "Chat safely inside the app. Phone numbers are shared only when
-  you both agree."** `raw-05-messages.png` is the conversation LIST, not a
-  thread. Open a seeded conversation and capture the thread itself, with no
-  phone number visible anywhere in the frame.
-- **Caption 6, "Your family can see you're safe."** `raw-11-family-guardian.png`
-  is the family home panel and it currently reads "No check-in yet today", which
-  argues against the caption. Capture `app/family/parent/[elderId].jsx` with the
-  check-in chip green, as the plan says.
+| File | Size | Alpha | Bytes | What proves the caption |
+|---|---|---|---|---|
+| `raw-14-helper-trust-score.png` | 1320 x 2868 | no | 97,003 | The HELPER seat. The page reads "up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile", and Grace Liu's row shows Trust stages 7/7, Their review 5/5, Your profile 3/3. This is the split caption 4 claims, and it is not the elder's 7 + 5 + 2 + 1 |
+| `raw-15-chat-thread.png` | 1320 x 2868 | no | 58,589 | A thread at `/chat/7fd4182c-...`, not the conversation list. Three real seeded messages between Margaret and Ethan Cole. A regex sweep of every visible string in the frame for phone-like digit runs returned none |
+| `raw-16-family-parent-checked-in.png` | 1320 x 2868 | no | 107,542 | `app/family/parent/[elderId].jsx` at `/family/parent/f5b309df-...`, with the chip reading "Checked in today" in the achieved green. Measured, not assumed: 248 pixels within tolerance of `greenDeep` `#1a5c2e` sit in the chip band, bounded to x 417 to 546, y 206 to 217 |
 
-Chrome could not be driven for these three because the machine was saturated by
-parallel work at capture time. They need one short session, not a new approach.
+**The family shot needed a real state change first.** The seeded data said "No
+check-in yet today", which argued against the caption. So the elder seat did an
+actual check-in on the live backend before the family shot was taken: sign in as
+`elder`, open `/checkin`, dismiss the first-time explainer, tap "I'm here
+today". The streak moved from 7 days to 8 and the week row filled, and the
+family view then read "Checked in today". The state is true because it was made
+true, not because a caption says so.
+
+### One deliberate change to the page before each shot, recorded in full
+
+The word **"Refresh"** was hidden before every capture. It is not part of the
+app being sold.
+
+`src/components/ui/RefreshControl.jsx` line 25 branches on
+`Platform.OS === 'web'`. The browser gets a visible `TextLink` reading
+"Refresh"; iOS and Android get the real `RefreshControl`, which shows nothing
+until it is pulled. A store screenshot taken from the web build therefore
+carries a control that an iPhone buyer will never find in the app they
+downloaded. Hiding it makes the shot more faithful to the product, not less.
+
+The hide is narrow on purpose: the element whose text is exactly "Refresh" is
+hidden, then only those ancestors whose entire text content is also just
+"Refresh". The first attempt walked three levels up instead and hid the whole
+scroll container, which produced three blank 17KB captures. They were replaced.
+File size is the tell: a real capture of these screens is 58KB to 108KB.
+
+**This applies to the older captures too.** `raw-05-messages.png` and the other
+raws that came from screens with pull-to-refresh were taken on 2026-08-11, from
+a build before this control existed on those screens. Any re-capture of them
+must hide it the same way.
 
 ## Before uploading, re-check
 
-The captures came from the build that was live on 2026-08-11, which is commit
-`af22521`. The elder Edit Profile crash fix and the audit fixes are committed
+Raws 01 to 13 came from the build that was live on 2026-08-11, commit
+`af22521`. Raws 14 to 16 came from the build live on 2026-08-15. The elder Edit Profile crash fix and the audit fixes are committed
 after that and are not deployed yet. None of the 13 shots contain Edit Profile,
 so all 13 remain accurate. Re-run the capture pass after the next deploy anyway,
 and re-bake if any screen moved.
