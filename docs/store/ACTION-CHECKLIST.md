@@ -109,10 +109,13 @@ hour spent here is an hour not spent on the meter.
 
 ## 2. Owner actions (accounts, payments, people)
 
-- [ ] **Enroll in the Apple Developer Program, 99 USD per year.** [owner]
-  Blocks launch because no App Store Connect app record can exist without it,
-  and every iOS item below depends on that record. The enrollment type is
-  settled: **individual**, decided 2026-08-15 (section 1).
+- [x] **Enroll in the Apple Developer Program, 99 USD per year.** PAID
+  2026-08-16 as an individual, via web enrollment at
+  `developer.apple.com/enroll`. The Developer app's ID scanner rejected the
+  government photo ID for the Canada region ("Invalid Submission"), so the web
+  route was used: no scanner, and identity questions go to a human if Apple
+  asks at all. Awaiting activation: usually 1 to 2 days, budget a week. Watch
+  agharsha.anbu@gmail.com for the confirmation and for any document request.
 - [x] **Get a DUNS number first if enrolling as a company.** NOT APPLICABLE:
   the owner decided individual enrollment on 2026-08-15, which skips the DUNS
   number entirely and shows the personal legal name as the seller. Kept here
