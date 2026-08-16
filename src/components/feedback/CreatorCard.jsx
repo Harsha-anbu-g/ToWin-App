@@ -3,16 +3,18 @@
 // rows are 44pt links; the portfolio pill stays a neutral ghost — the trust
 // color never fills an action and Submit stays the screen's only filled button.
 import { Image, Linking, Pressable, Text, View } from 'react-native';
-import { Briefcase, Camera, Code2, Globe, Mail, MapPin, Phone } from '../icons';
+import { Briefcase, Camera, Code2, Globe, Mail, MapPin } from '../icons';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 
-// Verbatim from the website's Feedback.jsx
+// From the website's Feedback.jsx, except the contact rows: the personal
+// Gmail and WhatsApp number left the app on 2026-08-15, an owner decision
+// before store submission. Mail goes to the support address a person already
+// reads; the founder's public profiles stay.
 const CONTACTS = [
-  { icon: Mail, label: 'agharsha.anbu@gmail.com', href: 'mailto:agharsha.anbu@gmail.com' },
+  { icon: Mail, label: 'help@towinly.com', href: 'mailto:help@towinly.com' },
   // Portfolio (web 53b20e8 2026-07-26): the founder's own domain.
   { icon: Globe, label: 'harshavardhanag.com', href: 'https://harshavardhanag.com' },
-  { icon: Phone, label: '+1 438-535-5782 (WhatsApp)', href: 'https://wa.me/14385355782' },
   { icon: MapPin, label: 'Montreal, Quebec, Canada', href: null },
   { icon: Briefcase, label: 'LinkedIn: harsha-anbu-gowri', href: 'https://www.linkedin.com/in/harsha-anbu-gowri/' },
   { icon: Code2, label: 'GitHub: Harsha-anbu-g', href: 'https://github.com/Harsha-anbu-g' },
