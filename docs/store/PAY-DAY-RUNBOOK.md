@@ -64,11 +64,11 @@ section 6.
 DONE 2026-08-15, owner confirmed the mail arrives and a person reads it.
 Five public pages, both store contact fields and App Review all write there.
 
-**0.6 Settle the PostHog question.** The production backend has
-`POSTHOG_API_KEY` set, and the server sends the plain email address as the
-signup event id. Three rows of both privacy forms depend on which way this goes.
-The two paths are in `privacy-labels.md` section 5 item 1. Do not open either
-privacy form until it is decided.
+**0.6 Settle the PostHog question.** DONE 2026-08-15: the owner chose to turn
+it off. `POSTHOG_API_KEY` was deleted from production and the backend
+redeployed without it, verified by read-back. The privacy labels in
+`privacy-labels.md` stand exactly as written; the three formerly blocked rows
+are resolved in section 5 item 1. Nothing to decide on the day.
 
 ---
 

@@ -145,13 +145,14 @@ hour spent here is an hour not spent on the meter.
   `user_signed_up` at `AuthService.java:173`, keys on the user UUID instead, so
   only the first one carries the address.
 
-  **What it changes.** Both privacy forms must now declare Email plus Analytics
-  shared with a third party. The rows to flip are listed in
-  `App/docs/store/privacy-labels.md` section 5 item 1, and the console answers
-  are tracked in `App/docs/store/app-store-connect-fields.md`. The alternative
-  is to clear `POSTHOG_API_KEY` on the production backend before submitting,
-  which is a one-command owner action that restores the labels as written.
-  Either answer is fine. Submitting the old labels with the key set is not.
+  **RESOLVED 2026-08-15: the key is gone.** The owner chose to clear it.
+  `POSTHOG_API_KEY` was deleted from the `backend` service in production,
+  verified by a read-back (38 variables remain, the key absent), and the
+  backend was redeployed the same hour so the running server dropped it from
+  memory. `PostHogService` is a documented no-op with a blank key, so the
+  privacy labels in `App/docs/store/privacy-labels.md` stand exactly as
+  written and no legal page changes. The three formerly blocked rows are
+  resolved to No / not shared in that file, section 5 item 1.
 - [ ] **Enter the privacy answers in both consoles** [owner] from
   `App/docs/store/privacy-labels.md` (Apple App Privacy questionnaire, Play
   Data safety form). Only the account holder can fill console forms. Blocks
