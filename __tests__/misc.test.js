@@ -98,9 +98,12 @@ describe('DEEP-21: founder card text meets the 16px body floor', () => {
     expect(sizeOf(pitch)).toBeGreaterThanOrEqual(16);
     expect(sizeOf(blurb)).toBeGreaterThanOrEqual(16);
 
-    // Contact rows carry addresses that have to be read exactly.
-    expect(sizeOf(r.getByText('agharsha.anbu@gmail.com'))).toBeGreaterThanOrEqual(16);
-    expect(sizeOf(r.getByText('+1 438-535-5782 (WhatsApp)'))).toBeGreaterThanOrEqual(16);
+    // Contact rows carry addresses that have to be read exactly. The mail row
+    // is the support address since 2026-08-15: the personal Gmail and the
+    // WhatsApp number left the app before store submission (owner decision).
+    expect(sizeOf(r.getByText('help@towinly.com'))).toBeGreaterThanOrEqual(16);
+    expect(r.queryByText(/agharsha\.anbu@gmail\.com/)).toBeNull();
+    expect(r.queryByText(/438-535-5782/)).toBeNull();
     expect(sizeOf(r.getByText('Visit my portfolio'))).toBeGreaterThanOrEqual(16);
 
     // The credential line is secondary, so meta (14) is its floor, but it must
@@ -114,13 +117,13 @@ describe('DEEP-30: a contact tap that opens nothing says so', () => {
     const openURL = jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
     const r = await wrap(<CreatorCard />);
 
-    await fireEvent.press(r.getByLabelText('agharsha.anbu@gmail.com'));
+    await fireEvent.press(r.getByLabelText('help@towinly.com'));
 
-    await waitFor(() => expect(openURL).toHaveBeenCalledWith('mailto:agharsha.anbu@gmail.com'));
+    await waitFor(() => expect(openURL).toHaveBeenCalledWith('mailto:help@towinly.com'));
     // The toast is the only feedback there is, so it has to say the tap failed
     // AND hand the address back (the row's own label is the second match).
     await waitFor(() => expect(r.getAllByText(/mail app/i).length).toBeGreaterThan(0));
-    expect(r.getAllByText(/agharsha\.anbu@gmail\.com/i).length).toBeGreaterThan(1);
+    expect(r.getAllByText(/help@towinly\.com/i).length).toBeGreaterThan(1);
 
     openURL.mockRestore();
     r.unmount();
