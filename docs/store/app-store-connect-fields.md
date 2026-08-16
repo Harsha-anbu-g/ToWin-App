@@ -327,10 +327,16 @@ reviews from people the product was never designed for.
    published contact, and the deletion page promises a reply within seven days.
    Two countries in a language the founder speaks is what one person can answer
    inside that promise. Guideline 1.5 judges whether support is real.
-4. **Leaving the EU out at launch is deliberate.** EU distribution requires a
-   Digital Services Act trader declaration, and a trader's name, address and
-   phone number are published to every EU user. That is a decision to make with
-   the account holder awake, not a box ticked on submission night.
+4. **Leaving the EU out at launch is deliberate.** One correction from the
+   2026-08-15 primary-source check: App Store Connect asks the trader status
+   question on every new app submission, EU or not. Apple's words: "Even if
+   you don't distribute apps in the EU, you'll still need to declare a trader
+   status." What EU distribution adds is publication: a trader's name, address
+   and phone number shown to every EU user (an individual may list a P.O. Box).
+   With the EU off, answer the declaration honestly and nothing is published.
+   Towinly runs dated marketing campaigns, so the honest answer is trader.
+   Switching the EU on later is the decision to make with the account holder
+   awake, not a box ticked on submission night.
 5. **Adding countries later needs no review.** Availability is a settings change
    on a live app. Starting narrow costs nothing and is reversible in a minute.
 6. **India is a market, not a hedge.** The product answers a specific Indian
@@ -402,7 +408,7 @@ Ship the still set, add a preview when the app has usage to film.
 | Support URL | `https://www.towinly.com/app/support` | READY, corrected 2026-08-15 |
 | Marketing URL | `https://www.towinly.com` | READY |
 | Version | `1.0.0` | READY, matches `app.json` |
-| Copyright | `2026 <legal entity>` | **USER INPUT NEEDED** |
+| Copyright | `2026 <owner's legal name>`, individual enrollment decided 2026-08-15 | **USER INPUT NEEDED**, spelling per photo ID |
 | Routing App Coverage File | Leave empty. Towinly is not a maps app. | READY |
 | Build | Select after TestFlight finishes processing | AFTER BUILD |
 

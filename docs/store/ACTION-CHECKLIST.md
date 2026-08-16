@@ -42,11 +42,11 @@ hour spent here is an hour not spent on the meter.
 - [x] **Prove the privacy page and the support page are live and correct.**
   DONE 2026-08-15. Both return 200 and both render the right document in a real
   browser. Evidence in section 3.
-- [ ] **Decide individual or organization enrollment.** [owner] The enrollment
-  type sets the seller name shown beside the app, and changing it later means a
-  new enrollment and a transfer. The organization path needs a DUNS number
-  first, and that wait lands entirely before the payment step. Analysis and a
-  recommendation: `App/docs/store/enrollment-decision.md`.
+- [x] **Decide individual or organization enrollment.** DECIDED 2026-08-15:
+  **individual**, chosen by the owner in session. The seller name will be the
+  owner's legal personal name; confirm it against the government photo ID
+  before enrolling. The DUNS item in section 2 no longer applies. Analysis and
+  the conditions that would reopen it: `App/docs/store/enrollment-decision.md`.
 - [x] **Aggregate the iOS privacy manifest statically.** DONE 2026-08-15.
   8 manifests found by glob, 4 API categories, 7 reason codes, zero tracking
   and zero declared collection. No row contradicts the store labels. Full table
@@ -98,9 +98,10 @@ hour spent here is an hour not spent on the meter.
   [owner then repo] Free, no Apple money, but it needs the owner's browser.
   `eas whoami` prints `Not logged in` today. Commands in
   `App/docs/store/PAY-DAY-RUNBOOK.md`.
-- [ ] **Send a test message to help@towinly.com and confirm a person receives
-  it.** [owner] Five public pages, both store contact fields and App Review all
-  write to that address. Apple writes to it first.
+- [x] **Send a test message to help@towinly.com and confirm a person receives
+  it.** DONE 2026-08-15, confirmed by the owner in session: the mail arrives
+  and a person reads it. Five public pages, both store contact fields and App
+  Review all write to that address. Apple writes to it first.
 
 ---
 
@@ -108,12 +109,12 @@ hour spent here is an hour not spent on the meter.
 
 - [ ] **Enroll in the Apple Developer Program, 99 USD per year.** [owner]
   Blocks launch because no App Store Connect app record can exist without it,
-  and every iOS item below depends on that record. Settle the enrollment type
-  first: see section 1.
-- [ ] **Get a DUNS number first if enrolling as a company.** [owner] Apple
-  requires a DUNS number for organization accounts. Individual enrollment skips
-  it and shows the personal legal name as the seller on the store. Blocks Apple
-  enrollment for a company account, so decide before starting the 99 USD step.
+  and every iOS item below depends on that record. The enrollment type is
+  settled: **individual**, decided 2026-08-15 (section 1).
+- [x] **Get a DUNS number first if enrolling as a company.** NOT APPLICABLE:
+  the owner decided individual enrollment on 2026-08-15, which skips the DUNS
+  number entirely and shows the personal legal name as the seller. Kept here
+  in case the decision is ever reopened per `enrollment-decision.md` section 6.
 - [ ] **Register a Google Play Console developer account, 25 USD one time.**
   [owner] Blocks launch because there is no Play listing, no closed-testing
   track and no Data safety form without it. Register it the same day as the
@@ -171,7 +172,8 @@ hour spent here is an hour not spent on the meter.
   `https://www.towinly.com/app/privacy` above the first section. Neither store
   demands lawyer sign-off, so this blocks credibility rather than review. The
   banner is on screen for every reviewer and every user.
-- [ ] **Send a test message to help@towinly.com.** [owner] See section 1.
+- [x] **Send a test message to help@towinly.com.** DONE 2026-08-15, owner
+  confirmed. See section 1.
 
 ---
 

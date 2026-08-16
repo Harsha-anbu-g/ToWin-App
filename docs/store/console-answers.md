@@ -464,7 +464,7 @@ gives the three ways out.
 | Support URL | `https://www.towinly.com/app/support` | READY, HTTP 200 on 2026-08-15 |
 | Marketing URL | `https://www.towinly.com` | READY |
 | Version | `1.0.0`, matching `app.json` | READY |
-| Copyright | `2026 <legal entity>`, set by the enrollment type | **OWNER** |
+| Copyright | `2026 Harshavardhan Anbuchezhian Gowri`. Individual enrollment, and the name was confirmed against the government photo ID on 2026-08-15. Paste as written. | READY |
 | Routing App Coverage File | Leave empty | READY |
 | Build | Select after TestFlight processing finishes | ACCOUNT |
 | Version Release | **Manually release this version** | READY |
@@ -642,7 +642,7 @@ open question. Each one is a paste or a click.
 
 | # | Item | Why it waits |
 |---|---|---|
-| 1 | Enrollment type: individual or organization | Sets the seller name on the store page and the copyright line. Analysis in `enrollment-decision.md`. Decide this **before** paying. |
+| 1 | Enrollment type: individual or organization | DECIDED 2026-08-15: **individual**. Seller name is the owner's legal personal name. Record in `enrollment-decision.md`. |
 | 2 | Legal entity name, postal address | Real legal identity. Never guessed. |
 | 3 | D-U-N-S number | Only for an organization enrollment, and the wait lands entirely before the payment step. |
 | 4 | Register `com.towinly.app` as an explicit App ID | The New App dialog will not offer the bundle ID until it exists in the developer portal. |
@@ -650,7 +650,7 @@ open question. Each one is a paste or a click.
 | 6 | Team ID, ten characters, from Membership | `eas submit` wants it as `appleTeamId`. |
 | 7 | App Review contact: first name, last name, phone with country code, email | Section 6.1. |
 | 8 | Legal, Technical and Marketing contacts | Account settings. The same person at this size. |
-| 9 | Copyright line, `2026 <legal entity>` | Follows item 1. |
+| 9 | Copyright line, `2026 <owner's legal name>` | Item 1 is decided: individual. Only the exact spelling against the photo ID remains. |
 | 10 | Select the build after TestFlight processing | There is no build until EAS produces one. |
 
 **Needs the Play account:**
