@@ -109,7 +109,7 @@ Functionality** for all types unless a second purpose is listed.
 | Identifiers | User ID | **Yes** | App Functionality | Username (public), backend account id, session JWT. |
 | Identifiers | Device ID | No | | Nothing reads or sends one. |
 | Purchases | all | No | | No payments in the app. |
-| Usage Data | Product Interaction / Advertising / Other | **PostHog-blocked** | | No client analytics SDK. The **server** sends a signup event to PostHog and the production key is set, confirmed 2026-08-15. Answer this only after the section 5 item 1 decision. |
+| Usage Data | Product Interaction / Advertising / Other | **No** | | No client analytics SDK, and the server PostHog path is dead: the owner cleared `POSTHOG_API_KEY` from production on 2026-08-15 and the backend redeployed without it (section 5 item 1). |
 | Diagnostics | Crash / Performance / Other | No | | No crash or performance SDK. |
 | Environment Scanning / Body / Surroundings | all | No | | |
 | Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/register.jsx`), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`). Trust score goes to Groq with AI questions, after consent. |
@@ -157,7 +157,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | Play category | Data type | Collected? | Shared? | Optional? | Purpose(s) |
 |---|---|---|---|---|---|
 | Personal info | Name | **Yes** | **Yes** (first name to Groq, only with the user's one-time consent, only when they use Ask AI) | Optional | App functionality |
-| Personal info | Email address | **Yes** | **PostHog-blocked** (the server sends the plaintext address as the signup event id and the production key is set, confirmed 2026-08-15; section 5 item 1) | Required | App functionality, Account management |
+| Personal info | Email address | **Yes** | **No** (resolved 2026-08-15: the owner cleared the production PostHog key and the backend redeployed, so the plaintext-email signup event no longer leaves the server; section 5 item 1) | Required | App functionality, Account management |
 | Personal info | User IDs | **Yes** | No | Required | App functionality, Account management |
 | Personal info | Address | No | | | |
 | Personal info | Phone number | **Yes** | No (Twilio delivers SMS as a service provider) | Optional | App functionality |
@@ -173,7 +173,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | Files and docs | all | No | | | |
 | Calendar | all | No | | | |
 | Contacts | Contacts | **Yes** | No (Twilio texts them as a service provider) | Optional | App functionality. Hand-typed emergency contacts (name, phone, relationship) and the family-link identifier. No address book permission exists; say so in the free-text box. |
-| App activity | App interactions | **PostHog-blocked** | | | No client analytics SDK. The server sends `user_signup_started` and `user_signed_up` to PostHog and the production key is set, confirmed 2026-08-15. Section 5 item 1. |
+| App activity | App interactions | **No** | | | No client analytics SDK, and the server `user_signup_started` / `user_signed_up` events stopped on 2026-08-15 when the owner cleared the production key. Section 5 item 1. |
 | App activity | In-app search history | No | | | |
 | App activity | Installed apps | No | | | |
 | App activity | Other user-generated content | **Yes** | No | Optional | App functionality. Bio, help requests, reviews, feedback, reports, Pass On stories, letters and Sealed items. |
@@ -255,8 +255,14 @@ No ads. No data brokers. No sale of personal data.
    `AuthService.java:173`, keys on the user UUID, so only the first carries an
    address.
 
-   **Two honest paths, and the owner picks one before either form is
-   submitted.**
+   **DECIDED AND DONE 2026-08-15: the owner chose the second path.**
+   `POSTHOG_API_KEY` was deleted from the production backend (verified by a
+   read-back: 38 variables remain, the key absent) and the backend was
+   redeployed the same hour so the running server dropped it from memory.
+   `PostHogService` is a documented no-op with a blank key
+   (`PostHogService.java:22-26`), so the labels stand exactly as written and
+   no legal page changes. The three rows below are resolved to **No** /
+   **not shared**. The two paths are kept for the record:
    - **Keep PostHog on.** Then Apple `Usage Data / Product Interaction` becomes
      collected and linked, `Identifiers / User ID` stays yes, Play
      `Personal info / Email address` becomes **shared** with an analytics third
