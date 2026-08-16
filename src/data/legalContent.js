@@ -231,7 +231,10 @@ export function privacySections(email) {
         + 'it sees the phone number a message is going to. OpenStreetMap turns the name of your '
         + 'town into a rough position, and is told nothing about you. Groq writes the answers '
         + 'from the Towinly helper, and only when you have said yes to that. Railway runs the '
-        + 'servers everything sits on. None of them are allowed to sell your information or use '
+        + 'servers everything sits on. Expo delivers the notification that makes your phone '
+        + 'ring, and sees the delivery address your phone made for that purpose and the few '
+        + 'words on the ping itself, such as a name. It never sees what a message says. '
+        + 'None of them are allowed to sell your information or use '
         + 'it for their own purposes.' },
 
     { h: 'Who can see what',

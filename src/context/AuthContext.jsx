@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import * as Store from '../lib/storage';
 import { setOnSessionExpired, setTokenGetter } from '../api/client';
 import { clearDrafts } from '../lib/chatDrafts';
+import { unregisterPushAsync } from '../lib/pushNotifications';
 import { parseJwtPayload } from '../lib/jwt';
 import { KEYS } from '../lib/storageKeys';
 import {
@@ -45,6 +46,11 @@ export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
+    // Silence this phone for the account that is leaving. Fired BEFORE the
+    // user state clears, with the JWT passed explicitly, because the shared
+    // token getter goes null on the next line and the request would otherwise
+    // leave unauthenticated. Fire-and-forget: sign-out never waits on it.
+    unregisterPushAsync(userRef.current?.token);
     setUser(null);
     // The next account on this phone must not see this account's cached
     // private data (chats, connections, profile) — wipe the query cache and

@@ -264,8 +264,11 @@ closed, and the answers are good news for the individual path:
   new account and a full transfer, so the individual start keeps the most
   doors open. (support.google.com/googleplay/android-developer/answer/13634888)
 - **Nothing in the shipped app blocks a future Apple transfer.** No Sign in
-  with Apple, no Apple Pay, no iCloud, no push entitlements: verified against
-  `app.json`, `package.json` and source. And the old belief that Sign in with
+  with Apple, no Apple Pay, no iCloud: verified against `app.json`,
+  `package.json` and source. Push notifications arrived 2026-08-16 with the
+  notification feature, and they are not on Apple's transfer blocker list
+  either: the recipient team mints its own APNs key after a transfer and
+  delivery resumes. And the old belief that Sign in with
   Apple blocks transfers is outdated. Apple's current criteria list does not
   include it. The real cost, if it is ever added: its user IDs are team-scoped,
   so a transfer then needs Apple's TN3159 user migration or every signed-in

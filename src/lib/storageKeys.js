@@ -17,6 +17,9 @@ export const KEYS = {
   // Renamed away from 'towin-theme', which is the website's legacy theme key —
   // a night-mode toggle on the phone used to flip the desktop site.
   theme: 'towinly-app-theme',
+  // The Expo push token registered for this device, kept so sign-out can
+  // silence exactly this phone. Native builds only; never written on web.
+  pushToken: 'towinly-push-token',
   haptics: 'towin-haptics',
   checkinPrompted: 'towin-checkin-prompted',
   checkinExplained: 'towin-checkin-explained',

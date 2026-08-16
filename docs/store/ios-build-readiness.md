@@ -41,7 +41,7 @@ the prebuild output is the truth** and introspect was wrong. Details in section 
 | `ios.buildNumber` | not set in app.json | Correct for remote versioning, see below |
 | `ITSAppUsesNonExemptEncryption` | `false` | Present, skips the export compliance prompt on every upload |
 | `ios.supportsTablet` | `false` | Deliberate, see section 6 |
-| `ios.entitlements` | `{}` (empty) | Correct, no push, no associated domains, no Sign in with Apple |
+| `ios.entitlements` | `aps-environment` expected since 2026-08-16 | The push feature added the `expo-notifications` plugin, so prebuild now writes the push entitlement. The 2026-08-15 dry run predates this; re-run `npx expo prebuild` before the first build and expect exactly `aps-environment`, still no associated domains and no Sign in with Apple. EAS asks to create an APNs key on the next build: answer yes now. |
 | `CFBundleURLSchemes` | `towinly`, `com.towinly.app` | Correct |
 | `CFBundleDisplayName` | `Towinly` | Correct |
 | `UIUserInterfaceStyle` | `Light` | Matches the light-only design decision |

@@ -12,6 +12,7 @@ import { loadHapticsPreference } from '../src/lib/haptics';
 import { registerServiceWorker } from '../src/lib/registerServiceWorker';
 import FontGate from '../src/components/FontGate';
 import OfflineBanner from '../src/components/OfflineBanner';
+import PushRegistrar from '../src/components/PushRegistrar';
 import LiveRegion from '../src/components/ui/LiveRegion';
 
 const queryClient = new QueryClient({
@@ -123,6 +124,10 @@ export default function RootLayout() {
                   and outside AppFrame because the dialog portals to the whole
                   viewport on web rather than into the 560pt phone column. */}
               <ConfirmProvider>
+                {/* Renders nothing: push permission, token registration and
+                    tap routing. Inside AuthProvider (it watches the user)
+                    and outside AppFrame (it draws nothing to frame). */}
+                <PushRegistrar />
                 <AppFrame>
                   <ThemedShell />
                 </AppFrame>
