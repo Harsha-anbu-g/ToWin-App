@@ -2,6 +2,7 @@
   "expo": {
     "name": "Towinly",
     "slug": "towinly",
+    "owner": "harshavardhan_ag",
     "version": "1.0.0",
     "runtimeVersion": {
       "policy": "fingerprint"
@@ -17,7 +18,11 @@
       "resizeMode": "contain"
     },
     "extra": {
-      "apiBaseUrl": "https://backend-production-cef3.up.railway.app/api"
+      "apiBaseUrl": "https://backend-production-cef3.up.railway.app/api",
+      "router": {},
+      "eas": {
+        "projectId": "6cf0141c-c99a-4663-87df-12f271989e7b"
+      }
     },
     "ios": {
       "supportsTablet": false,
