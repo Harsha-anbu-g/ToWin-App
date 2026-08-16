@@ -35,6 +35,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "appleId": "agharsha.anbu@gmail.com",
+        "ascAppId": "6802125342",
+        "appleTeamId": "G6RRNXL9BV"
+      }
+    }
   }
 }
