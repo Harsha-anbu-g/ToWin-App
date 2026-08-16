@@ -1,5 +1,11 @@
 # Individual or organization: decide this before the 99 USD
 
+**DECIDED 2026-08-15: individual.** The owner chose the individual path in
+session after reading this analysis. The rest of this document is kept as the
+record of why, and for the conditions in section 6 that would reopen it.
+The legal name is confirmed too: **Harshavardhan Anbuchezhian Gowri**, checked
+against the Indian passport, and the Apple Account already matches it exactly.
+
 Apple asks for the enrollment type before it takes the money, and the answer
 sets the name that every elder and every worried daughter sees beside the app.
 It is the one choice on enrollment day that is expensive to undo.
@@ -70,9 +76,10 @@ Towinly already publishes under the founder's name rather than an alias, which
 `app-store-connect-fields.md` section 0 also notes. So an individual enrollment
 matches what has already shipped.
 
-**Needs confirmation from the owner:** the exact legal name as it appears on the
-government photo ID. It must match the Apple Account name or enrollment goes on
-a silent hold, per the runbook. This document does not guess at a legal name.
+**Confirmed 2026-08-15 against the Indian passport:** the legal name is
+**Harshavardhan Anbuchezhian Gowri** (given name Harshavardhan, surname
+Anbuchezhian Gowri), and the Apple Account on the owner's iPhone already shows
+exactly this name, letter for letter. No correction needed before enrollment.
 
 ### The copyright line
 
@@ -148,6 +155,47 @@ Three things worth weighing before the table tempts you:
 That last point is why the recommendation below still holds. But the choice
 should be made knowing the exemption exists, not in ignorance of it.
 
+### What each store publishes about you, verified 2026-08-15
+
+Checked against Apple's and Google's own pages by a 33-agent primary-source
+sweep on 2026-08-15. These are the facts that usually surprise a founder after
+the money is spent.
+
+- **Google Play shows your legal name, your country and your developer email
+  on the listing, in every country, for a personal account.** Google's words:
+  "Google will display your legal name, your country (as per your legal
+  address), and developer email address on Google Play."
+  (support.google.com/googleplay/android-developer/answer/13628312)
+- **Your full street address becomes public on Play only if the app ever
+  monetizes.** Merchant accounts "must show their full address on Google
+  Play", taken from the payments profile.
+  (support.google.com/googleplay/android-developer/answer/13634081) Towinly is
+  free today, so no address shows. The day payments land, decide first whose
+  address sits in that payments profile. A mailbox service beats a home
+  address.
+- **On Play, an organization account is less private for a person, in one
+  way.** Organization accounts must show a verified phone number publicly.
+  Personal accounts show only the email.
+  (support.google.com/googleplay/android-developer/answer/13634888)
+- **Apple publishes an address or phone only under the EU trader rule, and
+  only when the app is distributed in the EU's 27 territories.** Towinly ships
+  to the United States and India, so nothing is published. The trader status
+  question must still be answered in App Store Connect either way; skipping
+  the EU only stops the publication, not the declaration.
+  (developer.apple.com/help/app-store-connect/manage-compliance-information/manage-european-union-digital-services-act-trader-requirements/)
+  If the EU is ever switched on, an individual may list a P.O. Box there. An
+  organization gets its D-U-N-S address shown with no console override.
+- **The Apple developer name shown under the app title is set once, at the
+  first app record, and cannot be edited later.** For an individual it is the
+  legal name, with no choice offered.
+  (developer.apple.com/help/app-store-connect/create-an-app-record/set-your-developer-name/)
+- **One category trap on Play:** Google requires an organization account for
+  health applications, financial services, VPNs and government apps.
+  (support.google.com/googleplay/android-developer/answer/13634885) Towinly's
+  store category is companionship and trust, not health. Keep it that way on
+  the console forms: a health categorization as a personal account is a
+  rejection, and "Company is healthcare" is a brand line, not a store answer.
+
 ### Payments and worker classification, later rather than now
 
 `console-answers.md` section on financial features records the app as having no
@@ -187,13 +235,41 @@ create an organization account and use App Transfer to move the app across.
 Both are real, both take days of back and forth, and neither should be started
 mid review. An App Transfer moves the existing app across rather than starting a
 second listing, which is what makes the individual route survivable.
-**Needs confirmation:** whether ratings and reviews carry across the transfer.
-Apple documents the behaviour on its own transfer page, and the repo does not
-record it.
 
-**Needs confirmation:** the equivalent transfer path on Google Play. The repo
-does not document it, and `mobile-release-ops` only records that a package name
-can never be reused, which is a different question.
+**Confirmed 2026-08-15, primary sources.** Both former open questions are
+closed, and the answers are good news for the individual path:
+
+- **Ratings and reviews survive an Apple transfer.** Apple's words: "During
+  and after the transfer, the app retains its reviews and ratings, and users
+  continue to receive updates." The bundle ID, the App ID and the full
+  analytics history go to the recipient too. TestFlight builds and testers do
+  not: they must be removed before the transfer.
+  (developer.apple.com/help/app-store-connect/transfer-an-app/overview-of-app-transfer)
+- **Apple also converts an individual membership to an organization in
+  place**, by support request with a D-U-N-S number, so the transfer may never
+  be needed. No timeline is published; 2026 forum reports run from about two
+  weeks to six. (developer.apple.com/help/account/membership/updating-your-account-information/)
+  One question Apple does not answer in writing: whether that conversion
+  updates the one-time developer name under the app title. Ask support before
+  creating the first app record.
+- **Google Play transfers everything.** "All users, statistics, data,
+  comments, ratings, subscriptions, and others that are related to the app are
+  also transferred." No fee, about 2 business days of review. It needs the
+  registration transaction ID from the original 25 USD receipt email, so keep
+  that email forever. Test tracks do not transfer.
+  (support.google.com/googleplay/android-developer/answer/6230247)
+- **Google Play also converts a personal account to an organization in
+  place**, by creating and linking a new verified organization payments
+  profile. The reverse is unsupported: organization back to personal means a
+  new account and a full transfer, so the individual start keeps the most
+  doors open. (support.google.com/googleplay/android-developer/answer/13634888)
+- **Nothing in the shipped app blocks a future Apple transfer.** No Sign in
+  with Apple, no Apple Pay, no iCloud, no push entitlements: verified against
+  `app.json`, `package.json` and source. And the old belief that Sign in with
+  Apple blocks transfers is outdated. Apple's current criteria list does not
+  include it. The real cost, if it is ever added: its user IDs are team-scoped,
+  so a transfer then needs Apple's TN3159 user migration or every signed-in
+  user becomes a stranger. (developer.apple.com/help/app-store-connect/transfer-an-app/app-transfer-criteria)
 
 ---
 
@@ -207,7 +283,7 @@ can never be reused, which is a different question.
 | Seller name on the store | The account holder's legal name | The company name |
 | People with portal access | One | Many, with roles |
 | Realistic time to active | A day or two, budget a week | The D-U-N-S wait, then enrollment |
-| Reversible | Through support, or a new account plus App Transfer | Same |
+| Reversible | Yes, both stores convert in place: Apple by support request, Play by a new organization payments profile | Play cannot go back to personal; Apple direction undocumented |
 
 ---
 
@@ -220,10 +296,10 @@ Read this only if section 6 does not convince you.
 2. Apple links its own D-U-N-S lookup and request form from the enrollment flow
    at `developer.apple.com/programs/enroll`. Start there rather than from a
    search engine, because a paid intermediary looks similar and this is free.
-3. `APPLE-DAY-ONE-RUNBOOK.md` section 1 records the number as free, with a wait
-   from a few days to a few weeks when the entity does not already have one.
-   **Needs confirmation on the day:** Apple states its own current timing on that
-   page, and it moves.
+3. Free, and Apple states its own numbers as of 2026-08-15: up to 5 business
+   days for D&B to issue, then up to 2 business days for Apple to receive it
+   (developer.apple.com/support/D-U-N-S/). The unbounded part is Apple's
+   organization review after that, which has no published timeline.
 4. The whole wait lands **before** the 99 USD step, which `console-answers.md`
    item 3 also records. So an organization enrollment does not cost more money.
    It costs the calendar.
@@ -283,13 +359,23 @@ rejected application and a restart.
 
 ## 7. Before you click enroll
 
-- [ ] Enrollment type chosen: individual or organization.
-- [ ] The exact legal name confirmed against the government photo ID, and the
-      Apple Account name corrected first if it differs.
+- [x] Enrollment type chosen: **individual**, decided by the owner 2026-08-15.
+- [x] The exact legal name confirmed against the government photo ID: DONE
+      2026-08-15. Indian passport reads surname **Anbuchezhian Gowri**, given
+      name **Harshavardhan**. The Apple Account on the owner's iPhone shows
+      **Harshavardhan Anbuchezhian Gowri**, an exact match, verified against a
+      screenshot of Settings. No correction needed.
 - [ ] Two factor authentication on, on an Apple Account you will control for
       years. The account becomes the Account Holder and cannot be swapped
-      casually.
-- [ ] The copyright line settled as `2026 <that same legal identity>`, ready to
-      paste into the field listed in `console-answers.md`.
-- [ ] The same identity decided for Google Play, so the two stores do not show
-      two different sellers.
+      casually. Check in Settings > your name > Sign-In & Security.
+- [x] The copyright line settled: **`2026 Harshavardhan Anbuchezhian Gowri`**,
+      ready to paste into the field listed in `console-answers.md`.
+- [x] The same identity decided for Google Play: Personal account type, same
+      legal name, so the two stores do not show two different sellers.
+- [ ] Ask Apple support one question before creating the first app record:
+      does converting an individual membership to an organization later update
+      the developer name shown under the app title? That name is set once and
+      Apple does not answer this in writing. The answer decides whether the
+      individual start ever costs the brand anything.
+- [ ] Keep the Google Play 25 USD registration receipt email forever. A future
+      app transfer requires the registration transaction ID from it.

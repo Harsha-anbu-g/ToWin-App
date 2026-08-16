@@ -32,10 +32,10 @@ Frozen, never edited on the day: bundle identifier and Android package
 
 Nothing here costs Apple money. All of it is slower to do at midnight.
 
-**0.1 Choose the enrollment type.** Read `enrollment-decision.md`. The
-recommendation is individual. It sets the seller name every elder and every
-adult child sees, and changing it later means a support conversion or an App
-Transfer over days.
+**0.1 Choose the enrollment type.** DECIDED 2026-08-15: **individual**, chosen
+by the owner. Record in `enrollment-decision.md`. It sets the seller name every
+elder and every adult child sees, and changing it later means a support
+conversion or an App Transfer over days. On the day, skip straight to 0.2.
 
 **0.2 Ready the Apple Account.** Two factor authentication on, on an address you
 will control for years. It becomes the Account Holder and cannot be swapped
@@ -61,6 +61,7 @@ Review and commit the `app.json` diff. Full notes in `submit-config.md`
 section 6.
 
 **0.5 Send a test message to `help@towinly.com` and confirm a person reads it.**
+DONE 2026-08-15, owner confirmed the mail arrives and a person reads it.
 Five public pages, both store contact fields and App Review all write there.
 
 **0.6 Settle the PostHog question.** The production backend has

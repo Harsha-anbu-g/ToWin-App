@@ -68,7 +68,7 @@ Apple or Google, so all of it can close before enrollment.
 |---|---|---|
 | A1 | **No Support URL exists.** App Store Connect will not accept a submission without one. | Human decision, then repo |
 | A2 | **The app name is written two ways.** Settle it before the App Store Connect record is created, because renaming later needs a version review. | Human decision |
-| A3 | **help@towinly.com has never been proven to reach a person.** Five public pages, both store contact fields and App Review all write to it. | Human |
+| A3 | **help@towinly.com reaches a person.** CLOSED 2026-08-15: owner confirmed delivery. Five public pages, both store contact fields and App Review all write to it. | Human, done |
 | A4 | **A reviewer testing account deletion can permanently destroy a demo seat.** | Backend, or seed a spare seat |
 | A5 | **EAS is not set up.** eas-cli is not installed, the project is not linked, and EAS Update is not configured. | Human, free Expo account |
 | A6 | **The production PostHog flag is unverified.** If it is on, both privacy forms change. | Human, one command |
@@ -79,7 +79,7 @@ Apple or Google, so all of it can close before enrollment.
 
 | # | Blocker | Owner |
 |---|---|---|
-| B1 | Apple Developer Program enrollment, 99 USD a year, plus the individual or organization decision. | Human |
+| B1 | Apple Developer Program enrollment, 99 USD a year. The individual-or-organization decision is made: **individual**, 2026-08-15. | Human |
 | B2 | Google Play developer registration, 25 USD once, plus identity verification. Takes 1 to 3 days. | Human |
 | B3 | `com.towinly.app` has never been checked for global uniqueness. Registering the App ID is the last cheap moment to find a clash. | Human, enrollment day |
 | B4 | iOS signing credentials. EAS makes these on the first production build. | Human, enrollment day |
@@ -105,8 +105,8 @@ Everything below is free and none of it needs Apple or Google.
    `https://www.towinly.com/app/delete-account`, which is live today and names
    a contact address. The better answer is a real `/app/support` page in this
    repo, about an hour of work.
-3. **Send a test message to help@towinly.com and confirm it arrives.** Do this
-   before anything else depends on it. Apple writes to this address.
+3. **Send a test message to help@towinly.com and confirm it arrives.** DONE
+   2026-08-15, owner confirmed. Apple writes to this address.
 4. **Run `railway variables` on the production backend and read
    `POSTHOG_API_KEY`.** If it has a value, the server records a signup event
    keyed on the plain email, and several privacy answers flip to yes. If it is
