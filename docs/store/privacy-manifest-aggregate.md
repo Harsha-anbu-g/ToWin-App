@@ -30,18 +30,33 @@ npx jest privacy-manifest
 
 ---
 
-## 1. The eight manifests
+## 1. The eleven manifests
+
+Eight at the 2026-08-15 pass. Three more on 2026-08-16, when the push
+notification feature added expo-notifications and expo-device (which pulls in
+expo-application). All three declare API categories and reason codes that were
+ALREADY in the union below, zero tracking and zero collected data, so section 2
+gained no new row: only the "Declared by" columns widened.
 
 | # | File | Package |
 |---|---|---|
-| 1 | `expo-constants/ios/PrivacyInfo.xcprivacy` | expo-constants |
-| 2 | `expo-file-system/ios/PrivacyInfo.xcprivacy` | expo-file-system |
-| 3 | `expo-system-ui/ios/PrivacyInfo.xcprivacy` | expo-system-ui |
-| 4 | `react-native/React/Resources/PrivacyInfo.xcprivacy` | react-native |
-| 5 | `react-native/ReactCommon/cxxreact/PrivacyInfo.xcprivacy` | react-native |
-| 6 | `react-native/third-party-podspecs/RCT-Folly/PrivacyInfo.xcprivacy` | react-native |
-| 7 | `react-native/third-party-podspecs/boost/PrivacyInfo.xcprivacy` | react-native |
-| 8 | `react-native/third-party-podspecs/glog/PrivacyInfo.xcprivacy` | react-native |
+| 1 | `expo-application/ios/PrivacyInfo.xcprivacy` | expo-application |
+| 2 | `expo-constants/ios/PrivacyInfo.xcprivacy` | expo-constants |
+| 3 | `expo-device/ios/PrivacyInfo.xcprivacy` | expo-device |
+| 4 | `expo-file-system/ios/PrivacyInfo.xcprivacy` | expo-file-system |
+| 5 | `expo-notifications/ios/PrivacyInfo.xcprivacy` | expo-notifications |
+| 6 | `expo-system-ui/ios/PrivacyInfo.xcprivacy` | expo-system-ui |
+| 7 | `react-native/React/Resources/PrivacyInfo.xcprivacy` | react-native |
+| 8 | `react-native/ReactCommon/cxxreact/PrivacyInfo.xcprivacy` | react-native |
+| 9 | `react-native/third-party-podspecs/RCT-Folly/PrivacyInfo.xcprivacy` | react-native |
+| 10 | `react-native/third-party-podspecs/boost/PrivacyInfo.xcprivacy` | react-native |
+| 11 | `react-native/third-party-podspecs/glog/PrivacyInfo.xcprivacy` | react-native |
+
+Push-feature note for section 2, kept here so the counts read honestly:
+expo-notifications and expo-application declare `UserDefaults CA92.1` (the
+notification settings each library remembers), expo-application declares
+`FileTimestamp C617.1`, and expo-device declares `SystemBootTime 35F9.1`. Each
+sentence in section 2 stays true as written.
 
 ## 2. The union: four API categories, seven reason codes
 

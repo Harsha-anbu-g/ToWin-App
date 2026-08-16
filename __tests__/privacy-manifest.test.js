@@ -61,7 +61,13 @@ function packageOf(relPath) {
  * store labels. That is exactly the work the test refuses to let anyone skip.
  */
 const PINNED = {
-  manifestCount: 8,
+  // Re-pinned 2026-08-16 for the push feature: expo-notifications, expo-device
+  // and expo-application (pulled in by expo-device) each ship a manifest. All
+  // three declare API categories and reason codes ALREADY in the aggregate
+  // below, zero tracking and zero collected data, so the union is unchanged in
+  // kind. The count and package list are the only movement. The deliberate-act
+  // paperwork: docs/store/privacy-manifest-aggregate.md, same-day entry.
+  manifestCount: 11,
   apiTypes: {
     NSPrivacyAccessedAPICategoryUserDefaults: ['CA92.1'],
     NSPrivacyAccessedAPICategoryFileTimestamp: ['0A2A.1', '3B52.1', 'C617.1'],
@@ -69,8 +75,11 @@ const PINNED = {
     NSPrivacyAccessedAPICategorySystemBootTime: ['35F9.1'],
   },
   packages: [
+    'expo-application',
     'expo-constants',
+    'expo-device',
     'expo-file-system',
+    'expo-notifications',
     'expo-system-ui',
     'react-native',
   ],

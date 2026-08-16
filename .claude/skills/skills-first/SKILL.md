@@ -16,7 +16,7 @@ of using them. This skill forces the habit: **consult the catalog first, then ac
 2. **Scan ALL catalogs — project, global, and plugins.** Not just this repo's skills:
    - **Project skills** (`.claude/skills/` here): the Towinly company pack (menu below) +
      the design pack (impeccable, emil-design-eng, _jutsu, review-animations…).
-   - **Global skills** (`~/.claude/skills/`, ~120): the gstack suite (`gstack-*`), superpowers
+   - **Global skills** (`~/.claude/skills/`, ~500): the gstack suite (`gstack-*`), superpowers
      dev skills (brainstorming, writing-plans, test-driven-development, systematic-debugging…),
      design packs (ui-ux-pro-max, mobile-app-ui-design, frontend-design, high-end-visual-design…),
      documents (docx, pptx, xlsx, pdf, slides), content (social, video, emails, copywriting,

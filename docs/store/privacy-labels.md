@@ -24,9 +24,14 @@ Facts these labels rest on, each verified in code:
 - **No analytics, attribution, crash, or tracking SDK** in
   `App/package.json` dependencies. No PostHog, Sentry, Firebase, Amplitude,
   AppsFlyer, or ad SDK of any kind.
-- **No device identifiers sent.** No `expo-device`, no `expo-application`,
-  no advertising ID, no push token (expo-notifications is not installed).
-  The only identifier on the wire is the account JWT.
+- **One device identifier, by permission only, since 2026-08-16.** The push
+  feature installed `expo-notifications` and `expo-device`. When, and only
+  when, the person allows notifications, the phone mints an Expo push token
+  and the app stores it server-side against the account so messages and help
+  activity can ring the phone. It exists for delivery, is deleted on sign-out
+  and account deletion, and transits Expo's push service (a processor named
+  in the privacy policy). No advertising ID, no analytics identifier. The
+  other identifier on the wire is the account JWT.
 - **No GPS.** `expo-location` is not installed. Location is a town the user
   hand-types, geocoded server-side (`app/profile-edit.jsx:246`).
 - **Camera and microphone are blocked**, with both permissions stripped
@@ -107,7 +112,7 @@ Functionality** for all types unless a second purpose is listed.
 | Browsing History | all | No | | |
 | Search History | all | No | | No in-app search history is stored; the geocode query is the location field above. |
 | Identifiers | User ID | **Yes** | App Functionality | Username (public), backend account id, session JWT. |
-| Identifiers | Device ID | No | | Nothing reads or sends one. |
+| Identifiers | Device ID | **Yes** | App Functionality | The Expo push token, minted only after the person allows notifications, stored against the account so the phone can ring for messages and help activity. Linked to identity, not used for tracking. Added 2026-08-16 with the push feature. |
 | Purchases | all | No | | No payments in the app. |
 | Usage Data | Product Interaction / Advertising / Other | **No** | | No client analytics SDK, and the server PostHog path is dead: the owner cleared `POSTHOG_API_KEY` from production on 2026-08-15 and the backend redeployed without it (section 5 item 1). |
 | Diagnostics | Crash / Performance / Other | No | | No crash or performance SDK. |
@@ -180,7 +185,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | App activity | Other actions | **Yes** | No | Optional | App functionality. Trust ladder confirmations and pauses, streak check-ins. |
 | Web browsing | all | No | | | |
 | App info and performance | Crash logs / Diagnostics / Other | No | | | |
-| Device or other IDs | Device or other IDs | No | | | No device ID, ad ID, or push token exists in the binary. |
+| Device or other IDs | Device or other IDs | **Yes** | No | Optional | App functionality: the Expo push token, only after the person allows notifications. Expo delivers as a processor; that is not "sharing" in Play's sense. Added 2026-08-16 with the push feature. |
 
 ### 2.3 Free-text notes worth entering in the console
 
@@ -294,7 +299,7 @@ first:
 |---|---|
 | Any analytics/attribution/crash SDK (PostHog client, Sentry, Firebase, etc.) | Apple Usage Data / Diagnostics; Play App interactions / Crash logs; possibly Device IDs and Tracking |
 | Enabling EAS Update (`updates.url` + `ENABLED=true`) | Update checks send device and app metadata to Expo's servers: Device or other IDs |
-| Push notifications (`expo-notifications`) | Push token = Device ID on both stores |
+| Push notifications (`expo-notifications`) | HAPPENED 2026-08-16, handled: Device ID rows above flipped to Yes, policy names Expo, manifest re-pinned at 11 |
 | `expo-location` or any GPS use | Location answers change from typed-town to device location; Android location permission appears |
 | Unblocking camera or microphone (e.g. real voice input in Ask AI) | Audio Data / Photos-from-camera; both purpose strings and blocked-permissions lists |
 | Google sign-in in native builds (`GoogleLoginButton` gate removed) | Google account data collected; also triggers Apple 4.8 (Sign in with Apple) |
