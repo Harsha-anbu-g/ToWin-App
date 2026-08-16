@@ -121,9 +121,12 @@ hour spent here is an hour not spent on the meter.
   number entirely and shows the personal legal name as the seller. Kept here
   in case the decision is ever reopened per `enrollment-decision.md` section 6.
 - [ ] **Register a Google Play Console developer account, 25 USD one time.**
-  [owner] Blocks launch because there is no Play listing, no closed-testing
-  track and no Data safety form without it. Register it the same day as the
-  Apple one: Google's clock is the one you do not control.
+  DEFERRED by owner decision 2026-08-16: **launch is App Store first, Play
+  later.** The same-day advice stands whenever Play starts: registration,
+  identity check and the 12-tester 14-day gate mean Android goes live roughly
+  5 to 6 weeks after the day this account is created. India is a
+  majority-Android market, so the India launch effectively waits with it.
+  Every Play item below inherits this deferral.
 - [ ] **Accept the agreements and complete identity verification in both
   consoles.** [owner] Apple asks you to accept the Developer Program License
   Agreement at first sign in, and an unaccepted agreement makes later Apple
