@@ -17,7 +17,9 @@ export const DRAFT = {
     'We wrote this ourselves, in plain words, from what Towinly actually does. A lawyer has '
     + 'not been through it yet. Where something is still to be decided, this page says so '
     + 'rather than guessing. When a lawyer has checked it, this notice will come off.',
-  asOf: 'Draft of 2 August 2026',
+  // Bumped 2026-08-16: the policy gained the Expo push processor language,
+  // and a policy that changed must say so on its face.
+  asOf: 'Draft of 16 August 2026',
 };
 
 /**

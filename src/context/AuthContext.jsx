@@ -46,11 +46,11 @@ export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
-    // Silence this phone for the account that is leaving. Fired BEFORE the
-    // user state clears, with the JWT passed explicitly, because the shared
-    // token getter goes null on the next line and the request would otherwise
-    // leave unauthenticated. Fire-and-forget: sign-out never waits on it.
-    unregisterPushAsync(userRef.current?.token);
+    // Silence this phone for the account that is leaving. The DELETE needs no
+    // session (holding the push token is the proof), so this works for an
+    // expired session too. Fire-and-forget: sign-out never waits on it, and a
+    // failed goodbye is retried by PushRegistrar on the next signed-out boot.
+    unregisterPushAsync();
     setUser(null);
     // The next account on this phone must not see this account's cached
     // private data (chats, connections, profile) — wipe the query cache and

@@ -177,7 +177,8 @@ hour spent here is an hour not spent on the meter.
   exists. One day below 12 testers restarts the run.
 - [ ] **Decide on the lawyer review of the legal pages.** [owner] Both policies
   ship with a visible draft notice: `App/src/data/legalContent.js:14` exports
-  `DRAFT` with `asOf: 'Draft of 2 August 2026'`, and the notice renders live at
+  `DRAFT` with `asOf: 'Draft of 16 August 2026'` (bumped when the push
+  processor language landed), and the notice renders live at
   `https://www.towinly.com/app/privacy` above the first section. Neither store
   demands lawyer sign-off, so this blocks credibility rather than review. The
   banner is on screen for every reviewer and every user.

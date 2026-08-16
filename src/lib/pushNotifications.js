@@ -19,21 +19,29 @@ const notifications = () => require('expo-notifications');
 const device = () => require('expo-device');
 
 /**
- * While the app is OPEN, stay silent: every ping-worthy moment already shows
- * as an in-app badge, and a banner on top of the very chat you are reading
- * would say what the screen already says. The OS shows lock-screen and
- * background notifications on its own; this handler only governs foreground.
+ * Foreground policy, per ping kind (2026-08-16 review, HIGH): a MAIN chat
+ * message stays silent while the app is open, because the chat badge and the
+ * thread itself already say it, and a banner over the very chat you are
+ * reading repeats the screen. Everything else SHOWS a quiet banner even
+ * in-app: an offer on your request, your offer accepted, and family-thread
+ * activity have no always-visible badge, so suppressing them eats the news.
+ * The OS handles lock-screen and background on its own; this governs only
+ * the app-open case.
  */
 export function setupForegroundHandler() {
   if (!isNative()) return;
   notifications().setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: false,
-      shouldPlaySound: false,
-      shouldSetBadge: false,
-      shouldShowBanner: false,
-      shouldShowList: false,
-    }),
+    handleNotification: async (notification) => {
+      const data = notification?.request?.content?.data;
+      const quiet = data?.type === 'message' && data?.channel !== 'FAMILY_UPDATES';
+      return {
+        shouldShowAlert: !quiet,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+        shouldShowBanner: !quiet,
+        shouldShowList: !quiet,
+      };
+    },
   });
 }
 
@@ -44,6 +52,11 @@ export function setupForegroundHandler() {
  */
 export async function registerForPushAsync() {
   if (!isNative()) return null;
+  // Android is deferred with the Play launch, and without FCM configured a
+  // token request errors after the permission dialog has already been spent.
+  // The one-shot system ask is saved for the build that can honor it
+  // (2026-08-16 review). iOS-first, like the launch itself.
+  if (Platform.OS === 'android') return null;
   try {
     if (!device().isDevice) return null;
     const Notifications = notifications();
@@ -74,22 +87,23 @@ export async function registerForPushAsync() {
 
 /**
  * Sign-out: this device must stop ringing for the account that just left.
- * The JWT is passed in by the caller because logout clears the shared token
- * getter before this request would leave. Fire-and-forget by design.
+ * The DELETE needs no session: holding the token is the proof, which is what
+ * lets an EXPIRED session still silence the phone (2026-08-16 review, HIGH).
+ * Order matters: the server goodbye goes first, and the local record is
+ * cleared only after it succeeds, so a failed goodbye is retried at the next
+ * app start instead of being forgotten.
  */
-export async function unregisterPushAsync(jwt) {
+export async function unregisterPushAsync() {
   if (!isNative()) return;
   try {
     const token = await Store.getItemAsync(KEYS.pushToken);
     if (!token) return;
+    await api.delete('/notifications/token', { data: { token } });
     await Store.deleteItemAsync(KEYS.pushToken);
-    await api.delete('/notifications/token', {
-      data: { token },
-      headers: jwt ? { Authorization: `Bearer ${jwt}` } : undefined,
-    });
   } catch {
-    // The server drops dead tokens on its own (DeviceNotRegistered), so a
-    // failed goodbye here cannot leave the phone ringing forever.
+    // Kept locally, retried by PushRegistrar on the next signed-out boot. The
+    // server also drops dead tokens on its own (DeviceNotRegistered), so even
+    // a phone that never comes back cannot ring forever.
   }
 }
 
@@ -107,27 +121,38 @@ export function routeForNotification(data) {
   return null;
 }
 
+const openResponse = (router, response) => {
+  const path = routeForNotification(
+    response?.notification?.request?.content?.data
+  );
+  if (path) router.push(path);
+};
+
 /**
- * Tapping a notification opens the screen it is about: the chat thread, your
- * help request's applicants, or your jobs. Wired once at the root. Also
- * answers the cold start, where the tap happened before the app was running.
+ * Tapping a notification while the app runs opens the screen it is about:
+ * the chat thread, your help request's applicants, or your jobs. Wired once
+ * at the root.
  */
 export function wireNotificationTaps(router) {
   if (!isNative()) return () => {};
-  const Notifications = notifications();
-
-  const open = (response) => {
-    const path = routeForNotification(
-      response?.notification?.request?.content?.data
-    );
-    if (path) router.push(path);
-  };
-
-  // The tap that launched the app from cold, delivered exactly once.
-  Notifications.getLastNotificationResponseAsync?.()
-    .then((response) => response && open(response))
-    .catch(() => {});
-
-  const sub = Notifications.addNotificationResponseReceivedListener(open);
+  const sub = notifications().addNotificationResponseReceivedListener(
+    (response) => openResponse(router, response)
+  );
   return () => sub.remove();
+}
+
+/**
+ * The tap that LAUNCHED the app from cold, answered exactly once, and only
+ * after auth has booted (2026-08-16 review): routing into the chat before
+ * the restored session exists fires its queries tokenless and strands the
+ * screen. PushRegistrar calls this when booted turns true.
+ */
+export async function answerColdStartTapAsync(router) {
+  if (!isNative()) return;
+  try {
+    const response = await notifications().getLastNotificationResponseAsync?.();
+    if (response) openResponse(router, response);
+  } catch {
+    // No cold-start tap to answer is the common case, never an error.
+  }
 }
