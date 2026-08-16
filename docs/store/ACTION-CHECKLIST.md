@@ -94,10 +94,12 @@ hour spent here is an hour not spent on the meter.
   its own timeline. Every field points at the one file that owns it rather than
   repeating it. Closes with an honest still-open list and the end-of-run
   verification table.
-- [ ] **Create a free Expo account and run `eas login` then `eas init`.**
-  [owner then repo] Free, no Apple money, but it needs the owner's browser.
-  `eas whoami` prints `Not logged in` today. Commands in
-  `App/docs/store/PAY-DAY-RUNBOOK.md`.
+- [x] **Create a free Expo account and run `eas login` then `eas init`.**
+  DONE 2026-08-15. Account `harshavardhan_ag` (agharsha.anbu@gmail.com),
+  project created and linked: `@harshavardhan_ag/towinly`, ID
+  `6cf0141c-c99a-4663-87df-12f271989e7b`, written to `app.json` with
+  `owner: harshavardhan_ag` pinned so builds never land in the auto-created
+  team account. Verified with `eas project:info`.
 - [x] **Send a test message to help@towinly.com and confirm a person receives
   it.** DONE 2026-08-15, confirmed by the owner in session: the mail arrives
   and a person reads it. Five public pages, both store contact fields and App
@@ -180,12 +182,12 @@ hour spent here is an hour not spent on the meter.
 
 ## 3. Repo actions (code, config, docs)
 
-- [ ] **Link the EAS project.** [owner then repo] `App/app.json` has no
-  `extra.eas.projectId`, so the channel fields in `App/eas.json` are inert and
-  no store build can be produced. `eas whoami` prints `Not logged in`, so this
-  cannot start in the repo: the owner signs in to a free Expo account first,
-  then `eas init` writes the id and the repo commits it. Blocks launch because
-  without it there is no binary to submit.
+- [x] **Link the EAS project.** DONE 2026-08-15. `eas init` wrote
+  `extra.eas.projectId: 6cf0141c-c99a-4663-87df-12f271989e7b` into
+  `App/app.json`, `owner: harshavardhan_ag` pinned alongside it, and
+  `eas project:info` confirms `@harshavardhan_ag/towinly`. The channel fields
+  in `App/eas.json` are live now: a store build can be produced the moment the
+  paid accounts exist.
 - [x] **Reword `photosPermission` in `App/app.json`.** DONE, and the earlier
   entry was stale. `app.json` line 65 reads: "Towinly uses your photo library
   so you can choose a profile picture, and so you can send a photo of your ID
