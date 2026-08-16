@@ -114,8 +114,8 @@ hour spent here is an hour not spent on the meter.
   `developer.apple.com/enroll`. The Developer app's ID scanner rejected the
   government photo ID for the Canada region ("Invalid Submission"), so the web
   route was used: no scanner, and identity questions go to a human if Apple
-  asks at all. Awaiting activation: usually 1 to 2 days, budget a week. Watch
-  agharsha.anbu@gmail.com for the confirmation and for any document request.
+  asks at all. **ACTIVE the same day:** the welcome email landed 18 minutes
+  after payment (order W1865609506, 119 CAD), with no document request.
 - [x] **Get a DUNS number first if enrolling as a company.** NOT APPLICABLE:
   the owner decided individual enrollment on 2026-08-15, which skips the DUNS
   number entirely and shows the personal legal name as the seller. Kept here
