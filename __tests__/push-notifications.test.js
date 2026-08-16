@@ -36,7 +36,9 @@ import api from '../src/api/client';
 const Store = jest.requireMock('../src/lib/storage');
 import { KEYS } from '../src/lib/storageKeys';
 import {
+  answerColdStartTapAsync,
   registerForPushAsync,
+  setupForegroundHandler,
   unregisterPushAsync,
   routeForNotification,
   wireNotificationTaps,
@@ -104,29 +106,31 @@ describe('registering for pings', () => {
 });
 
 describe('sign-out silences this device', () => {
-  test('the stored token is deleted on the server with the leaving JWT', async () => {
+  test('the server goodbye needs no session, and the local record clears after it succeeds', async () => {
     Store.__store.set(KEYS.pushToken, 'ExponentPushToken[abc]');
 
-    await unregisterPushAsync('jwt-of-the-leaving-account');
+    await unregisterPushAsync();
 
     expect(api.delete).toHaveBeenCalledWith('/notifications/token', {
       data: { token: 'ExponentPushToken[abc]' },
-      headers: { Authorization: 'Bearer jwt-of-the-leaving-account' },
     });
     expect(Store.__store.has(KEYS.pushToken)).toBe(false);
   });
 
   test('no stored token means nothing to say to the server', async () => {
-    await unregisterPushAsync('jwt');
+    await unregisterPushAsync();
 
     expect(api.delete).not.toHaveBeenCalled();
   });
 
-  test('a dead network cannot make sign-out throw', async () => {
+  test('a dead network keeps the token for the next boot to retry, and never throws', async () => {
     Store.__store.set(KEYS.pushToken, 'ExponentPushToken[abc]');
     api.delete.mockRejectedValue(new Error('offline'));
 
-    await expect(unregisterPushAsync('jwt')).resolves.toBeUndefined();
+    await expect(unregisterPushAsync()).resolves.toBeUndefined();
+    // The goodbye failed, so the record survives: PushRegistrar retries it
+    // on the next signed-out start.
+    expect(Store.__store.get(KEYS.pushToken)).toBe('ExponentPushToken[abc]');
   });
 });
 
@@ -168,7 +172,7 @@ describe('a tapped notification opens the screen it is about', () => {
     expect(router.push).toHaveBeenCalledWith('/chat/c9');
   });
 
-  test('the cold-start tap is answered once the app is up', async () => {
+  test('the cold-start tap is answered by its own gated call, not the listener', async () => {
     const router = { push: jest.fn() };
     mockNotifications.getLastNotificationResponseAsync.mockResolvedValue({
       notification: {
@@ -176,10 +180,52 @@ describe('a tapped notification opens the screen it is about', () => {
       },
     });
 
+    // Wiring the live listener alone must NOT answer the cold start: that
+    // waits for auth to boot, so the opened screen can actually load.
     wireNotificationTaps(router);
     await Promise.resolve();
-    await Promise.resolve();
+    expect(router.push).not.toHaveBeenCalled();
+
+    await answerColdStartTapAsync(router);
 
     expect(router.push).toHaveBeenCalledWith('/my-jobs');
+  });
+});
+
+describe('the foreground policy', () => {
+  const handlerFor = () => {
+    setupForegroundHandler();
+    return mockNotifications.setNotificationHandler.mock.calls[0][0].handleNotification;
+  };
+  const pingOf = (data) => ({ request: { content: { data } } });
+
+  test('a plain chat message stays silent while the app is open', async () => {
+    const handle = handlerFor();
+    const answer = await handle(pingOf({ type: 'message', connectionId: 'c1' }));
+    expect(answer.shouldShowBanner).toBe(false);
+    expect(answer.shouldShowAlert).toBe(false);
+  });
+
+  test.each([
+    [{ type: 'need', needId: 'n1' }],
+    [{ type: 'need_accepted', needId: 'n1' }],
+    [{ type: 'message', connectionId: 'c1', channel: 'FAMILY_UPDATES' }],
+  ])('%o shows a banner even in-app: no badge covers it', async (data) => {
+    const handle = handlerFor();
+    const answer = await handle(pingOf(data));
+    expect(answer.shouldShowBanner).toBe(true);
+    expect(answer.shouldPlaySound).toBe(false);
+  });
+});
+
+describe('Android waits for its own launch', () => {
+  test('no permission dialog is spent where no token source exists yet', async () => {
+    Platform.OS = 'android';
+
+    const token = await registerForPushAsync();
+
+    expect(token).toBeNull();
+    expect(mockNotifications.getPermissionsAsync).not.toHaveBeenCalled();
+    expect(mockNotifications.requestPermissionsAsync).not.toHaveBeenCalled();
   });
 });
