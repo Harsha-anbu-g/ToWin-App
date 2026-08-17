@@ -1,12 +1,13 @@
 // Landing journey rail: the tortoise, dots, and 0N/07 counter must follow
-// the pager on EVERY platform. Native emits momentum events, so
-// onMomentumScrollEnd is enough there — but react-native-web never fires
-// momentum events (ScrollViewBase only dispatches onScroll), so the phone
-// web build at towinly.com/app/landing froze the rail on 01/07 while the
-// slides scrolled underneath. The rail must also advance from plain scroll
-// events, which both platforms deliver.
+// the pager on EVERY platform, each by its own signal. Native emits momentum
+// events, and the counter waits for them: it ticks once per ARRIVED page,
+// because scroll-driven Math.round flipped the number at the half-way point
+// of a drag and could jitter around the boundary (owner bug report,
+// 2026-08-16). react-native-web never fires momentum events (ScrollViewBase
+// only dispatches onScroll), so the web keeps advancing from plain scroll,
+// the fix for the rail frozen on 01/07 at towinly.com/app/landing.
 import { fireEvent, render } from '@testing-library/react-native';
-import { Dimensions } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import Landing from '../app/(auth)/landing';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 
@@ -49,9 +50,26 @@ test('the rail starts at chapter one', async () => {
   expect(r.getByText('01/07')).toBeTruthy();
 });
 
-test('a plain scroll advances the rail (the web pager has no momentum events)', async () => {
+test('web: a plain scroll advances the rail (no momentum events exist there)', async () => {
+  Platform.OS = 'web';
+  try {
+    const r = await renderLanding();
+    await fireEvent.scroll(r.pager, { nativeEvent: { contentOffset: { y: slideH } } });
+    expect(r.getByText('02/07')).toBeTruthy();
+  } finally {
+    Platform.OS = 'ios';
+  }
+});
+
+test('native: a mid-drag scroll leaves the counter alone until the page settles', async () => {
+  // The bug this pins: the number used to flip at the half-way point of a
+  // drag and could jitter when a slow drag hovered near the boundary.
   const r = await renderLanding();
   await fireEvent.scroll(r.pager, { nativeEvent: { contentOffset: { y: slideH } } });
+  expect(r.getByText('01/07')).toBeTruthy();
+  await fireEvent(r.pager, 'momentumScrollEnd', {
+    nativeEvent: { contentOffset: { y: slideH } },
+  });
   expect(r.getByText('02/07')).toBeTruthy();
 });
 

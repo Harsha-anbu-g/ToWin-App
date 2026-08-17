@@ -21,7 +21,8 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
+        "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com",
+        "EXPO_PUBLIC_SHOW_DEMO": "1"
       }
     },
     "simulator": {
