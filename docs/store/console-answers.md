@@ -374,7 +374,7 @@ Re-run the whole verification in one command: see section 9.
 
 ### 6.4 Notes, ready to paste
 
-App Store Connect caps this field at 4000 characters. The block below is 3967,
+App Store Connect caps this field at 4000 characters. The block below is 3953,
 machine-counted.
 
 **One claim was corrected on 2026-08-15 before this block was written.** The
@@ -415,7 +415,7 @@ One permission, two uses, both optional. A single picker on Edit profile raises 
 
 DEMO ACCOUNTS (please review all three)
 
-The one tap demo buttons are compiled out of production builds. Type these into the login field, which accepts a username or an email:
+One tap demo buttons sit below the login form. Or type these into the login field, which accepts a username or an email:
 
 - Elder: "elder" / "12345678" (Margaret, four helpers at four different steps)
 - Helper: "helper" / "123456789" (Harsha, one connection at a full 15 of 15)

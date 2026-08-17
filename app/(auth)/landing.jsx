@@ -24,7 +24,7 @@ import {
   Video,
 } from '../../src/components/icons';
 import { useRef, useState } from 'react';
-import { Animated, FlatList, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Platform, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TortoiseMark, { IntroBrandLockup } from '../../src/components/TortoiseMark';
 import Button from '../../src/components/ui/Button';
@@ -302,32 +302,49 @@ export default function Landing() {
   const { height } = useWindowDimensions();
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
-  const walk = useRef(new Animated.Value(0)).current; // 0..1 down the rail
+  // The finger drives the feet: raw scroll offset, mapped below into the
+  // rail's 0..1 walk. Direct manipulation, so going back glides exactly like
+  // going forward, and there is no per-page tween to restart or stutter.
+  const scrollY = useRef(new Animated.Value(0)).current;
+  // Which way the head points: 1 = down (walking on with the story),
+  // 0 = up (walking back, or arrived at the end, the mark's natural pose).
+  const facing = useRef(new Animated.Value(1)).current;
 
   const topBar = insets.top + 44;
   const slideH = height - topBar;
   const last = CHAPTERS.length - 1;
+  const walk = scrollY.interpolate({
+    inputRange: [0, Math.max(1, slideH * last)],
+    outputRange: [0, 1],
+    extrapolate: 'clamp',
+  });
 
   const go = async (href) => {
     await markOnboarded();
     router.replace(href);
   };
 
-  // Fired from onScroll AND onMomentumScrollEnd: react-native-web never
-  // emits momentum events (its ScrollViewBase only dispatches onScroll), so
-  // the phone web build froze the rail on 01/07. Plain scroll drives the
-  // rail on every platform; momentum end stays as the native settle signal.
+  // The settled page: number, dots and the head-turn change once per arrival,
+  // not at the mid-point of a drag (the number used to flip early and could
+  // jitter when a slow drag hovered near halfway). Native fires this from
+  // onMomentumScrollEnd; react-native-web never emits momentum events (its
+  // ScrollViewBase only dispatches onScroll), so the web keeps calling it
+  // from the scroll listener like before.
   const onPage = (e) => {
     const i = Math.min(last, Math.max(0, Math.round(e.nativeEvent.contentOffset.y / slideH)));
-    if (i === index) return; // scroll ticks inside a page must not restart the walk
+    if (i === index) return;
+    // Turn the head to face the way it walks: down when the story moves on,
+    // up when the person walks back, and up on arrival at the end (the
+    // original "head-up on arrival" pose).
+    const headUp = i === last || i < index;
     setIndex(i);
-    if (reduced) walk.setValue(i / last);
+    if (reduced) facing.setValue(headUp ? 0 : 1);
     else {
-      Animated.timing(walk, {
-        toValue: i / last,
+      Animated.timing(facing, {
+        toValue: headUp ? 0 : 1,
         duration: DURATION.base,
         easing: EASE.out,
-        useNativeDriver: true, // transform-only (scaleY + translateY) — UI thread
+        useNativeDriver: true, // transform-only (rotate) — UI thread
       }).start();
     }
   };
@@ -393,7 +410,9 @@ export default function Landing() {
         </View>
       </View>
 
-      <FlatList
+      {/* Animated.FlatList: the native-driver scroll stream (scrollY) only
+          attaches to an Animated component. */}
+      <Animated.FlatList
         testID="landing-pager"
         data={CHAPTERS}
         keyExtractor={(c) => String(c.n)}
@@ -421,7 +440,15 @@ export default function Landing() {
         )}
         pagingEnabled
         showsVerticalScrollIndicator={false}
-        onScroll={onPage}
+        // scrollY tracks the finger on the UI thread (native driver); the web
+        // has no native driver and no momentum events, so it takes the JS
+        // path and drives the page bookkeeping from the same scroll stream.
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          Platform.OS === 'web'
+            ? { useNativeDriver: false, listener: onPage }
+            : { useNativeDriver: true }
+        )}
         scrollEventThrottle={16}
         onMomentumScrollEnd={onPage}
         getItemLayout={(_, i) => ({ length: slideH, offset: slideH * i, index: i })}
@@ -469,7 +496,9 @@ export default function Landing() {
             marginTop: -13,
             transform: [
               { translateY: walk.interpolate({ inputRange: [0, 1], outputRange: [0, RAIL_H] }) },
-              { rotate: index === last ? '0deg' : '180deg' },
+              // The head turns to face the walk: down while the story moves
+              // on, up when walking back, up on arrival (its natural pose).
+              { rotate: facing.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '180deg'] }) },
             ],
           }}
         >
