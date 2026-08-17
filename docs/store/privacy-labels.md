@@ -42,9 +42,12 @@ Facts these labels rest on, each verified in code:
   audio never reaches the app (`src/components/AskAiAssistant.jsx:132`).
 - **No address book access.** Emergency contacts and family-link identifiers
   are typed by hand. No contacts permission exists in the manifest.
-- **expo-updates is disabled** in the built manifest
-  (`expo.modules.updates.ENABLED=false`) and `app.json` has no `updates.url`,
-  so the binary does not phone Expo's update servers.
+- **expo-updates is ENABLED since 2026-08-16** (`eas update:configure` wrote
+  `updates.url` into `app.json`; the first store build refused to compile
+  without it, because the build profiles carry channels). Store builds check
+  Expo's update servers for over-the-air JS updates; those checks send device
+  and app metadata to Expo. Covered honestly: the Device ID rows below are
+  already Yes and the privacy policy already names Expo as a processor.
 - **Google sign-in never runs in store builds.**
   `src/components/auth/GoogleLoginButton.jsx:46` returns null when
   `Platform.OS !== 'web'`, and `src/lib/oauthFlow.js` documents that v1
@@ -298,7 +301,7 @@ first:
 | Change | Labels it breaks |
 |---|---|
 | Any analytics/attribution/crash SDK (PostHog client, Sentry, Firebase, etc.) | Apple Usage Data / Diagnostics; Play App interactions / Crash logs; possibly Device IDs and Tracking |
-| Enabling EAS Update (`updates.url` + `ENABLED=true`) | Update checks send device and app metadata to Expo's servers: Device or other IDs |
+| Enabling EAS Update (`updates.url` + `ENABLED=true`) | HAPPENED 2026-08-16 (`eas update:configure`, needed by the build). Covered: the Device ID rows are already Yes and the policy already names Expo as a processor. |
 | Push notifications (`expo-notifications`) | HAPPENED 2026-08-16, handled: Device ID rows above flipped to Yes, policy names Expo, manifest re-pinned at 11 |
 | `expo-location` or any GPS use | Location answers change from typed-town to device location; Android location permission appears |
 | Unblocking camera or microphone (e.g. real voice input in Ask AI) | Audio Data / Photos-from-camera; both purpose strings and blocked-permissions lists |

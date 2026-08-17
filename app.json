@@ -38,6 +38,10 @@
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.WRITE_EXTERNAL_STORAGE"
       ],
       "adaptiveIcon": {
@@ -73,6 +77,9 @@
           "microphonePermission": false
         }
       ]
-    ]
+    ],
+    "updates": {
+      "url": "https://u.expo.dev/6cf0141c-c99a-4663-87df-12f271989e7b"
+    }
   }
 }
