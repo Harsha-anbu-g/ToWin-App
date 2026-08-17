@@ -137,9 +137,11 @@ afterEach(() => jest.clearAllMocks());
 
 test('elder pull-to-refresh reloads the My boxes counts', async () => {
   const keys = await invalidatedKeys('ELDER');
-  // MyBoxesCard reads the pass-on page's own two keys; without these the
-  // counts on the card are whatever they were at first paint, all session.
-  expect(keys).toContain('passon-mine');
+  // MyBoxesCard left Home (owner call 2026-08-17), so its 'passon-mine'
+  // counts key left the refresh list with it; a key nothing on the page
+  // reads is a wasted request per pull. 'passon-setup' stays: the family
+  // panel's KeyholderAsk still reads it.
+  expect(keys).not.toContain('passon-mine');
   expect(keys).toContain('passon-setup');
 });
 

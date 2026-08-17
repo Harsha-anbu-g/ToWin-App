@@ -268,7 +268,13 @@ export default function MenuSheet({ visible, onClose }) {
                 });
                 if (!ok) return;
                 onClose();
-                logout();
+                // Let the two native layers above the screen (this sheet and
+                // the confirm dialog) finish dismissing BEFORE auth state
+                // rips the tabs out from under them. Logging out while a
+                // native modal is still presented strands its presentation
+                // context and freezes every touch: the first TestFlight
+                // build hung exactly here (owner report 2026-08-17).
+                setTimeout(logout, 400);
               }}
             />
           </Group>

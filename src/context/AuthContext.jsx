@@ -46,11 +46,6 @@ export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
 
   const logout = useCallback(async () => {
-    // Silence this phone for the account that is leaving. The DELETE needs no
-    // session (holding the push token is the proof), so this works for an
-    // expired session too. Fire-and-forget: sign-out never waits on it, and a
-    // failed goodbye is retried by PushRegistrar on the next signed-out boot.
-    unregisterPushAsync();
     setUser(null);
     // The next account on this phone must not see this account's cached
     // private data (chats, connections, profile) — wipe the query cache and
@@ -67,6 +62,15 @@ export function AuthProvider({ children }) {
     } catch {
       // storage unavailable — in-memory logout still holds for this session
     }
+    // Silence this phone for the account that left. AFTER the keychain
+    // delete above settles, so logout never runs two keychain operations
+    // concurrently (defensive: first TestFlight build reported a hang on
+    // logout, and mixed concurrent keychain access is the one native-side
+    // suspect this path controls). The DELETE itself needs no session:
+    // holding the push token is the proof, so an expired session works too.
+    // Fire-and-forget past this line; a failed goodbye is retried by
+    // PushRegistrar on the next signed-out start.
+    unregisterPushAsync();
   }, [queryClient]);
 
   const login = useCallback(async (token) => {
