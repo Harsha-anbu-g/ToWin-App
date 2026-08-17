@@ -29,6 +29,10 @@ yarn-error.*
 # macOS
 .DS_Store
 *.pem
+# The OTA code-signing CERTIFICATE is public by design and must ship: the
+# build embeds it so installed apps can verify updates. The PRIVATE key
+# stays under keys/, which remains ignored below.
+!certs/certificate.pem
 
 # local env files
 .env*.local
