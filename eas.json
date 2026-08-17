@@ -31,7 +31,8 @@
       },
       "env": {
         "EXPO_PUBLIC_LEGAL_CONTACT_EMAIL": "help@towinly.com"
-      }
+      },
+      "channel": "simulator"
     }
   },
   "submit": {
