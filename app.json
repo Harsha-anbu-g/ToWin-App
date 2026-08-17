@@ -5,7 +5,7 @@
     "owner": "harshavardhan_ag",
     "version": "1.0.0",
     "runtimeVersion": {
-      "policy": "fingerprint"
+      "policy": "appVersion"
     },
     "orientation": "portrait",
     "icon": "./assets/icon.png",
