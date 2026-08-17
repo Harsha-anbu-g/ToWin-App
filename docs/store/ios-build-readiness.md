@@ -152,6 +152,14 @@ EXUpdatesEnabled        = false
 EXUpdatesCheckOnLaunch  = ALWAYS
 EXUpdatesLaunchWaitMs   = 0
 EXUpdatesRuntimeVersion = file:fingerprint
+(Superseded 2026-08-16: the fingerprint policy failed the first two store
+builds with "Runtime version calculated on local machine not equal to runtime
+version calculated during build", because the hash covers the local machine's
+installed packages and the cloud's fresh install hashes differently. The
+policy is now appVersion: runtime 1.0.0 follows the app version, computed
+identically everywhere. The discipline it asks in exchange: bump the app
+version whenever a native dependency changes, which mobile-release-ops
+requires anyway.)
 ```
 
 There is no `EXUpdatesURL`, and updates are disabled. This is the concrete proof that
