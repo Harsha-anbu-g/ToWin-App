@@ -22,7 +22,7 @@ import {
 import { Flag, Mic, Send, Volume2, X } from './icons';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { useConfirm } from '../context/ConfirmContext';
+import { ConfirmHost, useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { announce } from '../lib/announce';
 import focusForScreenReader from '../lib/focusForScreenReader';
@@ -563,6 +563,11 @@ export default function AskAiAssistant() {
             </KeyboardAvoider>
           </View>
         </View>
+        {/* The consent dialog draws INSIDE this sheet's native layer — a
+            second native modal presented over an open one silently lands
+            underneath on a real iPhone, which made Send feel dead before
+            the first question was ever allowed to leave (2026-08-17). */}
+        <ConfirmHost />
       </Modal>
     </>
   );

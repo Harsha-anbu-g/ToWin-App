@@ -10,7 +10,7 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
-import { ConfirmProvider, useConfirm } from '../src/context/ConfirmContext';
+import { ConfirmHost, ConfirmProvider, useConfirm } from '../src/context/ConfirmContext';
 
 // A harness that fires confirm() on press and records what it resolved to, so
 // the tests assert the PROMISE, not just the pixels. The promise is the whole
@@ -163,4 +163,52 @@ test('both buttons keep a >=44pt target', async () => {
     const flat = Object.assign({}, ...styles);
     expect(flat.minHeight).toBeGreaterThanOrEqual(44);
   }
+});
+
+// THE HOST RULE (2026-08-17): a confirm() fired from inside an open native
+// Modal must render through that sheet's <ConfirmHost />, not as a second
+// native modal — on a real iPhone the second modal lands underneath and the
+// gated button feels dead (the first TestFlight build's logout and AI consent
+// both died this way).
+describe('ConfirmHost: dialogs inside sheets', () => {
+  test('with a host mounted, the dialog renders through the host and settles', async () => {
+    const onResult = jest.fn();
+    const view = await render(
+      <ThemeProvider>
+        <ConfirmProvider>
+          <Harness options={OPTIONS} onResult={onResult} />
+          <ConfirmHost />
+        </ConfirmProvider>
+      </ThemeProvider>
+    );
+    fireEvent.press(view.getByLabelText('open'));
+    await view.findByText(OPTIONS.title);
+
+    // Through the host overlay, never a second native modal.
+    expect(view.getByTestId('confirm-host-overlay')).toBeTruthy();
+    expect(view.queryByTestId('confirm-modal')).toBeNull();
+
+    fireEvent.press(view.getByText(OPTIONS.confirmLabel));
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(true));
+  });
+
+  test('a host unmounting mid-question settles the caller false instead of hanging', async () => {
+    const onResult = jest.fn();
+    function Shell({ hosted }) {
+      return (
+        <ThemeProvider>
+          <ConfirmProvider>
+            <Harness options={OPTIONS} onResult={onResult} />
+            {hosted ? <ConfirmHost /> : null}
+          </ConfirmProvider>
+        </ThemeProvider>
+      );
+    }
+    const view = await render(<Shell hosted />);
+    fireEvent.press(view.getByLabelText('open'));
+    await view.findByText(OPTIONS.title);
+
+    view.rerender(<Shell hosted={false} />);
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(false));
+  });
 });

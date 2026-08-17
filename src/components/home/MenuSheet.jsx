@@ -28,7 +28,7 @@ import {
 } from '../icons';
 import { useAuth } from '../../context/AuthContext';
 import focusForScreenReader from '../../lib/focusForScreenReader';
-import { useConfirm } from '../../context/ConfirmContext';
+import { ConfirmHost, useConfirm } from '../../context/ConfirmContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
@@ -280,6 +280,10 @@ export default function MenuSheet({ visible, onClose }) {
           </Group>
         </ScrollView>
       </Animated.View>
+      {/* The confirm dialog draws INSIDE this sheet's native layer — a second
+          native modal presented over an open one silently lands underneath on
+          a real iPhone, which made Log out feel dead (2026-08-17). */}
+      <ConfirmHost />
     </Modal>
   );
 }
