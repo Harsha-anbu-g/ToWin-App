@@ -378,8 +378,10 @@ export default function MyEldersPanel() {
 
       <SegmentedControl
         segments={[
-          { key: 'trusted', label: 'Trusted Elders', count: trusted.length + pausedTrusted.length },
+          // Building Trust leads, mirroring MyHelpersPanel (owner call
+          // 2026-08-17) and matching the default segment.
           { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
+          { key: 'trusted', label: 'Trusted Elders', count: trusted.length + pausedTrusted.length },
         ]}
         value={seg}
         onChange={setSeg}
@@ -413,7 +415,16 @@ export default function MyEldersPanel() {
             }
             onEnd={confirmEnd}
             onConfirm={confirmStep}
-            onPause={(c) => pause.mutate(c.id)}
+            onPause={async (c) => {
+              // Asks first (owner call 2026-08-17), mirroring MyHelpersPanel.
+              const ok = await askConfirm({
+                title: 'Take a break?',
+                message: 'Trust steps and messages with this elder pause until either of you resumes. Nothing is lost.',
+                cancelLabel: 'Not now',
+                confirmLabel: 'Take a break',
+              });
+              if (ok) pause.mutate(c.id);
+            }}
           />
         ))
       )}

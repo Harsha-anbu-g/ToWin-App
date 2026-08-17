@@ -337,7 +337,10 @@ export default function AskAiAssistant() {
     // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
     announce('Thinking…');
     try {
-      const { data } = await api.post('/assistant/chat', { message: q, history });
+      // 30s, not the client default 15s: a thoughtful Groq answer can outrun
+      // 15s under load, and a timeout here reads as "the AI is broken"
+      // (owner report from the first TestFlight build, 2026-08-17).
+      const { data } = await api.post('/assistant/chat', { message: q, history }, { timeout: 30_000 });
       if (!mounted.current) return;
       setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: data.reply }]);
       announce(data.reply);

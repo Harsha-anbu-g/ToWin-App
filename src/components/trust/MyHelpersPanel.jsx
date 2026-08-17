@@ -289,8 +289,11 @@ export default function MyHelpersPanel() {
 
       <SegmentedControl
         segments={[
-          { key: 'trusted', label: 'Trusted Friends', count: trusted.length + pausedTrusted.length },
+          // Building Trust leads (owner call 2026-08-17): it is the working
+          // list, where the next step lives; Trusted Friends is the trophy
+          // shelf. The order now matches the default segment below.
           { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
+          { key: 'trusted', label: 'Trusted Friends', count: trusted.length + pausedTrusted.length },
         ]}
         value={seg}
         onChange={setSeg}
@@ -322,7 +325,18 @@ export default function MyHelpersPanel() {
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
               onConfirm={() => confirmStep(card)}
-              onPause={() => pause.mutate(card.connectionId)}
+              onPause={async () => {
+                // Asks first (owner call 2026-08-17): a mis-tap here
+                // silences a friendship, so the dialog stands in front and
+                // the undo toast stays as the second net.
+                const ok = await askConfirm({
+                  title: 'Take a break?',
+                  message: `Trust steps and messages with ${card.customerName} pause until either of you resumes. Nothing is lost.`,
+                  cancelLabel: 'Not now',
+                  confirmLabel: 'Take a break',
+                });
+                if (ok) pause.mutate(card.connectionId);
+              }}
             />
           );
         })

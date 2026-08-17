@@ -48,7 +48,7 @@ export default function Checkin() {
   }
 
   return (
-    <Screen back onRefresh={refetch} contentStyle={{ gap: spacing[4] }}>
+    <Screen onRefresh={refetch} contentStyle={{ gap: spacing[4] }}>
       <GreetingHeader />
       <FirstTimeCard
         flag={KEYS.checkinExplained}

@@ -85,9 +85,11 @@ const NeedCard = memo(function NeedCard({
       </View>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 6 }}>{meta}</Text>
 
+      {/* View sits right beside the count (owner call 2026-08-17): the
+          button belongs to the sentence, not to the far edge of the row. */}
       {need.status === 'OPEN' && applicants.length > 0 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flex: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flexShrink: 1 }}>
             {applicantsLabel(applicants.length)}
           </Text>
           <Pressable
@@ -384,7 +386,10 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       ListHeaderComponent={
         <SegmentedControl
           segments={[
-            { key: 'open', label: 'Looking for Help', count: looking.length },
+            // 'Waiting', not 'Looking for Help': three segments share one
+            // phone width, and the long label truncated to dots on device
+            // (owner report 2026-08-17). The row pills keep the full phrase.
+            { key: 'open', label: 'Waiting', count: looking.length },
             { key: 'progress', label: 'In Progress', count: inProgress.length },
             { key: 'done', label: 'Completed', count: finished.length },
           ]}
