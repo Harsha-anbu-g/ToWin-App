@@ -29,6 +29,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import GlassLens, { hasLiquidGlass } from '../../src/components/ui/GlassLens';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
@@ -138,30 +139,15 @@ function GlassTabBackground({ animX, shown, scale, lensW }) {
             width: lensW,
             borderRadius: 999,
             overflow: 'hidden',
-            borderWidth: 1,
+            // Real Liquid Glass draws its own edge; only the fallback
+            // composite needs the hairline to read as a capsule.
+            borderWidth: hasLiquidGlass ? 0 : 1,
             borderColor: t.blueSoft,
             opacity: shown,
             transform: [{ translateX: animX }, { scale }],
           }}
         >
-          {Platform.OS !== 'android' ? (
-            <BlurView
-              intensity={22}
-              tint={mode === 'dark' ? 'dark' : 'light'}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-          ) : null}
-          <View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: t.blueTint,
-              opacity: Platform.OS === 'android' ? 0.95 : 0.75,
-            }}
-          />
+          <GlassLens tint={mode === 'dark' ? 'dark' : 'light'} washColor={t.blueTint} />
         </Animated.View>
       ) : null}
     </View>

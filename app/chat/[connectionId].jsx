@@ -139,7 +139,10 @@ export default function ChatThread() {
   // only ever ACCEPTS, and never sees a dead start button (TrustService
   // refuses a helper-initiated confirm; same guard as MyEldersPanel).
   const actsAsElder = user?.role === 'ELDER' || user?.role === 'BOTH';
-  const accepting = !!conn?.confirmedByOther;
+  // Accepting is a HELPER-only state: TrustService refuses any helper-first
+  // confirm, so the other side can never be waiting on an elder (owner call
+  // 2026-08-17 — the elder's button always reads Start).
+  const accepting = !actsAsElder && !!conn?.confirmedByOther;
   const stepLabel = accepting ? 'Accept the next step' : 'Start the next step';
 
   const { data, isLoading, isError, refetch } = useQuery({

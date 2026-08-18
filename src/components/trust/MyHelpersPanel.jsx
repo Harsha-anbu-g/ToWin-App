@@ -35,9 +35,10 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
   const [familyOpen, setFamilyOpen] = useState(false);
   const atTop = card.stageIndex >= 6;
   const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
-  // Backend rule (website ea03935): the elder STARTS a step; if the other
-  // side already confirmed, this tap accepts and the step climbs.
-  const ctaLabel = confirmedByOther ? 'Accept the next step' : 'Start the next step';
+  // Backend rule (TrustService): the elder STARTS every step and the helper
+  // can only accept afterwards — so this card's button always reads Start
+  // (a helper-first confirm is refused server-side; owner call 2026-08-17).
+  const ctaLabel = 'Start the next step';
 
   return (
     <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 14, marginTop: 12 }}>
@@ -272,14 +273,12 @@ export default function MyHelpersPanel() {
 
   // askConfirm, not confirm: `confirm` is already the trust-step mutation.
   const confirmStep = async (card) => {
-    const accepting = !!connOf(card.connectionId)?.confirmedByOther;
+    // Always the Start dialog: only the elder can begin a step (TrustService).
     const ok = await askConfirm({
-      title: accepting ? 'Accept the next step?' : 'Start the next step?',
-      message: accepting
-        ? `${card.customerName} has asked to move one step up. Accepting climbs the ladder for both of you.`
-        : `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
+      title: 'Start the next step?',
+      message: `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
       cancelLabel: 'Not yet',
-      confirmLabel: accepting ? 'Accept' : 'Start',
+      confirmLabel: 'Start',
     });
     if (ok) confirm.mutate(card.connectionId);
   };

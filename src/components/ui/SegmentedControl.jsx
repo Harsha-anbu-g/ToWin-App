@@ -9,8 +9,8 @@
 // lens simply doesn't render (Jest never lays out, so tests see plain chips
 // with the same roles and states as always).
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Platform, Pressable, Text, View } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { Animated, Pressable, Text, View } from 'react-native';
+import GlassLens, { hasLiquidGlass } from './GlassLens';
 import { haptic } from '../../lib/haptics';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
@@ -72,30 +72,13 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             width: slotW,
             borderRadius: radius.pill,
             overflow: 'hidden',
-            borderWidth: 1,
+            // Real Liquid Glass draws its own edge; only the fallback needs a rim.
+            borderWidth: hasLiquidGlass ? 0 : 1,
             borderColor: mode === 'dark' ? t.border : 'rgba(255,255,255,0.9)',
             transform: [{ translateX: slide }],
           }}
         >
-          {/* Android's blur is costly and uneven — the wash alone reads fine there. */}
-          {Platform.OS !== 'android' ? (
-            <BlurView
-              intensity={18}
-              tint={mode === 'dark' ? 'dark' : 'light'}
-              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-            />
-          ) : null}
-          <View
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: t.segActive,
-              opacity: Platform.OS === 'android' ? 0.92 : 0.72,
-            }}
-          />
+          <GlassLens tint={mode === 'dark' ? 'dark' : 'light'} washColor={t.segActive} washOpacity={0.72} />
         </Animated.View>
       ) : null}
       {segments.map((seg) => {
