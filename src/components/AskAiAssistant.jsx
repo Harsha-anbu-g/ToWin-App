@@ -407,9 +407,12 @@ export default function AskAiAssistant() {
           height: 44,
           paddingHorizontal: 14,
           borderRadius: 22,
-          backgroundColor: t.blueWash,
-          borderWidth: 2,
-          borderColor: t.blue,
+          // Quiet float (owner report 2026-08-17: "so many blue"): the
+          // mascot and label carry the identity; the pill itself is the
+          // neutral surface with a hairline, floating over content.
+          backgroundColor: t.surface,
+          borderWidth: 1,
+          borderColor: t.border,
           flexDirection: 'row',
           alignItems: 'center',
           gap: 7,

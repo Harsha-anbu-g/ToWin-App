@@ -43,11 +43,11 @@ export default function Button({
       backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
     },
-    // iOS tonal (owner call 2026-08-17, supersedes the ghost-outline web
-    // parity): a quiet sky wash fill, no outline.
+    // iOS tonal (owner calls 2026-08-17, supersedes the ghost-outline web
+    // parity): neutral gray fill, blue text — blue FILL is the primary's.
     secondary: {
       minHeight: 40,
-      backgroundColor: t.blueWash,
+      backgroundColor: t.surfaceFill,
       borderWidth: 0,
     },
     text: {

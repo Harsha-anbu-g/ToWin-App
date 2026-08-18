@@ -261,7 +261,10 @@ export default function TabsLayout() {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const slotW = slots.length > 0 ? winW / slots.length : 0;
-  const lensW = slotW > 0 ? Math.min(slotW - 6, 118) : 0;
+  // Nearly the full slot: the label may render as wide as the slot allows
+  // (large OS text scales it up to the chrome cap), and letters must never
+  // poke past the capsule (owner report 2026-08-17).
+  const lensW = slotW > 0 ? Math.min(slotW - 4, 112) : 0;
   const barH = 76 + insets.bottom;
   const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
   const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';
