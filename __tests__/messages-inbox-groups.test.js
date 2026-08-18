@@ -187,7 +187,7 @@ test('a shared friendship surfaces its group updates thread under Groups', async
   r.getByText('Rosa & Priya'); // a parent's thread, readable as family
   r.getByText('You & Margaret'); // my own shared friendship's thread
 
-  await fireEvent.press(r.getByLabelText('Updates thread: Rosa & Priya'));
+  await fireEvent.press(r.getByLabelText('Group: Rosa & Priya'));
   expect(mockPush).toHaveBeenCalledWith('/chat/c9?channel=family');
 });
 

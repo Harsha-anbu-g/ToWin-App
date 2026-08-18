@@ -13,8 +13,8 @@ export const SHARING_GIVES = [
   },
   {
     key: 'UPDATES',
-    elder: () => 'Follow the small updates thread on it, together with you and your helper.',
-    family: name => `Follow the small updates thread, together with ${name} and their helper.`,
+    elder: () => 'Follow the small group chat on it, together with you and your helper.',
+    family: name => `Follow the small group chat, together with ${name} and their helper.`,
   },
   {
     key: 'TALK',

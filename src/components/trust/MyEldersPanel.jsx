@@ -245,7 +245,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
           folded family section. */}
       {familyOpen && conn.sharedWithFamily ? (
         <ActionChip
-          label="Open the family updates thread"
+          label="Open the family group"
           onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
           style={{ marginTop: 8, alignSelf: 'flex-start' }}
         />

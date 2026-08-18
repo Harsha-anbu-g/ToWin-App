@@ -346,7 +346,7 @@ export default function FamilyParentScreen() {
                 <Pressable
                   onPress={() => router.push(`/chat/${h.connectionId}?channel=family`)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Open the updates thread with ${elderName} and ${h.helperName}`}
+                  accessibilityLabel={`Open the group with ${elderName} and ${h.helperName}`}
                   style={({ pressed }) => ({
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -358,7 +358,7 @@ export default function FamilyParentScreen() {
                 >
                   <MessageCircle size={15} color={t.blueDeep} strokeWidth={2} />
                   <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-                    Open the small updates thread
+                    Open the group chat
                   </Text>
                 </Pressable>
 

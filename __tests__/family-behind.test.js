@@ -129,5 +129,5 @@ test('the updates-thread link rides only on shared friendships', async () => {
   const r = await wrap(<MyEldersPanel />);
   await r.findByText('Margaret');
   await fireEvent.press(await r.findByLabelText(/Family options/));
-  r.getByLabelText('Open the family updates thread');
+  r.getByLabelText('Open the family group');
 });

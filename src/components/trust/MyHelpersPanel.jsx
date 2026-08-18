@@ -192,7 +192,7 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           <FamilyShareToggle connectionId={conn.id} shared={conn.sharedWithFamily} />
           {conn.sharedWithFamily ? (
             <ActionChip
-              label="Open the family updates thread"
+              label="Open the family group"
               onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
               style={{ marginTop: 8, alignSelf: 'flex-start' }}
             />
