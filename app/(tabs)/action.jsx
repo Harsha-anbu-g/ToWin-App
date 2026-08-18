@@ -115,7 +115,8 @@ function PostNeedForm() {
     <View style={{ flex: 1 }}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
-        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}
+        // 120 clears the floating glass tab bar the form now scrolls beneath
+        contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: 120 }}
       >
         <Text
           accessibilityRole="header"

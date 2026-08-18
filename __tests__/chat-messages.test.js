@@ -12,6 +12,7 @@ import MessagesInbox from '../app/(tabs)/messages';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
+import { type } from '../src/theme/tokens';
 
 let mockRole = 'ELDER';
 
@@ -174,9 +175,9 @@ describe('DEEP-32: the failed-send recovery line is readable', () => {
     await fireEvent.press(r.getByLabelText('Send message'));
 
     const caption = await r.findByText("Didn't send. Tap to try again.");
-    // type.meta (14) is the floor for secondary text that asks for an action;
-    // this line is the ONLY instruction for rescuing an unsent message.
-    expect(StyleSheet.flatten(caption.props.style).fontSize).toBeGreaterThanOrEqual(14);
+    // The ramp's meta size is the floor for secondary text that asks for an
+    // action; this line is the ONLY instruction for rescuing an unsent message.
+    expect(StyleSheet.flatten(caption.props.style).fontSize).toBeGreaterThanOrEqual(type.meta);
 
     r.unmount();
   });

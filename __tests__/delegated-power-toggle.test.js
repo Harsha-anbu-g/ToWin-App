@@ -80,7 +80,7 @@ test('a flip PUTs the WHOLE next set, not a delta', async () => {
   );
 
   const advance = POWERS.find((p) => p.key === 'ADVANCE_TRUST');
-  await fireEvent.press(r.getByRole('switch', { name: `${advance.title}, Sarah` }));
+  await fireEvent(r.getByRole('switch', { name: `${advance.title}, Sarah` }), 'valueChange', true);
 
   // Replace semantics: the kept power rides along with the newly ticked one.
   expect(api.put).toHaveBeenCalledTimes(1);
@@ -104,7 +104,7 @@ test("the server's answer wins over the optimistic guess", async () => {
   const r = await wrap(<DelegatedPowerToggle linkId="l1" familyName="Sarah" powers={[]} />);
 
   const reviews = POWERS.find((p) => p.key === 'LEAVE_REVIEWS');
-  await fireEvent.press(r.getByRole('switch', { name: `${reviews.title}, Sarah` }));
+  await fireEvent(r.getByRole('switch', { name: `${reviews.title}, Sarah` }), 'valueChange', true);
 
   await r.findByText(reviews.off('Sarah'));
   r.getByRole('switch', { name: `${reviews.title}, Sarah`, checked: false });
@@ -117,7 +117,7 @@ test('failure rolls the flip back and toasts', async () => {
   );
 
   const reviews = POWERS.find((p) => p.key === 'LEAVE_REVIEWS');
-  await fireEvent.press(r.getByRole('switch', { name: `${reviews.title}, Sarah` }));
+  await fireEvent(r.getByRole('switch', { name: `${reviews.title}, Sarah` }), 'valueChange', true);
 
   await r.findByText("Couldn't save that change. Please try again.");
   r.getByRole('switch', { name: `${reviews.title}, Sarah`, checked: true });
@@ -133,7 +133,7 @@ test('onSaved receives the fresh link so the caller can patch its cache', async 
   );
 
   const manage = POWERS.find((p) => p.key === 'MANAGE_HELP_REQUESTS');
-  await fireEvent.press(r.getByRole('switch', { name: `${manage.title}, Sarah` }));
+  await fireEvent(r.getByRole('switch', { name: `${manage.title}, Sarah` }), 'valueChange', true);
   await r.findByText(manage.on('Sarah'));
   expect(onSaved).toHaveBeenCalledWith(fresh);
 });

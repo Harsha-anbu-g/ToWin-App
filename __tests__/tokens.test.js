@@ -8,7 +8,9 @@ test('core brand tokens match index.css exactly', () => {
   // inkFaint2 below: audited AA fixes supersede raw parity.
   expect(light.blueDeep).toBe('#2A7298');
   expect(light.greenDeep).toBe('#1a5c2e');
-  expect(light.canvas).toBe('#f6f4ef'); // all boxes warm parchment (user 2026-07-12)
+  // Owner call 2026-08-17: cards are white on the white page (hairline-
+  // separated) — the parchment card fill is retired app-wide.
+  expect(light.canvas).toBe('#ffffff');
   expect(light.border).toBe('#e5e1d9');
   expect(light.ink).toBe('#1d1d1f');
 });
@@ -46,17 +48,18 @@ test('redesign: shape scale — 12 inputs, 16 cards, 18 hero, pills round', () =
   expect(radius.pill).toBe(9999);
 });
 
-test('redesign: SF type ramp per handoff', () => {
-  expect(type.title).toBe(28);
-  expect(type.cardTitle).toBe(19);
-  expect(type.body).toBe(16); // audit 2026-07-17: elder rule — running text never below 16 (handoff said 15)
-  // Rulebook pass 2026-07-27: meta carries meaningful secondary text (13 was
-  // under the floor); tabLabel sat below the hard 11pt platform minimum.
-  expect(type.meta).toBe(14);
+// Owner call 2026-08-17: normal-density ramp — the oversized elder ramp is
+// retired; sizes match ordinary iOS/Android conventions. Body stays 16 (the
+// platform-normal reading size), tabLabel keeps the hard 11pt HIG minimum.
+test('normal-density SF type ramp (owner call 2026-08-17)', () => {
+  expect(type.title).toBe(24);
+  expect(type.cardTitle).toBe(17);
+  expect(type.body).toBe(16);
+  expect(type.meta).toBe(13);
   expect(type.caption).toBe(12);
   expect(type.segCount).toBe(12);
   expect(type.tabLabel).toBe(11);
-  expect(type.bigNumber).toBe(48);
+  expect(type.bigNumber).toBe(40);
 });
 
 test('alias tokens are ported (spot checks)', () => {
@@ -75,9 +78,9 @@ test('tokens added on the website 2026-07-09 sync are ported', () => {
   expect(dark.logoGreen).toBe('#025E32');
 });
 
-test('type scale never below 13, body 18', () => {
-  expect(text.base).toBe(18);
-  expect(text.xs).toBe(13);
+test('legacy text scale rides the normal-density ramp too', () => {
+  expect(text.base).toBe(16);
+  expect(text.xs).toBe(12);
 });
 
 test('spacing is the 8px scale', () => {

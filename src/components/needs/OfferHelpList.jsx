@@ -19,6 +19,7 @@ import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
+import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import { useApplyMutations } from '../../lib/useApplyMutations';
@@ -290,6 +291,8 @@ export default function OfferHelpList() {
   );
 
   return (
+    // Swiping the list left/right steps the segments, iOS-style.
+    <SwipeSegments keys={['available', 'applied', 'done']} value={seg} onChange={setSeg} style={{ flex: 1 }}>
     <FlatList
       data={isLoading && seg === 'available' ? [] : shown}
       keyExtractor={(n) => n.id}
@@ -299,7 +302,7 @@ export default function OfferHelpList() {
         <View>
           <Text
             accessibilityRole="header"
-            style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
+            style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
           >
             Offer Help
           </Text>
@@ -390,5 +393,6 @@ export default function OfferHelpList() {
       }
       renderItem={renderItem}
     />
+    </SwipeSegments>
   );
 }

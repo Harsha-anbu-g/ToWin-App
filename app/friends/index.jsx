@@ -14,6 +14,7 @@ import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
@@ -34,13 +35,14 @@ function TonalChip({ label, onPress, neutral = false }) {
       accessibilityLabel={label}
       onPress={onPress}
       disabled={!onPress}
+      // Normal-density chip (owner call 2026-08-17), matching the kit's
+      // ActionChip: 36pt visual pill inside the row the avatar sizes anyway.
+      hitSlop={{ top: 4, bottom: 4 }}
       style={({ pressed }) => ({
-        // 44 as a real box, not 34 plus hitSlop — the web build drops hitSlop
-        // (DEEP-08). Min, not fixed, so it grows with the OS large-text
-        // setting; it still sits inside the 48pt avatar that sets row height.
-        minHeight: 44,
+        // min, not fixed, so it grows with the OS large-text setting
+        minHeight: 36,
         paddingVertical: 6,
-        paddingHorizontal: 16,
+        paddingHorizontal: 14,
         borderRadius: radius.pill,
         backgroundColor: neutral ? t.surfaceFill : 'transparent',
         borderWidth: 1,
@@ -70,14 +72,14 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
         borderWidth: 1,
         borderColor: t.border,
         borderRadius: radius.card,
-        padding: 14,
+        padding: 12,
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
         opacity: pressed ? 0.8 : 1,
       })}
     >
-      <Avatar name={person.name} uri={person.photoUrl} size={48} />
+      <Avatar name={person.name} uri={person.photoUrl} size={44} />
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
           {person.name}
@@ -394,7 +396,7 @@ export default function FriendsScreen() {
       <View style={{ flex: 1, paddingHorizontal: spacing[4] }}>
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginTop: 4 }}
+          style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5, marginTop: 4 }}
         >
           Add Friends
         </Text>
@@ -410,6 +412,13 @@ export default function FriendsScreen() {
           style={{ marginTop: 14, marginBottom: 12 }}
         />
 
+        {/* Swiping the list left/right steps the segments, iOS-style. */}
+        <SwipeSegments
+          keys={['find', 'invites', 'requested']}
+          value={seg}
+          onChange={setSeg}
+          style={{ flex: 1 }}
+        >
         {seg === 'find' ? (
           <FlatList
             data={isLoading ? [] : people}
@@ -428,10 +437,13 @@ export default function FriendsScreen() {
                 {/* Direct choice, not a cycler — going from 25 back to 10 took
                     four taps and a memorized sequence (rulebook: recognition
                     over recall). */}
+                {/* One fixed row of equal-width pills (owner report 2026-08-17:
+                    the wrapping row dropped "100 km" alone onto a second line).
+                    flex: 1 keeps the five widths uniform on every screen. */}
                 <View
                   accessibilityRole="radiogroup"
                   accessibilityLabel={`Showing ${who} within`}
-                  style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
+                  style={{ flexDirection: 'row', gap: 6 }}
                 >
                   {RADIUS_STEPS.map((km, i) => {
                     const active = i === radiusIdx;
@@ -442,14 +454,11 @@ export default function FriendsScreen() {
                         accessibilityLabel={`${km} kilometers`}
                         aria-checked={active}
                         onPress={() => setRadiusIdx(i)}
-                        // A real 44pt box, the kit Chip's rule: these wrap with
-                        // an 8pt gap, and slop would both eat that gap and
-                        // vanish on the web build, which never implements it
-                        // (DEEP-08).
                         style={({ pressed }) => ({
-                          minHeight: 44,
-                          paddingHorizontal: 14,
+                          flex: 1,
+                          minHeight: 36,
                           borderRadius: radius.pill,
+                          alignItems: 'center',
                           justifyContent: 'center',
                           backgroundColor: active ? t.blueWash : 'transparent',
                           borderWidth: 1,
@@ -502,6 +511,7 @@ export default function FriendsScreen() {
             }
           />
         )}
+        </SwipeSegments>
       </View>
     </Screen>
   );

@@ -21,7 +21,8 @@ export default function Card({ children, style, contentStyle, testID, ...rest })
       ]}
       {...rest}
     >
-      <View style={[{ padding: spacing[6] }, contentStyle]}>{children}</View>
+      {/* spacing[4], not [6] — normal-density cards (owner call 2026-08-17) */}
+      <View style={[{ padding: spacing[4] }, contentStyle]}>{children}</View>
     </PaperCard>
   );
 }

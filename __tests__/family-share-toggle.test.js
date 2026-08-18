@@ -113,7 +113,7 @@ test('tap flips optimistically before the POST resolves, with the exact payload'
   api.post.mockImplementation(() => new Promise((resolve) => { resolvePost = resolve; }));
   const r = await wrap(<FamilyShareToggle connectionId="c1" shared={false} />);
 
-  await fireEvent.press(r.getByRole('switch'));
+  await fireEvent(r.getByRole('switch'), 'valueChange', true);
   expect(api.post).toHaveBeenCalledWith('/connections/c1/family-visibility', { shared: true });
   // Optimistic: the on copy shows while the request is still in flight.
   r.getByText('Your family can see this friendship.');
@@ -127,7 +127,7 @@ test('failure rolls the flip back and toasts the web copy', async () => {
   api.post.mockRejectedValue(new Error('network down'));
   const r = await wrap(<FamilyShareToggle connectionId="c1" shared={false} />);
 
-  await fireEvent.press(r.getByRole('switch'));
+  await fireEvent(r.getByRole('switch'), 'valueChange', true);
   await r.findByText("Couldn't save that change. Please try again.");
   r.getByRole('switch', { checked: false });
   r.getByText('Kept private from family. Only you can change this.');
@@ -168,13 +168,17 @@ test('server-truth re-sync: a changed prop updates the toggle in place', async (
   r.getByText('Kept private from family. Only you can change this.');
 });
 
-test('MyHelpersPanel renders the switch on every connection card', async () => {
+test('MyHelpersPanel keeps the switch on every card, folded under the Family arrow', async () => {
   stubGet(
     [conn(), conn({ id: 'c2', otherUserId: 'u2', otherUserName: 'Priya', sharedWithFamily: true })],
     [customer(), customer({ connectionId: 'c2', customerName: 'Priya', stageIndex: 2 })]
   );
   const r = await wrap(<MyHelpersPanel />);
   await r.findByText('Harsha');
+  // Folded by default (owner call 2026-08-17): the arrow reveals the switch.
+  const arrows = r.getAllByLabelText(/Family options/);
+  expect(arrows).toHaveLength(2);
+  for (const arrow of arrows) await fireEvent.press(arrow);
   expect(r.getAllByLabelText('Let my family see this friendship')).toHaveLength(2);
 });
 

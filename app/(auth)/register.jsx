@@ -225,7 +225,8 @@ export default function Register() {
         </Text>
 
         {/* Role cards — the first decision (3q): selected = 2px blue + wash */}
-        <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
+        {/* Body size, not sm: this is the screen's one real question. */}
+        <Text style={{ fontSize: type.body, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
           {ROLE_PROMPT}
         </Text>
         {/* Wrapping row: ELDER + HELPER share the line, the full-width FAMILY

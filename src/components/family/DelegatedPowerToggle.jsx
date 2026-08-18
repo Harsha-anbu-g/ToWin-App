@@ -7,96 +7,36 @@
 // half-on. Optimistic flip; the server's answer is the record that decides.
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
-import { useReducedMotion } from '../../lib/useReducedMotion';
-import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 
-// Track/knob geometry — same numbers as FamilyShareToggle (the web control's
-// 40×24 track, 3px inset, 18px knob, 16px travel).
-const TRACK_W = 40;
-const TRACK_H = 24;
-const TRACK_PAD = 3;
-const KNOB = 18;
-const KNOB_TRAVEL = 16;
-
-// One switch row. Owns its own knob animation so three rows never share an
-// Animated.Value. Knob motion: transform only, ease-out, well under 300ms
-// (Emil rule); reduce-motion SNAPS via setValue — the app convention.
+// One switch row — the platform's native Switch in a plain settings-style
+// row (owner call 2026-08-17: iOS-style controls everywhere; the hand-drawn
+// web-parity track is retired, same as FamilyShareToggle).
 function PowerSwitch({ power, name, isOn, busy, onFlip }) {
-  const { t, type, radius } = useTheme();
-  const reducedMotion = useReducedMotion();
-  const slide = useRef(new Animated.Value(isOn ? 1 : 0)).current;
-
-  useEffect(() => {
-    const dest = isOn ? 1 : 0;
-    if (reducedMotion) {
-      slide.setValue(dest);
-      return;
-    }
-    Animated.timing(slide, {
-      toValue: dest,
-      duration: DURATION.fast,
-      easing: EASE.out,
-      useNativeDriver: true,
-    }).start();
-  }, [isOn, reducedMotion, slide]);
-
+  const { t, type } = useTheme();
   return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityLabel={`${power.title}, ${name}`}
-      accessibilityState={{ checked: isOn, disabled: busy, busy }}
-      disabled={busy}
-      onPress={onFlip}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        minHeight: 44,
-        marginTop: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderWidth: 1,
-        borderColor: t.skyLine2,
-        borderRadius: radius.input,
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, marginTop: 8 }}>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 21 }}>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, lineHeight: 18 }}>
           {power.title}
         </Text>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
+        <Text style={{ fontSize: type.caption, color: t.inkSlate, lineHeight: 16, marginTop: 2 }}>
           {isOn ? power.on(name) : power.off(name)}
         </Text>
       </View>
-      <View
-        style={{
-          width: TRACK_W + TRACK_PAD * 2,
-          height: TRACK_H + TRACK_PAD * 2,
-          padding: TRACK_PAD,
-          borderRadius: radius.pill,
-          justifyContent: 'center',
-          backgroundColor: isOn ? t.blue : t.slateSoft,
-        }}
-      >
-        <Animated.View
-          style={{
-            width: KNOB,
-            height: KNOB,
-            borderRadius: KNOB / 2,
-            backgroundColor: t.actionInk,
-            transform: [
-              { translateX: slide.interpolate({ inputRange: [0, 1], outputRange: [0, KNOB_TRAVEL] }) },
-            ],
-          }}
-        />
-      </View>
-    </Pressable>
+      <Switch
+        accessibilityLabel={`${power.title}, ${name}`}
+        value={isOn}
+        disabled={busy}
+        onValueChange={onFlip}
+        trackColor={{ false: t.slateSoft, true: t.blue }}
+        ios_backgroundColor={t.slateSoft}
+      />
+    </View>
   );
 }
 

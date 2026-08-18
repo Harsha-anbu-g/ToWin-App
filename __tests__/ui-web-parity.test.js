@@ -53,7 +53,10 @@ jest.mock('../src/lib/storage', () => ({
 import api from '../src/api/client';
 import ProfileScreen from '../app/(tabs)/profile';
 
-const MIN_TARGET = 44; // design law: a real box, because web has no hitSlop
+// Owner call 2026-08-17 (normal density): the visual box floor is 36pt —
+// ordinary app chip height. The box must still be real (measured minHeight,
+// never hitSlop, because react-native-web drops hitSlop).
+const MIN_TARGET = 36;
 
 const styleOf = (node) => StyleSheet.flatten(node.props.style) ?? {};
 

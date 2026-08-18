@@ -9,17 +9,17 @@ import Button from '../ui/Button';
 export default function PausedCard({ conn, onResume, resuming }) {
   const { t, radius, type, fontFamily } = useTheme();
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 16, marginTop: 14 }}>
+    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 14, marginTop: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
-        <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={44} />
+        <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={40} />
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.ink }}>{conn.otherUserName}</Text>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1, lineHeight: 18 }}>
+          <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}>{conn.otherUserName}</Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1, lineHeight: 16 }}>
             On a break. Trust steps and messages are paused.
           </Text>
         </View>
       </View>
-      <Button title="Resume" variant="secondary" loading={resuming} onPress={onResume} style={{ marginTop: 14 }} />
+      <Button title="Resume" variant="secondary" loading={resuming} onPress={onResume} style={{ marginTop: 12 }} />
     </View>
   );
 }

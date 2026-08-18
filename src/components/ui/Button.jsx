@@ -23,7 +23,7 @@ export default function Button({
   accessibilityLabel,
   accessibilityHint,
 }) {
-  const { t, radius, text, fontScaleCaps, pressRipple } = useTheme();
+  const { t, radius, text, type, fontScaleCaps, pressRipple } = useTheme();
   const blocked = disabled || loading;
   const small = size === 'small';
 
@@ -35,36 +35,40 @@ export default function Button({
     onPress?.(e);
   };
 
+  // Normal-density heights (owner call 2026-08-17): 46pt primary, 40pt for
+  // the quiet variants — ordinary app proportions instead of the elder ramp.
   const shell = {
     primary: {
-      minHeight: 50,
+      minHeight: 46,
       backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
     },
     // Ghost, like the website's .ghost-btn — no fill, hairline sky border.
     // A wash-filled pill reads "generated"; a printed hairline reads designed.
     secondary: {
-      minHeight: 44,
+      minHeight: 40,
       backgroundColor: 'transparent',
       borderWidth: 1,
       borderColor: t.blueSoft,
     },
     text: {
-      minHeight: 44,
+      minHeight: 40,
       backgroundColor: 'transparent',
       borderWidth: 0,
     },
     // Plain red text, iOS-style — destructive must not share the pill shape
     // of ordinary actions (it reads as "just another button" otherwise).
     destructive: {
-      minHeight: 44,
+      minHeight: 40,
       backgroundColor: 'transparent',
       borderWidth: 0,
     },
   }[variant];
 
+  // Primary keeps the body size (it is the screen's one filled action); the
+  // quiet variants ride text.sm, which the normal-density ramp sets to 14.
   const label = {
-    primary: { color: t.actionInk, fontSize: text.sm },
+    primary: { color: t.actionInk, fontSize: type.body },
     secondary: { color: t.blueDeep, fontSize: text.sm },
     text: { color: t.blueDeep, fontSize: text.sm },
     destructive: { color: t.redDeep, fontSize: text.sm },
@@ -92,7 +96,7 @@ export default function Button({
           opacity: pressed ? 0.85 : disabled && variant !== 'primary' ? 0.5 : 1,
         },
         shell,
-        small ? { minHeight: 38, paddingHorizontal: 16 } : null,
+        small ? { minHeight: 36, paddingHorizontal: 14 } : null,
         style,
       ]}
     >

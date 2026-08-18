@@ -149,7 +149,7 @@ export default function FinishSetup() {
 
         {/* Same size and weight as register's prompt: the twins ask one
             question and had drifted to two different sizes. */}
-        <Text style={{ fontSize: text.sm, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
+        <Text style={{ fontSize: type.body, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
           {ROLE_PROMPT}
         </Text>
         {/* The two cards were loose Pressables with no group around them, so a

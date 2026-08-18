@@ -153,15 +153,15 @@ test('a second confirm while one is open resolves false instead of stacking', as
   expect(first).not.toHaveBeenCalled();
 });
 
-// Elder-first: the rulebook floors every target at 44pt. A confirm dialog is
+// Normal-density floor (owner call 2026-08-17): quiet buttons are 40pt. A confirm dialog is
 // the last place to shave that — it is where the irreversible taps happen.
-test('both buttons keep a >=44pt target', async () => {
+test('both buttons keep a >=40pt target', async () => {
   const { getByLabelText } = await openWith();
 
   for (const label of ['Cancel', 'Send SOS']) {
     const styles = [getByLabelText(label).props.style].flat(Infinity).filter(Boolean);
     const flat = Object.assign({}, ...styles);
-    expect(flat.minHeight).toBeGreaterThanOrEqual(44);
+    expect(flat.minHeight).toBeGreaterThanOrEqual(40);
   }
 });
 
