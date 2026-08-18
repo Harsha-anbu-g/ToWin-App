@@ -107,8 +107,8 @@ function tabA11yLabel(label, count = 0, noun = '') {
 // The lens capsule's geometry inside the 76pt bar: it wraps the WHOLE tab
 // item — icon and label together (owner call 2026-08-17: "the lens should
 // also cover the letter").
-const LENS_TOP = 3;
-const LENS_H = 58; // generous: icon row + the full label line, with air below
+const LENS_TOP = 5;
+const LENS_H = 54; // hugs the icon row + label line with just a little air
 
 // The bar's glass sheet + the finger-following lens (owner calls
 // 2026-08-17: the WhatsApp/Apple effect — a glass capsule that glides to
@@ -283,8 +283,10 @@ export default function TabsLayout() {
     const measured = widths[slotTitles[slots[i]]];
     // Icon row is 22pt wide; the label is usually the wider of the two.
     const content = Math.max(measured ?? 0, 22);
-    const hug = measured ? content + 32 : Math.min(sw - 6, 96); // pre-measure fallback
-    return Math.max(56, Math.min(hug, sw - 4));
+    // +20 = 10pt of air each side — snug around the letters (owner call
+    // 2026-08-18: "bring it closer").
+    const hug = measured ? content + 20 : Math.min(sw - 6, 96); // pre-measure fallback
+    return Math.max(48, Math.min(hug, sw - 4));
   };
 
   const lensX = useRef(new Animated.Value(0)).current;
