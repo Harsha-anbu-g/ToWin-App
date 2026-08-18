@@ -43,13 +43,12 @@ export default function Button({
       backgroundColor: disabled ? t.btnDisabled : t.actionFill,
       borderWidth: 0,
     },
-    // Ghost, like the website's .ghost-btn — no fill, hairline sky border.
-    // A wash-filled pill reads "generated"; a printed hairline reads designed.
+    // iOS tonal (owner call 2026-08-17, supersedes the ghost-outline web
+    // parity): a quiet sky wash fill, no outline.
     secondary: {
       minHeight: 40,
-      backgroundColor: 'transparent',
-      borderWidth: 1,
-      borderColor: t.blueSoft,
+      backgroundColor: t.blueWash,
+      borderWidth: 0,
     },
     text: {
       minHeight: 40,

@@ -131,11 +131,15 @@ test('"Not yet" closes the dialog without confirming anything', async () => {
   expect(api.post).not.toHaveBeenCalledWith('/trust/c1/confirm');
 });
 
-test('when the other side already confirmed, the action reads as accepting', async () => {
+test('an elder always reads Start — accepting is a helper-only state', async () => {
+  // TrustService refuses a helper-first confirm, so confirmedByOther can
+  // only ever be a transient blip on the elder's side; the elder's action
+  // must never flip to "Accept" (owner call 2026-08-17).
   stubGet(conn({ confirmedByOther: true }));
   const r = await wrap(<ChatThread />);
 
-  expect(await r.findByText('Accept the next step')).toBeTruthy();
+  expect(await r.findByText('Start the next step')).toBeTruthy();
+  expect(r.queryByText('Accept the next step')).toBeNull();
 });
 
 test('a helper never sees a dead start button — the elder starts each step', async () => {

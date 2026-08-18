@@ -106,9 +106,8 @@ const NeedCard = memo(function NeedCard({
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: radius.pill,
-              backgroundColor: 'transparent',
-              borderWidth: 1,
-              borderColor: t.blueSoft,
+              // iOS tonal pill — filled wash, no outline (owner call 2026-08-17)
+              backgroundColor: t.blueWash,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.7 : 1,

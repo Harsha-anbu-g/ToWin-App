@@ -261,9 +261,8 @@ export default function ProfileScreen() {
               paddingVertical: spacing[2],
               paddingHorizontal: 15,
               borderRadius: 22,
-              backgroundColor: t.canvas,
-              borderWidth: 1,
-              borderColor: t.border,
+              // iOS tonal pill — filled wash, no outline (owner call 2026-08-17)
+              backgroundColor: t.surfaceFill,
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.7 : 1,
