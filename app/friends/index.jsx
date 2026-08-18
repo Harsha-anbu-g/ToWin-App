@@ -44,8 +44,8 @@ function TonalChip({ label, onPress, neutral = false }) {
         paddingVertical: 6,
         paddingHorizontal: 14,
         borderRadius: radius.pill,
-        // iOS tonal pill — filled wash, no outline (owner call 2026-08-17)
-        backgroundColor: neutral ? t.surfaceFill : t.blueWash,
+        // iOS tonal pill — neutral gray fill, colored text (owner call 2026-08-17)
+        backgroundColor: t.surfaceFill,
         alignItems: 'center',
         justifyContent: 'center',
         opacity: pressed ? 0.7 : 1,

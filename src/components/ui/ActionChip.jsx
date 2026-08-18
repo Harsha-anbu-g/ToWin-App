@@ -29,9 +29,10 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
           paddingVertical: 6,
           paddingHorizontal: 14,
           borderRadius: radius.pill,
-          // iOS tonal pill (owner call 2026-08-17): a quiet filled wash, no
-          // outline — the App Store GET-button grammar.
-          backgroundColor: tonal ? t.blueWash : destructive ? t.redTint : t.surfaceFill,
+          // iOS tonal pill (owner calls 2026-08-17): the App Store GET-button
+          // grammar — neutral gray fill, the COLOR lives in the text. A blue
+          // fill on every chip drowned the screen in blue.
+          backgroundColor: t.surfaceFill,
           alignItems: 'center',
           justifyContent: 'center',
           opacity: disabled ? 0.5 : pressed ? 0.7 : 1,
