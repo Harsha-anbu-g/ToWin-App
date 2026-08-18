@@ -58,7 +58,7 @@ function ChatSkeleton() {
 }
 
 export default function ChatThread() {
-  const { t, spacing, radius, text, type } = useTheme();
+  const { mode, t, spacing, radius, text, type } = useTheme();
   const { connectionId, channel: channelParam } = useLocalSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -631,6 +631,9 @@ export default function ChatThread() {
             onChangeText={setInput}
             placeholder="Write a message…"
             placeholderTextColor={t.ink4}
+            // The iOS keyboard dresses to match the app's own opt-in night
+            // mode (never the OS setting) — Apple polish, Towinly's rule.
+            keyboardAppearance={mode === 'dark' ? 'dark' : 'light'}
             multiline
             style={{
               flex: 1,

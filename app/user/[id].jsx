@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BookOpen } from '../../src/components/icons';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { ActionSheetIOS, Platform, Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import { FROM_PAGE } from '../../src/lib/passOnLocks';
 import ActionChip from '../../src/components/ui/ActionChip';
@@ -374,7 +374,31 @@ export default function UserProfile() {
             {conn?.status === 'ACTIVE' ? (
               <Button title="End friendship" variant="destructive" onPress={confirmEnd} />
             ) : null}
-            <Button title="Report this person" variant="text" onPress={() => setReportOpen((v) => !v)} />
+            <Button
+              title="Report this person"
+              variant="text"
+              onPress={() => {
+                // iOS gets the system action sheet for this pick-one list
+                // (owner call 2026-08-17: Apple design wherever possible);
+                // Android/web keep the in-screen list below — they have no
+                // native sheet, and the rulebook prefers in-place over a
+                // stacked Alert there.
+                if (Platform.OS === 'ios') {
+                  ActionSheetIOS.showActionSheetWithOptions(
+                    {
+                      title: 'What went wrong?',
+                      options: [...REPORT_REASONS, 'Never mind'],
+                      cancelButtonIndex: REPORT_REASONS.length,
+                    },
+                    (i) => {
+                      if (i < REPORT_REASONS.length) report.mutate(REPORT_REASONS[i]);
+                    }
+                  );
+                  return;
+                }
+                setReportOpen((v) => !v);
+              }}
+            />
             <Button
               title={blocking ? 'Blocking…' : 'Block this person'}
               variant="destructive"

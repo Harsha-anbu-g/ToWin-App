@@ -329,8 +329,10 @@ export default function ProfileEdit() {
   // out from under the reader.
   const dobRef = useRef(null);
   const phoneRef = useRef(null);
+  const facebookRef = useRef(null);
   const focusDob = useCallback(() => dobRef.current?.focus(), []);
   const focusPhone = useCallback(() => phoneRef.current?.focus(), []);
+  const focusFacebook = useCallback(() => facebookRef.current?.focus(), []);
   const genderHandlers = useMemo(
     () =>
       Object.fromEntries(
@@ -545,9 +547,13 @@ export default function ProfileEdit() {
           textContentType="telephoneNumber"
           autoComplete="tel"
           helper="Only shared after both people reach the Phone Ready trust stage."
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusFacebook}
           style={FIELD_GAP}
         />
         <Input
+          ref={facebookRef}
           label="Facebook link (optional)"
           value={form.facebookUrl}
           onChangeText={set('facebookUrl')}
