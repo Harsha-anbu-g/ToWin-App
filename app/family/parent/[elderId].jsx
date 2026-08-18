@@ -28,6 +28,7 @@ import Button from '../../../src/components/ui/Button';
 import LoadError from '../../../src/components/ui/LoadError';
 import Screen from '../../../src/components/ui/Screen';
 import SegmentedControl from '../../../src/components/ui/SegmentedControl';
+import SwipeSegments from '../../../src/components/ui/SwipeSegments';
 import SkeletonCard from '../../../src/components/ui/Skeleton';
 import TrustBadge from '../../../src/components/ui/TrustBadge';
 import { useToast } from '../../../src/context/ToastContext';
@@ -222,6 +223,8 @@ export default function FamilyParentScreen() {
             style={{ marginTop: spacing[4] }}
           />
 
+          {/* Swiping the content left/right steps the segments, iOS-style. */}
+          <SwipeSegments keys={['friendships', 'today', 'powers']} value={tab} onChange={setTab}>
           {tab === 'friendships' ? (
             <>
               <Text
@@ -454,6 +457,7 @@ export default function FamilyParentScreen() {
               <FamilyPowerAsks link={link} elderName={elderName} onChanged={reload} />
             </>
           ) : null}
+          </SwipeSegments>
         </>
       )}
     </Screen>

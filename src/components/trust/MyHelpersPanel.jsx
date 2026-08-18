@@ -89,7 +89,7 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
             {card.total}
-            <Text style={{ fontWeight: '400', fontSize: type.caption }}>/{card.totalMax}</Text>
+            <Text style={{ fontWeight: '400', fontSize: type.caption, fontVariant: ['tabular-nums'] }}>/{card.totalMax}</Text>
           </Text>
         </Pressable>
       </View>

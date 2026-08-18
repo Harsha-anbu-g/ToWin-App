@@ -37,6 +37,7 @@ import {
 } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import Button from '../components/ui/Button';
+import { haptic } from '../lib/haptics';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -152,6 +153,9 @@ export function ConfirmProvider({ children }) {
     if (resolver.current) return Promise.resolve(false);
     return new Promise((resolve) => {
       resolver.current = resolve;
+      // Destructive questions announce themselves in the hand too — the
+      // system warning tap (owner call 2026-08-17: Apple feel everywhere).
+      if (options?.destructive) haptic.warning();
       setRequest(options);
     });
   }, []);

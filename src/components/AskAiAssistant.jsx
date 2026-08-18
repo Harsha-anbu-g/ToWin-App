@@ -231,7 +231,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
 });
 
 export default function AskAiAssistant() {
-  const { t, spacing, type, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
+  const { mode, t, spacing, type, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
   const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
@@ -542,6 +542,7 @@ export default function AskAiAssistant() {
                   onChangeText={setInput}
                   placeholder="Type your question…"
                   placeholderTextColor={t.ink4}
+                  keyboardAppearance={mode === 'dark' ? 'dark' : 'light'}
                   multiline
                   style={{
                     flex: 1,

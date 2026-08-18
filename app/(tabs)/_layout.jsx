@@ -33,6 +33,7 @@ import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
 import { haptic } from '../../src/lib/haptics';
+import { setAppBadgeCountAsync } from '../../src/lib/pushNotifications';
 import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
@@ -369,6 +370,13 @@ export default function TabsLayout() {
       onPanResponderTerminate: () => live.current.cancel(),
     })
   ).current;
+
+  // The app icon's badge mirrors unread conversations (owner call
+  // 2026-08-17: Apple behavior everywhere) — cleared when the count is,
+  // and on logout, when unread goes undefined → 0.
+  useEffect(() => {
+    setAppBadgeCountAsync(Number(unread) || 0);
+  }, [unread]);
 
   // Auth guard: after logout or a dead session (401), leaving the user inside
   // the tabs would render silently empty screens — bounce to Log In instead

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
 import SegmentedControl from '../src/components/ui/SegmentedControl';
+import SwipeSegments from '../src/components/ui/SwipeSegments';
 import { useAuth } from '../src/context/AuthContext';
 import { useTheme } from '../src/theme/ThemeContext';
 
@@ -117,6 +118,8 @@ export default function Guide() {
           onChange={setRole}
           style={{ marginBottom: spacing[3] }}
         />
+        {/* Swiping the role content steps the segments, iOS-style. */}
+        <SwipeSegments keys={['ELDER', 'HELPER', 'FAMILY']} value={role} onChange={setRole}>
         <H>What you can do</H>
         {role === 'FAMILY' ? (
           <P>As Family, you stay close to your parent&apos;s life here, always with their say-so.</P>
@@ -130,6 +133,7 @@ export default function Guide() {
             and they can change their mind at any time.
           </P>
         ) : null}
+        </SwipeSegments>
       </Card>
 
       <Card style={{ marginTop: spacing[4] }}>

@@ -86,7 +86,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
         {scoreCard ? (
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
             {scoreCard.total}
-            <Text style={{ fontWeight: '400', fontSize: type.caption }}>/{scoreCard.totalMax}</Text>
+            <Text style={{ fontWeight: '400', fontSize: type.caption, fontVariant: ['tabular-nums'] }}>/{scoreCard.totalMax}</Text>
           </Text>
         ) : null}
       </View>

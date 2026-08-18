@@ -21,6 +21,7 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import LoadError from '../../src/components/ui/LoadError';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
@@ -437,6 +438,8 @@ export default function PassOn() {
 
       <SegmentedControl segments={TABS} value={tab} onChange={changeTab} />
 
+      {/* Swiping the boxes left/right steps the segments, iOS-style. */}
+      <SwipeSegments keys={TABS.map((s) => s.key)} value={tab} onChange={changeTab}>
       {tab === 'stories' ? (
         <View accessibilityLabel="Your story box" style={{ gap: spacing[3] }}>
           {writingHere('STORY') ? (
@@ -597,6 +600,7 @@ export default function PassOn() {
           ) : null}
         </View>
       ) : null}
+      </SwipeSegments>
     </Screen>
   );
 }

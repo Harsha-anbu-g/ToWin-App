@@ -108,6 +108,17 @@ export async function unregisterPushAsync() {
 }
 
 /** Where each kind of ping leads. Exported for the tests. */
+// App-icon badge = unread conversations (owner call 2026-08-17: Apple
+// behavior everywhere). Callers pass the count; web has no icon to badge.
+export async function setAppBadgeCountAsync(count) {
+  if (Platform.OS === 'web') return;
+  try {
+    await notifications().setBadgeCountAsync(Math.max(0, Number(count) || 0));
+  } catch {
+    // Badging is a nicety — never let it break the caller.
+  }
+}
+
 export function routeForNotification(data) {
   if (!data || typeof data !== 'object') return null;
   if (data.type === 'message' && data.connectionId) {
