@@ -10,7 +10,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, Tabs, usePathname, useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   MessageCircle,
@@ -116,7 +116,7 @@ const LENS_H = 58; // generous: icon row + the full label line, with air below
 // bar). Purely visual: it renders as the bar's BACKGROUND layer, so every
 // real tab button, badge, and screen-reader label stays exactly as the
 // library renders it. The layout above owns the animated values.
-function GlassTabBackground({ animX, shown, scale, lensW }) {
+function GlassTabBackground({ animX, animW, shown, scale, ready }) {
   const { t, mode } = useTheme();
   return (
     <View style={{ flex: 1 }}>
@@ -129,14 +129,14 @@ function GlassTabBackground({ animX, shown, scale, lensW }) {
           style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
         />
       ) : null}
-      {lensW > 0 ? (
+      {ready ? (
         <Animated.View
           pointerEvents="none"
           style={{
             position: 'absolute',
             top: LENS_TOP,
             height: LENS_H,
-            width: lensW,
+            width: animW,
             borderRadius: 999,
             overflow: 'hidden',
             // Real Liquid Glass draws its own edge; only the fallback
@@ -261,15 +261,34 @@ export default function TabsLayout() {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const slotW = slots.length > 0 ? winW / slots.length : 0;
-  // Nearly the full slot: the label may render as wide as the slot allows
-  // (large OS text scales it up to the chrome cap), and letters must never
-  // poke past the capsule (owner report 2026-08-17).
-  const lensW = slotW > 0 ? Math.min(slotW - 4, 112) : 0;
   const barH = 76 + insets.bottom;
   const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
   const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';
 
+  // The capsule hugs each tab's CONTENT, WhatsApp-style (owner report
+  // 2026-08-17: a fixed width let long words poke out and drowned short
+  // ones). Every rendered label reports its true width from onLayout —
+  // covering the OS text-size setting — and the lens resizes as it glides.
+  const [labelWidths, setLabelWidths] = useState({});
+  const noteLabel = (title, w) =>
+    setLabelWidths((prev) => (Math.abs((prev[title] ?? 0) - w) < 1 ? prev : { ...prev, [title]: w }));
+  const slotTitles = {
+    home: homeTab.label,
+    'posted-help': 'Posted Help',
+    messages: 'Messages',
+    profile: 'Profile',
+  };
+  const lensWFor = (i, sw, widths) => {
+    if (sw <= 0) return 0;
+    const measured = widths[slotTitles[slots[i]]];
+    // Icon row is 22pt wide; the label is usually the wider of the two.
+    const content = Math.max(measured ?? 0, 22);
+    const hug = measured ? content + 32 : Math.min(sw - 6, 96); // pre-measure fallback
+    return Math.max(56, Math.min(hug, sw - 4));
+  };
+
   const lensX = useRef(new Animated.Value(0)).current;
+  const lensWAnim = useRef(new Animated.Value(0)).current;
   const lensShown = useRef(new Animated.Value(0)).current;
   const lensScale = useRef(new Animated.Value(1)).current;
   const dragging = useRef(false);
@@ -277,46 +296,61 @@ export default function TabsLayout() {
 
   // One spring voice for every lens move: quick, critically damped — the
   // organic WhatsApp glide, no visible bounce (Emil rule still holds).
-  const LENS_SPRING = { damping: 26, stiffness: 320, mass: 0.9, useNativeDriver: true };
+  // JS-driven: width is a layout prop the native driver can't animate, and
+  // one view can't mix drivers — the bar is a single small view, so the JS
+  // driver keeps up fine.
+  const LENS_SPRING = { damping: 26, stiffness: 320, mass: 0.9, useNativeDriver: false };
   const centerOf = (i, sw, lw) => i * sw + (sw - lw) / 2;
 
   useEffect(() => {
     if (slotW <= 0 || dragging.current) return;
     if (!lensable) {
       if (reducedMotion) lensShown.setValue(0);
-      else Animated.timing(lensShown, { toValue: 0, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: true }).start();
+      else Animated.timing(lensShown, { toValue: 0, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: false }).start();
       return;
     }
-    const dest = centerOf(activeIndex, slotW, lensW);
+    const lw = lensWFor(activeIndex, slotW, labelWidths);
+    const dest = centerOf(activeIndex, slotW, lw);
     if (reducedMotion || !placed.current) {
       placed.current = true;
       lensX.setValue(dest);
+      lensWAnim.setValue(lw);
       lensShown.setValue(1);
       return;
     }
-    Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: true }).start();
+    Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: false }).start();
     Animated.spring(lensX, { toValue: dest, ...LENS_SPRING }).start();
+    Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
     // The spring config is a stable literal and the Animated.Values are refs —
-    // only real geometry/route changes should re-run this.
+    // only real geometry/route/measure changes should re-run this.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex, lensable, slotW, lensW, reducedMotion]);
+  }, [activeIndex, lensable, slotW, labelWidths, reducedMotion]);
 
   // Live state for the drag responder (created once; reads through the ref).
-  const live = useRef({});
+  const live = useRef({ hovered: -1 });
   live.current = {
-    slots, slotW, lensW, winW, winH, barH, activeIndex, lensable,
+    ...live.current,
+    slots, slotW, winW, winH, barH, activeIndex, lensable, labelWidths,
     grab: () => {
       dragging.current = true;
+      live.current.hovered = -1;
       haptic.selection();
       Animated.spring(lensScale, { toValue: 1.08, ...LENS_SPRING }).start();
-      Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: true }).start();
+      Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: false }).start();
     },
     track: (pageX) => {
-      const { winW: w, lensW: lw } = live.current;
-      lensX.setValue(Math.min(Math.max(pageX - lw / 2, 4), w - lw - 4));
+      const { winW: w, slots: s, slotW: sw, labelWidths: widths } = live.current;
+      // Hug whichever tab the finger is over: the width morphs mid-glide.
+      const over = Math.min(s.length - 1, Math.max(0, Math.floor(pageX / sw)));
+      if (over !== live.current.hovered) {
+        live.current.hovered = over;
+        Animated.spring(lensWAnim, { toValue: lensWFor(over, sw, widths), ...LENS_SPRING }).start();
+      }
+      const lw = lensWFor(over, sw, widths);
+      lensX.setValue(Math.min(Math.max(pageX - lw / 2, 2), w - lw - 2));
     },
     drop: (pageX) => {
-      const { slots: s, slotW: sw, lensW: lw, activeIndex: cur } = live.current;
+      const { slots: s, slotW: sw, activeIndex: cur, labelWidths: widths } = live.current;
       dragging.current = false;
       Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
       let idx = Math.min(s.length - 1, Math.max(0, Math.floor(pageX / sw)));
@@ -326,17 +360,23 @@ export default function TabsLayout() {
         idx = pageX / sw - idx < 0.5 ? Math.max(0, idx - 1) : Math.min(s.length - 1, idx + 1);
         if (s[idx] === 'action') idx = Math.max(0, cur);
       }
+      const lw = lensWFor(idx, sw, widths);
       Animated.spring(lensX, { toValue: centerOf(idx, sw, lw), ...LENS_SPRING }).start();
+      Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
       if (idx !== cur && s[idx]) {
         haptic.impact();
         router.push(`/${s[idx]}`);
       }
     },
     cancel: () => {
-      const { slotW: sw, lensW: lw, activeIndex: cur, lensable: ok } = live.current;
+      const { slotW: sw, activeIndex: cur, lensable: ok, labelWidths: widths } = live.current;
       dragging.current = false;
       Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
-      if (ok) Animated.spring(lensX, { toValue: centerOf(cur, sw, lw), ...LENS_SPRING }).start();
+      if (ok) {
+        const lw = lensWFor(cur, sw, widths);
+        Animated.spring(lensX, { toValue: centerOf(cur, sw, lw), ...LENS_SPRING }).start();
+        Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
+      }
     },
   };
 
@@ -393,6 +433,8 @@ export default function TabsLayout() {
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={fontScaleCaps.chrome}
+            // Each label reports its rendered width so the lens can hug it.
+            onLayout={(e) => noteLabel(children, e.nativeEvent.layout.width)}
             style={{ fontSize: type.tabLabel, fontWeight: '600', color }}
           >
             {children}
@@ -422,7 +464,13 @@ export default function TabsLayout() {
           paddingBottom: Math.max(insets.bottom, 8),
         },
         tabBarBackground: () => (
-          <GlassTabBackground animX={lensX} shown={lensShown} scale={lensScale} lensW={lensW} />
+          <GlassTabBackground
+            animX={lensX}
+            animW={lensWAnim}
+            shown={lensShown}
+            scale={lensScale}
+            ready={slotW > 0}
+          />
         ),
         sceneStyle: { backgroundColor: t.surface },
       }}
