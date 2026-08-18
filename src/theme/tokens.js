@@ -63,10 +63,12 @@ export const light = {
   redMild: '#cf6a66', // soft error text
 
   // Surfaces
-  // Cards/boxes are warm parchment on the white page (user decision
-  // 2026-07-12: "the colour used in daily check-in — all boxes use it").
+  // Cards are white on the white page, separated by hairline borders (owner
+  // call 2026-08-17: "the mild golden is not good where the background is
+  // white" — the parchment card fill is retired; it supersedes the 2026-07-12
+  // all-boxes-parchment decision). Warmth survives only on heroParchment.
   // Elevation stays surface contrast + hairline, never shadow.
-  canvas: '#f6f4ef',
+  canvas: '#ffffff',
   surface: '#ffffff', // page canvas — plain white (2026-07-11 redesign, user decision)
   surfaceFill: '#f2f2f5', // segmented tracks, neutral chips, search fields
   heroParchment: '#f6f4ef', // check-in hero card — same warm family as canvas
@@ -287,25 +289,25 @@ export const radius = {
 // sm raised 15 → 16 (rulebook pass 2026-07-27): it carries Input errors/helpers,
 // secondary Button labels, toast messages, and the legal body — all reading text,
 // all under the elder floor at 15.
-export const text = { xs: 13, sm: 16, base: 18, lg: 22, xl: 28, '2xl': 34, '3xl': 40 };
+export const text = { xs: 12, sm: 14, base: 16, lg: 20, xl: 24, '2xl': 28, '3xl': 32 };
 
 // Redesign SF type ramp (handoff, locked): body/UI on the system stack; scores,
 // streaks, and times ALWAYS render with tabular numerals (fontVariant:
 // ['tabular-nums']). Display sizes stay Newsreader 400 via fontFamily.display —
 // titles 27–30, card titles 17–21, big numbers 42–56; these are the midpoints.
+// Normal-density ramp (owner call 2026-08-17: "nothing specific for elder" —
+// the oversized elder ramp is retired; sizes now match ordinary iOS/Android
+// app conventions). Body stays 16: that IS the platform-normal reading size.
 export const type = {
-  title: 28, // screen titles (Newsreader)
-  cardTitle: 19, // card titles (Newsreader)
-  bigNumber: 48, // serif streaks/scores
-  body: 16, // elder rule: running text never below 16 (handoff's 15 was under the floor)
-  // Floors raised (rulebook pass 2026-07-27): meta carries actionable/meaningful
-  // secondary text (chip labels, status lines, ladder legends) — 13 was under the
-  // important-secondary floor; tabLabel sat below the hard 11pt platform minimum.
-  meta: 14,
+  title: 24, // screen titles (Newsreader)
+  cardTitle: 17, // card titles (Newsreader)
+  bigNumber: 40, // serif streaks/scores
+  body: 16, // running text — platform-normal reading size
+  meta: 13, // secondary text (chip labels, status lines, ladder legends)
   caption: 12,
   segCount: 12, // segmented-control counts
   tabLabel: 11, // tab bar labels — the absolute HIG floor, never lower
-  wordmark: 19, // 'Towinly' SF 600, color blueTeal
+  wordmark: 17, // 'Towinly' SF 600, color blueTeal
 };
 
 // Elder-first font scaling (UX-701): never allowFontScaling={false} — large

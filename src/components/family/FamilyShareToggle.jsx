@@ -4,50 +4,24 @@
 // Default off: private until the elder says otherwise (backend V39 default).
 // Sharing never moves the trust score, so no query invalidation is needed —
 // the POST returns the fresh ConnectionResponse and we patch it in place.
+//
+// Owner call 2026-08-17 ("the switch for the family is not good"): the
+// hand-drawn web-parity track is retired for the platform's native Switch —
+// the control every other app uses — in a plain settings-style row.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, Text, View } from 'react-native';
+import { Switch, Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
-import { useReducedMotion } from '../../lib/useReducedMotion';
-import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 
-// Track/knob geometry — the web control's exact numbers (40×24 track, 3px
-// inset, 18px knob, 16px travel; "same geometry as the NavBar night switch").
-const TRACK_W = 40;
-const TRACK_H = 24;
-const TRACK_PAD = 3;
-const KNOB = 18;
-const KNOB_TRAVEL = 16;
-
 export default function FamilyShareToggle({ connectionId, shared: initialShared = false }) {
-  const { t, type, radius } = useTheme();
+  const { t, type } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const reducedMotion = useReducedMotion();
   // Optimistic local state, like the web control: flip now, roll back on
   // failure. A successful POST means the cache and this state already agree.
   const [shared, setShared] = useState(!!initialShared);
-  const slide = useRef(new Animated.Value(initialShared ? 1 : 0)).current;
-
-  // Knob motion: transform only, ease-out, well under 300ms (Emil rule).
-  // Reduce-motion SNAPS (setValue) — the app convention (MenuSheet,
-  // TortoiseMark) and the web's real behavior: index.css clamps every
-  // transition to 0.01ms under prefers-reduced-motion (FAM-407 2026-07-19).
-  useEffect(() => {
-    const dest = shared ? 1 : 0;
-    if (reducedMotion) {
-      slide.setValue(dest);
-      return;
-    }
-    Animated.timing(slide, {
-      toValue: dest,
-      duration: DURATION.fast,
-      easing: EASE.out,
-      useNativeDriver: true,
-    }).start();
-  }, [shared, reducedMotion, slide]);
 
   const save = useMutation({
     mutationFn: async (next) =>
@@ -80,68 +54,32 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
     setShared(!!initialShared);
   }, [initialShared, save.isPending]);
 
-  const flip = () => {
+  const flip = (next) => {
     if (save.isPending) return;
-    const next = !shared;
     setShared(next);
     save.mutate(next);
   };
 
   return (
-    <Pressable
-      accessibilityRole="switch"
-      accessibilityLabel="Let my family see this friendship"
-      accessibilityState={{ checked: shared, disabled: save.isPending, busy: save.isPending }}
-      disabled={save.isPending}
-      onPress={flip}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        minHeight: 44,
-        marginTop: 12,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderWidth: 1,
-        borderColor: t.skyLine2,
-        borderRadius: radius.input,
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, marginTop: 8 }}>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 21 }}>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, lineHeight: 18 }}>
           Let my family see this friendship
         </Text>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
+        <Text style={{ fontSize: type.caption, color: t.inkSlate, lineHeight: 16, marginTop: 2 }}>
           {shared
             ? 'Your family can see this friendship.'
             : 'Kept private from family. Only you can change this.'}
         </Text>
       </View>
-      {/* Track paints (non-animated color swap, like the web); only the knob
-          moves. actionInk = the white that rides an action fill, both themes. */}
-      <View
-        style={{
-          width: TRACK_W + TRACK_PAD * 2,
-          height: TRACK_H + TRACK_PAD * 2,
-          padding: TRACK_PAD,
-          borderRadius: radius.pill,
-          justifyContent: 'center',
-          backgroundColor: shared ? t.blue : t.slateSoft,
-        }}
-      >
-        <Animated.View
-          style={{
-            width: KNOB,
-            height: KNOB,
-            borderRadius: KNOB / 2,
-            backgroundColor: t.actionInk,
-            transform: [
-              { translateX: slide.interpolate({ inputRange: [0, 1], outputRange: [0, KNOB_TRAVEL] }) },
-            ],
-          }}
-        />
-      </View>
-    </Pressable>
+      <Switch
+        accessibilityLabel="Let my family see this friendship"
+        value={shared}
+        disabled={save.isPending}
+        onValueChange={flip}
+        trackColor={{ false: t.slateSoft, true: t.blue }}
+        ios_backgroundColor={t.slateSoft}
+      />
+    </View>
   );
 }

@@ -23,8 +23,10 @@ import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blo
 import { useTheme } from '../../src/theme/ThemeContext';
 
 function ChipRow({ items }) {
-  const { t, radius, text, spacing } = useTheme();
+  const { t, radius, type, spacing } = useTheme();
   if (!items?.length) return null;
+  // Small tag chips (owner report 2026-08-17: interests dominated the
+  // profile card) — meta-size labels in slim pills, like ordinary app tags.
   return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginTop: spacing[3] }}>
       {items.map((item) => (
@@ -35,11 +37,11 @@ function ChipRow({ items }) {
             borderWidth: 1,
             borderColor: t.greyLine,
             borderRadius: radius.pill,
-            paddingHorizontal: spacing[3],
-            paddingVertical: 5,
+            paddingHorizontal: 10,
+            paddingVertical: 3,
           }}
         >
-          <Text style={{ fontSize: text.sm, color: t.inkSlate }}>{item}</Text>
+          <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{item}</Text>
         </View>
       ))}
     </View>

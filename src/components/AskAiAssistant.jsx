@@ -14,6 +14,7 @@ import {
   FlatList,
   Image,
   Modal,
+  Platform,
   Pressable,
   Text,
   TextInput,
@@ -421,18 +422,32 @@ export default function AskAiAssistant() {
 
       <Modal
         visible={open}
-        transparent
+        // Native iOS card sheet (owner call 2026-08-17: iOS style everywhere):
+        // rounded top, the screen behind recedes, and dragging the sheet down
+        // closes it with the system's own physics. Android and web have no
+        // pageSheet, so they keep the full-screen slide.
+        presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
         statusBarTranslucent
         navigationBarTranslucent
         animationType={reducedMotion ? 'none' : 'slide'}
         onRequestClose={close}
+        // The iOS drag-down dismisses natively; sync our state after it.
+        onDismiss={() => { if (open) close(); }}
         // Android Modal doesn't relocate TalkBack focus on its own — hand it to
         // the sheet header so focus isn't stuck on the hidden screen behind it.
         onShow={() => focusForScreenReader(headerRef)}
       >
         {/* Full page (user call 2026-07-17): the helper owns the whole screen
-            instead of a bottom sheet. */}
-        <View style={{ flex: 1, backgroundColor: t.surface, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+            instead of a bottom sheet. On iOS the pageSheet already starts
+            below the status bar, so only Android/web pad for it. */}
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: t.surface,
+            paddingTop: Platform.OS === 'ios' ? 0 : insets.top,
+            paddingBottom: insets.bottom,
+          }}
+        >
           <View style={{ flex: 1, overflow: 'hidden' }}>
             {/* Wash header: mascot + Ask AI / Your Towinly helper */}
             <View

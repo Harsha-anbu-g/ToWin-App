@@ -23,6 +23,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import SegmentedControl from '../ui/SegmentedControl';
+import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 
@@ -375,6 +376,8 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   );
 
   return (
+    // Swiping the list left/right steps the segments, iOS-style.
+    <SwipeSegments keys={['open', 'progress', 'done']} value={seg} onChange={setSeg} style={{ flex: 1 }}>
     <FlatList
       data={settled ? shown : []}
       keyExtractor={keyId}
@@ -429,5 +432,6 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
         )
       }
     />
+    </SwipeSegments>
   );
 }

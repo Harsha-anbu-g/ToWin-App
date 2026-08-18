@@ -128,6 +128,109 @@ function FamilyCard({ family }) {
   );
 }
 
+// One profile group = 1 point, earned only when every field is filled —
+// web Trust.jsx ProfileGroup parity (owner report 2026-08-17: the app's
+// Trust page was missing the update-profile box the website has).
+function ProfileGroup({ group }) {
+  const { t, radius, type } = useTheme();
+  const { label, completed, doneCount, itemCount, items } = group;
+  return (
+    <View
+      style={{
+        borderRadius: radius.input,
+        padding: 12,
+        backgroundColor: completed ? t.blueWash : t.surfaceFill,
+        borderWidth: 1,
+        borderColor: completed ? t.blueSoft : t.border,
+      }}
+    >
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, flexShrink: 1 }}>{label}</Text>
+        <View
+          style={{
+            backgroundColor: completed ? t.blue : t.greyFill,
+            borderRadius: radius.pill,
+            paddingHorizontal: 8,
+            paddingVertical: 2,
+          }}
+        >
+          <Text
+            style={{
+              fontSize: type.caption,
+              fontWeight: '600',
+              color: completed ? t.actionInk : t.inkFaint2,
+              fontVariant: ['tabular-nums'],
+            }}
+          >
+            {completed ? '+1 point ✓' : `${doneCount}/${itemCount} · +1 point`}
+          </Text>
+        </View>
+      </View>
+      <View style={{ gap: 6, marginTop: 8 }}>
+        {items.map((it) => (
+          <View key={it.key} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+            <Text style={{ fontSize: type.meta, lineHeight: 18, color: it.completed ? t.blueDeep : t.inkFaint2 }}>
+              {it.completed ? '✓' : '○'}
+            </Text>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  fontSize: type.meta,
+                  fontWeight: it.completed ? '600' : '400',
+                  color: it.completed ? t.blueDeep : t.ink,
+                  lineHeight: 18,
+                }}
+              >
+                {it.label}
+              </Text>
+              {!it.completed && it.tip ? (
+                <Text style={{ fontSize: type.caption, color: t.inkFaint2, lineHeight: 16, marginTop: 1 }}>
+                  {it.tip}
+                </Text>
+              ) : null}
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+// Profile points card (web ProfileCard parity): the field groups, what each
+// is worth, and the way to finish. Renders only when the backend sends the
+// profile breakdown, so older payloads simply skip it.
+function ProfilePointsCard({ profile, onGoToProfile }) {
+  const { t, type, fontFamily } = useTheme();
+  if (!profile?.groups?.length) return null;
+  const done = profile.earned >= profile.max;
+  return (
+    <Card style={{ marginTop: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}>
+            Your profile
+          </Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, lineHeight: 16, marginTop: 2 }}>
+            Fill a whole set to earn its point. It counts for every person you help.
+          </Text>
+        </View>
+        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, fontVariant: ['tabular-nums'] }}>
+          {profile.earned}
+          <Text style={{ fontWeight: '400', color: t.inkFaint2, fontSize: type.meta }}> / {profile.max}</Text>
+        </Text>
+      </View>
+      <View style={{ gap: 8, marginTop: 12 }}>
+        {profile.groups.map((g) => (
+          <ProfileGroup key={g.key} group={g} />
+        ))}
+      </View>
+      {!done ? (
+        <Button title="Finish your profile" variant="secondary" onPress={onGoToProfile} style={{ marginTop: 12 }} />
+      ) : null}
+    </Card>
+  );
+}
+
 function HelperPointsCard({ card }) {
   const { t, radius, type } = useTheme();
   const pct = card.totalMax > 0 ? card.total / card.totalMax : 0;
@@ -203,11 +306,11 @@ export default function TrustScreen() {
     <Screen back onRefresh={refetch}>
       <Text
         accessibilityRole="header"
-        style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}
+        style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
         Your <Text style={{ color: t.trustGold }}>Trust</Text> Score
       </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 4 }}>
+      <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
         {isFamily
           ? // Honest, profile-only framing — never the elder scoring rules.
             'Your score comes from your profile. Fill it in to earn your first points.'
@@ -293,9 +396,9 @@ export default function TrustScreen() {
                 <Text
                   style={{
                     fontFamily: fontFamily.display,
-                    fontSize: 19,
+                    fontSize: type.cardTitle,
                     color: t.ink,
-                    lineHeight: 25,
+                    lineHeight: 22,
                     marginTop: spacing[2],
                   }}
                 >
@@ -362,6 +465,13 @@ export default function TrustScreen() {
             </Card>
           )}
 
+          {/* The update-profile box, web Trust parity (owner report
+              2026-08-17): which profile sets are filled, and the way to
+              finish the missing ones. */}
+          <ProfilePointsCard
+            profile={breakdown?.profile}
+            onGoToProfile={() => router.push('/profile-edit')}
+          />
         </>
       )}
     </Screen>

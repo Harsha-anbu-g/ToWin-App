@@ -3,7 +3,7 @@
 // belong to (web 2026-07-26), with the chat only where the coordination
 // connection exists — and the updates-thread link only on shared friendships.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import MyEldersPanel from '../src/components/trust/MyEldersPanel';
 import { ToastProvider } from '../src/context/ToastContext';
@@ -92,6 +92,8 @@ test('family rows nest under the elder they stand behind, with the relationship'
   stub({ entries: [sarah] });
   const r = await wrap(<MyEldersPanel />);
 
+  // Folded by default (owner call 2026-08-17): the arrow reveals the family.
+  await fireEvent.press(await r.findByLabelText(/Family options/));
   await r.findByText("Margaret's family");
   r.getByText(/Sarah/);
   r.getByText(/, Margaret's daughter/);
@@ -110,6 +112,7 @@ test('the chat appears only with the FAMILY coordination connection', async () =
   });
   const r = await wrap(<MyEldersPanel />);
 
+  await fireEvent.press(await r.findByLabelText(/Family options/));
   await r.findByText("Margaret's family");
   r.getByText('You can message each other while this friendship stays shared.');
 });
@@ -125,5 +128,6 @@ test('the updates-thread link rides only on shared friendships', async () => {
   stub({ connections: [conn({ sharedWithFamily: true })] });
   const r = await wrap(<MyEldersPanel />);
   await r.findByText('Margaret');
+  await fireEvent.press(await r.findByLabelText(/Family options/));
   r.getByLabelText('Open the family updates thread');
 });

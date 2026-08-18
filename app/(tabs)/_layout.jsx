@@ -8,7 +8,9 @@
 // while its own screen is open. Tab bar is a white surface with a hairline
 // top border — no shadows.
 import { useQuery } from '@tanstack/react-query';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, usePathname, useRouter } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { useEffect, useRef } from 'react';
 import {
   FileText,
   MessageCircle,
@@ -17,14 +19,24 @@ import {
   UserRound,
   UsersRound,
 } from '../../src/components/icons';
-import { Platform, Pressable, Text, View } from 'react-native';
+import {
+  Animated,
+  PanResponder,
+  Platform,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
 import { haptic } from '../../src/lib/haptics';
+import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
+import { DURATION, EASE } from '../../src/theme/motion';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // `badge` renders the count ourselves instead of via tabBarBadge: the library's
@@ -37,12 +49,13 @@ const tabIcon = (Icon, badge) =>
     const { t, fontScaleCaps } = useTheme();
     const count = badge && badge.count > 0 ? badge.count : null;
     return (
+      // No static fill — the bar's gliding glass lens (GlassTabBackground)
+      // carries the active highlight now.
       <View
         style={{
           paddingHorizontal: 16,
           paddingVertical: 3,
           borderRadius: 999,
-          backgroundColor: focused ? t.blueTint : 'transparent',
         }}
       >
         <Icon size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />
@@ -87,6 +100,71 @@ function tabA11yLabel(label, count = 0, noun = '') {
   const withCount = count > 0 ? `${label}, ${count} ${noun}` : label;
   if (Platform.OS === 'ios') return `${withCount}, tab`;
   return count > 0 ? withCount : undefined;
+}
+
+// The lens capsule's geometry inside the 76pt bar: it wraps the WHOLE tab
+// item — icon and label together (owner call 2026-08-17: "the lens should
+// also cover the letter").
+const LENS_TOP = 4;
+const LENS_H = 49;
+
+// The bar's glass sheet + the finger-following lens (owner calls
+// 2026-08-17: the WhatsApp/Apple effect — a glass capsule that glides to
+// the tab you choose and rides along under your finger when you drag the
+// bar). Purely visual: it renders as the bar's BACKGROUND layer, so every
+// real tab button, badge, and screen-reader label stays exactly as the
+// library renders it. The layout above owns the animated values.
+function GlassTabBackground({ animX, shown, scale, lensW }) {
+  const { t, mode } = useTheme();
+  return (
+    <View style={{ flex: 1 }}>
+      {/* The bar's own glass: content scrolls beneath and blurs through.
+          Android's view blur is costly — its bar stays a solid surface. */}
+      {Platform.OS !== 'android' ? (
+        <BlurView
+          intensity={30}
+          tint={mode === 'dark' ? 'dark' : 'light'}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+        />
+      ) : null}
+      {lensW > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: LENS_TOP,
+            height: LENS_H,
+            width: lensW,
+            borderRadius: 999,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: t.blueSoft,
+            opacity: shown,
+            transform: [{ translateX: animX }, { scale }],
+          }}
+        >
+          {Platform.OS !== 'android' ? (
+            <BlurView
+              intensity={22}
+              tint={mode === 'dark' ? 'dark' : 'light'}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+          ) : null}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: t.blueTint,
+              opacity: Platform.OS === 'android' ? 0.95 : 0.75,
+            }}
+          />
+        </Animated.View>
+      ) : null}
+    </View>
+  );
 }
 
 function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps, pressRipple }) {
@@ -137,7 +215,7 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type,
 }
 
 export default function TabsLayout() {
-  const { t, type, fontScaleCaps, pressRipple } = useTheme();
+  const { t, mode, type, fontScaleCaps, pressRipple } = useTheme();
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -172,20 +250,134 @@ export default function TabsLayout() {
     enabled: !!user,
   });
 
-  // Auth guard: after logout or a dead session (401), leaving the user inside
-  // the tabs would render silently empty screens — bounce to Log In instead
-  // (the landing story is first-launch-only; returning users skip it).
-  if (booted && !user) return <Redirect href="/(auth)/login" />;
-
   const action = centerActionFor(user?.role);
   const second = secondTabFor(user?.role);
   const homeTab = homeTabFor(user?.role);
   // FAMILY has no center action at all (roles.js) — the slot disappears and
   // the bar is Home · Messages · Profile.
   const ActionIcon = action?.key === 'find' ? Search : Plus;
+  // The visible slots, in render order — the glass lens maps pathname → slot.
+  const slots = [
+    'home',
+    ...(second?.name === 'posted-help' ? ['posted-help'] : []),
+    ...(action ? ['action'] : []),
+    'messages',
+    'profile',
+  ];
+
+  // ---- The gliding glass lens (owner calls 2026-08-17: WhatsApp feel) ----
+  // The bar spans the full window, so geometry needs no onLayout: slot width
+  // is windowW / slots. The lens springs to the active tab on navigation and
+  // rides directly under the finger during a horizontal drag on the bar.
+  const { width: winW, height: winH } = useWindowDimensions();
+  const pathname = usePathname();
+  const router = useRouter();
+  const reducedMotion = useReducedMotion();
+  const slotW = slots.length > 0 ? winW / slots.length : 0;
+  const lensW = slotW > 0 ? Math.min(slotW - 10, 104) : 0;
+  const barH = 76 + insets.bottom;
+  const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
+  const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';
+
+  const lensX = useRef(new Animated.Value(0)).current;
+  const lensShown = useRef(new Animated.Value(0)).current;
+  const lensScale = useRef(new Animated.Value(1)).current;
+  const dragging = useRef(false);
+  const placed = useRef(false); // first render positions without animating
+
+  // One spring voice for every lens move: quick, critically damped — the
+  // organic WhatsApp glide, no visible bounce (Emil rule still holds).
+  const LENS_SPRING = { damping: 26, stiffness: 320, mass: 0.9, useNativeDriver: true };
+  const centerOf = (i, sw, lw) => i * sw + (sw - lw) / 2;
+
+  useEffect(() => {
+    if (slotW <= 0 || dragging.current) return;
+    if (!lensable) {
+      if (reducedMotion) lensShown.setValue(0);
+      else Animated.timing(lensShown, { toValue: 0, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: true }).start();
+      return;
+    }
+    const dest = centerOf(activeIndex, slotW, lensW);
+    if (reducedMotion || !placed.current) {
+      placed.current = true;
+      lensX.setValue(dest);
+      lensShown.setValue(1);
+      return;
+    }
+    Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: true }).start();
+    Animated.spring(lensX, { toValue: dest, ...LENS_SPRING }).start();
+    // The spring config is a stable literal and the Animated.Values are refs —
+    // only real geometry/route changes should re-run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, lensable, slotW, lensW, reducedMotion]);
+
+  // Live state for the drag responder (created once; reads through the ref).
+  const live = useRef({});
+  live.current = {
+    slots, slotW, lensW, winW, winH, barH, activeIndex, lensable,
+    grab: () => {
+      dragging.current = true;
+      haptic.selection();
+      Animated.spring(lensScale, { toValue: 1.08, ...LENS_SPRING }).start();
+      Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: true }).start();
+    },
+    track: (pageX) => {
+      const { winW: w, lensW: lw } = live.current;
+      lensX.setValue(Math.min(Math.max(pageX - lw / 2, 4), w - lw - 4));
+    },
+    drop: (pageX) => {
+      const { slots: s, slotW: sw, lensW: lw, activeIndex: cur } = live.current;
+      dragging.current = false;
+      Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
+      let idx = Math.min(s.length - 1, Math.max(0, Math.floor(pageX / sw)));
+      if (s[idx] === 'action') {
+        // The FAB opens a form — a drag never lands on it; roll to the
+        // nearer ordinary tab instead.
+        idx = pageX / sw - idx < 0.5 ? Math.max(0, idx - 1) : Math.min(s.length - 1, idx + 1);
+        if (s[idx] === 'action') idx = Math.max(0, cur);
+      }
+      Animated.spring(lensX, { toValue: centerOf(idx, sw, lw), ...LENS_SPRING }).start();
+      if (idx !== cur && s[idx]) {
+        haptic.impact();
+        router.push(`/${s[idx]}`);
+      }
+    },
+    cancel: () => {
+      const { slotW: sw, lensW: lw, activeIndex: cur, lensable: ok } = live.current;
+      dragging.current = false;
+      Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
+      if (ok) Animated.spring(lensX, { toValue: centerOf(cur, sw, lw), ...LENS_SPRING }).start();
+    },
+  };
+
+  // Captures only a clearly horizontal drag that starts INSIDE the bar; taps
+  // fall through to the real tab buttons untouched, and gestures anywhere
+  // else on the screen never reach this.
+  const barPan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (e, g) => {
+        const { winH: h, barH: bh } = live.current;
+        return (
+          e.nativeEvent.pageY > h - bh &&
+          Math.abs(g.dx) > 10 &&
+          Math.abs(g.dx) > Math.abs(g.dy) * 1.5
+        );
+      },
+      onPanResponderGrant: () => live.current.grab(),
+      onPanResponderMove: (e) => live.current.track(e.nativeEvent.pageX),
+      onPanResponderRelease: (e) => live.current.drop(e.nativeEvent.pageX),
+      onPanResponderTerminate: () => live.current.cancel(),
+    })
+  ).current;
+
+  // Auth guard: after logout or a dead session (401), leaving the user inside
+  // the tabs would render silently empty screens — bounce to Log In instead
+  // (the landing story is first-launch-only; returning users skip it). Sits
+  // BELOW the hooks so the hook order never changes between renders.
+  if (booted && !user) return <Redirect href="/(auth)/login" />;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} {...barPan.panHandlers}>
     <Tabs
       // UX-703: every tab press answers back. The bar emits tabPress from every
       // slot's onPress (the center FAB's custom button included), so one
@@ -209,8 +401,21 @@ export default function TabsLayout() {
             {children}
           </Text>
         ),
+        // Floating glass bar (owner call 2026-08-17: the iOS look) — content
+        // scrolls beneath it and blurs through GlassTabBackground. The wash
+        // over the blur keeps icons and labels at full contrast. Android
+        // skips the blur, so its bar stays the solid canvas it always was.
         tabBarStyle: {
-          backgroundColor: t.canvas,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor:
+            Platform.OS === 'android'
+              ? t.canvas
+              : mode === 'dark'
+                ? 'rgba(32,31,29,0.78)'
+                : 'rgba(255,255,255,0.72)',
           borderTopWidth: 1,
           borderTopColor: t.border,
           // 76, not 64: room for the center circle to sit fully INSIDE its
@@ -219,6 +424,9 @@ export default function TabsLayout() {
           paddingTop: 8,
           paddingBottom: Math.max(insets.bottom, 8),
         },
+        tabBarBackground: () => (
+          <GlassTabBackground animX={lensX} shown={lensShown} scale={lensScale} lensW={lensW} />
+        ),
         sceneStyle: { backgroundColor: t.surface },
       }}
     >

@@ -133,6 +133,16 @@ test('no magic durations: every duration is a named beat (brand ledger aside)', 
   expect(failures).toEqual([]);
 });
 
+// The glass lens (owner call 2026-08-17: "like the WhatsApp slider") glides
+// with a CRITICALLY DAMPED Animated.spring — high damping, no visible
+// overshoot, so the no-bounce law's intent holds while the glide tracks the
+// finger organically. Only these two files carry that exemption; anything
+// else reaching for a spring still fails here.
+const SPRING_EXEMPT = [
+  path.join('app', '(tabs)', '_layout.jsx'),
+  path.join('src', 'components', 'ui', 'SegmentedControl.jsx'),
+];
+
 test('no inline curves, no weak built-ins, no bounce, no layout animation', () => {
   const BANNED = [
     /Easing\.bezier\(\s*\d/, // inline control points — the data lives in tokens
@@ -142,12 +152,22 @@ test('no inline curves, no weak built-ins, no bounce, no layout animation', () =
     /\bAnimated\.spring\b|\bwithSpring\b/, // spring = bounce family, banned here
     /\bwithRepeat\b|\bLayoutAnimation\b/, // loops and layout-property animation
   ];
+  const SPRING = BANNED[4];
   const failures = [];
   for (const file of APP_FILES) {
     const rel = path.relative(ROOT, file);
     if (rel === path.join('src', 'theme', 'motion.js')) continue; // the one builder
     const code = readCode(file);
     for (const re of BANNED) {
+      if (re === SPRING && SPRING_EXEMPT.includes(rel)) {
+        // The lens files may spring, but never with visible bounce: every
+        // spring they declare must keep damping in the critical range.
+        const dampings = [...code.matchAll(/damping:\s*(\d+)/g)].map((m) => Number(m[1]));
+        if (/\bAnimated\.spring\b/.test(code) && (dampings.length === 0 || dampings.some((d) => d < 20))) {
+          failures.push(`${rel} springs with visible bounce (damping < 20)`);
+        }
+        continue;
+      }
       if (re.test(code)) failures.push(`${rel} matches ${re}`);
     }
   }

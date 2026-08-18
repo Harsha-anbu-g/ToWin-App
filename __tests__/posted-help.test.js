@@ -77,9 +77,19 @@ test('a refresh that fails still stops the spinner', async () => {
   const { root } = await wrap(<PostedHelpList />);
   await waitFor(() => expect(api.get).toHaveBeenCalled());
   // RNTL 14 dropped the UNSAFE_ queries, so the spinner is read off the host
-  // ScrollView's own prop. Re-read it each time: `root` stays live, the
-  // element on it is replaced on every render.
-  const spinner = () => root.props.refreshControl.props;
+  // ScrollView's own prop. The list now sits inside the SwipeSegments
+  // wrapper, so walk down to the host that carries refreshControl. Re-read
+  // it each time: `root` stays live, elements are replaced on every render.
+  const hostWithRefresh = (el) => {
+    if (el?.props?.refreshControl) return el;
+    for (const child of el?.children ?? []) {
+      if (typeof child === 'string') continue;
+      const hit = hostWithRefresh(child);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  const spinner = () => hostWithRefresh(root).props.refreshControl.props;
   expect(spinner().refreshing).toBe(false);
 
   // The network drops between the pull and the refetch.

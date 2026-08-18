@@ -19,7 +19,11 @@ import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 
-const MIN_TARGET = 44; // design law: a real box, because web has no hitSlop
+// Owner call 2026-08-17 (normal density): the visual box floor is 36pt —
+// ordinary app chip height. The box must still be real (measured minHeight,
+// never hitSlop, because react-native-web drops hitSlop); native targets are
+// topped back toward 44 with hitSlop where the components add it.
+const MIN_TARGET = 36;
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
@@ -64,7 +68,7 @@ const wrap = (ui) =>
 
 const styleOf = (node) => StyleSheet.flatten(node.props.style) ?? {};
 
-// A measured box, not slop: the number has to be there and it has to be 44.
+// A measured box, not slop: the number has to be there and clear the floor.
 const expectRealTarget = (node) => {
   const style = styleOf(node);
   expect(style.minHeight).toEqual(expect.any(Number));
@@ -107,7 +111,7 @@ beforeEach(() => {
 // asking to move into the component.
 // ---------------------------------------------------------------------------
 describe('the shared action chip', () => {
-  test('is a real 44pt box, not 36pt plus slop', async () => {
+  test('is a real box at the normal-density floor, not slop', async () => {
     // Arrange / Act
     const r = await render(
       <ThemeProvider>

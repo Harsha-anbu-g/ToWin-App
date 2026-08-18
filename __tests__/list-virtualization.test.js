@@ -246,7 +246,18 @@ test('posted requests: cards render through the FlatList and keep pull-to-refres
   const r = await wrap(<PostedHelpList />);
   await r.findByText('Need a ride to the clinic');
   r.getByText('Groceries this Friday');
-  expect(r.root.props.refreshControl).toBeTruthy();
+  // The list sits inside the SwipeSegments wrapper now — find the host
+  // that actually carries pull-to-refresh.
+  const hostWithRefresh = (el) => {
+    if (el?.props?.refreshControl) return el;
+    for (const child of el?.children ?? []) {
+      if (typeof child === 'string') continue;
+      const hit = hostWithRefresh(child);
+      if (hit) return hit;
+    }
+    return null;
+  };
+  expect(hostWithRefresh(r.root)).toBeTruthy();
 });
 
 test('friends invites: cards render through the FlatList with their actions', async () => {

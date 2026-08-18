@@ -20,6 +20,7 @@ import Button from '../../src/components/ui/Button';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
@@ -211,7 +212,7 @@ function RowSeparator() {
 const keyId = (item) => item.id;
 
 export default function MessagesInbox() {
-  const { t, spacing, text, fontFamily, radius } = useTheme();
+  const { t, spacing, text, type, fontFamily, radius } = useTheme();
   const { user } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -308,6 +309,13 @@ export default function MessagesInbox() {
 
   return (
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
+      {/* Swiping the inbox left/right steps the tabs, iOS-style. */}
+      <SwipeSegments
+        keys={sections.map((s) => s.key)}
+        value={currentTab}
+        onChange={setActiveTab}
+        style={{ flex: 1 }}
+      >
       <FlatList
         testID="inbox-list"
         data={displayed}
@@ -323,7 +331,7 @@ export default function MessagesInbox() {
           <View>
             <Text
               accessibilityRole="header"
-              style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
+              style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
             >
               Messages
             </Text>
@@ -410,6 +418,7 @@ export default function MessagesInbox() {
           )
         }
       />
+      </SwipeSegments>
     </Screen>
   );
 }

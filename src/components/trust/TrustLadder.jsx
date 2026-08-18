@@ -38,9 +38,9 @@ export default function TrustLadder({ stageIndex, style }) {
             {isGoal ? (
               <View
                 style={{
-                  width: 26,
-                  height: 26,
-                  borderRadius: 13,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 11,
                   backgroundColor: t.blueWash,
                   borderWidth: 1,
                   borderColor: t.blueSoft,
@@ -48,14 +48,14 @@ export default function TrustLadder({ stageIndex, style }) {
                   justifyContent: 'center',
                 }}
               >
-                <TortoiseMark size={16} />
+                <TortoiseMark size={13} />
               </View>
             ) : (
               <View
                 style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 12,
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
                   backgroundColor: done ? t.blue : t.surface,
                   // A step you haven't reached still gets a real ring (user
                   // call 2026-07-26: "even though it is not done make the
@@ -67,7 +67,7 @@ export default function TrustLadder({ stageIndex, style }) {
                   justifyContent: 'center',
                 }}
               >
-                {done ? <Check size={12} color={t.actionInk} strokeWidth={2.5} /> : null}
+                {done ? <Check size={10} color={t.actionInk} strokeWidth={2.5} /> : null}
               </View>
             )}
           </View>

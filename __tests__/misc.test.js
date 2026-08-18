@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
+import { type } from '../src/theme/tokens';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 
@@ -106,9 +107,9 @@ describe('DEEP-21: founder card text meets the 16px body floor', () => {
     expect(r.queryByText(/438-535-5782/)).toBeNull();
     expect(sizeOf(r.getByText('Visit my portfolio'))).toBeGreaterThanOrEqual(16);
 
-    // The credential line is secondary, so meta (14) is its floor, but it must
-    // come from the ramp rather than a literal.
-    expect(sizeOf(r.getByText(/Full-Stack Engineer/))).toBeGreaterThanOrEqual(14);
+    // The credential line is secondary, so the ramp's meta size is its floor
+    // (normal-density ramp, owner call 2026-08-17).
+    expect(sizeOf(r.getByText(/Full-Stack Engineer/))).toBeGreaterThanOrEqual(type.meta);
   });
 });
 

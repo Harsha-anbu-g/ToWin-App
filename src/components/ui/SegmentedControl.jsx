@@ -1,34 +1,103 @@
 // Segmented control — the canvas's pill track (3d/3f/3g/4a…): surfaceFill
-// track, active chip lifted to segActive (white by day, lighter charcoal by
-// night — border-free, the brand's no-shadow elevation), label + tabular
-// count.
+// track, label + tabular count.
 //
-// The chip stays 34pt to the eye; the target around it is a real 44pt box
-// (DEEP-08). It used to be 34pt plus hitSlop, which the web build drops
-// entirely — so the app's most-used filter, on 8+ screens, was a 34pt target
-// at towinly.com/app/ while the design law promises 44. The extra height is
-// taken out of the track's vertical padding, so the control lands within 2pt
-// of the height it has always drawn.
-import { Pressable, Text, View } from 'react-native';
+// iOS lens (owner call 2026-08-17, "like WhatsApp / the Apple one"): ONE
+// glass pill slides between segments instead of each chip painting its own
+// active fill — blur underneath, a translucent segActive wash on top, and a
+// bright hairline rim, gliding with the app's base ease-out beat. Reduced
+// motion snaps it in place; until the first layout measures the track the
+// lens simply doesn't render (Jest never lays out, so tests see plain chips
+// with the same roles and states as always).
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Platform, Pressable, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { haptic } from '../../lib/haptics';
+import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
 
+const TRACK_PAD = 4; // the track's horizontal inset the lens must respect
+const LENS_INSET = 5; // top/bottom air inside the 40pt slot
+
 export default function SegmentedControl({ segments, value, onChange, style }) {
-  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
+  const { t, mode, radius, type, fontScaleCaps, pressRipple } = useTheme();
+  const reducedMotion = useReducedMotion();
+  const [trackW, setTrackW] = useState(0);
+
+  const index = Math.max(0, segments.findIndex((s) => s.key === value));
+  const slotW = trackW > 0 ? (trackW - TRACK_PAD * 2) / segments.length : 0;
+  const slide = useRef(new Animated.Value(0)).current;
+  const placed = useRef(false); // first layout positions without animating
+
+  useEffect(() => {
+    if (slotW <= 0) return;
+    const dest = TRACK_PAD + index * slotW;
+    if (reducedMotion || !placed.current) {
+      placed.current = true;
+      slide.setValue(dest);
+      return;
+    }
+    // Same spring voice as the tab bar's lens: quick, critically damped —
+    // the WhatsApp glide, no visible bounce (Emil rule still holds).
+    Animated.spring(slide, {
+      toValue: dest,
+      damping: 26,
+      stiffness: 320,
+      mass: 0.9,
+      useNativeDriver: true,
+    }).start();
+  }, [index, slotW, reducedMotion, slide]);
 
   return (
     <View
       accessibilityRole="tablist"
+      onLayout={(e) => setTrackW(e.nativeEvent.layout.width)}
       style={[
         {
           flexDirection: 'row',
           backgroundColor: t.surfaceFill,
           borderRadius: radius.pill,
-          paddingHorizontal: 4,
+          paddingHorizontal: TRACK_PAD,
         },
         style,
       ]}
     >
+      {slotW > 0 ? (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: LENS_INSET,
+            bottom: LENS_INSET,
+            left: 0,
+            width: slotW,
+            borderRadius: radius.pill,
+            overflow: 'hidden',
+            borderWidth: 1,
+            borderColor: mode === 'dark' ? t.border : 'rgba(255,255,255,0.9)',
+            transform: [{ translateX: slide }],
+          }}
+        >
+          {/* Android's blur is costly and uneven — the wash alone reads fine there. */}
+          {Platform.OS !== 'android' ? (
+            <BlurView
+              intensity={18}
+              tint={mode === 'dark' ? 'dark' : 'light'}
+              style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
+            />
+          ) : null}
+          <View
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: t.segActive,
+              opacity: Platform.OS === 'android' ? 0.92 : 0.72,
+            }}
+          />
+        </Animated.View>
+      ) : null}
       {segments.map((seg) => {
         const active = seg.key === value;
         return (
@@ -56,18 +125,18 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             // in-screen filter control on 8+ screens and previously gave none.
             style={({ pressed }) => ({
               flex: 1,
-              minHeight: 44, // min, not fixed — grows with the OS large-text setting
+              minHeight: 40, // min, not fixed — grows with the OS large-text setting
               justifyContent: 'center',
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            {/* The chip the eye sees, inside the box the finger gets. */}
+            {/* The chip the eye sees — the gliding lens behind it carries the
+                active fill, so the chip itself stays transparent. */}
             <View
               style={{
-                minHeight: 34,
-                paddingVertical: 4,
+                minHeight: 30,
+                paddingVertical: 3,
                 borderRadius: radius.pill,
-                backgroundColor: active ? t.segActive : 'transparent',
                 flexDirection: 'row',
                 alignItems: 'center',
                 justifyContent: 'center',

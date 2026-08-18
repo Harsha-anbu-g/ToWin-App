@@ -19,12 +19,15 @@ export default function ActionChip({ label, onPress, tonal = false, destructive 
       disabled={disabled}
       onPress={onPress}
       android_ripple={pressRipple}
+      // Normal-density chip (owner call 2026-08-17): 36pt visual pill; the
+      // hitSlop keeps the native target near 44pt.
+      hitSlop={{ top: 4, bottom: 4 }}
       style={({ pressed }) => [
         {
           // min, not fixed — the label must wrap at large OS text, never clip
-          minHeight: 44,
-          paddingVertical: 8,
-          paddingHorizontal: 16,
+          minHeight: 36,
+          paddingVertical: 6,
+          paddingHorizontal: 14,
           borderRadius: radius.pill,
           backgroundColor: 'transparent',
           borderWidth: 1,

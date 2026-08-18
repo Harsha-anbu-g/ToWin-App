@@ -1,5 +1,6 @@
 // Legal document sheet. Port of Register.jsx's LegalModal (draft legal copy).
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRef } from 'react';
+import { Modal, PanResponder, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LegalSections from './legal/LegalSections';
 import Button from './ui/Button';
@@ -11,6 +12,20 @@ export default function LegalModal({ title, sections, visible, onClose }) {
   const { t, spacing, radius, text, fontFamily, pressRipple } = useTheme();
   const reducedMotion = useReducedMotion();
   const insets = useSafeAreaInsets();
+
+  // iOS-sheet gesture (owner call 2026-08-17): dragging the sheet's header
+  // area down closes it, with a grabber bar saying so. The gesture lives on
+  // the header only, so the document's own scroll is never fought over.
+  const liveClose = useRef(onClose);
+  liveClose.current = onClose;
+  const drag = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 12 && Math.abs(g.dy) > Math.abs(g.dx) * 2,
+      onPanResponderRelease: (_e, g) => {
+        if (g.dy > 60 || g.vy > 0.5) liveClose.current();
+      },
+    })
+  ).current;
 
   return (
     <Modal
@@ -49,6 +64,20 @@ export default function LegalModal({ title, sections, visible, onClose }) {
             overflow: 'hidden',
           }}
         >
+          {/* Grabber — the system sheet's handle, drawn here because this is
+              a hand-rolled sheet. Dragging it (or the header) down closes. */}
+          <View {...drag.panHandlers}>
+            <View
+              aria-hidden
+              style={{
+                alignSelf: 'center',
+                width: 36,
+                height: 5,
+                borderRadius: 3,
+                backgroundColor: t.border,
+                marginTop: 8,
+              }}
+            />
           <View
             style={{
               paddingHorizontal: spacing[5],
@@ -85,6 +114,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
             >
               <Text style={{ fontSize: text.base, color: t.ink3, lineHeight: 20 }}>×</Text>
             </Pressable>
+          </View>
           </View>
 
           <ScrollView contentContainerStyle={{ padding: spacing[5] }}>
