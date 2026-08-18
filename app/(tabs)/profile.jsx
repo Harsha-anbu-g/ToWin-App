@@ -71,9 +71,12 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole
     );
   return (
     <Pressable
-      accessibilityRole={a11yRole ?? 'button'}
-      accessibilityState={a11yState}
-      accessibilityLabel={typeof label === 'string' ? label : undefined}
+      // No onPress → a plain container row: the control it hosts (e.g. a
+      // native Switch) is the single accessibility stop, Apple-style.
+      accessible={!!onPress}
+      accessibilityRole={onPress ? (a11yRole ?? 'button') : undefined}
+      accessibilityState={onPress ? a11yState : undefined}
+      accessibilityLabel={onPress && typeof label === 'string' ? label : undefined}
       onPress={onPress}
       disabled={!onPress}
       style={({ pressed }) => ({
@@ -312,19 +315,17 @@ export default function ProfileScreen() {
         <Row
           icon={Moon}
           label="Night mode"
-          onPress={toggle}
           divider
-          a11yRole="switch"
-          a11yState={{ checked: mode === 'dark' }}
           right={
-            // Visual-only: the row is the single control. A touchable inside a
-            // touchable gives screen readers two overlapping "Night mode" stops.
-            <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-              <Switch
-                value={mode === 'dark'}
-                trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
-              />
-            </View>
+            // The switch IS the control (owner call 2026-08-17: Apple feel —
+            // the hand-off row-tap gave none of the native press response).
+            <Switch
+              accessibilityLabel="Night mode"
+              value={mode === 'dark'}
+              onValueChange={toggle}
+              trackColor={{ false: t.slateSoft, true: t.blue }}
+              ios_backgroundColor={t.slateSoft}
+            />
           }
         />
         {/* Phones only. expo-haptics has no web implementation and the haptic
@@ -335,18 +336,15 @@ export default function ProfileScreen() {
           <Row
             icon={Vibrate}
             label="Vibration feedback"
-            onPress={() => setHapticsEnabled(!hapticsOn)}
             divider
-            a11yRole="switch"
-            a11yState={{ checked: hapticsOn }}
             right={
-              // Visual-only, same as Night mode: the row is the single control.
-              <View pointerEvents="none" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-                <Switch
-                  value={hapticsOn}
-                  trackColor={{ true: t.blue, false: Platform.OS === 'android' ? t.greyLine2 : undefined }}
-                />
-              </View>
+              <Switch
+                accessibilityLabel="Vibration feedback"
+                value={hapticsOn}
+                onValueChange={(next) => setHapticsEnabled(next)}
+                trackColor={{ false: t.slateSoft, true: t.blue }}
+                ios_backgroundColor={t.slateSoft}
+              />
             }
           />
         )}

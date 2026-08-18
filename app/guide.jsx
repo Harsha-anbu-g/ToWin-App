@@ -31,7 +31,7 @@ const FAMILY_CAN = [
   'Link to your parent. They must say yes before you see anything.',
   'See that they checked in today, so you know they are okay.',
   'Follow the friendships they choose to share with you, and only those.',
-  'Read the small updates thread on a shared friendship, together with your parent and their helper.',
+  'Read the small group chat on a shared friendship, together with your parent and their helper.',
   'Message their helpers directly, through the trust your parent has built.',
   'Ask for permission to act for them: request help, move a friendship forward, or leave a review in their name.',
 ];

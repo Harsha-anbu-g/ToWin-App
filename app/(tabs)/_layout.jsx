@@ -106,8 +106,8 @@ function tabA11yLabel(label, count = 0, noun = '') {
 // The lens capsule's geometry inside the 76pt bar: it wraps the WHOLE tab
 // item — icon and label together (owner call 2026-08-17: "the lens should
 // also cover the letter").
-const LENS_TOP = 4;
-const LENS_H = 49;
+const LENS_TOP = 3;
+const LENS_H = 58; // generous: icon row + the full label line, with air below
 
 // The bar's glass sheet + the finger-following lens (owner calls
 // 2026-08-17: the WhatsApp/Apple effect — a glass capsule that glides to
@@ -275,7 +275,7 @@ export default function TabsLayout() {
   const router = useRouter();
   const reducedMotion = useReducedMotion();
   const slotW = slots.length > 0 ? winW / slots.length : 0;
-  const lensW = slotW > 0 ? Math.min(slotW - 10, 104) : 0;
+  const lensW = slotW > 0 ? Math.min(slotW - 6, 118) : 0;
   const barH = 76 + insets.bottom;
   const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
   const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';

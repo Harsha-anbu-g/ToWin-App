@@ -74,7 +74,7 @@ const GroupThreadRow = memo(function GroupThreadRow({ id, title }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Updates thread: ${title}`}
+      accessibilityLabel={`Group: ${title}`}
       onPress={() => router.push(`/chat/${id}?channel=family`)}
       style={({ pressed }) => ({
         flexDirection: 'row',
@@ -102,7 +102,7 @@ const GroupThreadRow = memo(function GroupThreadRow({ id, title }) {
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>{title}</Text>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-          Small updates thread. Everyone sharing it reads along
+          Group chat. Everyone sharing it reads along
         </Text>
       </View>
       <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />

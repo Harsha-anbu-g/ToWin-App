@@ -456,7 +456,7 @@ export default function ChatThread() {
             </Text>
             {isFamilyChannel ? (
               <Text style={{ fontSize: text.xs, color: t.inkSlate, marginTop: 1 }}>
-                Small updates thread. Family reads along
+                Family group. Everyone here reads along
               </Text>
             ) : null}
           </View>
