@@ -8,6 +8,7 @@
 // screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { ChevronRight } from '../icons';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
@@ -62,6 +63,11 @@ const NeedCard = memo(function NeedCard({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const applicants = need.applications ?? [];
+  // Once the request leaves OPEN, the person who took it must stay visible
+  // (owner report 2026-08-17: "helper found" never said WHO). The backend
+  // marks them ACCEPTED in the applications list.
+  const acceptedHelper =
+    need.status !== 'OPEN' ? applicants.find((a) => a.status === 'ACCEPTED') : null;
   const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
     need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null].filter(Boolean).join(' · ');
 
@@ -85,6 +91,36 @@ const NeedCard = memo(function NeedCard({
         <StatusPill status={need.status} />
       </View>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 6 }}>{meta}</Text>
+
+      {/* WHO is helping — tap opens their profile (message from there). */}
+      {acceptedHelper ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`View ${acceptedHelper.helperName}'s profile`}
+          onPress={() => router.push(`/user/${acceptedHelper.helperId}`)}
+          style={({ pressed }) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            minHeight: 44,
+            marginTop: 10,
+            opacity: pressed ? 0.7 : 1,
+          })}
+        >
+          <Avatar name={acceptedHelper.helperName} uri={acceptedHelper.helperPhotoUrl} size={36} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>
+              {acceptedHelper.helperName}
+            </Text>
+            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
+              {need.status === 'ASSIGNED'
+                ? 'Is helping you with this. Tap to see their profile.'
+                : 'Helped you with this.'}
+            </Text>
+          </View>
+          <ChevronRight size={16} color={t.inkFaint2} strokeWidth={2} />
+        </Pressable>
+      ) : null}
 
       {/* View sits right beside the count (owner call 2026-08-17): the
           button belongs to the sentence, not to the far edge of the row. */}

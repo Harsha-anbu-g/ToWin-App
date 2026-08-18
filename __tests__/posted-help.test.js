@@ -2,7 +2,7 @@
 // removable — including one with zero applicants, which has no applicant
 // expansion for a Remove button to hide inside.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, act, render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
@@ -46,6 +46,35 @@ const wrap = (ui) =>
   );
 
 afterEach(() => jest.clearAllMocks());
+
+test('an ASSIGNED request names the accepted helper, tappable to their profile', async () => {
+  // Owner report 2026-08-17: "In Progress said helper found, but never WHO."
+  api.get.mockResolvedValue({
+    data: {
+      content: [
+        {
+          id: 'n2',
+          title: 'Groceries on Friday',
+          status: 'ASSIGNED',
+          category: 'SHOPPING',
+          urgency: 'NORMAL',
+          applications: [
+            { helperId: 'h9', helperName: 'Daniel', status: 'ACCEPTED' },
+            { helperId: 'h2', helperName: 'Marta', status: 'PENDING' },
+          ],
+        },
+      ],
+    },
+  });
+  const r = await wrap(<PostedHelpList />);
+  // The card lives on the In Progress segment, not the default Waiting one.
+  await fireEvent.press(await r.findByLabelText(/In Progress/));
+  await waitFor(() => r.getByText('Daniel'));
+  r.getByText('Is helping you with this. Tap to see their profile.');
+  r.getByLabelText("View Daniel's profile");
+  // Only the accepted helper is named on the card once the request is theirs.
+  expect(r.queryByText('Marta')).toBeNull();
+});
 
 test('an OPEN request with zero applicants still offers Remove', async () => {
   api.get.mockResolvedValue({
