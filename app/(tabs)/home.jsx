@@ -10,7 +10,6 @@ import RefreshControl from '../../src/components/ui/RefreshControl';
 import api from '../../src/api/client';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import GreetingHeader from '../../src/components/home/GreetingHeader';
-import MenuSheet from '../../src/components/home/MenuSheet';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
@@ -19,6 +18,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { getPromptedDay, markPromptedToday, shouldPromptCheckin } from '../../src/lib/checkinGate';
 import { markSeen } from '../../src/lib/seenIds';
 import { seenKey } from '../../src/lib/storageKeys';
+import { useUpdatesFeed } from '../../src/lib/updatesFeed';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function HomeScreen() {
@@ -27,7 +27,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // The bell's red count — unseen items across every notification source.
+  const { unseen: updatesCount } = useUpdatesFeed(user);
 
   const isHelper = user?.role === 'HELPER';
   // FAMILY (family-in-trust 2026-07-19): home is the family panel — no
@@ -124,7 +125,11 @@ export default function HomeScreen() {
       // `keyboard` because the add-parent form lives mid-page — without it the
       // keyboard covers the identifier field on small phones.
       <Screen scroll={false} keyboard contentStyle={{ padding: 0 }}>
-        <NavRow trustScore={trust ? Math.round(trust.totalScore) : undefined} onMenu={() => setMenuOpen(true)} />
+        <NavRow
+          trustScore={trust ? Math.round(trust.totalScore) : undefined}
+          onAlerts={() => router.push('/updates')}
+          alertCount={updatesCount}
+        />
         <ScrollView
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           keyboardShouldPersistTaps="handled"
@@ -133,8 +138,6 @@ export default function HomeScreen() {
           <GreetingHeader />
           <FamilyHomePanel />
         </ScrollView>
-
-        <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
       </Screen>
     );
   }
@@ -143,8 +146,9 @@ export default function HomeScreen() {
     <Screen scroll={false} contentStyle={{ padding: 0 }}>
       <NavRow
         trustScore={trust ? Math.round(trust.totalScore) : undefined}
-        onMenu={() => setMenuOpen(true)}
         onAddFriends={() => router.push('/friends')}
+        onAlerts={() => router.push('/updates')}
+        alertCount={updatesCount}
       />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
@@ -157,8 +161,6 @@ export default function HomeScreen() {
         {/* SOS hidden for now (user call 2026-07-17) — SosCard stays in the
             codebase for when it returns. */}
       </ScrollView>
-
-      <MenuSheet visible={menuOpen} onClose={() => setMenuOpen(false)} />
     </Screen>
   );
 }

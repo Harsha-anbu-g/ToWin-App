@@ -144,7 +144,7 @@ test('chrome primitives scale tighter so their frames never break', async () => 
         onChange={() => {}}
       />
       <TrustBadge score={12} />
-      <NavRow trustScore={24} onMenu={() => {}} onAddFriends={() => {}} />
+      <NavRow trustScore={24} onAddFriends={() => {}} onAlerts={() => {}} />
       <Avatar name="Margaret Hall" />
     </>
   );
@@ -152,7 +152,7 @@ test('chrome primitives scale tighter so their frames never break', async () => 
   expect(getByText('2').props.maxFontSizeMultiplier).toBe(fontScaleCaps.chrome);
   expect(getAllByText('12')[0].props.maxFontSizeMultiplier).toBe(fontScaleCaps.chrome);
   expect(getByText('Towinly').props.maxFontSizeMultiplier).toBe(fontScaleCaps.chrome);
-  expect(getByText('Menu').props.maxFontSizeMultiplier).toBe(fontScaleCaps.chrome);
+  expect(getByText('Updates').props.maxFontSizeMultiplier).toBe(fontScaleCaps.chrome);
   expect(getByText('MH', { includeHiddenElements: true }).props.maxFontSizeMultiplier).toBe(
     fontScaleCaps.chrome
   );
