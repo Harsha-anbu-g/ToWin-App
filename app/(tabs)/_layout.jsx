@@ -38,6 +38,14 @@ import { setAppBadgeCountAsync } from '../../src/lib/pushNotifications';
 import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
+import {
+  LENS_H,
+  LENS_RADIUS,
+  LENS_TOP,
+  labelMaxWidth,
+  lensWidthFor,
+  lensXFor,
+} from '../../src/lib/tabLensGeometry';
 import { DURATION, EASE } from '../../src/theme/motion';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -106,9 +114,10 @@ function tabA11yLabel(label, count = 0, noun = '') {
 
 // The lens capsule's geometry inside the 76pt bar: it wraps the WHOLE tab
 // item — icon and label together (owner call 2026-08-17: "the lens should
-// also cover the letter").
-const LENS_TOP = 5;
-const LENS_H = 54; // hugs the icon row + label line with just a little air
+// also cover the letter"). The arithmetic lives in src/lib/tabLensGeometry so
+// a test can hold it: a full-pill radius used to narrow the glass to 52pt at
+// the label's own height while the label was 62pt wide, and every letter past
+// that sat outside the lens (owner report 2026-08-19).
 
 // The bar's glass sheet + the finger-following lens (owner calls
 // 2026-08-17: the WhatsApp/Apple effect — a glass capsule that glides to
@@ -137,7 +146,9 @@ function GlassTabBackground({ animX, animW, shown, scale, ready }) {
             top: LENS_TOP,
             height: LENS_H,
             width: animW,
-            borderRadius: 999,
+            // A rounded rectangle, not a pill: a pill's corner radius is half
+            // its height, and the label reads down inside that curve.
+            borderRadius: LENS_RADIUS,
             overflow: 'hidden',
             // Real Liquid Glass draws its own edge; only the fallback
             // composite needs the hairline to read as a capsule.
@@ -193,7 +204,20 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type,
       <Text
         numberOfLines={1}
         maxFontSizeMultiplier={fontScaleCaps.chrome}
-        style={{ fontSize: type.tabLabel, fontWeight: '600', color: t.blueDeep, marginTop: 2 }}
+        style={{
+          fontSize: type.tabLabel,
+          // Explicit, because this label is ours rather than the library's:
+          // without it the line box was exactly the font size and the "p"
+          // descenders in "Post Help" were sliced off (seen 2026-08-19). The
+          // raised circle leaves the stack a couple of points taller than the
+          // bar's content box, so flex was shrinking this line and clipping
+          // it — the label keeps its full height instead.
+          lineHeight: Math.round(type.tabLabel * 1.25),
+          flexShrink: 0,
+          fontWeight: '600',
+          color: t.blueDeep,
+          marginTop: 2,
+        }}
       >
         {label}
       </Text>
@@ -281,12 +305,9 @@ export default function TabsLayout() {
   const lensWFor = (i, sw, widths) => {
     if (sw <= 0) return 0;
     const measured = widths[slotTitles[slots[i]]];
-    // Icon row is 22pt wide; the label is usually the wider of the two.
-    const content = Math.max(measured ?? 0, 22);
-    // +20 = 10pt of air each side — snug around the letters (owner call
-    // 2026-08-18: "bring it closer").
-    const hug = measured ? content + 20 : Math.min(sw - 6, 96); // pre-measure fallback
-    return Math.max(48, Math.min(hug, sw - 4));
+    // Before the first measurement lands, hug the icon row alone rather than
+    // guessing a width the letters might not fit inside.
+    return lensWidthFor(measured ?? 22, sw);
   };
 
   const lensX = useRef(new Animated.Value(0)).current;
@@ -302,7 +323,7 @@ export default function TabsLayout() {
   // one view can't mix drivers — the bar is a single small view, so the JS
   // driver keeps up fine.
   const LENS_SPRING = { damping: 26, stiffness: 320, mass: 0.9, useNativeDriver: false };
-  const centerOf = (i, sw, lw) => i * sw + (sw - lw) / 2;
+  const centerOf = lensXFor;
 
   useEffect(() => {
     if (slotW <= 0 || dragging.current) return;
@@ -437,7 +458,16 @@ export default function TabsLayout() {
             maxFontSizeMultiplier={fontScaleCaps.chrome}
             // Each label reports its rendered width so the lens can hug it.
             onLayout={(e) => noteLabel(children, e.nativeEvent.layout.width)}
-            style={{ fontSize: type.tabLabel, fontWeight: '600', color }}
+            style={{
+              fontSize: type.tabLabel,
+              fontWeight: '600',
+              color,
+              // A label may never grow wider than the glass it reads inside.
+              // Past this it truncates within the lens (owner report
+              // 2026-08-19: letters were sitting outside the capsule at
+              // larger OS text). slotW is 0 on the very first render.
+              maxWidth: slotW > 0 ? labelMaxWidth(slotW) : undefined,
+            }}
           >
             {children}
           </Text>
