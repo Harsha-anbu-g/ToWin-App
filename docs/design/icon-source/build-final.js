@@ -29,10 +29,10 @@ const paneStrokes = strokes.slice(7);
 
 const CX = 625;
 const CY = 633.3;
-// mark height in path units is ~804.6; scale 0.88 ≈ 69% of the tile (iOS),
-// scale 0.66 ≈ 52% (Android adaptive safe zone, same share as the last set)
-const IOS_SCALE = 0.88;
-const AND_SCALE = 0.66;
+// mark height in path units is ~804.6; scale 1.06 ≈ 80% of the tile (iOS, the owner's S3),
+// scale 0.75 ≈ 59% (largest that keeps every tip inside the 66dp round-mask circle)
+const IOS_SCALE = 1.06;
+const AND_SCALE = 0.75;
 
 const markPaths = (lineColor) =>
   [
