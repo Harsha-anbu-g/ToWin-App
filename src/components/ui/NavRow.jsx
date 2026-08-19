@@ -1,16 +1,21 @@
-// Top nav row (3a/4a): menu · wordmark · gold trust pill · person-add.
+// Top nav row: person-search · wordmark · gold trust pill · bell.
 // The wordmark is the one non-serif brand mark: SF 19/600 in blueTeal,
 // -0.4 tracking. Icon buttons are labeled 44pt columns (audit 2026-07-17:
-// icon-only glyphs — UserRoundPlus especially — aren't self-evident for
-// elders; captions use the tab-bar label size, same convention).
-// Trust pill only renders once the score is known — no flash of "undefined".
+// icon-only glyphs aren't self-evident for elders; captions use the tab-bar
+// label size, same convention).
+// Owner calls 2026-08-19: the Menu button is gone (its four orphan pages
+// moved onto Profile), Add friends took its left slot with a person-search
+// glyph — UserRoundPlus kept reading as the Profile tab's person — and the
+// bell in the right corner opens Updates, the one place every notification
+// lands. Trust pill only renders once the score is known — no flash of
+// "undefined".
 import { useRouter } from 'expo-router';
-import { Menu, UserRoundPlus } from '../icons';
+import { Bell, UserRoundSearch } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
-function IconTarget({ label, caption, captionColor, onPress, children }) {
-  const { type, fontScaleCaps, pressRipple } = useTheme();
+function IconTarget({ label, caption, captionColor, onPress, badgeCount, children }) {
+  const { t, type, fontScaleCaps, pressRipple } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
@@ -26,7 +31,37 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
         opacity: pressed ? 0.6 : 1,
       })}
     >
-      {children}
+      <View>
+        {children}
+        {badgeCount > 0 ? (
+          // The red "new activity" storm, same voice as the tab badges.
+          // Hidden from assistive tech: the count is folded into `label`.
+          <Text
+            numberOfLines={1}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            maxFontSizeMultiplier={fontScaleCaps.chrome}
+            style={{
+              position: 'absolute',
+              top: -5,
+              right: -9,
+              minWidth: 16,
+              height: 16,
+              lineHeight: 15,
+              borderRadius: 8,
+              paddingHorizontal: 4,
+              overflow: 'hidden',
+              textAlign: 'center',
+              fontSize: 11,
+              fontWeight: '600',
+              backgroundColor: t.red,
+              color: t.canvas,
+            }}
+          >
+            {badgeCount}
+          </Text>
+        ) : null}
+      </View>
       <Text
         maxFontSizeMultiplier={fontScaleCaps.chrome}
         style={{ fontSize: type.tabLabel, fontWeight: '600', color: captionColor, marginTop: 1 }}
@@ -37,7 +72,7 @@ function IconTarget({ label, caption, captionColor, onPress, children }) {
   );
 }
 
-export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
+export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount = 0, style }) {
   const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
   const router = useRouter();
 
@@ -56,9 +91,13 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
       ]}
     >
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: -11 }}>
-        <IconTarget label="Menu" caption="Menu" captionColor={t.inkSlate} onPress={onMenu}>
-          <Menu size={22} color={t.ink} strokeWidth={1.8} />
-        </IconTarget>
+        {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
+            — no handler, no button, instead of a dead target. */}
+        {onAddFriends ? (
+          <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
+            <UserRoundSearch size={21} color={t.blueDeep} strokeWidth={1.8} />
+          </IconTarget>
+        ) : null}
         <Text
           maxFontSizeMultiplier={fontScaleCaps.chrome}
           style={{
@@ -66,6 +105,7 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             fontWeight: '600',
             color: t.greenDeep, // website navbar wordmark green (--green-deep)
             letterSpacing: -0.4,
+            marginLeft: onAddFriends ? 0 : 11, // no button → wordmark holds the edge
           }}
         >
           Towinly
@@ -111,11 +151,15 @@ export default function NavRow({ trustScore, onMenu, onAddFriends, style }) {
             </Text>
           </Pressable>
         ) : null}
-        {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
-            — no handler, no button, instead of a dead target. */}
-        {onAddFriends ? (
-          <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
-            <UserRoundPlus size={21} color={t.blueDeep} strokeWidth={1.8} />
+        {onAlerts ? (
+          <IconTarget
+            label={alertCount > 0 ? `Updates, ${alertCount} new` : 'Updates'}
+            caption="Updates"
+            captionColor={t.inkSlate}
+            onPress={onAlerts}
+            badgeCount={alertCount}
+          >
+            <Bell size={21} color={t.ink} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
       </View>

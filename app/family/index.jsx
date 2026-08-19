@@ -1,6 +1,7 @@
 // My Family (FAM-403; FAM-504/505 web parity 2026-07-26) — the elder's
-// management screen for their family circle, reached from MenuSheet "My
-// Family" and Profile Edit "Manage My Family". Copy is 1:1 with web
+// management screen for their family circle, reached from Profile "My
+// Family" (the Menu drawer retired 2026-08-19) and Profile Edit "Manage My
+// Family". Copy is 1:1 with web
 // MyFamily.jsx; only elder-seat links render (iAmElder — a BOTH user's own
 // family-side links live on Family Home instead). The seat cap is 5 counting
 // OPEN REQUESTS, the web rule — never just active links.

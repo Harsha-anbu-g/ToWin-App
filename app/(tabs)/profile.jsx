@@ -7,7 +7,10 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, Switch, Text, View } from 'react-native';
 import {
+  Archive,
   BookOpen,
+  Briefcase,
+  CalendarCheck,
   ChevronRight,
   FileText,
   KeyRound,
@@ -17,6 +20,7 @@ import {
   PhoneCall,
   Monitor,
   ShieldCheck,
+  Users,
   UserX,
   Vibrate,
 } from '../../src/components/icons';
@@ -108,6 +112,10 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole
 export default function ProfileScreen() {
   const { t, spacing, text, type, fontFamily, mode, toggle } = useTheme();
   const { user, logout } = useAuth();
+  // Same seat guards the old Menu drawer used for these surfaces.
+  const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
+  const isHelper = user?.role === 'HELPER' || user?.role === 'BOTH';
+  const isFamily = user?.role === 'FAMILY';
   const { showToast } = useToast();
   const confirm = useConfirm();
   const router = useRouter();
@@ -288,6 +296,33 @@ export default function ProfileScreen() {
           />
         </View>
       </Card>
+
+      {/* My places — the four pages that lived only in the old Menu drawer
+          (removed 2026-08-19, owner call: Add friends took its slot). Without
+          these rows they would be unreachable. Same role guards the drawer
+          used: family circle and boxes are the elder seat's, offers are the
+          helper's, check-in belongs to everyone with a streak. */}
+      {!isFamily ? (
+        <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
+          {isHelper ? (
+            <Row
+              icon={Briefcase}
+              label="My offers & jobs"
+              onPress={() => router.push('/my-jobs')}
+              divider
+            />
+          ) : null}
+          {!isFamily ? (
+            <Row icon={CalendarCheck} label="Daily check-in" onPress={() => router.push('/checkin')} divider={isElder} />
+          ) : null}
+          {isElder ? (
+            <>
+              <Row icon={Users} label="My Family" onPress={() => router.push('/family')} divider />
+              <Row icon={Archive} label="My boxes" onPress={() => router.push('/pass-on')} />
+            </>
+          ) : null}
+        </Card>
+      ) : null}
 
       {/* The 3h list: Trust Score · Peekaboo · Guide · Night mode · SOS */}
       <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>

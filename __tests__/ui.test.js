@@ -129,16 +129,28 @@ test('chip fires onPress and exposes its selected state', async () => {
   expect(onPress).toHaveBeenCalledTimes(1);
 });
 
-test('nav row: menu and add-friends targets fire, trust pill reads score', async () => {
-  const onMenu = jest.fn();
+test('nav row: add-friends and updates targets fire, trust pill reads score', async () => {
+  // The Menu button is gone (2026-08-19): Add friends holds the left slot,
+  // the Updates bell the right corner, its count folded into the label.
   const onAddFriends = jest.fn();
-  const { getByRole, getByText } = await wrap(
-    <NavRow trustScore={24} onMenu={onMenu} onAddFriends={onAddFriends} />
+  const onAlerts = jest.fn();
+  const { getByRole, getByText, queryByRole } = await wrap(
+    <NavRow trustScore={24} onAddFriends={onAddFriends} onAlerts={onAlerts} alertCount={3} />
   );
-  await fireEvent.press(getByRole('button', { name: 'Menu' }));
+  expect(queryByRole('button', { name: 'Menu' })).toBeNull();
   await fireEvent.press(getByRole('button', { name: 'Add friends' }));
-  expect(onMenu).toHaveBeenCalled();
+  await fireEvent.press(getByRole('button', { name: 'Updates, 3 new' }));
   expect(onAddFriends).toHaveBeenCalled();
+  expect(onAlerts).toHaveBeenCalled();
   expect(getByText('24')).toBeOnTheScreen();
   expect(getByText('trust')).toHaveStyle({ color: '#1a5c2e' });
+});
+
+test('nav row without handlers: no dead targets, wordmark still reads', async () => {
+  // FAMILY has no discovery surface; a NavRow with no handlers renders no
+  // buttons at all rather than dead ones.
+  const { queryByRole, getByText } = await wrap(<NavRow />);
+  expect(queryByRole('button', { name: 'Add friends' })).toBeNull();
+  expect(queryByRole('button', { name: 'Updates' })).toBeNull();
+  expect(getByText('Towinly')).toBeOnTheScreen();
 });

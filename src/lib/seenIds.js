@@ -59,6 +59,13 @@ export function unseenCount(storageKey, tokens) {
   return tokens.reduce((n, token) => (seen.has(token) ? n : n + 1), 0);
 }
 
+/** Which of these tokens the user has NOT seen yet (order kept). */
+export function unseenTokens(storageKey, tokens) {
+  const seen = sets.get(storageKey);
+  if (!seen) return [];
+  return tokens.filter((token) => !seen.has(token));
+}
+
 /** Record these tokens as seen and persist (oldest dropped past the cap). */
 export async function markSeen(storageKey, tokens) {
   await loadSeen(storageKey);
