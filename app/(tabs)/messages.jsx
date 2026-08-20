@@ -174,13 +174,16 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
         </Text>
       </View>
       {conn.unreadCount > 0 ? (
+        // Red, like every other unread count in the app (owner call
+        // 2026-08-19) — this row's badge and the Messages tab's badge count
+        // the same thing, so they cannot be two different colors.
         <View
           style={{
             minWidth: 22,
             height: 22,
             borderRadius: 11,
             paddingHorizontal: 6,
-            backgroundColor: t.badgeFill,
+            backgroundColor: t.red,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -189,7 +192,7 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
             style={{
               fontSize: 12,
               fontWeight: '700',
-              color: t.actionInk,
+              color: t.canvas,
               fontVariant: ['tabular-nums'],
             }}
           >

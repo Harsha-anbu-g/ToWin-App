@@ -1,6 +1,8 @@
-// Home — My Helpers lives here (user decision 2026-07-12): greeting, then
-// the trust ladders. The daily check-in is its own screen (/checkin) and the
-// first Home visit of a day walks there ONCE if today isn't checked in yet.
+// Home — My Helpers lives here (user decision 2026-07-12): the trust ladders,
+// straight away. The "Good morning, <name>" greeting was removed 2026-08-19
+// (owner call) so the ladders start at the top of the page; it still opens the
+// daily check-in screen, where it belongs to that moment. The first Home visit
+// of a day walks to /checkin ONCE if today isn't checked in yet.
 // Helpers see their quiet doorways (their ladders live on the My Elders tab).
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -9,7 +11,6 @@ import { ScrollView } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api from '../../src/api/client';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
-import GreetingHeader from '../../src/components/home/GreetingHeader';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
 import NavRow from '../../src/components/ui/NavRow';
@@ -135,7 +136,6 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
         >
-          <GreetingHeader />
           <FamilyHomePanel />
         </ScrollView>
       </Screen>
@@ -154,7 +154,6 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
       >
-        <GreetingHeader />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
         {/* My boxes card removed from Home (owner call 2026-08-17):
             What I pass on stays reachable through the menu. */}
