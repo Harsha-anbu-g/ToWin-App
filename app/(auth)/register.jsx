@@ -3,22 +3,22 @@
 // NOTE: no account exists until the emailed link is opened — success routes
 // to check-email, never logs in (mirrors web).
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AlertCircle, Check, Eye, EyeOff } from '../../src/components/icons';
+import { AlertCircle, Check } from '../../src/components/icons';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
 import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
 import { showDemoAccounts } from '../../src/lib/appEnv';
 import Input from '../../src/components/ui/Input';
+import PasswordInput from '../../src/components/ui/PasswordInput';
 import LegalModal from '../../src/components/LegalModal';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
 import { yearsOld } from '../../src/lib/copy';
 import { parseFlexibleDate } from '../../src/lib/flexibleDate';
-import { MATCH_GREEN, STRENGTH_FAIR, STRENGTH_WEAK } from '../../src/theme/parity';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
@@ -55,31 +55,22 @@ const MIN_AGE = 18;
 const MAX_AGE = 120;
 
 // Hoisted so memo'd Inputs get the same style object every render
-const FIELD_GAP = { marginBottom: spacing[4] };
-const FIELD_GAP_TOP = { marginTop: spacing[4] };
+const FIELD_GAP = { marginBottom: spacing[5] };
+const FIELD_GAP_TOP = { marginTop: spacing[5] };
 
-function EyeToggle({ shown, onToggle, color }) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={shown ? 'Hide password' : 'Show password'}
-      onPress={onToggle}
-      hitSlop={8}
-      style={({ pressed }) => ({
-        minWidth: 44,
-        minHeight: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: pressed ? 0.7 : 1,
-      })}
-    >
-      {shown ? <EyeOff size={18} color={color} /> : <Eye size={18} color={color} />}
-    </Pressable>
-  );
-}
+// The consent box, and the indent that keeps the two legal links under its
+// label. Written twice as a bare 22, the two drifted apart the moment either
+// moved (audit 2026-08-19).
+const CHECKBOX_SIZE = 22;
+
+// One document behind one link. Two links opening two sheets put two more
+// buttons on a page that already had ten, and nobody reads one of these
+// without the other (owner call 2026-08-19). Hoisted so the concatenation is
+// not rebuilt on every keystroke.
+const LEGAL_SECTIONS = [...TERMS_CONTENT, ...PRIVACY_CONTENT];
 
 export default function Register() {
-  const { t, radius, text, type, fontFamily } = useTheme();
+  const { t, radius, type, fontFamily } = useTheme();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -96,9 +87,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [agreed, setAgreed] = useState(false);
-  const [legalOpen, setLegalOpen] = useState(null); // 'terms' | 'privacy' | null
-  const [showPwd, setShowPwd] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const [legalOpen, setLegalOpen] = useState(false);
 
   const setField = (key, value) => {
     setForm((f) => ({ ...f, [key]: value }));
@@ -130,8 +119,6 @@ export default function Register() {
     setForm((f) => ({ ...f, confirmPassword: v }));
     setFieldErrors((f) => ({ ...f, confirmPassword: '' }));
   }, []);
-  const togglePwd = useCallback(() => setShowPwd((v) => !v), []);
-  const toggleConfirm = useCallback(() => setShowConfirm((v) => !v), []);
 
   // Return-key path (UX-708): Next walks username → email → date of birth →
   // password → re-enter, Done on the last field submits. Stable callbacks
@@ -148,14 +135,6 @@ export default function Register() {
   const focusConfirm = useCallback(() => confirmRef.current?.focus(), []);
   const submitRef = useRef(null);
   const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
-  const pwdEye = useMemo(
-    () => <EyeToggle shown={showPwd} onToggle={togglePwd} color={t.ink3} />,
-    [showPwd, togglePwd, t.ink3]
-  );
-  const confirmEye = useMemo(
-    () => <EyeToggle shown={showConfirm} onToggle={toggleConfirm} color={t.ink3} />,
-    [showConfirm, toggleConfirm, t.ink3]
-  );
 
   const handleSubmit = async () => {
     setError('');
@@ -208,19 +187,30 @@ export default function Register() {
   const strength = pwdStrength(form.password);
   // Good/Strong read green, not blue: blue on this screen means "tap me" (role
   // cards, primary button) and a meter is not interactive.
-  const strengthColors = [STRENGTH_WEAK, STRENGTH_FAIR, MATCH_GREEN, MATCH_GREEN];
+  // The app's own palette, not the three iOS system colors this used to
+  // borrow: the old 'good' bar was a pale sage while the 'Passwords match'
+  // line six rows below was greenDeep — two greens saying one thing, on
+  // screen together (audit 2026-08-19).
+  const strengthColors = [t.redError, t.redMild, t.greenDeep, t.greenDeep];
 
   return (
-    <Screen back keyboard>
+    // spacing[6] gutter + spacing[5] field gaps: login.jsx's rhythm, which
+    // the owner already tuned. Register is the longest page in the flow and
+    // was running the tightest (audit 2026-08-19).
+    <Screen back keyboard contentStyle={{ paddingHorizontal: spacing[6] }}>
       {/* 3q: the form sits flat on the white page — no card chrome */}
       <View style={{ marginTop: spacing[4] }}>
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
+          style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
           Join Towinly.
         </Text>
-        <Text style={{ fontSize: 16, color: t.ink3, marginTop: 4, marginBottom: spacing[5] }}>
+        {/* spacing[8] under each section, spacing[5] between fields inside one:
+            "space within a group < space between groups" is the only grouping
+            cue a single column has (rulebook §5). The page ran everything at
+            16–24 and read as one solid block (owner call 2026-08-19). */}
+        <Text style={{ fontSize: type.body, color: t.ink3, marginTop: spacing[1], marginBottom: spacing[8] }}>
           Create your free account in minutes.
         </Text>
 
@@ -237,7 +227,7 @@ export default function Register() {
         <View
           accessibilityRole="radiogroup"
           accessibilityLabel={ROLE_PROMPT}
-          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[5] }}
+          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[8] }}
         >
           {ROLES.map(({ value, label, desc, fullWidth }) => {
             const active = form.role === value;
@@ -258,20 +248,27 @@ export default function Register() {
                   minHeight: 64,
                   padding: spacing[3],
                   borderRadius: radius.input,
-                  borderWidth: active ? 2 : 1.5,
+                  // 1pt idle matches the inputs below, 2pt active matches
+                  // Paper's focused outline — one border language down the
+                  // whole column (audit 2026-08-19).
+                  borderWidth: active ? 2 : 1,
                   borderColor: active ? t.blue : t.fieldLine,
                   backgroundColor: active ? t.blueWash : t.canvas,
                   opacity: pressed ? 0.8 : 1,
                 })}
               >
-                <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
+                {/* Body size, not sm: the option's own NAME was the smallest
+                    text in the card while its description sat at 16, so every
+                    card read upside-down. Weight and color carry the hierarchy
+                    now (audit 2026-08-19). */}
+                <Text style={{ fontSize: type.body, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
                   {label}
                 </Text>
                 {/* blueDeep/inkSlate, not teal/ink4 — this copy decides an
                     identity; it must clear 4.5:1 (rulebook). Body size, not
                     meta: it is read rather than scanned, and misreading it
                     signs the person up as the wrong person. */}
-                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 22 }}>
+                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: spacing[1], lineHeight: 24 }}>
                   {desc}
                 </Text>
               </Pressable>
@@ -290,13 +287,18 @@ export default function Register() {
               backgroundColor: t.redTint,
               borderWidth: 1,
               borderColor: t.redLine,
-              borderRadius: radius.md,
+              borderRadius: radius.input,
               padding: spacing[3],
               marginBottom: spacing[4],
             }}
           >
-            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 1 }} />
-            <Text style={{ flex: 1, fontSize: text.sm, color: t.redError, lineHeight: 21 }}>
+            {/* (24pt line box − 18pt icon) / 2 — the icon sits on the first
+                line's optical centre rather than its ascender. */}
+            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 3 }} />
+            {/* Body size, like every other sentence on this page. This was the
+                last 14pt text left on the screen, and it is the one that says
+                why the account was not created (audit 2026-08-19). */}
+            <Text style={{ flex: 1, fontSize: type.body, color: t.redError, lineHeight: 24 }}>
               {error}
             </Text>
           </View>
@@ -359,22 +361,28 @@ export default function Register() {
           style={FIELD_GAP}
         />
 
-        <Input
+        {/* The kit control, not a local copy of it: this was the only
+            password screen in the app reimplementing the eye toggle
+            (audit 2026-08-19). PasswordInput owns show/hide state and
+            spreads the rest, ref included, straight through to Input. */}
+        <PasswordInput
           ref={passwordRef}
           label="Password"
           value={form.password}
           onChangeText={setPassword}
           error={fieldErrors.password}
-          secureTextEntry={!showPwd}
+          helper="At least 8 characters."
           textContentType="newPassword"
           autoComplete="new-password"
           returnKeyType="next"
           submitBehavior="submit"
           onSubmitEditing={focusConfirm}
-          rightSlot={pwdEye}
         />
         {form.password ? (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 6 }}>
+          // spacing[2] is exactly where Input draws its own helper line, so
+          // the meter reads as this field's helper rather than a stray row.
+          // (A {/* */} comment here is an object literal to the parser.)
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[1], marginTop: spacing[2] }}>
             {[1, 2, 3, 4].map((i) => (
               <View
                 key={i}
@@ -386,31 +394,29 @@ export default function Register() {
                 }}
               />
             ))}
-            <Text style={{ fontSize: type.meta, color: t.ink3, marginLeft: 6 }}>
+            <Text style={{ fontSize: type.meta, color: t.ink3, marginLeft: spacing[2] }}>
               {STRENGTH_LABELS[strength]}
             </Text>
           </View>
         ) : null}
 
-        <Input
+        <PasswordInput
           ref={confirmRef}
           label="Re-enter password"
           value={form.confirmPassword}
           onChangeText={setConfirmPassword}
           error={fieldErrors.confirmPassword}
-          secureTextEntry={!showConfirm}
           textContentType="newPassword"
           autoComplete="new-password"
           returnKeyType="done"
           onSubmitEditing={submitFromKeyboard}
-          rightSlot={confirmEye}
           style={FIELD_GAP_TOP}
         />
         {form.confirmPassword && form.password && form.confirmPassword === form.password ? (
           /* greenDeep at body size: the web's MATCH_GREEN measured 2.93:1 at
              13px, so the one line confirming the two passwords agree was the
              hardest thing on the page to read. */
-          <Text style={{ fontSize: type.body, color: t.greenDeep, marginTop: 4 }}>Passwords match</Text>
+          <Text style={{ fontSize: type.body, color: t.greenDeep, marginTop: spacing[1] }}>Passwords match</Text>
         ) : null}
 
         {/* Terms agreement — submit stays disabled until checked (HCI rule 5).
@@ -427,68 +433,56 @@ export default function Register() {
             flexDirection: 'row',
             alignItems: 'flex-start',
             gap: spacing[3],
-            marginTop: spacing[5],
+            marginTop: spacing[8],
             opacity: pressed ? 0.7 : 1,
           })}
         >
           <View
             style={{
-              width: 22,
-              height: 22,
+              width: CHECKBOX_SIZE,
+              height: CHECKBOX_SIZE,
               borderRadius: 6,
-              borderWidth: 1.5,
+              // The same 1-idle / 2-chosen border language as the role cards
+              // and the inputs — this box is a choice control like they are,
+              // and it was the last 1.5pt line on the page (audit 2026-08-19).
+              borderWidth: agreed ? 2 : 1,
               borderColor: agreed ? t.blue : t.fieldLine,
               backgroundColor: agreed ? t.blue : t.canvas,
               alignItems: 'center',
               justifyContent: 'center',
-              marginTop: 2,
+              // (24pt line box − 22pt box) / 2, the same optical centring the
+              // alert icon uses.
+              marginTop: 1,
             }}
           >
             {/* An icon, not a glyph in a fixed line box — the ✓ clipped at
                 large OS text (rulebook). */}
             {agreed ? <Check size={15} color={t.actionInk} strokeWidth={3} /> : null}
           </View>
-          <Text style={{ flex: 1, fontSize: text.base, color: t.ink3, lineHeight: 25 }}>
+          <Text style={{ flex: 1, fontSize: type.body, color: t.ink3, lineHeight: 24 }}>
             I agree to the Terms of Service and Privacy Policy
           </Text>
         </Pressable>
-        {/* rowGap: when the two 44pt links wrap they must not stack at 0pt */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', columnGap: spacing[5], rowGap: spacing[2], marginLeft: 22 + spacing[3] }}>
-          {/* button, not link: these open a sheet over this screen. "Link"
-              promises a screen reader it is going somewhere, and this is the
-              last thing read before the agree checkbox. */}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setLegalOpen('terms')}
-            style={({ pressed }) => ({
-              minHeight: 44,
-              justifyContent: 'center',
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
-              Read the Terms
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setLegalOpen('privacy')}
-            style={({ pressed }) => ({
-              minHeight: 44,
-              justifyContent: 'center',
-              opacity: pressed ? 0.6 : 1,
-            })}
-          >
-            <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep, textDecorationLine: 'underline' }}>
-              Read the Privacy Policy
-            </Text>
-          </Pressable>
+        {/* Indented under the checkbox label so it reads as belonging to that
+            sentence rather than as another thing to decide. One row now: the
+            two links stacked because side by side they needed 314pt in a 311pt
+            column, and two 44pt rows here was two more buttons on a page that
+            already had ten.
+            TextLink carries accessibilityRole="button" — the right role, since
+            it opens a sheet rather than navigates — plus the 44pt floor, the
+            pressed state and the Android ripple (audit 2026-08-19). */}
+        <View style={{ alignItems: 'flex-start', marginLeft: CHECKBOX_SIZE + spacing[3] }}>
+          <TextLink
+            label="Read the Terms and Privacy Policy"
+            onPress={() => setLegalOpen(true)}
+            style={{ alignSelf: 'flex-start', paddingHorizontal: 0 }}
+          />
         </View>
 
         {/* The reason the button waits is written on screen, not hidden in an
             accessibility hint (rulebook: a greyed button must explain itself). */}
         {!form.role || !agreed ? (
-          <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21, marginTop: spacing[4] }}>
+          <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 24, marginTop: spacing[4] }}>
             {!form.role
               ? 'Choose who you are joining as, and agree to the terms above.'
               : 'Agree to the terms above to continue.'}
@@ -511,29 +505,23 @@ export default function Register() {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'center',
-            marginTop: spacing[4],
+            marginTop: spacing[8],
           }}
         >
-          <Text style={{ fontSize: 16, color: t.ink3 }}>Already have an account? </Text>
+          <Text style={{ fontSize: type.body, color: t.ink3 }}>Already have an account? </Text>
           <TextLink label="Log in" onPress={() => router.push('/(auth)/login')} />
         </View>
 
         {/* Demo accounts live quietly under the form, not above it — hidden in
             store builds so the shared credentials never ship (audit). */}
-        {showDemoAccounts() ? <DemoAccountsCard onError={setError} /> : null}
+        {showDemoAccounts() ? <DemoAccountsCard onError={setError} collapsed /> : null}
       </View>
 
       <LegalModal
-        title="Terms of Service"
-        sections={TERMS_CONTENT}
-        visible={legalOpen === 'terms'}
-        onClose={() => setLegalOpen(null)}
-      />
-      <LegalModal
-        title="Privacy Policy"
-        sections={PRIVACY_CONTENT}
-        visible={legalOpen === 'privacy'}
-        onClose={() => setLegalOpen(null)}
+        title="Terms and Privacy Policy"
+        sections={LEGAL_SECTIONS}
+        visible={legalOpen}
+        onClose={() => setLegalOpen(false)}
       />
     </Screen>
   );

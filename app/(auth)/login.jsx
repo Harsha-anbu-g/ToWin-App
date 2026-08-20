@@ -22,7 +22,7 @@ import { spacing } from '../../src/theme/tokens';
 const FIELD_GAP = { marginBottom: spacing[5] };
 
 export default function Login() {
-  const { t, radius, text, fontFamily } = useTheme();
+  const { t, radius, type, fontFamily } = useTheme();
   const { login, sessionExpired } = useAuth();
   const router = useRouter();
 
@@ -130,11 +130,11 @@ export default function Login() {
       <View>
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
+          style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
           Welcome back.
         </Text>
-        <Text style={{ fontSize: 16, color: t.ink3, marginTop: spacing[2], marginBottom: spacing[6] }}>
+        <Text style={{ fontSize: type.body, color: t.ink3, marginTop: spacing[2], marginBottom: spacing[6] }}>
           Log in to your Towinly account.
         </Text>
 
@@ -144,13 +144,13 @@ export default function Login() {
               backgroundColor: t.blueWash,
               borderWidth: 1,
               borderColor: t.blueSoft,
-              borderRadius: radius.md,
+              borderRadius: radius.input,
               padding: spacing[3],
               marginBottom: spacing[4],
             }}
           >
             {/* blueDeep, not blueTeal — teal on the wash measured 3.47:1 (rulebook) */}
-            <Text style={{ fontSize: text.sm, color: t.blueDeep, lineHeight: 21 }}>
+            <Text style={{ fontSize: type.body, color: t.blueDeep, lineHeight: 24 }}>
               For your safety, you were logged out after a period of inactivity. Please log in again.
             </Text>
           </View>
@@ -167,14 +167,16 @@ export default function Login() {
               backgroundColor: t.redTint,
               borderWidth: 1,
               borderColor: t.redLine,
-              borderRadius: radius.md,
+              borderRadius: radius.input,
               padding: spacing[3],
               marginBottom: spacing[4],
             }}
           >
             {/* Icon + color, never color alone (rulebook) */}
-            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 1 }} />
-            <Text style={{ flex: 1, fontSize: text.sm, color: t.redError, lineHeight: 21 }}>
+            {/* (24pt line box − 18pt icon) / 2 — the icon sits on the first
+                line's optical centre rather than its ascender. */}
+            <AlertCircle size={18} color={t.redError} strokeWidth={2} style={{ marginTop: 3 }} />
+            <Text style={{ flex: 1, fontSize: type.body, color: t.redError, lineHeight: 24 }}>
               {error}
             </Text>
           </View>
@@ -237,7 +239,7 @@ export default function Login() {
             marginTop: spacing[6],
           }}
         >
-          <Text style={{ fontSize: 16, color: t.ink3 }}>New here? </Text>
+          <Text style={{ fontSize: type.body, color: t.ink3 }}>New here? </Text>
           <TextLink label="Create Account" onPress={() => router.push('/(auth)/register')} />
         </View>
 

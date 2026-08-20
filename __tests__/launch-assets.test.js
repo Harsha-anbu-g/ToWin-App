@@ -29,15 +29,32 @@ function readPng(relPath) {
 // app.json holds "./assets/x.png"; the reader wants "assets/x.png".
 const fromConfig = (configured) => readPng(configured.replace(/^\.\//, ''));
 
+// The splash is configured through the expo-splash-screen plugin, not the
+// top-level "splash" key. That key is the legacy path, and Expo reads it with
+// enableFullScreenImage_legacy: true — it pins the artwork to all four screen
+// edges, so a 1024-square tortoise fills the whole phone for the second before
+// the first screen paints. The plugin path sizes the mark instead.
+const splashProps = appJson.expo.plugins.find(
+  (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-splash-screen'
+)?.[1];
+
 test('the splash is 1024 square, so it is not upscaled on a big phone', () => {
-  const splash = fromConfig(appJson.expo.splash.image);
+  const splash = fromConfig(splashProps.image);
   expect(splash.width).toBe(1024);
   expect(splash.height).toBe(1024);
   // The mark has to sit on the parchment the splash config paints, so the
   // artwork itself must be transparent, never flattened onto white.
   expect(splash.colorType).toBe(6);
-  expect(appJson.expo.splash.backgroundColor).toBe('#f6f4ef');
-  expect(appJson.expo.splash.resizeMode).toBe('contain');
+  expect(splashProps.backgroundColor).toBe('#f6f4ef');
+  expect(splashProps.resizeMode).toBe('contain');
+});
+
+test('the splash mark is sized small, and the legacy full-screen key is gone', () => {
+  // 100pt is about a quarter of the width of a phone: a small mark on parchment,
+  // not a tortoise filling the screen. Expo's own default is 200.
+  expect(splashProps.imageWidth).toBe(100);
+  // Present again, this would win back the full-screen behaviour on iOS.
+  expect(appJson.expo.splash).toBeUndefined();
 });
 
 test('the app icon is 1024 square and carries NO alpha', () => {

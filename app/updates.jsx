@@ -188,6 +188,7 @@ export default function UpdatesScreen() {
             )
           }
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
         />
       )}

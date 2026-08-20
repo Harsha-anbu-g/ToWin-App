@@ -7,6 +7,7 @@ import { Pressable, Text, View } from 'react-native';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
+import TextLink from './ui/TextLink';
 import { yearsOld } from '../lib/copy';
 
 // Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as
@@ -18,11 +19,18 @@ const DEMO = {
   FAMILY: { identifier: 'demo.sarah@towin.app', password: 'DemoSarah!2026', label: 'Try as Family', sub: "Sarah, Margaret's daughter" },
 };
 
-export default function DemoAccountsCard({ onError }) {
+// `collapsed` folds the three seats behind one line of text. Login leaves them
+// open — one tap with no typing is the whole point of the demo seats there
+// (owner call 2026-08-16). Register is the opposite case: someone on that page
+// has already decided to sign up, so three more buttons under a form that
+// already carries five fields is just noise (owner call 2026-08-19, "too many
+// buttons and no free white space").
+export default function DemoAccountsCard({ onError, collapsed = false }) {
   const { t, spacing, radius, type } = useTheme();
   const { login } = useAuth();
   const router = useRouter();
   const [guestLoading, setGuestLoading] = useState('');
+  const [open, setOpen] = useState(!collapsed);
 
   const handleGuest = async (role) => {
     setGuestLoading(role);
@@ -78,6 +86,17 @@ export default function DemoAccountsCard({ onError }) {
       <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{DEMO[role].sub}</Text>
     </Pressable>
   );
+
+  // Folded: one line, no divider, no chrome. The divider and the explaining
+  // sentence are part of what made the page feel full, so they wait behind the
+  // tap too — the label carries the offer on its own.
+  if (!open) {
+    return (
+      <View style={{ marginTop: spacing[8] }}>
+        <TextLink label="Just looking? Try a sample account" onPress={() => setOpen(true)} />
+      </View>
+    );
+  }
 
   return (
     <View style={{ marginTop: spacing[6] }}>

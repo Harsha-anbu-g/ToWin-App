@@ -173,20 +173,24 @@ export default function FinishSetup() {
                   flex: 1,
                   minHeight: 64,
                   padding: spacing[3],
-                  borderRadius: radius.md,
-                  borderWidth: active ? 2 : 1.5,
-                  borderColor: active ? t.blue : t.border,
+                  // Same shape and border language as register.jsx's picker:
+                  // this twin had drifted to radius.md and t.border, which
+                  // measures ~1.3:1 on white and misses the 3:1 floor that
+                  // fieldLine exists to hold (audit 2026-08-19).
+                  borderRadius: radius.input,
+                  borderWidth: active ? 2 : 1,
+                  borderColor: active ? t.blue : t.fieldLine,
                   backgroundColor: active ? t.blueWash : t.canvas,
                   opacity: pressed ? 0.8 : 1,
                 })}
               >
-                <Text style={{ fontSize: text.sm, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
+                <Text style={{ fontSize: type.body, fontWeight: '600', color: active ? t.blueDeep : t.ink }}>
                   {label}
                 </Text>
                 {/* Body size, not meta (register.jsx): this copy is read rather
                     than scanned, and misreading it signs the person up as the
                     wrong person. */}
-                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: 4, lineHeight: 22 }}>
+                <Text style={{ fontSize: type.body, color: active ? t.blueDeep : t.inkSlate, marginTop: spacing[1], lineHeight: 24 }}>
                   {desc}
                 </Text>
               </Pressable>

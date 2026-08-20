@@ -42,7 +42,7 @@ export default function GoogleLoginButton({
   dividerLabel = 'or log in with username',
   style,
 }) {
-  const { t, radius, text, spacing } = useTheme();
+  const { t, radius, text, type, spacing } = useTheme();
   if (Platform.OS !== 'web') return null;
 
   return (
@@ -56,22 +56,28 @@ export default function GoogleLoginButton({
           alignItems: 'center',
           justifyContent: 'center',
           gap: 10,
-          minHeight: 48,
+          // The kit Button's own metrics (46 tall, 20 side padding, label at
+          // type.body/600): this shell sat 2pt taller with a heavier edge and
+          // a lighter label than every other button in the flow
+          // (audit 2026-08-19). The pill and the white fill stay - pills mean
+          // "action" here, and staying unfilled keeps one filled primary.
+          minHeight: 46,
+          paddingHorizontal: 20,
           backgroundColor: t.canvas,
-          borderWidth: 1.5,
+          borderWidth: 1,
           borderColor: pressed ? t.blueSoft : t.fieldLine,
           borderRadius: radius.pill,
         })}
       >
         <GoogleG />
-        <Text style={{ fontSize: 16, fontWeight: '500', color: t.ink }}>{label}</Text>
+        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{label}</Text>
       </Pressable>
-      <Text style={{ fontSize: text.sm, color: t.ink4, textAlign: 'center', marginTop: spacing[2] }}>
+      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center', marginTop: spacing[2] }}>
         Fastest way in, no password to remember.
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3], marginVertical: spacing[5] }}>
         <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
-        <Text style={{ fontSize: text.sm, color: t.ink4 }}>{dividerLabel}</Text>
+        <Text style={{ fontSize: text.sm, color: t.inkSlate }}>{dividerLabel}</Text>
         <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
       </View>
     </View>
