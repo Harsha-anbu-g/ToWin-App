@@ -32,8 +32,18 @@ Facts these labels rest on, each verified in code:
   and account deletion, and transits Expo's push service (a processor named
   in the privacy policy). No advertising ID, no analytics identifier. The
   other identifier on the wire is the account JWT.
-- **No GPS.** `expo-location` is not installed. Location is a town the user
-  hand-types, geocoded server-side (`app/profile-edit.jsx:246`).
+- **Device location, rounded on the phone (changed 2026-08-19).**
+  `expo-location ~19.0.8` is installed and asked for on the Add Friends screen
+  only, foreground only (`app.json` blocks every background/always variant).
+  Every fix is snapped to a 0.02 degree cell by `src/lib/coarseLocation.js`
+  BEFORE it reaches the network, so what is transmitted and stored is a
+  ~2.2 x 1.7 km area (3.5 to 4.9 sq km), never a street. That is above Play's
+  3 sq km "approximate" line and at two decimal places, below Apple's
+  three-decimal "Precise Location" line. The hand-typed town
+  (`app/profile-edit.jsx`) remains as the fallback for anyone who declines.
+  Rounding is also the only defence available against a live backend weakness:
+  `/discover` accepts caller-supplied lat/lng and returns distances rounded to
+  0.1 km, which trilaterates a stored point to ~100 m. See OPEN QUESTION below.
 - **Camera and microphone are blocked**, with both permissions stripped
   from the build:
   `app.json android.blockedPermissions` and `tools:node="remove"` in
@@ -102,8 +112,8 @@ Functionality** for all types unless a second purpose is listed.
 | Contact Info | Other User Contact Info | **Yes** | App Functionality | Third-party data the user types: emergency contact name, phone, relationship (`app/emergency-contacts.jsx`), and the elder's username or email in a family link request (`src/components/family/AddParentForm.jsx:48`). |
 | Health & Fitness | all | No | | |
 | Financial Info | all | No | | |
-| Location | Precise Location | No | | No GPS permission exists. |
-| Location | Coarse Location | **Yes** (optional) | App Functionality | Hand-typed town, geocoded server-side via OpenStreetMap; town-level coordinates and city stored, city shown to members. |
+| Location | Precise Location | No | | The phone is read, but the fix is rounded to a ~4 sq km cell before it leaves the device (`src/lib/coarseLocation.js`); nothing at three decimal places is ever transmitted or stored. |
+| Location | Coarse Location | **Yes** (optional) | App Functionality | Two sources: the device fix rounded to a ~2 km cell (Add Friends, foreground only, permission asked), and the hand-typed town geocoded server-side via OpenStreetMap. Only the rounded/town-level coordinate and the city are stored; the city is shown to members. |
 | Sensitive Info | Sensitive Info | No | | Apple's definition (race, sexual orientation, religion, biometrics, etc.) matches nothing collected. DOB and gender are declared under Other Data Types. |
 | Contacts | Contacts | No | | The address book is never read. |
 | User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to Groq after explicit per-user consent. |
@@ -303,7 +313,7 @@ first:
 | Any analytics/attribution/crash SDK (PostHog client, Sentry, Firebase, etc.) | Apple Usage Data / Diagnostics; Play App interactions / Crash logs; possibly Device IDs and Tracking |
 | Enabling EAS Update (`updates.url` + `ENABLED=true`) | HAPPENED 2026-08-16 (`eas update:configure`, needed by the build). Covered: the Device ID rows are already Yes and the policy already names Expo as a processor. |
 | Push notifications (`expo-notifications`) | HAPPENED 2026-08-16, handled: Device ID rows above flipped to Yes, policy names Expo, manifest re-pinned at 11 |
-| `expo-location` or any GPS use | Location answers change from typed-town to device location; Android location permission appears |
+| `expo-location` or any GPS use | HAPPENED 2026-08-19. Apple rows are UNCHANGED (Coarse Location stays Yes / App Functionality / linked / not tracking; Precise Location stays No) because the fix is rounded on device before transmission. Android now declares location permissions via the plugin. See OPEN QUESTION below before submitting. |
 | Unblocking camera or microphone (e.g. real voice input in Ask AI) | Audio Data / Photos-from-camera; both purpose strings and blocked-permissions lists |
 | Google sign-in in native builds (`GoogleLoginButton` gate removed) | Google account data collected; also triggers Apple 4.8 (Sign in with Apple) |
 | Re-mounting `SosCard` | No label change (contacts already declared) but reviewer-visible SMS behavior returns; update reviewer notes |
@@ -319,3 +329,22 @@ grep -rhoE "api\.(get|post|put|patch|delete)\(\s*[\`'\"][^\`'\"]+" app/ src/ \
 
 Plus: `package.json` dependency diff, `app.json` plugins/permissions diff,
 and `android/app/src/main/AndroidManifest.xml` permission list.
+
+
+## OPEN QUESTION for the owner, raised 2026-08-19
+
+The app now holds `ACCESS_FINE_LOCATION` on Android (the `expo-location`
+plugin declares it) while transmitting only a rounded, approximate position.
+That gap is deliberate: requesting coarse permission alone costs another 1 to
+3 km of OS-level error on top of the 2 km grid, which would leave the 5 km
+filter meaningless.
+
+Play's Data safety form asks what an app **collects and transmits**, and by
+that reading only "Approximate location" is a Yes. A reviewer looking at the
+manifest instead may expect "Precise location" declared as well. Declaring
+more than you collect is never penalised; declaring less can be.
+
+**Recommendation:** answer Play with Approximate location = Yes AND Precise
+location = Yes, and use the Data safety free-text to say the precise fix never
+leaves the device. Apple's questionnaire asks about what is collected, so its
+rows stay as they are above. Decide this before the next Play submission.
