@@ -22,12 +22,16 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
       accessibilityLabel={label}
       onPress={onPress}
       android_ripple={pressRipple}
-      hitSlop={{ top: 2, bottom: 2, left: 4, right: 4 }}
+      hitSlop={{ top: 4, bottom: 4, left: 6, right: 6 }}
       style={({ pressed }) => ({
-        minWidth: 44,
-        minHeight: 44,
+        // 56, not 44 (owner call 2026-08-19: "increase the size of the
+        // updates and friends") — these two are the row's only actions
+        // besides the trust pill, and they carry the app's live news.
+        minWidth: 56,
+        minHeight: 52,
         alignItems: 'center',
         justifyContent: 'center',
+        gap: 2,
         opacity: pressed ? 0.6 : 1,
       })}
     >
@@ -43,16 +47,16 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
             maxFontSizeMultiplier={fontScaleCaps.chrome}
             style={{
               position: 'absolute',
-              top: -5,
-              right: -9,
-              minWidth: 16,
-              height: 16,
-              lineHeight: 15,
-              borderRadius: 8,
-              paddingHorizontal: 4,
+              top: -6,
+              right: -10,
+              minWidth: 18,
+              height: 18,
+              lineHeight: 17,
+              borderRadius: 9,
+              paddingHorizontal: 5,
               overflow: 'hidden',
               textAlign: 'center',
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: '600',
               backgroundColor: t.red,
               color: t.canvas,
@@ -64,7 +68,7 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
       </View>
       <Text
         maxFontSizeMultiplier={fontScaleCaps.chrome}
-        style={{ fontSize: type.tabLabel, fontWeight: '600', color: captionColor, marginTop: 1 }}
+        style={{ fontSize: type.caption, fontWeight: '600', color: captionColor }}
       >
         {caption}
       </Text>
@@ -83,19 +87,19 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          paddingLeft: 16,
-          paddingRight: 8,
-          paddingVertical: 4,
+          paddingLeft: 12,
+          paddingRight: 12,
+          paddingVertical: 6,
         },
         style,
       ]}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: -11 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: -8 }}>
         {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
             — no handler, no button, instead of a dead target. */}
         {onAddFriends ? (
           <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
-            <UserRoundSearch size={21} color={t.blueDeep} strokeWidth={1.8} />
+            <UserRoundSearch size={26} color={t.blueDeep} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
         <Text
@@ -105,13 +109,15 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
             fontWeight: '600',
             color: t.greenDeep, // website navbar wordmark green (--green-deep)
             letterSpacing: -0.4,
-            marginLeft: onAddFriends ? 0 : 11, // no button → wordmark holds the edge
+            marginLeft: onAddFriends ? 0 : 8, // no button → wordmark holds the edge
           }}
         >
           Towinly
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
+      {/* Air between the three things on the right (owner call 2026-08-19:
+          "give space for the friend trust and updates"). */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         {trustScore != null ? (
           // The score is the doorway to the Trust Score page (user call
           // 2026-07-26) — it was a dead label before.
@@ -129,9 +135,8 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
               borderWidth: 1,
               borderColor: t.blueSoft,
               borderRadius: radius.pill,
-              paddingVertical: 5,
-              paddingHorizontal: 11,
-              marginRight: 6,
+              paddingVertical: 7,
+              paddingHorizontal: 13,
               opacity: pressed ? 0.6 : 1,
             })}
           >
@@ -159,7 +164,7 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
             onPress={onAlerts}
             badgeCount={alertCount}
           >
-            <Bell size={21} color={t.ink} strokeWidth={1.8} />
+            <Bell size={26} color={t.ink} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
       </View>
