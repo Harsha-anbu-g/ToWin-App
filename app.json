@@ -3,7 +3,7 @@
     "name": "Towinly",
     "slug": "towinly",
     "owner": "harshavardhan_ag",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "runtimeVersion": {
       "policy": "appVersion"
     },
@@ -12,11 +12,6 @@
     "scheme": "towinly",
     "userInterfaceStyle": "light",
     "backgroundColor": "#f6f4ef",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "backgroundColor": "#f6f4ef",
-      "resizeMode": "contain"
-    },
     "extra": {
       "apiBaseUrl": "https://backend-production-cef3.up.railway.app/api",
       "router": {},
@@ -35,10 +30,6 @@
       "package": "com.towinly.app",
       "allowBackup": false,
       "blockedPermissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.SYSTEM_ALERT_WINDOW",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
         "android.permission.SYSTEM_ALERT_WINDOW",
@@ -63,6 +54,15 @@
       "expo-router",
       "expo-notifications",
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 100,
+          "resizeMode": "contain",
+          "backgroundColor": "#f6f4ef"
+        }
+      ],
+      [
         "expo-secure-store",
         {
           "faceIDPermission": false
@@ -75,6 +75,17 @@
           "photosPermission": "Towinly uses your photo library so you can choose a profile picture, and so you can send a photo of your ID if you choose to verify who you are.",
           "cameraPermission": false,
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Towinly uses your location to show how far away each person is, and to show only people within the distance you choose. We save a rounded position, never your address, and never while the app is closed.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
         }
       ]
     ],

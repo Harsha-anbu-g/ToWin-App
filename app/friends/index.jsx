@@ -6,7 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from '../../src/components/icons';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -16,11 +16,13 @@ import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import LoadError from '../../src/components/ui/LoadError';
+import LocationPrimer from '../../src/components/needs/LocationPrimer';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
+import { STATUS, currentStatus, enableAndSave } from '../../src/lib/deviceLocation';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // The km control cycles through the web's radius steps; people are filtered
@@ -92,12 +94,19 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
           ) : (
             <Text style={{ color: t.inkSlate }}>New here</Text>
           )}
+          {/* "0 km" is a claim, and it was the wrong one: before real
+              locations existed everybody shared one town-centre point, so
+              every card said 0. A rounded position puts people in ~2 km
+              cells, so a genuine 0 now means "in your area" and deserves
+              words rather than a number that reads as broken. */}
           <Text style={{ color: t.inkSlate }}>
-            {Number.isFinite(person.distanceKm) && person.distanceKm > 0
-              ? ` · ${person.distanceKm.toFixed(0)} km`
-              : person.city
-                ? ` · ${person.city}`
-                : ''}
+            {Number.isFinite(person.distanceKm) && person.distanceKm >= 1
+              ? ` · ${person.distanceKm.toFixed(0)} km away`
+              : Number.isFinite(person.distanceKm)
+                ? ' · in your area'
+                : person.city
+                  ? ` · ${person.city}`
+                  : ''}
           </Text>
         </Text>
       </View>
@@ -226,13 +235,49 @@ export default function FriendsScreen() {
   const [radiusIdx, setRadiusIdx] = useState(2); // 25 km default, like the web
   const [refreshing, setRefreshing] = useState(false);
 
+  const radiusKm = RADIUS_STEPS[radiusIdx];
+
+  // Where this phone is, asked for on THIS screen and nowhere else: it is the
+  // only screen whose job depends on it. Read without prompting on mount, so
+  // the card can say the right thing before anyone taps (HCI 1).
+  const [locStatus, setLocStatus] = useState(null); // null = still checking
+  const [locBusy, setLocBusy] = useState(false);
+  const [primerHidden, setPrimerHidden] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    currentStatus().then((st) => {
+      if (alive) setLocStatus(st);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const enableLocation = useCallback(async () => {
+    setLocBusy(true);
+    const { status } = await enableAndSave();
+    setLocBusy(false);
+    setLocStatus(status);
+    // A fresh position changes every distance on screen, so re-ask the server
+    // rather than re-sorting a list computed against the old one.
+    if (status === STATUS.allowed) {
+      await queryClient.invalidateQueries({ queryKey: ['discover'] });
+    }
+  }, [queryClient]);
+
   const isHelper = user?.role === 'HELPER';
   const path = isHelper ? '/discover/elders' : '/discover/helpers';
   const who = isHelper ? 'elders' : 'helpers';
 
+  // The chosen distance goes ON THE WIRE. Without it the backend falls back to
+  // DiscoveryFilter's own default of 10 km, so the 25/50/100 km chips could
+  // never widen anything — they only ever re-filtered a list the server had
+  // already capped at 10 (found 2026-08-19, the second half of "the location
+  // is not working"). radiusKm is in the query key, so changing the chip
+  // refetches rather than re-slicing a stale list.
   const { data: discovered, isLoading, isError: discoverFailed, refetch: refetchDiscover } = useQuery({
-    queryKey: ['discover', path],
-    queryFn: async () => (await api.get(path)).data,
+    queryKey: ['discover', path, radiusKm],
+    queryFn: async () => (await api.get(path, { params: { radiusKm } })).data,
   });
   const { data: connections, isLoading: connsLoading, isError: connsFailed, refetch: refetchConns } = useQuery({
     queryKey: ['connections'],
@@ -265,7 +310,6 @@ export default function FriendsScreen() {
     [conns]
   );
 
-  const radiusKm = RADIUS_STEPS[radiusIdx];
   const people = filterBlocked(discovered ?? [], blocked, (p) => p.userId).filter(
     (p) => !Number.isFinite(p.distanceKm) || p.distanceKm <= radiusKm
   );
@@ -295,7 +339,7 @@ export default function FriendsScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: ['discover', path] });
+    await queryClient.invalidateQueries({ queryKey: ['discover', path] }); // prefix match: every radius
     await queryClient.invalidateQueries({ queryKey: ['connections'] });
     setRefreshing(false);
   };
@@ -427,6 +471,17 @@ export default function FriendsScreen() {
             contentContainerStyle={{ paddingBottom: 64, gap: 10 }}
             ListHeaderComponent={
               <View style={{ paddingBottom: 12 }}>
+                {/* Asks before the phone does: iOS spends its one prompt on
+                    whoever taps here, so nobody meets a system dialog without
+                    knowing why (HCI 5). Hidden once location is working. */}
+                {locStatus && !primerHidden ? (
+                  <LocationPrimer
+                    status={locStatus}
+                    busy={locBusy}
+                    onEnable={enableLocation}
+                    onDismiss={locStatus === STATUS.unknown ? () => setPrimerHidden(true) : undefined}
+                  />
+                ) : null}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <MapPin size={14} color={t.inkSlate} strokeWidth={1.8} />
                   <Text style={{ fontSize: type.meta, color: t.inkSlate }}>

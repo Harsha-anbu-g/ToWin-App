@@ -3,8 +3,8 @@
 One document, two consoles. Field label on the left, exactly as the console
 words it. Answer on the right. Paste, tick, move on.
 
-Written 2026-08-15 for version 1.0.0, bundle `com.towinly.app`, package
-`com.towinly.app`. Every answer here was re-verified on 2026-08-15 against the
+Written 2026-08-15 for version 1.0.0, revised 2026-08-19 for version 1.1.0,
+bundle `com.towinly.app`, package `com.towinly.app`. Every answer here was re-verified on 2026-08-15 against the
 code in this repo, the installed dependency tree, or the live production
 backend. Nothing was carried forward from an earlier document on trust.
 
@@ -450,7 +450,7 @@ gives the three ways out.
 
 ---
 
-## 7. Apple: version 1.0.0 page and release control
+## 7. Apple: version 1.1.0 page and release control
 
 | Console field | Answer | State |
 |---|---|---|
@@ -463,7 +463,7 @@ gives the three ways out.
 | Keywords | `listings.md` section 1, `keywords` | READY |
 | Support URL | `https://www.towinly.com/app/support` | READY, HTTP 200 on 2026-08-15 |
 | Marketing URL | `https://www.towinly.com` | READY |
-| Version | `1.0.0`, matching `app.json` | READY |
+| Version | `1.1.0`, matching `app.json` (bumped 2026-08-19: device location adds a native module, and `runtimeVersion` follows `appVersion`, so an OTA must never reach a 1.0.0 binary) | READY |
 | Copyright | `2026 Harshavardhan Anbuchezhian Gowri`. Individual enrollment, and the name was confirmed against the government photo ID on 2026-08-15. Paste as written. | READY |
 | Routing App Coverage File | Leave empty | READY |
 | Build | Select after TestFlight processing finishes | ACCOUNT |

@@ -209,15 +209,30 @@ export function privacySections(email) {
       p: 'Your information is kept on servers in the United States. Photos and identity '
         + 'documents are kept in Amazon S3, also in the United States.' },
 
-    // Towinly has never asked the phone for its location: there is no expo-location
-    // dependency, no location permission, and no call site. The town is typed by hand
-    // and turned into rough coordinates on our servers. The old wording promised a
-    // location switch that does not exist.
+    // Rewritten 2026-08-19, when the app gained real device location. Every
+    // sentence below has to stay true of the code: permission is asked on the
+    // Add Friends screen and nowhere else (src/components/needs/LocationPrimer),
+    // foreground only (app.json blocks the background variants), and the fix is
+    // snapped to a 0.02 degree cell before it can reach the network
+    // (src/lib/coarseLocation). If any of those change, this changes with them.
     { h: 'Where you live',
-      p: 'Towinly never asks your phone where it is. You type the name of your town, and we '
-        + 'look it up to get a rough position so we can show you people nearby. Only the town '
-        + 'is shown to other members, never an address. Leave the town blank and your account '
-        + 'carries on working, you just will not see how far away somebody is.' },
+      p: 'Towinly asks your phone where it is so we can show you how far away each person is, '
+        + 'and show only people within the distance you choose. We ask first, on the Add '
+        + 'Friends screen, and we explain why before your phone asks. You can say no and the '
+        + 'app carries on working, you just will not see how far away somebody is.' },
+
+    { h: 'What we keep, and what we do not',
+      p: 'We round your position to an area of about two kilometres across before it leaves '
+        + 'your phone, and only that rounded position is saved. We never keep your address or '
+        + 'your street. We only ever look while Towinly is open on your screen, never in the '
+        + 'background and never while the app is closed. Other members see the name of your '
+        + 'town and how far away you are, never a position on a map.' },
+
+    { h: 'Turning it off',
+      p: 'You can turn location off at any time in your phone settings, under Towinly. You can '
+        + 'also just type the name of your town in Edit Profile instead, and we will look that '
+        + 'up for a rough position without using your phone at all. Leave both blank and your '
+        + 'account carries on working.' },
 
     { h: 'How we use your information',
       p: 'To run Towinly: showing you people nearby, letting you write to each other, working '
