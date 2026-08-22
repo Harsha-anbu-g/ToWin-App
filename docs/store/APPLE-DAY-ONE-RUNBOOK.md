@@ -785,7 +785,7 @@ submission, where a bad push overwrites console fields you cannot easily see.
 - Do not claim end to end encryption for the Sealed box. The encryption is server
   side and the privacy policy says so.
 
-**Version 1.0.0 information:**
+**Version 1.1.0 information:**
 
 - Screenshots: the 6.9 inch iPhone set, 1320 x 2868. No iPad set is owed because
   `ios.supportsTablet` is false.
