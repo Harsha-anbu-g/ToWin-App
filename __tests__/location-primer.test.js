@@ -6,7 +6,7 @@
 // again is a button that does nothing, which is the worst of the options.
 import { render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
-import LocationPrimer from '../src/components/needs/LocationPrimer';
+import LocationPrimer from '../src/components/location/LocationPrimer';
 import { STATUS } from '../src/lib/deviceLocation';
 
 // The card never calls the library; it only needs the import to resolve.

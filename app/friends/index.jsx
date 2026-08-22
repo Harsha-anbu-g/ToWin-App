@@ -16,7 +16,7 @@ import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import LoadError from '../../src/components/ui/LoadError';
-import LocationPrimer from '../../src/components/needs/LocationPrimer';
+import LocationPrimer from '../../src/components/location/LocationPrimer';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
