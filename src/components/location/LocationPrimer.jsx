@@ -50,11 +50,11 @@ const CONTEXTS = {
     why: 'Towinly can use your location so helpers nearby see how far away you are, instead of the town you typed when you joined.',
     refusedTitle: 'Helpers cannot see how far away you are',
     refusedBody:
-      'Without your location your request shows the town you typed, so helpers close by cannot tell that you are close by. Your request is still posted, and you can turn this on whenever you like.',
+      'Without your location your request shows the town you typed, so a helper on your street looks no closer than one across town. Helpers still see it, and you can turn this on whenever you like.',
     blockedLead:
       'To show helpers how far away you are, open Settings on your phone, find Towinly, and turn Location on.',
     offClause: 'helpers nearby can see how far away you are.',
-    stillWorks: 'Your request is still posted without it.',
+    stillWorks: 'Your request still shows without it.',
   },
   offer: {
     askTitle: 'See how far away each request is',

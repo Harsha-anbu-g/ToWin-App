@@ -15,6 +15,8 @@ import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel, NEED_STATUS } from '../../lib/needs';
+import LocationPrimer from '../location/LocationPrimer';
+import useDevicePosition from '../../lib/useDevicePosition';
 import { markSeen } from '../../lib/seenIds';
 import { seenKey } from '../../lib/storageKeys';
 import { useAuth } from '../../context/AuthContext';
@@ -248,6 +250,28 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const [seg, setSeg] = useState(initialSegment);
   const [refreshing, setRefreshing] = useState(false);
 
+  // The ask lives HERE and not on the form (owner decision 2026-08-22).
+  // app/(tabs)/action.jsx pushes to this screen the moment a request posts, so
+  // this is the first thing an elder sees afterwards, with their own request in
+  // front of them. Nothing interrupts them while they are writing.
+  //
+  // Without a position their request carries the town centre they typed at
+  // signup, so a helper on their street reads the same distance as one across
+  // town. Add Friends used to be the only screen that ever asked, and an elder
+  // who never opened it was never asked at all.
+  const {
+    status: locStatus,
+    busy: locBusy,
+    hasPosition,
+    enable: enableLocation,
+    dismissed: locDismissed,
+    dismiss: hideLocationCard,
+  } = useDevicePosition();
+  // `locStatus` stays null until the first read lands, so the card waits rather
+  // than flashing the wrong words. Mounting cannot prompt: the iOS dialog is
+  // spent only by a tap on the card itself.
+  const shouldAskForLocation = !!locStatus && !hasPosition && !locDismissed;
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['needs-mine'],
     queryFn: async () => (await api.get('/needs/mine')).data,
@@ -422,6 +446,24 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       contentContainerStyle={{ paddingBottom: 120 }} // clears the Ask-AI FAB band on the posted-help tab
       ListHeaderComponent={
+        <>
+          {shouldAskForLocation ? (
+            <View style={{ marginTop: 14 }}>
+              {/* secondary: the locked rule is one filled sky-blue button per
+                  screen (HCI 8), and this list already scrolls under the
+                  filled Ask-AI action. Dismissible, because handing over a
+                  position must never be the price of reading your own
+                  requests (HCI 3). */}
+              <LocationPrimer
+                status={locStatus}
+                busy={locBusy}
+                context="post"
+                actionVariant="secondary"
+                onEnable={enableLocation}
+                onDismiss={hideLocationCard}
+              />
+            </View>
+          ) : null}
         <SegmentedControl
           segments={[
             // 'Waiting', not 'Looking for Help': three segments share one
@@ -434,9 +476,14 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
           value={seg}
           onChange={setSeg}
           // marginBottom 2 restores the old list container's top offset so
-          // the first card sits exactly where it always has.
-          style={{ marginTop: 14, marginBottom: settled && shown.length > 0 ? 2 : 0 }}
+          // the first card sits exactly where it always has. The card above
+          // brings its own 14 when it is there, so this one stands down.
+          style={{
+            marginTop: shouldAskForLocation ? 0 : 14,
+            marginBottom: settled && shown.length > 0 ? 2 : 0,
+          }}
         />
+        </>
       }
       ListEmptyComponent={
         isLoading ? (
