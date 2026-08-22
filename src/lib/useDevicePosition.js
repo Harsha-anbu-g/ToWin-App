@@ -103,6 +103,32 @@ export default function useDevicePosition() {
     return saved;
   }, [status, userId]);
 
+  const isStale = !record || Date.now() - record.savedAt > STALE_AFTER_MS;
+
+  // Somebody who has not opened the app since spring carries the position they
+  // had then, and it does not read as missing to anybody. It reads as a
+  // distance, and every helper looking at that card believes it.
+  //
+  // So where permission is ALREADY granted, a stale record is read again the
+  // moment a screen that cares is opened. No system dialog can appear in that
+  // state, which is the only reason this is allowed to be silent. It costs one
+  // balanced-accuracy fix, on a screen the person opened themselves.
+  //
+  // Once per mount, and never on a timer: no interval, no watcher, no
+  // background task, no AppState listener. __tests__/location-freshness.test.js
+  // reads the source of every file under app/ and src/ to keep it that way.
+  // The latch closes on the FIRST state this screen saw, whether or not it led
+  // to a read. Without that, a save that failed inside enable() would land back
+  // here as allowed-with-no-record and trigger an instant silent retry: another
+  // fix, another PUT, neither of them asked for. This is a mount decision.
+  const freshnessChecked = useRef(false);
+  useEffect(() => {
+    if (status === null || freshnessChecked.current) return;
+    freshnessChecked.current = true;
+    if (status !== STATUS.allowed || !isStale) return;
+    refresh();
+  }, [status, isStale, refresh]);
+
   const dismiss = useCallback(() => setDismissed(true), []);
 
   const position = useMemo(
@@ -116,7 +142,7 @@ export default function useDevicePosition() {
     hasPosition: !!record,
     position,
     savedAt: record?.savedAt ?? null,
-    isStale: !record || Date.now() - record.savedAt > STALE_AFTER_MS,
+    isStale,
     enable,
     refresh,
     dismissed,

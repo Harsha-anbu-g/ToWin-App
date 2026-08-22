@@ -31,6 +31,15 @@ const PROMISE =
 const SETTINGS_TITLE = 'Location is turned off for Towinly';
 const PHONE_OFF_TITLE = 'Location is turned off on this phone';
 
+// The person who moved this morning. Their saved position is hours old, so the
+// quiet staleness refresh will not touch it, and only they know it is wrong.
+// Said once, the same way on every screen, because it is about the account
+// rather than about what this screen does. The title is the deliberate mirror
+// of the profile refusal ("Your position comes from the town you type"), so the
+// two states read as the same sentence with the source swapped.
+const SET_TITLE = 'Your position comes from your phone';
+const SET_ACTION = 'Update my location';
+
 // Per screen: what it can do with a position, and what still works without one.
 // `stillWorks` ends every refusal state, so nobody is left thinking the screen
 // broke when they said no (HCI 1, HCI 9).
@@ -82,9 +91,15 @@ const CONTEXTS = {
 // One entry per state the screen can be in. `action` null means the phone is
 // the only thing that can change it now, so the card stops offering a button
 // that cannot work.
-const copyFor = (context, status) => {
+const copyFor = (context, status, canRefresh) => {
   const c = CONTEXTS[context] ?? CONTEXTS.find;
   switch (status) {
+    case STATUS.allowed:
+      // Only where the screen handed us a way to read again. The browse screens
+      // pass none, so somebody with a position still sees no card there.
+      return canRefresh
+        ? { title: SET_TITLE, body: `${PROMISE} Update it if you have moved.`, action: SET_ACTION }
+        : null;
     case STATUS.unknown:
       return { title: c.askTitle, body: `${c.why} ${PROMISE}`, action: 'Use my location' };
     case STATUS.refused:
@@ -97,7 +112,7 @@ const copyFor = (context, status) => {
         body: `Turn Location on in your phone settings and ${c.offClause} ${c.stillWorks}`,
         action: null,
       };
-    // allowed / unsupported: nothing to say, so nothing is shown.
+    // unsupported: nothing to say, so nothing is shown.
     default:
       return null;
   }
@@ -112,7 +127,8 @@ const copyFor = (context, status) => {
  *   already owns its one filled sky-blue button
  * @param {() => void} props.onEnable
  * @param {() => void} [props.onDismiss]
- * @param {() => void} [props.onRefresh] offered where a saved position may have gone stale
+ * @param {() => void} [props.onRefresh] read the phone again. Passing it is what
+ *   turns the card on for somebody who already has a position and has moved.
  */
 export default function LocationPrimer({
   status,
@@ -121,10 +137,14 @@ export default function LocationPrimer({
   actionVariant = 'primary',
   onEnable,
   onDismiss,
+  onRefresh,
 }) {
   const { t, spacing, type, text } = useTheme();
-  const copy = copyFor(context, status);
+  const copy = copyFor(context, status, !!onRefresh);
   if (!copy) return null;
+  // With a position there is nothing left to ask for, so the button reads
+  // again instead. Nothing here can prompt: permission is already granted.
+  const onAction = status === STATUS.allowed ? onRefresh : onEnable;
 
   return (
     <Card style={{ marginBottom: spacing[3] }}>
@@ -143,7 +163,7 @@ export default function LocationPrimer({
       {copy.action ? (
         <Button
           title={busy ? 'Just a moment…' : copy.action}
-          onPress={onEnable}
+          onPress={onAction}
           variant={actionVariant}
           loading={busy}
           disabled={busy}
