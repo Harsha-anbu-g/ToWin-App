@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { objectionableError } from '../../lib/contentFilter';
 import { TRUSTED_STAGE, stageIndexOf } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
@@ -61,6 +62,11 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
   const [comment, setComment] = useState('');
   const [done, setDone] = useState(false);
   const [errMsg, setErrMsg] = useState('');
+  // Apple 1.2: the words a family member writes about a helper are read by
+  // other members, so they go through the same filter as a help request
+  // (HARD-113). Its own state, because it belongs under the field it is about
+  // rather than in the card's server-error slot.
+  const [commentError, setCommentError] = useState('');
 
   const parent = elderName || 'your parent';
   const firstName = (helper?.helperName || 'them').split(' ')[0];
@@ -85,6 +91,16 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
     onError: (err) =>
       setErrMsg(err?.response?.data?.message || 'Could not save that review. Please try again.'),
   });
+
+  // Stopped before it is posted, and named. The stars are untouched and the
+  // words stay in the field to be fixed (HCI rule 9).
+  const submit = () => {
+    const refusal = objectionableError(comment);
+    setCommentError(refusal);
+    if (refusal) return;
+    setErrMsg('');
+    save.mutate();
+  };
 
   // Only a fully trusted friendship can be reviewed — the same gate the
   // parent and the helper live under, and the server holds it too.
@@ -137,8 +153,13 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
       <Input
         label="A few words (optional)"
         value={comment}
-        onChangeText={setComment}
+        onChangeText={(value) => {
+          setComment(value);
+          // A refusal left standing over corrected words would be its own bug.
+          setCommentError((cur) => (cur ? '' : cur));
+        }}
         multiline
+        error={commentError}
         placeholder={`What ${firstName} has been like for ${parent}`}
       />
 
@@ -159,7 +180,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
         <Button
           title={save.isPending ? 'Saving…' : `Save for ${parent}`}
           variant="secondary"
-          onPress={() => save.mutate()}
+          onPress={submit}
           disabled={save.isPending}
           style={{ flex: 1 }}
         />

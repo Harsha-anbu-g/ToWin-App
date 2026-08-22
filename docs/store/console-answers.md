@@ -130,7 +130,7 @@ guideline 1.2's filtering requirement.
 | Chat or messaging between users | Yes | One-to-one threads, `app/chat/[connectionId].jsx`. |
 | Users can create or share content other users see | Yes | Bios, help requests, reviews, Pass On entries, messages. |
 | App shares the user's location with other users | Approximate only | Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
-| In-app controls for objectionable content | Yes | Report from a profile, block from a profile, a managed block list, a write-time word filter on posts, and zero tolerance terms agreed at signup. Section 6 states exactly what the filter does and does not cover. |
+| In-app controls for objectionable content | Yes | Report from a profile, block from a profile, a managed block list, a write-time word filter on posts and on private messages, and zero tolerance terms agreed at signup. Section 6 states exactly what the filter does and does not cover. |
 | Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/register.jsx:52` sets `MIN_AGE = 18` and line 181 refuses the signup. No document check happens. |
 
 ### 2.4 Expect a teen tier, and do not argue with it
@@ -374,20 +374,30 @@ Re-run the whole verification in one command: see section 9.
 
 ### 6.4 Notes, ready to paste
 
-App Store Connect caps this field at 4000 characters. The block below is 3998,
+App Store Connect caps this field at 4000 characters. The block below is 3991,
 machine-counted.
 
 **One claim was corrected on 2026-08-15 before this block was written.** The
 earlier draft told Apple there was "a content filter on posts and messages".
-The filter does not run on messages. `objectionableError` from
-`src/lib/contentFilter.js` has exactly three call sites: the bio field in
-`app/profile-edit.jsx:236`, the help request title, description and other
-category in `app/(tabs)/action.jsx:99` to `:101`, and the Pass On title and body
-in `app/pass-on/index.jsx:299`. `app/chat/[connectionId].jsx` sends straight to
-`POST /messages/{id}/send` with no check, and a grep of the whole Spring Boot
-backend for a filter finds none. A reviewer can disprove the old sentence in
-thirty seconds by typing a slur into a chat. The block below says what is true:
-the write-time filter covers posts, and report and block cover messages.
+The filter did not run on messages. `objectionableError` from
+`src/lib/contentFilter.js` had exactly three call sites: the bio field in
+`app/profile-edit.jsx`, the help request title, description and other category
+in `app/(tabs)/action.jsx`, and the Pass On title and body in
+`app/pass-on/index.jsx`. `app/chat/[connectionId].jsx` sent straight to
+`POST /messages/{id}/send` with no check. A reviewer could have disproved the
+old sentence in thirty seconds by typing a slur into a chat.
+
+**Corrected again on 2026-08-22, this time because the app changed (HARD-113).**
+The filter now runs on the private message composer
+(`app/chat/[connectionId].jsx`, `handleSend`) and on the comment a family
+member writes about a helper for their parent
+(`src/components/family/FamilyReviewForParent.jsx`, `submit`). Both refuse
+before the POST, keep the typed words on screen, and show the same sentence the
+help form shows. `objectionableError` now has call sites in five files; grep for
+it to count them. Nothing else changed: it is still a client-side wordlist, it
+is still not moderation, and the Spring Boot backend still has no filter of its
+own, so report and block remain the answer to whatever it misses. The block
+below says exactly that.
 
 <!-- review-notes-v1:start -->
 WHAT TOWINLY IS
@@ -407,7 +417,7 @@ TOWINLY IS NOT A DATING APP
 The difference is in the mechanics, all of it visible in the build:
 
 - No swiping, no romance framing, and no gallery of profiles to browse. Elders and helpers meet through a posted help request.
-- Guideline 1.2 controls: report a person from their profile, block them from their profile, a block list at Profile > Blocked people, a write time word filter on bios, help requests and Pass On entries, and terms agreed at signup that close an account for harassment, threats, lies, discrimination or impersonation. Private messages rely on report and block rather than on the word filter. Reports reach help@towinly.com.
+- Guideline 1.2 controls: report a person from their profile, block them from their profile, a block list at Profile > Blocked people, a write time word filter on bios, help requests, Pass On entries, private messages and family reviews, and terms agreed at signup that close an account for harassment, threats, lies, discrimination or impersonation. Report and block cover the rest. Reports reach help@towinly.com.
 
 WHY THE APP ASKS FOR PHOTOS
 
@@ -543,7 +553,7 @@ the way the build behaves.
 | Question area | Answer | Reason, one line |
 |---|---|---|
 | Category | Social networking or communication | The product is people connecting to people. |
-| Violence, blood, sexual content, crude humour | No | None present, and explicit words are refused at write time on posts. |
+| Violence, blood, sexual content, crude humour | No | None present, and explicit words are refused at write time on posts and in private messages. |
 | Drugs, alcohol, tobacco | No | Not referenced anywhere. |
 | Gambling, simulated gambling, real money | No | `app/game.jsx` is a local memory game with no wager, no prize and no currency. |
 | Users can interact or exchange content | **Yes** | One-to-one chat, plus help requests other members browse. |
@@ -551,7 +561,7 @@ the way the build behaves.
 | Personal information shared with other users | **Yes** | Name, photo, bio, and a phone number once both sides reach the Phone step. |
 | Unrestricted access to the internet | **No** | No web view, no in-app browser, no user-typed URL is ever opened. Proof in section 2.2. |
 | Digital purchases | No | Nothing is sold in the app. |
-| User-generated content moderation | Describe the real controls | Report from a profile, block from a profile, a managed block list at Profile > Blocked people, a report button under every AI answer, a write-time word filter on bios, help requests and Pass On entries, and `help@towinly.com` for reports. Say plainly that private messages rely on report and block. |
+| User-generated content moderation | Describe the real controls | Report from a profile, block from a profile, a managed block list at Profile > Blocked people, a report button under every AI answer, a write-time word filter on bios, help requests, Pass On entries, private messages and family reviews, and `help@towinly.com` for reports. Say plainly that the filter is a client-side wordlist and that report and block cover what it misses. |
 
 Expect a Teen level rating rather than Everyone. That is correct for an app
 with open member-to-member messaging. Do not argue it down.
@@ -685,11 +695,21 @@ History kept, so a future reader can see what moved and why.
 
 **1. The reviewer notes claimed a content filter on messages.**
 Old wording: "a content filter on posts and messages".
-Why it changed: `objectionableError` has three call sites and none of them is
-the chat composer. `app/chat/[connectionId].jsx:200` posts to
+Why it changed: `objectionableError` had three call sites and none of them was
+the chat composer. `app/chat/[connectionId].jsx` posted to
 `/messages/{id}/send` with no check, and the Spring Boot backend has no filter
-either. The new wording names the three places the filter runs and says that
-messages rely on report and block. A reviewer can test this in thirty seconds.
+either. The wording then named the three places the filter ran and said that
+messages relied on report and block. A reviewer could test that in thirty
+seconds.
+
+**1b. Superseded on 2026-08-22: the app was changed instead (HARD-113).**
+Wording replaced: "Private messages rely on report and block rather than on the
+word filter."
+Why it changed: the filter now runs in the chat composer and on the family
+review comment, so the sentence it replaced had become the untrue one. The
+notes now name five surfaces and say report and block cover what the filter
+misses. `App/__tests__/content-filter-surfaces.test.js` holds both halves: a
+refused message never reaches the server, an ordinary one still sends.
 
 **2. The Support URL was recorded as blocking with nothing built.**
 Old wording, in `app-store-connect-fields.md` section 6.2: "Nothing exists
@@ -768,7 +788,8 @@ The block now states its own length, 3998, and
 `App/__tests__/console-answers.test.js` checks that number against the real
 block and fails if either drifts. Every phrase that test pins is untouched: the
 demo credentials, the seven trust steps, the 7 + 5 + 3 = 15 score, START HERE,
-WHY THE APP ASKS FOR PHOTOS, "word filter on bios, help requests and Pass On
-entries" and "Private messages rely on report and block".
+WHY THE APP ASKS FOR PHOTOS, and the filter sentence, which on 2026-08-22
+became "word filter on bios, help requests, Pass On entries, private messages
+and family reviews" plus "Report and block cover the rest".
 
 This section was swept for em dashes before saving. There are none.

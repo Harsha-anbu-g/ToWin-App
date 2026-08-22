@@ -508,9 +508,16 @@ There is no filter on messages. `objectionableError` from
 one of them: `app/profile-edit.jsx:236` for the bio,
 `app/(tabs)/action.jsx:99` to `:101` for a help request, and
 `app/pass-on/index.jsx:299` for a Pass On entry.
-`app/chat/[connectionId].jsx:200` posts to `/messages/{id}/send` with no check,
-and the Spring Boot backend has no filter either. A reviewer can disprove that
+`app/chat/[connectionId].jsx` posted to `/messages/{id}/send` with no check,
+and the Spring Boot backend has no filter either. A reviewer could disprove that
 sentence in thirty seconds by typing a slur into a chat.
+
+**Note added 2026-08-22 (HARD-113).** The paragraph above is preserved as it
+was written. The app has since changed: `objectionableError` now runs in the
+chat composer and on the family review comment as well, so the filter does
+cover private messages today. The wording to use is the one in
+`console-answers.md`, which was corrected in the same pass. The backend still
+has no filter of its own.
 
 App Store Connect caps this field at 4000 characters. The draft in
 `screenshots-and-review.md` is 3807 characters on its own, which leaves no room

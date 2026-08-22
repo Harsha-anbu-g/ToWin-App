@@ -17,9 +17,10 @@
  *     changes, the notes silently send a reviewer to a login wall.
  *  3. Trust ladder vocabulary. The seven step names and the count come from
  *     src/lib/trustStages.js. The notes recite them to Apple verbatim.
- *  4. The content filter claim. objectionableError does NOT run on chat
- *     messages. An earlier draft of these notes told Apple it did. That exact
- *     sentence is what this file exists to keep out.
+ *  4. The content filter claim. The notes and the call sites of
+ *     objectionableError must say the same thing. An early draft told Apple the
+ *     filter ran on messages when it did not; since HARD-113 it does, and these
+ *     tests were widened to hold the new truth rather than the old one.
  */
 const fs = require('fs');
 const path = require('path');
@@ -29,6 +30,7 @@ const { SHORT_STAGES, STAGE_COUNT } = require('../src/lib/trustStages');
 const DOC = path.join(__dirname, '..', 'docs', 'store', 'console-answers.md');
 const DEMO_CARD = path.join(__dirname, '..', 'src', 'components', 'auth', 'DemoCard.jsx');
 const CHAT_SCREEN = path.join(__dirname, '..', 'app', 'chat', '[connectionId].jsx');
+const FAMILY_REVIEW = path.join(__dirname, '..', 'src', 'components', 'family', 'FamilyReviewForParent.jsx');
 const APP_JSON = path.join(__dirname, '..', 'app.json');
 
 /** App Store Connect's App Review Notes field. */
@@ -40,6 +42,7 @@ const EN_DASH = '–';
 const doc = fs.readFileSync(DOC, 'utf8');
 const demoCard = fs.readFileSync(DEMO_CARD, 'utf8');
 const chatScreen = fs.readFileSync(CHAT_SCREEN, 'utf8');
+const familyReview = fs.readFileSync(FAMILY_REVIEW, 'utf8');
 const appJson = JSON.parse(fs.readFileSync(APP_JSON, 'utf8'));
 
 /**
@@ -125,20 +128,34 @@ describe('reviewer notes match the running app', () => {
 describe('the content filter claim stays true', () => {
   const notes = reviewNotes();
 
-  test('is a fact that the chat composer does not run the write-time filter', () => {
-    // If this ever fails, the app got safer and the notes may be widened to
-    // match. Widen them deliberately; do not delete this test.
-    expect(chatScreen).not.toContain('objectionableError');
+  // WIDENED 2026-08-22 (HARD-113), which is what the note on the old assertion
+  // asked for: "if this ever fails, the app got safer and the notes may be
+  // widened to match. Widen them deliberately; do not delete this test." The
+  // app did get safer, so the two assertions that pinned the filter's ABSENCE
+  // from chat now pin its presence. The rule they serve is untouched: the
+  // reviewer notes and the call sites must say the same thing, and the notes
+  // must never claim more than the code does.
+  test('the chat composer runs the write-time filter', () => {
+    expect(chatScreen).toContain('objectionableError');
   });
 
-  test('never tells Apple the filter covers messages', () => {
-    expect(notes).not.toMatch(/filter on posts and messages/i);
-    expect(notes).not.toMatch(/content filter[^.]*\bmessages\b/i);
+  test("the review a family member writes for a parent runs it too", () => {
+    expect(familyReview).toContain('objectionableError');
   });
 
-  test('names the three surfaces the filter does cover, and says what covers messages', () => {
-    expect(notes).toContain('word filter on bios, help requests and Pass On entries');
-    expect(notes).toContain('Private messages rely on report and block');
+  test('names the surfaces the filter covers, and what covers the rest', () => {
+    expect(notes).toContain(
+      'word filter on bios, help requests, Pass On entries, private messages and family reviews'
+    );
+    expect(notes).toContain('Report and block cover the rest');
+  });
+
+  test('still claims no moderation and no server-side filter', () => {
+    // The filter is a client-side wordlist. Anyone determined works around it,
+    // and src/lib/contentFilter.js says so in its own header. Telling Apple
+    // otherwise is the failure this block has always existed to prevent.
+    expect(notes).not.toMatch(/moderat/i);
+    expect(notes).not.toMatch(/server[- ]side (word )?filter/i);
   });
 });
 
