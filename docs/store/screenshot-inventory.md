@@ -139,9 +139,9 @@ measured with `sips` after capture, not eyeballed.
 
 | File | Size | Alpha | Bytes | What proves the caption |
 |---|---|---|---|---|
-| `raw-14-helper-trust-score.png` | 1320 x 2868 | no | 297,057 | The HELPER seat. The page reads "up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile", and Grace Liu's row shows Trust stages 7/7, Their review 5/5, Your profile 3/3. This is the split caption 4 claims, and it is not the elder's 7 + 5 + 2 + 1 |
-| `raw-15-chat-thread.png` | 1320 x 2868 | no | 140,875 | A thread at `/chat/56c5d9ed-...`, not the conversation list. Three real seeded messages between Margaret and Ethan Cole. A regex sweep of every visible string in the frame for phone-like digit runs returned none |
-| `raw-16-family-parent-checked-in.png` | 1320 x 2868 | no | 302,445 | `app/family/parent/[elderId].jsx` at `/family/parent/f5b309df-...`, with the chip reading "Checked in today" in the achieved green. Measured, not assumed: 3,847 pixels within tolerance 25 of `greenDeep` `#1a5c2e` sit in the chip band, bounded to x 104 to 501, y 484 to 522 |
+| `raw-14-helper-trust-score.png` | 1320 x 2868 | no | 319,857 | The HELPER seat. The page reads "up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile", and Grace Liu's row shows Trust stages 7/7, Their review 5/5, Your profile 3/3. This is the split caption 4 claims, and it is not the elder's 7 + 5 + 2 + 1 |
+| `raw-15-chat-thread.png` | 1320 x 2868 | no | 131,624 | A thread at `/chat/34ea7adc-...`, not the conversation list. Three real seeded messages between Margaret and Ethan Cole. A regex sweep of every visible string in the frame for phone-like digit runs returned none |
+| `raw-16-family-parent-checked-in.png` | 1320 x 2868 | no | 266,767 | `app/family/parent/[elderId].jsx` at `/family/parent/f5b309df-...`, with the chip reading "Checked in today" in the achieved green. Measured, not assumed: 3,847 pixels within tolerance 25 of `greenDeep` `#1a5c2e` sit in the chip band, bounded to x 104 to 501, y 484 to 522 |
 
 ### Re-captured at phone scale on 2026-08-15, under APL-805
 
@@ -201,16 +201,25 @@ must hide it the same way.
 
 Raws 01 to 13 came from the build that was live on 2026-08-11, commit
 `af22521`. Raws 14 to 16 came from the build live on 2026-08-15. Sixteen raws in
-total, and none of them contains Edit Profile.
+total, and none of them contains Edit Profile. The eight the manifest bakes from
+were replaced on 2026-08-22 from `ralph/store-hardening`.
 
-**All sixteen are now stale, and so are the eight baked shots (2026-08-22).**
-The owner's normal-density redesign of 2026-08-17 removed the elder oversizing,
-changed the type ramp and moved the cards to white, and the location run changed
-four more screens after that. Every capture predates both. Re-capture before the
-next submission: the runbook is in the store owner-actions page and the
-pinned recipe is in this file. Nothing here is deleted; superseded files move to
-`screenshots/superseded/`.
+**The eight the manifest uses were RE-CAPTURED on 2026-08-22 (HARD-117.)**
+They had gone stale twice over: the owner's normal-density redesign of
+2026-08-17 (`e1e56bf`) removed the elder oversizing, changed the type ramp and
+moved the cards to white, and the location run changed four more screens after
+that. Every capture predated both.
 
-(This paragraph used to end "None of the 13 shots contain Edit Profile, so all
-13 remain accurate." It was written when there were thirteen, and it stayed
-after the count reached sixteen and after the UI changed under all of them.)
+The eight now on disk came from this branch, through the pinned recipe, against
+the production backend and the three real demo seats. The other eight raws
+(01, 03, 04, 05, 06, 08, 09, 11) are NOT re-captured: nothing bakes from them,
+they are reference material, and they still show the old UI. Treat them as
+historical until something needs them.
+
+Nothing was deleted. The eight previous raws and all sixteen previous baked
+files moved to `screenshots/superseded/2026-08-11-pre-normal-density/`.
+
+(The paragraph this replaced ended "None of the 13 shots contain Edit Profile,
+so all 13 remain accurate." It was written when there were thirteen, and it
+stayed after the count reached sixteen and after the UI changed under all of
+them.)
