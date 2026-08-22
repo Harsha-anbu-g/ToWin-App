@@ -9,6 +9,10 @@
 // software actually does; a lawyer has not been through it. Two rules held
 // throughout: no country, court or statute is named anywhere, and nothing
 // overclaims — every promise below is one the running system keeps.
+//
+// Trust-stage names read from src/lib/trustStages.js (HARD-110) so the promise
+// made here and the rung shown on the card are the same word.
+import { FULL_STAGES, PHONE_STAGE } from '../lib/trustStages';
 
 /** The draft notice, visible at the top of both pages and the signup modal. */
 export const DRAFT = {
@@ -264,7 +268,7 @@ export function privacySections(email) {
     { h: 'Who can see what',
       p: 'Other members can see your name, your role, your city, your bio, your interests and '
         + 'your trust score. Your email address and phone number are shown to a connection only '
-        + 'once your trust journey together reaches the Phone Ready stage. Admins here can look '
+        + `once your trust journey together reaches the ${FULL_STAGES[PHONE_STAGE]} stage. Admins here can look `
         + 'at account information when they are investigating a safety report.' },
 
     { h: 'Messages',

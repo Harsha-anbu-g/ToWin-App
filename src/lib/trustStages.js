@@ -21,7 +21,10 @@ export const LEVEL_INDEX = {
   TRUSTED: 6,
 };
 
-/** Short labels used on cards and ladders, indexed the same 0-based way. */
+/**
+ * Short labels used on cards and ladders, indexed the same 0-based way.
+ * These are the chip register: the word after "Stage 3 of 7 ·".
+ */
 export const SHORT_STAGES = [
   'Connected',
   'Messaging',
@@ -32,8 +35,32 @@ export const SHORT_STAGES = [
   'Trusted',
 ];
 
+/**
+ * Long labels used in sentences, indexed the same 0-based way. The sentence
+ * register: "your email and phone are shown once you reach the Phone Ready
+ * stage". The website carries the same two registers on one row per rung
+ * (TrustJourney.jsx LEVELS: `label` and `short`), and these are the backend's
+ * own words for the rung (TrustScoreService.stageLabel, FamilyJourneyService),
+ * so a member reading the policy and a member reading a server-sent label see
+ * the same name. HARD-110 collapsed five hand-typed copies of this list onto
+ * this one; changing a word here changes what the rung MEANS, so it is pinned
+ * by stage-names-single-source.test.js.
+ */
+export const FULL_STAGES = [
+  'Just Connected',
+  'Messaging',
+  'Phone Ready',
+  'Video Ready',
+  'Social Media',
+  'Ready to Meet',
+  'Fully Trusted',
+];
+
 /** The step at which an elder's trust becomes reachable by their family. */
 export const MESSAGING_STAGE = 1;
+
+/** The step at which two people's phone numbers become visible to each other. */
+export const PHONE_STAGE = 2;
 
 /** The step at which the shared family-updates thread opens. */
 export const FIRST_MEET_STAGE = 5;

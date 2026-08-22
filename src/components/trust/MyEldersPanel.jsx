@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
+import { LEVEL_INDEX, SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
@@ -22,21 +23,6 @@ import SkeletonCard from '../ui/Skeleton';
 import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
-
-// Backend TrustLevel enum name → ladder index (source of truth: backend
-// common/enums/TrustLevel.java, mirrored by website TrustJourney.jsx). Used
-// as the fallback when /trust/my-score hasn't resolved yet — wrong names
-// here silently pin every elder to stage 0.
-const LEVEL_INDEX = {
-  DISCOVERED: 0,
-  MESSAGING: 1,
-  PHONE_CALL: 2,
-  VIDEO_CALL: 3,
-  VERIFIED: 4,
-  FIRST_MEET: 5,
-  TRUSTED: 6,
-};
-const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met in person', 'Trusted'];
 
 function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onConfirm, onPause }) {
   const { t, radius, type, fontFamily } = useTheme();

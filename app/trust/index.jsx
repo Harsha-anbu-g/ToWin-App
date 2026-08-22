@@ -16,11 +16,9 @@ import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
+import { SHORT_STAGES } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
 
-// Redesign stage vocabulary (mirrors the trust ladder / SHORT_STAGES) — the
-// backend's pre-redesign labels ("Verified") must not leak into the UI.
-const STAGE_LABELS = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met in person', 'Trusted'];
 
 // Tier ladder (web parity): name + points needed to enter it.
 const TIERS = [
@@ -240,7 +238,7 @@ function HelperPointsCard({ card }) {
         <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{STAGE_LABELS[Math.min(card.stageIndex, 6)]}</Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{SHORT_STAGES[Math.min(card.stageIndex, 6)]}</Text>
         </View>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
           {card.total} <Text style={{ fontWeight: '400', fontSize: type.caption }}>/ {card.totalMax} points</Text>

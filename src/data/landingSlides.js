@@ -14,15 +14,12 @@ export const CHAPTERS = [
 ];
 
 // The 7 Rooting stages — each step is worth +1 trust score.
-export const STAGES = [
-  'Just Connected',
-  'Messaging',
-  'Phone Ready',
-  'Video Ready',
-  'Social Media',
-  'Ready to Meet',
-  'Fully Trusted',
-];
+// The seven names are re-exported from src/lib/trustStages.js rather than
+// retyped (HARD-110, 2026-08-22). The words are byte-identical to the ones
+// this file carried before, so the handoff's verbatim lock still holds; what
+// changed is that the landing story and the privacy policy can no longer
+// drift apart.
+export { FULL_STAGES as STAGES } from '../lib/trustStages';
 
 export const COPY = {
   welcome: {

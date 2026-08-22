@@ -34,14 +34,10 @@ import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { DURATION, EASE } from '../../src/theme/motion';
 import { useTheme } from '../../src/theme/ThemeContext';
 
-const STAGE_ICONS = {
-  'Just Connected': Link2,
-  Messaging: MessageCircle,
-  'Phone Ready': Phone,
-  'Video Ready': Video,
-  'Social Media': Share2,
-  'Ready to Meet': Coffee,
-};
+// Indexed to match STAGES (src/lib/trustStages.js), not keyed by the rung's
+// words: the names live in one file now (HARD-110). The last rung is the goal
+// marker and draws the tortoise instead of an icon.
+const STAGE_ICONS = [Link2, MessageCircle, Phone, Video, Share2, Coffee];
 
 function Chapter({ n, label }) {
   const { t, type } = useTheme();
@@ -212,7 +208,7 @@ function Slide({ index }) {
           <View style={{ alignSelf: 'center', marginBottom: 12 }}>
             {STAGES.map((s, i) => {
               const isGoal = i === STAGES.length - 1;
-              const Icon = STAGE_ICONS[s];
+              const Icon = STAGE_ICONS[i];
               return (
                 <View key={s} style={{ flexDirection: 'row', gap: 12 }}>
                   <View style={{ width: 34, alignItems: 'center' }}>

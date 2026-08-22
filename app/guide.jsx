@@ -7,6 +7,7 @@ import Screen from '../src/components/ui/Screen';
 import SegmentedControl from '../src/components/ui/SegmentedControl';
 import SwipeSegments from '../src/components/ui/SwipeSegments';
 import { useAuth } from '../src/context/AuthContext';
+import { FULL_STAGES, PHONE_STAGE } from '../src/lib/trustStages';
 import { useTheme } from '../src/theme/ThemeContext';
 
 const ELDER_CAN = [
@@ -36,14 +37,28 @@ const FAMILY_CAN = [
   'Ask for permission to act for them: request help, move a friendship forward, or leave a review in their name.',
 ];
 
-const LADDER = [
-  ['Just connected', 'You said yes to each other. Chat inside Towinly only.'],
-  ['Chatting', 'Regular messages. Getting to know each other.'],
-  ['Friendly', 'First names and warm conversation come naturally.'],
-  ['Phone ready', 'You both agreed to share phone numbers.'],
-  ['Met in person', 'A first meeting in a public place went well.'],
-  ['Helping hand', 'Real help happens: errands, rides, company.'],
-  ['Fully trusted', 'The top of the ladder. Trust earned one step at a time.'],
+// What each rung means, in the order the backend advances them. The names
+// themselves come from src/lib/trustStages.js (HARD-110) so the guide, the
+// privacy policy and the line under a helper's name say the same word, and the
+// notes are ported from the website's own guide (guideContent.jsx §The trust
+// journey), which this screen has always claimed to be a port of.
+//
+// CORRECTION 2026-08-22: the seven rows here used to read "Just connected ·
+// Chatting · Friendly · Phone ready · Met in person · Helping hand · Fully
+// trusted". Three of those rungs do not exist in the product (Chatting,
+// Friendly, Helping hand), two real ones were missing (Video Ready, Social
+// Media), and Phone Ready was numbered 4 when the app unlocks phone numbers at
+// 3. The screen was teaching a ladder the software does not run. The rungs
+// below are the backend TrustLevel enum, unchanged: DISCOVERED, MESSAGING,
+// PHONE_CALL, VIDEO_CALL, VERIFIED, FIRST_MEET, TRUSTED.
+const LADDER_NOTES = [
+  "You both said yes. You can see each other's profile.",
+  'Private messages and photos, inside Towinly. The Message button appears here.',
+  'You both agree to share phone numbers and call each other.',
+  'A video call. You meet face to face on a screen.',
+  'You each share your Instagram, Facebook or other profiles.',
+  'You plan to meet in person. Emergency contacts are told.',
+  'The top of the ladder. You can leave and receive reviews.',
 ];
 
 function Bullets({ items }) {
@@ -145,7 +160,7 @@ export default function Guide() {
           to agree. Nobody can rush it.
         </P>
         <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
-          {LADDER.map(([stage, desc], i) => (
+          {FULL_STAGES.map((stage, i) => (
             <View key={stage} style={{ flexDirection: 'row', gap: spacing[3] }}>
               <View
                 style={{
@@ -163,7 +178,9 @@ export default function Guide() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>{stage}</Text>
-                <Text style={{ fontSize: text.sm, lineHeight: 21, color: t.inkSlate, marginTop: 1 }}>{desc}</Text>
+                <Text style={{ fontSize: text.sm, lineHeight: 21, color: t.inkSlate, marginTop: 1 }}>
+                  {LADDER_NOTES[i]}
+                </Text>
               </View>
             </View>
           ))}
@@ -174,7 +191,7 @@ export default function Guide() {
         <H>Staying safe</H>
         <Bullets
           items={[
-            'Phone numbers are shared only when you both reach the Phone Ready step.',
+            `Phone numbers are shared only when you both reach the ${FULL_STAGES[PHONE_STAGE]} step.`,
             'Meet in public places for first meetings.',
             'Elders can keep emergency contacts: the people to call when something happens.',
             'You can report anyone from their profile; our team reviews every report.',

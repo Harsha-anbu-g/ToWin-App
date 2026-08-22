@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
+import { SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import FamilyShareToggle from '../family/FamilyShareToggle';
 import ActionChip from '../ui/ActionChip';
@@ -24,8 +25,6 @@ import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
-// Short stage names for the ladder footer (handoff §Interactions).
-const SHORT_STAGES = ['Connected', 'Messaging', 'Phone', 'Video', 'Socials', 'Met', 'Trusted'];
 
 function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause }) {
   const { t, radius, type, fontFamily } = useTheme();

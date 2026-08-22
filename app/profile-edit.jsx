@@ -29,6 +29,7 @@ import { buildUpload } from '../src/lib/uploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { objectionableError } from '../src/lib/contentFilter';
 import { yearsOld } from '../src/lib/copy';
+import { FULL_STAGES, PHONE_STAGE } from '../src/lib/trustStages';
 import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
 
@@ -635,7 +636,7 @@ export default function ProfileEdit() {
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
           autoComplete="tel"
-          helper="Only shared after both people reach the Phone Ready trust stage."
+          helper={`Only shared after both people reach the ${FULL_STAGES[PHONE_STAGE]} trust stage.`}
           returnKeyType="next"
           submitBehavior="submit"
           onSubmitEditing={focusFacebook}

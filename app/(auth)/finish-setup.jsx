@@ -15,6 +15,7 @@ import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { clearPendingOnboarding, getPendingOnboarding } from '../../src/lib/pendingOnboarding';
+import { FULL_STAGES, PHONE_STAGE } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // Heading and group label read from one string, so they cannot drift apart.
@@ -242,7 +243,7 @@ export default function FinishSetup() {
             setFieldErrors((f) => ({ ...f, phone: '' }));
           }}
           error={fieldErrors.phone}
-          helper="Only shared after both people reach the Phone Ready trust stage."
+          helper={`Only shared after both people reach the ${FULL_STAGES[PHONE_STAGE]} trust stage.`}
           placeholder="+1 416 555 0123"
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
