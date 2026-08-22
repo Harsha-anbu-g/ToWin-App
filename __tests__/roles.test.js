@@ -1,9 +1,11 @@
 import { centerActionFor, homeTabFor, secondTabFor } from '../src/lib/roles';
 
 // Redesign nav: elder FAB posts help, helper FAB browses needs.
-test('elders (and BOTH) get "Post Help" — posting a need is their main job', () => {
-  expect(centerActionFor('ELDER').label).toBe('Post Help');
-  expect(centerActionFor('BOTH').label).toBe('Post Help');
+// HARD-110 renamed the elder's from "Post Help", which sat two characters from
+// the "Posted Help" tab beside it. The pair is Need Help / Offer Help now.
+test('elders (and BOTH) get "Need Help" — asking for a hand is their main job', () => {
+  expect(centerActionFor('ELDER').label).toBe('Need Help');
+  expect(centerActionFor('BOTH').label).toBe('Need Help');
 });
 
 test('helpers get "Offer Help"', () => {
@@ -11,7 +13,7 @@ test('helpers get "Offer Help"', () => {
 });
 
 test('unknown/missing role falls back to the elder action (safe default)', () => {
-  expect(centerActionFor(undefined).label).toBe('Post Help');
+  expect(centerActionFor(undefined).label).toBe('Need Help');
 });
 
 // 2026-07-12: the first tab IS the relationship hub — no "Home" label.

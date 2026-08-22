@@ -393,7 +393,7 @@ test('MenuSheet: My Family row shows for elders only', async () => {
 
 // FAM-407 + no-repeat menu (user call 2026-08-02): the menu only carries
 // surfaces with no tab of their own, and FAMILY must never see the elder
-// rows (Post Help would even crash, since centerActionFor('FAMILY') is null).
+// rows (Need Help would even crash, since centerActionFor('FAMILY') is null).
 test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows', async () => {
   mockRole = 'FAMILY';
   const r = await wrap(<MenuSheet visible onClose={jest.fn()} />);
@@ -407,7 +407,7 @@ test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows
   expect(r.queryByLabelText('My Parents')).toBeNull();
 
   // Elder/discovery rows must not leak (each is a wrong or crashing target).
-  expect(r.queryByLabelText('Post Help')).toBeNull();
+  expect(r.queryByLabelText('Need Help')).toBeNull();
   expect(r.queryByLabelText('Posted Help')).toBeNull();
   expect(r.queryByLabelText('My Helpers')).toBeNull();
   expect(r.queryByLabelText('Add Friends')).toBeNull();
@@ -421,7 +421,7 @@ test('MenuSheet: FAMILY gets the parents hub only — no elder or discovery rows
 // has no other way in.
 test('MenuSheet: tab-duplicate rows are gone for every seat', async () => {
   const elder = await wrap(<MenuSheet visible onClose={jest.fn()} />);
-  expect(elder.queryByLabelText('Post Help')).toBeNull();
+  expect(elder.queryByLabelText('Need Help')).toBeNull();
   expect(elder.queryByLabelText('Posted Help')).toBeNull();
   expect(elder.queryByLabelText('My Helpers')).toBeNull();
   expect(elder.queryByLabelText('Add Friends')).toBeNull();

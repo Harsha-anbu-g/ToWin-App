@@ -1,5 +1,11 @@
 // Terms of Service + Privacy Policy copy — ported verbatim from
 // Towinly/frontend/src/pages/Register.jsx (placeholder documents, prototype only).
+//
+// The one exception to "verbatim" is the trust-stage name, which reads from
+// src/lib/trustStages.js (HARD-110): a policy that promises a member their
+// phone number stays private until a named stage has to name the stage the
+// same way the ladder in their hand does.
+import { FULL_STAGES, PHONE_STAGE } from '../lib/trustStages';
 
 export const TERMS_CONTENT = [
   { h: '1. Welcome to Towinly',
@@ -30,7 +36,7 @@ export const PRIVACY_CONTENT = [
   { h: '3. How we use your data',
     p: 'Your data is used to operate Towinly: showing nearby members, enabling messaging, calculating trust scores, and keeping the community safe. We do not sell your personal data to advertisers.' },
   { h: '4. Who can see what',
-    p: 'Other members can see your name, role, city, bio, interests, and trust score. Your email and phone are visible to a connection only after the trust journey reaches the “Phone Ready” stage. Admins may access account data when investigating safety reports.' },
+    p: `Other members can see your name, role, city, bio, interests, and trust score. Your email and phone are visible to a connection only after the trust journey reaches the “${FULL_STAGES[PHONE_STAGE]}” stage. Admins may access account data when investigating safety reports.` },
   { h: '5. Messages',
     p: 'Messages between members are stored so you can read your history. Admins may review messages flagged for safety. We do not use the content of your messages for advertising.' },
   { h: '6. Data retention',

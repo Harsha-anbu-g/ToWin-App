@@ -33,9 +33,11 @@ function FieldLabel({ children }) {
   );
 }
 
-// Post Help (3e): title input, kind-of-help chips, Normal/Urgent, optional
+// Need Help (3e): title input, kind-of-help chips, Normal/Urgent, optional
 // details, bottom-pinned primary. Validation is inline on the fields.
-function PostNeedForm() {
+// The heading is the centre button's own label (roles.js), so the screen and
+// the button a member tapped to reach it always read the same (HARD-110).
+function PostNeedForm({ title }) {
   const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -122,7 +124,7 @@ function PostNeedForm() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
         >
-          Post Help
+          {title}
         </Text>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 3, marginBottom: 18 }}>
           Tell your neighbors what you need.
@@ -229,7 +231,7 @@ export default function ActionScreen() {
   ) : (
     // 3e owns its header (serif title + subtitle) and pins its primary
     <Screen scroll={false} keyboard contentStyle={{ padding: 0, paddingTop: 12 }}>
-      <PostNeedForm />
+      <PostNeedForm title={action.label} />
     </Screen>
   );
 }
