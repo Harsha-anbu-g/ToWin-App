@@ -22,6 +22,12 @@ import { useToast } from '../../src/context/ToastContext';
 import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
 import { useTheme } from '../../src/theme/ThemeContext';
 
+// The two outcomes of a block, named once. The success sentence must never be
+// shown unless the server-side half really ran.
+const BLOCK_DONE = "Blocked. You won't see this person anymore.";
+const BLOCK_HALF_DONE =
+  'Blocked on this phone. We could not end the friendship, so messages may still reach you.';
+
 function ChipRow({ items }) {
   const { t, radius, type, spacing } = useTheme();
   if (!items?.length) return null;
@@ -121,13 +127,17 @@ export default function UserProfile() {
       ),
   });
 
+  // `quiet` is passed by the block flow, which says its own sentence. Two
+  // toasts about one tap talk over each other, and the second one wins.
   const endFriendship = useMutation({
     mutationFn: () => api.delete(`/connections/${conn.id}`),
-    onSuccess: () => {
-      showToast('Friendship ended.', 'info');
+    onSuccess: (_data, variables) => {
+      if (!variables?.quiet) showToast('Friendship ended.', 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
-    onError: () => showToast('Could not do that right now. Please try again.', 'error'),
+    onError: (_err, variables) => {
+      if (!variables?.quiet) showToast('Could not do that right now. Please try again.', 'error');
+    },
   });
 
   const report = useMutation({
@@ -151,6 +161,24 @@ export default function UserProfile() {
     if (ok) endFriendship.mutate();
   };
 
+  // Ending the connection is the ONLY server-side half of a block:
+  // MessageService rejects a send unless the connection is active. The device
+  // list in src/lib/blockList.js hides them from THIS phone and nothing more.
+  // So the delete is awaited and its failure is said out loud with a retry,
+  // rather than covered by a success sentence the person would act on. It used
+  // to fire and forget, and then toast success either way.
+  async function endConnectionForBlock() {
+    try {
+      await endFriendship.mutateAsync({ quiet: true });
+      showToast(BLOCK_DONE, 'info');
+    } catch {
+      showToast(BLOCK_HALF_DONE, 'error', {
+        actionLabel: 'Try again',
+        onAction: endConnectionForBlock,
+      });
+    }
+  }
+
   // Device-side block (UGC 1.2): their content disappears everywhere for you,
   // and an active friendship ends so messages stop server-side too.
   // `blocking` keeps the button honest while the writes run (rulebook: every
@@ -159,9 +187,12 @@ export default function UserProfile() {
     setBlocking(true);
     try {
       await blockUser(user?.userId, { id, name: profile?.name ?? '' });
-      if (conn?.status === 'ACTIVE') endFriendship.mutate();
       queryClient.invalidateQueries({ queryKey: ['block-list'] });
-      showToast("Blocked. You won't see this person anymore.", 'info');
+      if (conn?.status === 'ACTIVE') await endConnectionForBlock();
+      else showToast(BLOCK_DONE, 'info');
+    } catch {
+      // The device list itself would not save, so nothing was blocked at all.
+      showToast('Could not block right now. Please try again.', 'error');
     } finally {
       setBlocking(false);
     }
@@ -172,6 +203,7 @@ export default function UserProfile() {
       title: `Block ${profile?.name ?? 'this person'}?`,
       message:
         "You won't see their help requests or messages anymore, and any friendship ends. " +
+        'The block is saved on this phone, so it does not follow you to another device. ' +
         'You can change your mind later in Profile → Blocked people.',
       confirmLabel: 'Block',
       destructive: true,
