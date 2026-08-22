@@ -22,6 +22,7 @@ import Register from '../app/(auth)/register';
 import ForgotPassword from '../app/(auth)/forgot-password';
 import ResetPassword from '../app/(auth)/reset-password';
 import FinishSetup from '../app/(auth)/finish-setup';
+import { setPendingOnboarding } from '../src/lib/pendingOnboarding';
 import ChatThread from '../app/chat/[connectionId]';
 
 let mockUser = null;
@@ -95,7 +96,14 @@ test.each([
   ['forgot-password', ForgotPassword],
   ['reset-password', ResetPassword],
   ['finish-setup', FinishSetup],
-])('%s form renders inside a keyboard avoider', async (_name, Form) => {
+])('%s form renders inside a keyboard avoider', async (name, Form) => {
+  // finish-setup no longer takes its identity off the URL (HARD-105): a link
+  // with params and no pending flow gets the refusal card, which has no form
+  // and so no keyboard avoider. The real flow is seeded here instead, which is
+  // what oauth-callback does after a successful exchange.
+  if (name === 'finish-setup') {
+    setPendingOnboarding({ onboardingToken: 'ob', email: 'm@example.com', name: 'Margaret' });
+  }
   const r = await wrap(<Form />);
   expect(r.getAllByTestId('keyboard-avoider').length).toBeGreaterThan(0);
 });

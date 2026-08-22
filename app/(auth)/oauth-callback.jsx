@@ -17,6 +17,7 @@ import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { consumeOAuthFlow } from '../../src/lib/oauthFlow';
+import { setPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function OAuthCallback() {
@@ -51,10 +52,12 @@ export default function OAuthCallback() {
           await login(data.token);
           router.replace('/'); // index routes by role/verification state
         } else if (data.status === 'NEEDS_ONBOARDING') {
-          router.replace({
-            pathname: '/(auth)/finish-setup',
-            params: { onboardingToken: data.onboardingToken, email: data.email, name: data.name },
-          });
+          // Handed over in memory, never through the URL. The token logs a
+          // device in, and the name and email are what the next screen claims
+          // about who this person is; all three came from the server here, so
+          // none of them should be re-readable, or plantable, from a link.
+          setPendingOnboarding(data);
+          router.replace('/(auth)/finish-setup');
         } else {
           setError('Something went wrong. Please try again.');
         }
