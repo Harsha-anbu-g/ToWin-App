@@ -165,8 +165,12 @@ describe('the distance pill on Offer Help', () => {
     // Act
     await fireEvent.press(pill);
 
-    // Assert — 25 km steps to the next ring, and the line above says so.
-    await waitFor(() => expect(r.getByText('Showing needs within 50 km of you')).toBeTruthy());
+    // Assert — 25 km steps to the next ring, and the pill says so.
+    // The line above it names the ring only once this phone has a position
+    // (LOC-204): without one the server cannot filter by distance, so the row
+    // reads "Showing every open request" instead of claiming a radius. The
+    // wording in both states is covered by __tests__/offer-help-location.test.js.
+    await waitFor(() => expect(r.getByLabelText(/Distance 50 kilometres/)).toBeTruthy());
   }, 30_000);
 });
 

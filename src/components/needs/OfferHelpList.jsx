@@ -17,6 +17,8 @@ import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
 import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
+import LocationPrimer from '../location/LocationPrimer';
+import useDevicePosition from '../../lib/useDevicePosition';
 import { useTheme } from '../../theme/ThemeContext';
 import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
@@ -234,11 +236,58 @@ export default function OfferHelpList() {
   const [seg, setSeg] = useState('available');
   const [radiusIdx, setRadiusIdx] = useState(2); // 25 km, like the web
   const [refreshing, setRefreshing] = useState(false);
+  const radiusKm = RADIUS_STEPS[radiusIdx];
 
-  const { data: openData, isLoading, isError: openFailed, refetch: refetchOpen } = useQuery({
+  // Where this phone is, if it has ever said. Read-only on mount: the iOS
+  // prompt is spent by a tap on the card below and nowhere else.
+  const {
+    status: locStatus,
+    busy: locBusy,
+    hasPosition,
+    position,
+    enable: enableLocation,
+    dismissed: locDismissed,
+    dismiss: hideLocationCard,
+  } = useDevicePosition();
+  // `locStatus` stays null until that read lands. Waiting one tick beats firing
+  // /needs/open and then replacing the list a moment later with a different one.
+  const settled = !!locStatus;
+  const shouldAskForLocation = settled && !hasPosition && !locDismissed;
+
+  const lat = position?.locationLat ?? null;
+  const lng = position?.locationLng ?? null;
+
+  // WITH a position: the endpoint that answers a real distance. /needs/open
+  // builds every row with toResponse(n, null, ...) (NeedService.java:107), so
+  // distanceKm is null on all of them and the pill below filtered nothing at
+  // all. /needs/nearby is the same flow the website picks
+  // (HelperDashboard.jsx:280-281) on this exact condition.
+  //
+  // The coordinates and the radius are IN THE KEY, so tapping the pill asks the
+  // server again instead of re-slicing a list computed against the old ring.
+  // That mistake was already fixed once for /discover in commit 8c046a0.
+  //
+  // What goes on the wire is the local record, which readSavedPosition has
+  // already snapped to the 0.02 degree cell. A raw fix never reaches it.
+  const nearbyQuery = useQuery({
+    queryKey: ['needs-nearby', lat, lng, radiusKm],
+    queryFn: async () => (await api.get('/needs/nearby', { params: { lat, lng, radiusKm } })).data,
+    enabled: settled && hasPosition,
+  });
+  // WITHOUT one: every open request, exactly as before. Browsing is never the
+  // price of handing over a position.
+  const openQuery = useQuery({
     queryKey: ['needs-open'],
     queryFn: async () => (await api.get('/needs/open')).data,
+    enabled: settled && !hasPosition,
   });
+  const feed = hasPosition ? nearbyQuery : openQuery;
+  const feedData = feed.data;
+  // A disabled query reports isLoading false in TanStack v5, so the wait for
+  // the position read has to be said here or the empty state flashes first.
+  const isLoading = !settled || feed.isLoading;
+  const feedFailed = feed.isError;
+  const refetchFeed = feed.refetch;
   const { data: appsData, isLoading: appsLoading, isError: appsFailed, refetch: refetchApps } = useQuery({
     queryKey: ['needs-applications'],
     queryFn: async () => (await api.get('/needs/applications')).data,
@@ -249,15 +298,27 @@ export default function OfferHelpList() {
     queryFn: () => getBlocked(user?.userId),
   });
 
-  const radiusKm = RADIUS_STEPS[radiusIdx];
   // Blocked elders' requests never show in Available (UGC 1.2); Applied and
   // Completed stay visible — they're the helper's own commitments to unwind.
   const open = filterBlocked(
-    Array.isArray(openData) ? openData : openData?.content ?? [],
+    Array.isArray(feedData) ? feedData : feedData?.content ?? [],
     blocked,
     (n) => n.elderId
   ).filter((n) => !Number.isFinite(n.distanceKm) || n.distanceKm <= radiusKm);
   const applications = Array.isArray(appsData) ? appsData : appsData?.content ?? [];
+
+  // Three lines that change with the position, named here rather than nested
+  // into the JSX below. "near you" and a ring are claims this screen can only
+  // make once it has one: without a position the server cannot filter by
+  // distance and every row comes back with distanceKm null.
+  const radiusLine = hasPosition
+    ? `Showing needs within ${radiusKm} km of you`
+    : 'Showing every open request';
+  const availableLabel = hasPosition ? 'open requests near you' : 'open requests';
+  // "Try a wider distance" points at a pill that cannot widen anything yet.
+  const availableEmpty = hasPosition
+    ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
+    : 'No open requests right now. Check back soon.';
 
   const available = open.filter((n) => !n.myApplicationStatus);
   const applied = applications.filter((n) => n.status !== 'COMPLETED' && n.status !== 'CANCELLED');
@@ -269,6 +330,8 @@ export default function OfferHelpList() {
     // finally: the spinner must stop even when refresh fails on poor WiFi
     try {
       await queryClient.invalidateQueries({ queryKey: ['needs-open'] });
+      // Prefix match: every coordinate and every ring this session has cached.
+      await queryClient.invalidateQueries({ queryKey: ['needs-nearby'] });
       await queryClient.invalidateQueries({ queryKey: ['needs-applications'] });
     } finally {
       setRefreshing(false);
@@ -316,13 +379,28 @@ export default function OfferHelpList() {
             onChange={setSeg}
             style={{ marginTop: 16 }}
           />
+          {seg === 'available' && shouldAskForLocation ? (
+            // Primary here, unlike Post Help: this screen owns no other filled
+            // sky-blue button, and without a position its whole distance row is
+            // inert. Dismissible, because reading the open requests must never
+            // be the price of handing over a position (HCI 3).
+            <View style={{ marginTop: 12 }}>
+              <LocationPrimer
+                status={locStatus}
+                busy={locBusy}
+                context="offer"
+                onEnable={enableLocation}
+                onDismiss={hideLocationCard}
+              />
+            </View>
+          ) : null}
           {seg === 'available' ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 }}>
                 <MapPin size={14} color={t.inkSlate} strokeWidth={1.8} />
-                <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
-                  Showing needs within {radiusKm} km of you
-                </Text>
+                {/* Naming a ring the screen cannot apply would state
+                    something untrue about what it is doing (HCI 1). */}
+                <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{radiusLine}</Text>
               </View>
               <Pressable
                 accessibilityRole="button"
@@ -360,19 +438,19 @@ export default function OfferHelpList() {
             // The pending load must never render "You haven't offered to help
             // yet" on an account that has (rulebook).
             <SkeletonCard />
-          ) : (seg === 'available' ? openFailed : appsFailed) ? (
+          ) : (seg === 'available' ? feedFailed : appsFailed) ? (
             // "Check back soon" copy on a failed fetch discourages the retry
             // that would actually fix it — name the failure instead.
             <LoadError
               bare
-              what={seg === 'available' ? 'open requests near you' : 'your offers'}
-              onRetry={seg === 'available' ? refetchOpen : refetchApps}
+              what={seg === 'available' ? availableLabel : 'your offers'}
+              onRetry={seg === 'available' ? refetchFeed : refetchApps}
             />
           ) : (
             <>
               <Text style={{ fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
                 {seg === 'available'
-                  ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
+                  ? availableEmpty
                   : seg === 'applied'
                     ? "You haven't offered to help yet."
                     : 'No completed help yet. It will show here.'}
