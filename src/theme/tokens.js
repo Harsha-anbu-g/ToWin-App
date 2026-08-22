@@ -51,7 +51,11 @@ export const light = {
   ink: '#1d1d1f',
   ink2: '#333333',
   ink3: '#676767', // ≥4.5:1 on white AND the parchment surface
-  ink4: '#707070', // muted text + placeholders — still ≥4.5:1 on --surface
+  // Darkened #707070 -> #6b6b6b (HARD-108). The old value was chosen against
+  // --surface, which is plain white, and measured 4.43:1 on surfaceFill
+  // (#f2f2f5), the segmented tracks and search fields it also paints. That is
+  // where the Ask AI placeholder lives. Now 4.77 there, 5.33 on white.
+  ink4: '#6b6b6b', // muted text + placeholders — ≥4.5:1 on surface AND surfaceFill
   inkFaint: '#c8c8cd', // disabled text ONLY (contrast-exempt) — never running text
   inkFaint2: '#646b76', // faint meta text — ≥4.5:1 on white, parchment, and tracks (handoff's #8a919c failed AA)
   inkDeep: '#2d3748', // heavy slate headings
@@ -88,7 +92,11 @@ export const light = {
 
   // Semantic
   red: '#cc0000',
-  redError: '#dc2626', // form-field errors
+  // Deepened #dc2626 -> #d31f1f (HARD-108): the old value measured 4.41:1 on
+  // redTint below, which is the bed it is always painted on. Now 4.82 there,
+  // 5.27 on white. This is the app's most-seen error colour, rendered by
+  // FormError.jsx and hand-rolled at four more call sites.
+  redError: '#d31f1f', // form-field errors
   redTint: '#fef2f2', // error background
   redSoft: '#fca5a5', // error border
   redDeep: '#9b3535', // destructive (end connection)
@@ -187,7 +195,10 @@ export const dark = {
   ink: '#f2f0ec',
   ink2: '#ddd9d2',
   ink3: '#a8a49c',
-  ink4: '#949089',
+  // Lightened #949089 -> #9f9b93 (HARD-108): the old value measured 4.33:1 on
+  // surfaceFill below. Now 4.97 there, and 4.63 on bubbleIn, which retires the
+  // reason app/chat/[connectionId].jsx gives for preferring ink3 on bubbles.
+  ink4: '#9f9b93',
   inkFaint: '#6f6c66',
   // 4.94:1 on the card canvas — #8f8b84 measured 4.29 there and failed AA,
   // the night twin of the light palette's same fix.
@@ -215,7 +226,15 @@ export const dark = {
   redError: '#f87171',
   redTint: 'rgba(220, 38, 38, 0.16)',
   redSoft: 'rgba(248, 113, 113, 0.45)',
-  redDeep: '#b45050',
+  // Lightened #b45050 -> #ce8d8d (HARD-108). Same hue and same saturation, only
+  // light enough for a dark bed. The old value measured 2.91:1 on canvas,
+  // 2.75 on surfaceFill, 3.30 on surface and 2.56 on the chat bubbles, and
+  // Button.jsx renders destructive at 14px so the large-text allowance does not
+  // apply. This colour carries the Log out and Delete account labels and the
+  // "Didn't send. Tap to try again." line, which is the only way to rescue an
+  // unsent message. Now 5.41 / 5.12 / 6.13 / 4.77, and 4.77 on the outgoing
+  // blueTint bubble composited over the page.
+  redDeep: '#ce8d8d',
   greenDeep: '#7cc28f',
   greenTint: 'rgba(255, 255, 255, 0.07)', // neutral fill at night (see light theme note)
   trustGold: '#7cc28f', // trust accent at night — same green family as greenDeep

@@ -21,6 +21,17 @@ const contrast = (fg, bg) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
+// Night tints are alpha washes (rgba), so they have no luminance of their own:
+// composite them over the page before measuring anything on top of them.
+const tintOver = (tint, base) => {
+  if (typeof tint !== 'string' || !tint.startsWith('rgba')) return tint;
+  const [r, g, b, a] = tint.match(/rgba?\(([^)]+)\)/)[1].split(',').map(Number);
+  const h = base.replace('#', '');
+  const [br, bg, bb] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
+  const mix = (fg, back) => Math.round(fg * a + back * (1 - a));
+  return `#${[mix(r, br), mix(g, bg), mix(b, bb)].map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+};
+
 // Sanity-check the math itself before trusting its verdicts on the palette.
 test('the ratio helper matches the two WCAG reference extremes', () => {
   expect(contrast('#ffffff', '#000000')).toBeCloseTo(21, 1);
@@ -115,4 +126,55 @@ describe.each([
       expect(contrast(t[token], t.canvas)).toBeGreaterThanOrEqual(4.5);
     }
   );
+});
+
+// ---------------------------------------------------------------------------
+// HARD-108. Three colours that carry the words a person most needs to read, and
+// all three were under AA on at least one of the beds they are painted on.
+// Every number below was computed with the formula at the top of this file, not
+// eyeballed, and the replacements were chosen by search rather than by taste.
+// ---------------------------------------------------------------------------
+
+describe.each([
+  ['light', light],
+  ['dark', dark],
+])('%s theme — the destructive label (redDeep)', (name, t) => {
+  // Button.jsx renders the destructive variant at 14px, so the 3:1 large-text
+  // allowance does not apply: this is 4.5 text. It carries "Log out" and
+  // "Delete my account". At night it measured 2.91 on canvas, 2.75 on
+  // surfaceFill and 3.30 on surface before this story.
+  test.each(['canvas', 'surface', 'surfaceFill'])('clears 4.5:1 on %s', (bed) => {
+    expect(contrast(t.redDeep, t[bed])).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe.each([
+  ['light', light],
+  ['dark', dark],
+])('%s theme — the form error (redError)', (name, t) => {
+  // redTint is the bed this colour is always painted on: FormError.jsx draws
+  // the pair, and login.jsx, register.jsx, finish-setup.jsx and
+  // emergency-contacts.jsx hand-roll the same pair. One assertion covers all
+  // five call sites, because they all read these two tokens. By day it
+  // measured 4.41 before this story.
+  test('clears 4.5:1 on its own tint', () => {
+    expect(contrast(t.redError, tintOver(t.redTint, t.surface))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test('clears 4.5:1 on the plain page too', () => {
+    expect(contrast(t.redError, t.surface)).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
+describe.each([
+  ['light', light],
+  ['dark', dark],
+])('%s theme — the placeholder ink (ink4)', (name, t) => {
+  // AskAiAssistant.jsx passes ink4 as placeholderTextColor over surfaceFill,
+  // which is also every segmented track, neutral chip and search field. A
+  // placeholder is reading text and gets the full 4.5, never the muted-gray
+  // default. It measured 4.43 by day and 4.33 at night before this story.
+  test('clears 4.5:1 on surfaceFill', () => {
+    expect(contrast(t.ink4, t.surfaceFill)).toBeGreaterThanOrEqual(4.5);
+  });
 });
