@@ -534,7 +534,7 @@ An app where strangers meet can look like one at first glance, so here is the di
 
 DEMO ACCOUNTS (please review all three)
 
-The one tap demo buttons are compiled out of production builds on purpose. Type these into the login field, which accepts a username or an email:
+One tap demo buttons sit below the login form. The field also takes a username or an email, so these can be typed instead:
 
 - Elder: "elder" / "12345678" (Margaret, helpers at different trust steps)
 - Helper: "helper" / "123456789" (Harsha)
@@ -778,3 +778,25 @@ rounded distance. The new row is worded to match `console-answers.md` section
 2.3 and section 8.2 word for word, so the two sheets can no longer drift apart
 without a test catching it (`__tests__/console-answers.test.js`, "no store
 document denies a dependency the binary holds").
+
+## Correction made on 2026-08-22 (HARD-102)
+
+**Section 7, the reviewer-notes block, DEMO ACCOUNTS.**
+Old wording: "The one tap demo buttons are compiled out of production builds on
+purpose. Type these into the login field, which accepts a username or an email:"
+
+Why it changed: it is false, and it is false in the one place a reviewer can
+check in four seconds. `eas.json` sets `EXPO_PUBLIC_SHOW_DEMO=1` on the
+production profile and `src/lib/appEnv.js` records why: an owner decision of
+2026-08-16 reversing an earlier audit's hide. The demo seats are public by
+design. A reviewer who reads that the buttons are absent and then sees them
+under the login form has a reason to doubt every other claim on the page.
+THE FLAG IS NOT THE DEFECT. It is the owner's decision and it stays.
+
+Note also that the pasteable reviewer notes live in `console-answers.md`,
+between the `review-notes-v1` markers, and that copy always said the buttons are
+there. This page carries a second, older copy of the same block. Treat
+`console-answers.md` as the single source and paste from there;
+`__tests__/console-answers.test.js` guards its length and its claims, and
+`__tests__/demo-buttons-claim.test.js` now keeps every copy of the sentence tied
+to the build flag.
