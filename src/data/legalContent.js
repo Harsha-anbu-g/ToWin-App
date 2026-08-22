@@ -318,10 +318,27 @@ export function privacySections(email) {
         + 'encrypted while it is stored, and only you can open it. No system is perfectly '
         + 'secure, so please use a strong, unique password and report anything suspicious.' },
 
+    // Rewritten 2026-08-22 (HARD-111). This section used to stop mid-decision:
+    // it said the backup window was "something we have not written down yet".
+    // A placeholder is not a retention statement, and Apple 5.1.1(i) asks for a
+    // real one. Every clause below is read off AccountService.purgeUserData in
+    // the read-only backend reference (lines 90-127): one transaction on the
+    // request, the named stores emptied in that order, the user row last, no
+    // soft-delete column on User, no archive table and no scheduled retention
+    // job anywhere in src/main. The number of days a copy can sit in a backup is
+    // still not established anywhere in the code, so this page states no number
+    // and makes no promise about one. __tests__/legal-retention-claim.test.js
+    // holds the wording, both ways.
     { h: 'How long we keep it',
-      p: 'We keep your information while your account is here. How long a copy of it can still '
-        + 'sit in one of our backups after that is something we have not written down yet, and '
-        + 'we will say it here once we have.' },
+      p: 'We keep what you give us for as long as your account is open. We do not copy any of '
+        + 'it into a separate store to keep after you go. When you ask us to delete your '
+        + 'account, we do it at the moment you ask, in one step: your profile and your photo, '
+        + 'any identity document you sent us, your messages, your reviews, your help requests, '
+        + 'the contacts you nominated, the family joined to your account and what you let them '
+        + 'do, your stories, your letters and everything in your Sealed box. Your account '
+        + 'itself is the last thing to go. We do not keep it marked as closed, and we hold no '
+        + 'separate store of the accounts we have deleted. We do not save what you ask the '
+        + 'Towinly helper either: your question is answered and then it is gone.' },
 
     { h: 'Deleting your account',
       p: 'If you ask us to delete your account, we remove your profile and your photo, your '
