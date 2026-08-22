@@ -66,12 +66,43 @@ export function unseenTokens(storageKey, tokens) {
   return tokens.filter((token) => !seen.has(token));
 }
 
-/** Record these tokens as seen and persist (oldest dropped past the cap). */
+/**
+ * Merge a batch into the seen set and apply the cap, oldest first, WITHOUT
+ * ever dropping a token from the batch itself.
+ *
+ * The old code was `[...new Set([...seen, ...tokens])].slice(-MAX_TOKENS)`,
+ * which trims by position. Past MAX_TOKENS that can trim a token the caller
+ * just marked seen, and then the `tokens.every(seen.has)` early return above
+ * is false forever: markSeen writes and notifies on every call, the badge hook
+ * re-renders every subscriber, and the Updates focus effect calls markSeen
+ * again. An infinite spin, reachable on any account whose feed carries more
+ * than 300 items. Trimming by identity keeps the cap and closes the loop.
+ *
+ * A batch larger than the cap is the one case where the cap yields: keeping it
+ * whole is what makes the early return reachable on the next call.
+ */
+export function capTokens(seen, tokens) {
+  const merged = [...new Set([...seen, ...tokens])];
+  let overflow = merged.length - MAX_TOKENS;
+  if (overflow <= 0) return merged;
+  const batch = new Set(tokens);
+  const kept = [];
+  for (const token of merged) {
+    if (overflow > 0 && !batch.has(token)) {
+      overflow -= 1;
+      continue;
+    }
+    kept.push(token);
+  }
+  return kept;
+}
+
+/** Record these tokens as seen and persist (see capTokens for the trim rule). */
 export async function markSeen(storageKey, tokens) {
   await loadSeen(storageKey);
   const seen = sets.get(storageKey);
   if (tokens.every((token) => seen.has(token))) return; // no change → no write
-  const next = [...new Set([...seen, ...tokens])].slice(-MAX_TOKENS);
+  const next = capTokens(seen, tokens);
   sets.set(storageKey, new Set(next));
   notify();
   try {

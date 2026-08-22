@@ -33,6 +33,13 @@ export default function EmergencyContacts() {
     queryKey: ['emergency-contacts'],
     queryFn: async () => (await api.get('/emergency/contacts')).data,
   });
+  // Array.isArray, never `contacts ?? []`. A captive portal on hotel or cafe
+  // wifi answers 200 with an HTML login page, so axios hands back a STRING.
+  // `??` catches null and undefined only, that string has a length above zero,
+  // and the old guard skipped the empty branch and called .map on it: a throw
+  // mid-render. Elders on public wifi are exactly who this app serves. Same
+  // shape as app/(tabs)/_layout.jsx:210.
+  const contactList = Array.isArray(contacts) ? contacts : [];
 
   const [form, setForm] = useState({ name: '', phone: '', relationship: '' });
   const [formError, setFormError] = useState('');
@@ -133,12 +140,12 @@ export default function EmergencyContacts() {
           <SkeletonCard lines={2} />
         ) : isError ? (
           <LoadError what="your emergency contacts" onRetry={refetch} style={{ marginTop: spacing[3] }} />
-        ) : (contacts ?? []).length === 0 ? (
+        ) : contactList.length === 0 ? (
           <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
             Nobody yet. Add a family member or a trusted neighbor below.
           </Text>
         ) : (
-          contacts.map((c, i) => (
+          contactList.map((c, i) => (
             <View
               key={c.id}
               style={{
