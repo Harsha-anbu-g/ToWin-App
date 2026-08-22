@@ -40,6 +40,13 @@ export const KEYS = {
   // belongs to the person, not to the phone: the next account signed in on a
   // shared phone must not be able to read, or undo, an elder's blocks.
   blockedPrefix: 'towin-blocked-',
+  // Per-user, so it is a prefix rather than a key — see locationKey(). The
+  // phone's own record of the rounded position it last saved, because the API
+  // cannot be asked for it: ProfileResponse carries `city` and no coordinates,
+  // and PUT /profile/location returns Void. Per account for the same reason a
+  // block list is: where an elder lives must not follow the handset to the
+  // next person who signs in on it.
+  locationPrefix: 'towin-location-',
   // READ-ONLY fallback. Returning visitors who set night mode on the old
   // website still have this; we honour it once and then write KEYS.theme.
   // Writing it is forbidden — see the test.
@@ -64,6 +71,15 @@ export const seenKey = (userId, category) => `${KEYS.seenPrefix}${userId ?? 'ano
 export const blockedKey = (userId) => `${KEYS.blockedPrefix}${userId ?? 'anon'}`;
 
 /**
+ * Where this phone recorded the rounded position it last saved for one
+ * account, as `{ locationLat, locationLng, savedAt }`. Written by exactly one
+ * place, savePosition() in src/lib/deviceLocation.js, and only after the PUT
+ * came back clean.
+ * @param {string|undefined|null} userId
+ */
+export const locationKey = (userId) => `${KEYS.locationPrefix}${userId ?? 'anon'}`;
+
+/**
  * Every key the app writes. The disjointness contract is asserted against
  * this list, so a key that is only ever read (themeLegacyReadOnly) is absent
  * on purpose, and so is SHARED_SESSION_TOKEN.
@@ -81,6 +97,7 @@ export const APP_WRITTEN_KEYS = [
   aiConsentKey('example'),
   seenKey('example', 'connections'),
   blockedKey('example'),
+  locationKey('example'),
 ];
 
 /**

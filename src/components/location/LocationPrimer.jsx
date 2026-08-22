@@ -9,6 +9,11 @@
 // It also carries the two states that follow a refusal, because a screen that
 // silently shows nothing is the thing an elder reads as "broken" (HCI 1), and
 // because a refusal has to be reversible (HCI 3).
+//
+// One card, four moments. `context` picks what this screen loses without a
+// position, because "See who is nearby" means nothing to somebody who has just
+// posted a help request. The 'find' sentences are owner-reviewed and asserted
+// word for word by __tests__/location-primer.test.js: they do not change.
 import { MapPin } from '../icons';
 import { Text, View } from 'react-native';
 import Button from '../ui/Button';
@@ -17,36 +22,108 @@ import TextLink from '../ui/TextLink';
 import { STATUS } from '../../lib/deviceLocation';
 import { useTheme } from '../../theme/ThemeContext';
 
-// One entry per state the screen can be in. `action` null means the phone is
-// the only thing that can change it now, so the card stops offering a button
-// that cannot work.
-const COPY = {
-  [STATUS.unknown]: {
-    title: 'See who is nearby',
-    body: 'Towinly can use your location to show how far away each person is, and to show only people within the distance you choose. We save a rounded position, about a two kilometre area, never your address. Never while the app is closed.',
-    action: 'Use my location',
+// The three promises, said at the moment of asking rather than only in the
+// policy: a rounded area, never an address, never while the app is closed.
+// Every context repeats them word for word.
+const PROMISE =
+  'We save a rounded position, about a two kilometre area, never your address. Never while the app is closed.';
+
+const SETTINGS_TITLE = 'Location is turned off for Towinly';
+const PHONE_OFF_TITLE = 'Location is turned off on this phone';
+
+// Per screen: what it can do with a position, and what still works without one.
+// `stillWorks` ends every refusal state, so nobody is left thinking the screen
+// broke when they said no (HCI 1, HCI 9).
+const CONTEXTS = {
+  find: {
+    askTitle: 'See who is nearby',
+    why: 'Towinly can use your location to show how far away each person is, and to show only people within the distance you choose.',
+    refusedTitle: 'Distances are hidden',
+    refusedBody:
+      'Without your location we cannot tell you how far away anyone is. You can still see everyone below, and you can turn this on whenever you like.',
+    blockedLead: 'To show distances again, open Settings on your phone, find Towinly, and turn Location on.',
+    offClause: 'Towinly can show how far away each person is.',
+    stillWorks: 'Everyone below still shows without it.',
   },
-  [STATUS.refused]: {
-    title: 'Distances are hidden',
-    body: 'Without your location we cannot tell you how far away anyone is. You can still see everyone below, and you can turn this on whenever you like.',
-    action: 'Use my location',
+  post: {
+    askTitle: 'Let helpers see how far away you are',
+    why: 'Towinly can use your location so helpers nearby see how far away you are, instead of the town you typed when you joined.',
+    refusedTitle: 'Helpers cannot see how far away you are',
+    refusedBody:
+      'Without your location your request shows the town you typed, so helpers close by cannot tell that you are close by. Your request is still posted, and you can turn this on whenever you like.',
+    blockedLead:
+      'To show helpers how far away you are, open Settings on your phone, find Towinly, and turn Location on.',
+    offClause: 'helpers nearby can see how far away you are.',
+    stillWorks: 'Your request is still posted without it.',
   },
-  [STATUS.blocked]: {
-    title: 'Location is turned off for Towinly',
-    body: 'To show distances again, open Settings on your phone, find Towinly, and turn Location on. Everyone below still shows without it.',
-    action: null,
+  offer: {
+    askTitle: 'See how far away each request is',
+    why: 'Towinly can use your location to show how far away each request is, and to show only the requests within the distance you choose.',
+    refusedTitle: 'Distances are hidden',
+    refusedBody:
+      'Without your location we cannot tell you how far away a request is, and the distance you pick cannot be used. Every open request still shows, and you can turn this on whenever you like.',
+    blockedLead: 'To sort by distance, open Settings on your phone, find Towinly, and turn Location on.',
+    offClause: 'Towinly can show how far away each request is.',
+    stillWorks: 'Every open request still shows without it.',
   },
-  [STATUS.off]: {
-    title: 'Location is turned off on this phone',
-    body: 'Turn Location on in your phone settings and Towinly can show how far away each person is. Everyone below still shows without it.',
-    action: null,
+  profile: {
+    askTitle: 'Use your phone instead of a typed town',
+    why: 'Towinly can use your location to set where you are, instead of the middle of the town you type.',
+    refusedTitle: 'Your position comes from the town you type',
+    refusedBody:
+      'Without your location Towinly looks up the town in the box above and uses the middle of it. That still works, and you can turn this on whenever you like.',
+    blockedLead:
+      'To use your phone instead of a typed town, open Settings on your phone, find Towinly, and turn Location on.',
+    offClause: 'Towinly can set where you are from your phone.',
+    stillWorks: 'The town you type still works without it.',
   },
 };
 
-export default function LocationPrimer({ status, busy, onEnable, onDismiss }) {
+// One entry per state the screen can be in. `action` null means the phone is
+// the only thing that can change it now, so the card stops offering a button
+// that cannot work.
+const copyFor = (context, status) => {
+  const c = CONTEXTS[context] ?? CONTEXTS.find;
+  switch (status) {
+    case STATUS.unknown:
+      return { title: c.askTitle, body: `${c.why} ${PROMISE}`, action: 'Use my location' };
+    case STATUS.refused:
+      return { title: c.refusedTitle, body: c.refusedBody, action: 'Use my location' };
+    case STATUS.blocked:
+      return { title: SETTINGS_TITLE, body: `${c.blockedLead} ${c.stillWorks}`, action: null };
+    case STATUS.off:
+      return {
+        title: PHONE_OFF_TITLE,
+        body: `Turn Location on in your phone settings and ${c.offClause} ${c.stillWorks}`,
+        action: null,
+      };
+    // allowed / unsupported: nothing to say, so nothing is shown.
+    default:
+      return null;
+  }
+};
+
+/**
+ * @param {object} props
+ * @param {string} props.status one of STATUS
+ * @param {boolean} [props.busy]
+ * @param {'find'|'post'|'offer'|'profile'} [props.context] what this screen loses without a position
+ * @param {'primary'|'secondary'} [props.actionVariant] secondary where the screen
+ *   already owns its one filled sky-blue button
+ * @param {() => void} props.onEnable
+ * @param {() => void} [props.onDismiss]
+ * @param {() => void} [props.onRefresh] offered where a saved position may have gone stale
+ */
+export default function LocationPrimer({
+  status,
+  busy,
+  context = 'find',
+  actionVariant = 'primary',
+  onEnable,
+  onDismiss,
+}) {
   const { t, spacing, type, text } = useTheme();
-  const copy = COPY[status];
-  // allowed / unsupported: nothing to say, so nothing is shown.
+  const copy = copyFor(context, status);
   if (!copy) return null;
 
   return (
@@ -67,6 +144,7 @@ export default function LocationPrimer({ status, busy, onEnable, onDismiss }) {
         <Button
           title={busy ? 'Just a moment…' : copy.action}
           onPress={onEnable}
+          variant={actionVariant}
           loading={busy}
           disabled={busy}
           style={{ marginTop: spacing[3] }}
