@@ -342,8 +342,14 @@ describe('using the phone, then pressing Save', () => {
     await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() => expect(getsMatching('/geocode/search')).toHaveLength(1));
+    // 45.51 snaps to 45.52 (HARD-103, 2026-08-22). This assertion used to
+    // expect the geocoder's own 45.51, which is what a typed town wrote to the
+    // wire before the coarsen call was added; -73.58 already sat on the grid.
+    // What this test protects is unchanged: a typed town still saves a position
+    // and a city through this path in every location state. The rounding itself
+    // is proven by the HARD-103 block at the end of this file.
     expect(api.put).toHaveBeenLastCalledWith('/profile/location', {
-      locationLat: 45.51,
+      locationLat: 45.52,
       locationLng: -73.58,
       city: 'Laval',
     });
@@ -374,8 +380,14 @@ describe('the typed town keeps working exactly as it did', () => {
     await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() => expect(getsMatching('/geocode/search')).toHaveLength(1));
+    // 45.51 snaps to 45.52 (HARD-103, 2026-08-22). This assertion used to
+    // expect the geocoder's own 45.51, which is what a typed town wrote to the
+    // wire before the coarsen call was added; -73.58 already sat on the grid.
+    // What this test protects is unchanged: a typed town still saves a position
+    // and a city through this path in every location state. The rounding itself
+    // is proven by the HARD-103 block at the end of this file.
     expect(api.put).toHaveBeenLastCalledWith('/profile/location', {
-      locationLat: 45.51,
+      locationLat: 45.52,
       locationLng: -73.58,
       city: 'Laval',
     });
@@ -399,5 +411,105 @@ describe('the typed town keeps working exactly as it did', () => {
     // The typed town is untouched, and nothing was written.
     expect(r.getByDisplayValue('Montreal')).toBeTruthy();
     expect(putsTo('/profile/location')).toHaveLength(0);
+  });
+});
+
+// HARD-103. The typed-town save must round exactly like the phone save does.
+//
+// LOC-205 taught this screen to read the phone and coarsen the fix. It left the
+// OTHER write path alone: the town in the box is forward-geocoded and whatever
+// comes back was PUT straight to /profile/location, with no call to coarsen and
+// no import from src/lib/coarseLocation.js. Two write paths, one grid, one of
+// them bypassing it.
+//
+// Why it is worth a test rather than a comment. /discover answers distances to
+// 0.1 km (DiscoveryService returns Math.round(distanceKm * 10) / 10), so three
+// calls from one ordinary account trilaterate a stored point to about 100
+// metres. While the stored value is a town centre that only resolves a town
+// centre. A geocoder asked for "12 Rue Saint-Denis" answers at address
+// precision, and the same three calls then resolve an elderly person's front
+// door. The backend is the website's and is read-only from here, so the phone
+// is the only place this can be defended, and the shipped privacy policy is
+// what promises it.
+describe('the typed town is rounded on the same grid as the phone (HARD-103)', () => {
+  // A real front door, five decimal places, the kind of answer a geocoder gives
+  // for a street address rather than a town name.
+  const FRONT_DOOR = { lat: 45.50169, lng: -73.56727, city: 'Montreal' };
+
+  test('an address-precision geocode reaches the wire snapped to the cell', async () => {
+    serve({ geocode: FRONT_DOOR });
+    const r = await wrap();
+    await loaded(r);
+
+    await fireEvent.changeText(r.getByLabelText('My town or city'), '12 Rue Saint-Denis');
+    await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(getsMatching('/geocode/search')).toHaveLength(1));
+    // 45.50169 snaps to 45.5 and -73.56727 snaps to -73.56, the same cell the
+    // phone path produces from the same coordinates in this file's
+    // getCurrentPositionAsync mock. Two write paths, one answer.
+    expect(api.put).toHaveBeenLastCalledWith('/profile/location', {
+      locationLat: 45.5,
+      locationLng: -73.56,
+      city: 'Montreal',
+    });
+  });
+
+  test('the five decimal places never appear in any request body', async () => {
+    serve({ geocode: FRONT_DOOR });
+    const r = await wrap();
+    await loaded(r);
+
+    await fireEvent.changeText(r.getByLabelText('My town or city'), '12 Rue Saint-Denis');
+    await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
+    await waitFor(() => expect(putsTo('/profile/location')).toHaveLength(1));
+
+    // Not just the location PUT: nothing this screen sends may carry the raw
+    // fix, whichever endpoint it goes to.
+    const everySentBody = JSON.stringify([...api.put.mock.calls, ...api.post.mock.calls]);
+    expect(everySentBody).not.toContain('45.50169');
+    expect(everySentBody).not.toContain('-73.56727');
+  });
+
+  test('a geocode with no usable coordinates sends the town and no coordinate fields', async () => {
+    // The AC is literal about this: coarsen returning null must not become
+    // locationLat: null, which the backend would store as a cleared position
+    // alongside a town it cannot place.
+    serve({ geocode: { lat: null, lng: undefined, city: 'Laval' } });
+    const r = await wrap();
+    await loaded(r);
+
+    await fireEvent.changeText(r.getByLabelText('My town or city'), 'Laval');
+    await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(putsTo('/profile/location')).toHaveLength(1));
+    const [, body] = putsTo('/profile/location')[0];
+    expect(body).toEqual({ city: 'Laval' });
+    expect('locationLat' in body).toBe(false);
+    expect('locationLng' in body).toBe(false);
+  });
+
+  test('an out-of-range geocode is refused the same way', async () => {
+    // coarseLocation refuses these before they reach the wire rather than
+    // letting the backend's @Min/@Max reject them after the fact.
+    serve({ geocode: { lat: 999, lng: -73.5, city: 'Nowhere' } });
+    const r = await wrap();
+    await loaded(r);
+
+    await fireEvent.changeText(r.getByLabelText('My town or city'), 'Nowhere');
+    await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(putsTo('/profile/location')).toHaveLength(1));
+    expect(putsTo('/profile/location')[0][1]).toEqual({ city: 'Nowhere' });
+  });
+
+  test('the screen imports the one grid rather than rounding by hand', async () => {
+    // A second rounding written inline would drift from GRID_DEGREES the first
+    // time the cell size is revisited.
+    const fs = require('fs');
+    const path = require('path');
+    const source = fs.readFileSync(path.join(__dirname, '..', 'app', 'profile-edit.jsx'), 'utf8');
+    expect(source).toMatch(/from '\.\.\/src\/lib\/coarseLocation'/);
+    expect(source).toContain('coarsen(');
   });
 });

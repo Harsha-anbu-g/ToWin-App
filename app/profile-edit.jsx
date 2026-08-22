@@ -21,6 +21,7 @@ import SkeletonCard from '../src/components/ui/Skeleton';
 import { useAuth } from '../src/context/AuthContext';
 import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
+import { coarsen } from '../src/lib/coarseLocation';
 import { STATUS } from '../src/lib/deviceLocation';
 import useDevicePosition from '../src/lib/useDevicePosition';
 import { parseFlexibleDate } from '../src/lib/flexibleDate';
@@ -328,11 +329,25 @@ export default function ProfileEdit() {
         await api.put('/profile/phone', { phone: form.phone.trim() });
       }
       if (form.city.trim() && form.city.trim() !== (me?.city ?? '')) {
-        // Web flow: geocode the typed place, then save coordinates + city
+        // Web flow: geocode the typed place, then save coordinates + city.
         const { data } = await api.get(`/geocode/search?q=${encodeURIComponent(form.city.trim())}`);
+        // Through the SAME grid the phone path uses (src/lib/deviceLocation.js
+        // returns coarsen(fix?.coords)), never a second rounding written here.
+        // A geocoder asked for a street address answers at address precision,
+        // and /discover hands back distances to 0.1 km, so three calls from one
+        // ordinary account trilaterate a stored point to about 100 metres. A
+        // town centre resolving to 100 metres is a town centre; an unrounded
+        // geocode resolving to 100 metres is somebody's front door. The backend
+        // belongs to the website and is read-only from here, so the phone is
+        // the only place this can be defended, and the shipped privacy policy
+        // is what promises it.
+        const cell = coarsen({ latitude: data.lat, longitude: data.lng });
         await api.put('/profile/location', {
-          locationLat: data.lat,
-          locationLng: data.lng,
+          // Spread, not `locationLat: cell?.locationLat`: an unusable geocode
+          // must send the town ALONE. Explicit nulls would tell the backend to
+          // clear the stored position (ProfileService sets both columns from
+          // whatever the body carries), so a bad geocode would wipe a good cell.
+          ...(cell ?? {}),
           city: data.city ?? form.city.trim(),
         });
       }
