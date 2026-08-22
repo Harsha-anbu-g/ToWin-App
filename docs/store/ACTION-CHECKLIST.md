@@ -170,9 +170,13 @@ hour spent here is an hour not spent on the meter.
   16 captures (`raw-01` to `raw-16`) in `App/docs/store/screenshots/`, every one
   at 1320 x 2868 (Apple's iPhone 6.9 inch size), taken from the live phone web
   build with real seeded data on all three demo seats. No Xcode, Android SDK or
-  physical phone was needed. **They are now stale:** every one shows the
-  pre-2026-08-17 UI. See HARD-117.
-  (Corrected 2026-08-22: this said thirteen.)
+  physical phone was needed.
+  **Re-captured 2026-08-22 (HARD-117).** The originals showed the pre-2026-08-17
+  UI. The eight the store manifest bakes from were shot again from
+  `ralph/store-hardening` through the pinned recipe; the other eight are
+  reference material and were left as history. Nothing deleted, everything
+  superseded moved to `screenshots/superseded/2026-08-11-pre-normal-density/`.
+  (Corrected 2026-08-22: this said thirteen captures.)
 - [ ] **Recruit 12 testers for Google's closed test and keep them enrolled 14
   consecutive days.** [owner] Required before a personal Play account gets
   production access. Blocks the Android launch and is the longest single item,

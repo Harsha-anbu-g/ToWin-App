@@ -81,7 +81,7 @@ Apple or Google, so all of it can close before enrollment.
 | A5 | ~~**EAS is not set up.**~~ **CLOSED.** `app.json` carries `owner: harshavardhan_ag` and `extra.eas.projectId: 6cf0141c-c99a-4663-87df-12f271989e7b`. A fresh shell still needs `eas login`. | Done |
 | A6 | ~~**The production PostHog flag is unverified.**~~ **CLOSED 2026-08-15.** It was set, the owner cleared it, the backend redeployed, and the read-back showed the key absent. The privacy forms stand as written. | Done |
 | A7 | ~~**The photo permission sentence is too narrow.**~~ **CLOSED.** `app.json` `photosPermission` now names the profile picture and the optional ID photo. | Done |
-| A8 | ~~**No final screenshots exist.**~~ **PARTLY CLOSED.** 8 shots are baked under `screenshots/final/ios/`, which clears both store minimums. They show the pre-2026-08-17 UI and need re-capturing: see HARD-117. | Repo, then human review |
+| A8 | ~~**No final screenshots exist.**~~ **CLOSED 2026-08-22.** 8 shots are baked under `screenshots/final/ios/` and `final/play/`, re-captured from the current UI and guarded by `__tests__/store-screenshots.test.js`. What remains is the owner's eye on them before upload. | Repo done, human review |
 
 ### Group B: these need the paid accounts
 
@@ -291,9 +291,10 @@ until the owner picks one" for a week after they had picked.)
 are baked under `App/docs/store/screenshots/final/ios/`, which clears both store
 minimums. The canonical output path is that folder and not `docs/store-images/`,
 because the git repository root is `App/` and the project root is not versioned.
-(Corrected 2026-08-22: this said five of eight. `ls` returns eight. What is
-actually wrong with them is their age, not their number: every one shows the
-pre-2026-08-17 UI. See HARD-117 and the owner runbook.)
+(Corrected 2026-08-22: this said five of eight, and `ls` returns eight. What
+was actually wrong with them was their age: every one showed the pre-2026-08-17
+UI. All eight were re-captured the same day from `ralph/store-hardening`, and
+`npx jest store-screenshots` passes 23 of 23 against the new set.)
 
 Checked and confirmed while resolving the above:
 
