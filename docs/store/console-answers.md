@@ -129,7 +129,7 @@ guideline 1.2's filtering requirement.
 |---|---|---|
 | Chat or messaging between users | Yes | One-to-one threads, `app/chat/[connectionId].jsx`. |
 | Users can create or share content other users see | Yes | Bios, help requests, reviews, Pass On entries, messages. |
-| App shares the user's location with other users | Approximate only | The member types a town, the server geocodes it, and other members see a town name and a rounded distance. No device location is ever read: `expo-location` is not installed. |
+| App shares the user's location with other users | Approximate only | Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
 | In-app controls for objectionable content | Yes | Report from a profile, block from a profile, a managed block list, a write-time word filter on posts, and zero tolerance terms agreed at signup. Section 6 states exactly what the filter does and does not cover. |
 | Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/register.jsx:52` sets `MIN_AGE = 18` and line 181 refuses the signup. No document check happens. |
 
@@ -374,7 +374,7 @@ Re-run the whole verification in one command: see section 9.
 
 ### 6.4 Notes, ready to paste
 
-App Store Connect caps this field at 4000 characters. The block below is 3953,
+App Store Connect caps this field at 4000 characters. The block below is 3998,
 machine-counted.
 
 **One claim was corrected on 2026-08-15 before this block was written.** The
@@ -392,11 +392,11 @@ the write-time filter covers posts, and report and block cover messages.
 <!-- review-notes-v1:start -->
 WHAT TOWINLY IS
 
-Towinly connects three kinds of people. Elders are older adults who ask for help: a ride, shopping, cleaning, or company. Helpers offer that help. Family members are relatives an elder links to their account, so someone they love can see they are safe.
+Towinly connects elders who ask for help (a ride, shopping, cleaning, company), helpers who offer it, and family members an elder links to their account, so someone they love can see they are safe.
 
 START HERE
 
-Sign in as "elder" / "12345678". Home shows Margaret's helpers and how far trust has grown with each one. Tap a helper to open the seven step ladder. That screen is the product.
+Sign in as "elder" / "12345678". Home shows Margaret's helpers and how far trust has grown with each. Tap a helper to open the seven step ladder. That screen is the product.
 
 THE TRUST LADDER IN THREE SENTENCES
 
@@ -404,40 +404,44 @@ Every pair of members climbs the same seven steps: Connected, Messaging, Phone, 
 
 TOWINLY IS NOT A DATING APP
 
-The difference is in the mechanics, and all of it is visible in the build:
+The difference is in the mechanics, all of it visible in the build:
 
 - No swiping, no romance framing, and no gallery of profiles to browse. Elders and helpers meet through a posted help request.
 - Guideline 1.2 controls: report a person from their profile, block them from their profile, a block list at Profile > Blocked people, a write time word filter on bios, help requests and Pass On entries, and terms agreed at signup that close an account for harassment, threats, lies, discrimination or impersonation. Private messages rely on report and block rather than on the word filter. Reports reach help@towinly.com.
 
 WHY THE APP ASKS FOR PHOTOS
 
-One permission, two uses, both optional. A single picker on Edit profile raises the photo library prompt: a profile picture, and a photo of an identity document if the member chooses to verify who they are. Camera and microphone are removed from the binary. There is no location permission: the town is typed by hand.
+One permission, two uses, both optional. A single picker on Edit profile raises the photo library prompt: a profile picture, and a photo of an identity document if the member chooses to verify who they are. Camera and microphone are removed from the binary.
+
+WHY THE APP ASKS FOR LOCATION
+
+Optional and foreground only. A card explains it before the system prompt, on the four screens where distance matters. The app rounds every fix to a 2 km cell on the phone, so the server gets an area, never a street. Say no and the app runs on the town you type.
 
 DEMO ACCOUNTS (please review all three)
 
-One tap demo buttons sit below the login form. Or type these into the login field, which accepts a username or an email:
+One tap demo buttons sit below the login form. The field also takes a username or an email:
 
 - Elder: "elder" / "12345678" (Margaret, four helpers at four different steps)
 - Helper: "helper" / "123456789" (Harsha, one connection at a full 15 of 15)
 - Family: "demo.sarah@towin.app" / "DemoSarah!2026" (Sarah, Margaret's daughter)
 
-The family login uses the older towin.app domain because that is how the backend seeds it, so type it exactly. Demo data resets a few minutes after the last change, so sample data reappearing is expected.
+The family login uses the older towin.app domain, which is how the backend seeds it, so type it exactly. Demo data resets a few minutes after the last change, so reappearing sample data is expected.
 
 DELETING AN ACCOUNT
 
-Deletion happens inside the app: Profile tab, then "Account and data", then "Delete my account". Towinly asks twice and the second question is "Delete forever".
+Deletion happens in the app: Profile tab, then "Account and data", then "Delete my account". Towinly asks twice and the second question is "Delete forever".
 
-Please test deletion on this spare seat rather than the three above, because those are shared with the next reviewer: <<SPARE SEAT>>
+Please test deletion on this spare seat, not the three above, which the next reviewer also uses: <<SPARE SEAT>>
 
 HOW TO REACH GUARDIAN MODE (no real family needed)
 
 1. Sign in as demo.sarah@towin.app. Home is the family panel, with Margaret as her linked parent.
-2. Tap Margaret's card. Three tabs: the friendships she shares with their trust ladders, how she is today, and what Sarah is allowed to do.
-3. Margaret has already allowed Sarah to manage her help requests and to take trust steps for her, so both work with no setup. The elder's side of those switches is under Home menu > My Family > Controls.
+2. Tap Margaret's card. Three tabs: the friendships she shares with their trust ladders, how she is today, and what Sarah may do.
+3. Margaret has already allowed Sarah to manage her help requests and take trust steps for her, so both work with no setup. The elder's side is under Home menu > My Family > Controls.
 
 THE AI ASSISTANT: CONSENT AND REPORTING
 
-Tap the "Ask AI" pill with the tortoise on any tab. Before the FIRST question a consent dialog appears. It names Groq, the outside AI service, says what is shared (the question, the chat, first name and trust score, never contact details), warns that answers are machine written and can be wrong, and offers "Not now" and "Yes, that's okay". "Not now" sends nothing. Consent is stored per user, so another demo account sees the dialog again. Every answer carries "Report this answer", which opens the feedback form with the answer quoted. Reports reach help@towinly.com.
+Tap the "Ask AI" pill on any tab. Before the FIRST question a consent dialog appears. It names Groq, the outside AI service, says what is shared (the question, the chat, first name and trust score, never contact details), warns that answers are machine written and can be wrong, and offers "Not now" and "Yes, that's okay". "Not now" sends nothing. Consent is per user, so another demo account sees the dialog again. Every answer carries "Report this answer", which opens the feedback form with it quoted. Reports reach help@towinly.com.
 <!-- review-notes-v1:end -->
 
 **Resolve `<<SPARE SEAT>>` before pasting.** Section 6.3 item 1 says why and
@@ -491,8 +495,8 @@ Live URL check re-run on 2026-08-15, all following redirects:
 | `https://www.towinly.com/app/delete-account` | **200** |
 
 Do not use `https://www.towinly.com/privacy`. It answers 200 as well, and it
-serves an older document with no contact address and a location paragraph
-describing a device setting this app does not have.
+serves an older document with no contact address and a location paragraph that
+never says the position is rounded on the phone before it is sent.
 
 ---
 
@@ -543,7 +547,7 @@ the way the build behaves.
 | Drugs, alcohol, tobacco | No | Not referenced anywhere. |
 | Gambling, simulated gambling, real money | No | `app/game.jsx` is a local memory game with no wager, no prize and no currency. |
 | Users can interact or exchange content | **Yes** | One-to-one chat, plus help requests other members browse. |
-| Users can share their location with other users | **Yes, town level** | A typed town, geocoded on the server, shown as a town and a rounded distance. No GPS: `expo-location` is not installed. |
+| Users can share their location with other users | **Yes, town level** | A typed town geocoded on the server, or the phone read in the foreground and snapped to a ~2 km cell on the device. Either way other members see a town and a rounded distance, never a point on a map. |
 | Personal information shared with other users | **Yes** | Name, photo, bio, and a phone number once both sides reach the Phone step. |
 | Unrestricted access to the internet | **No** | No web view, no in-app browser, no user-typed URL is ever opened. Proof in section 2.2. |
 | Digital purchases | No | Nothing is sold in the app. |
@@ -708,3 +712,63 @@ message counts and trust progress recorded as numbers rather than as an
 adjective.
 
 This file was swept for em dashes before saving. There are none.
+
+---
+
+## Corrections made on 2026-08-22 (LOC-207)
+
+Three answers on this page said the app reads no location. That was true when
+they were written and stopped being true on 2026-08-19, when `expo-location`
+was installed. Filing a store answer that denies a permission the binary holds
+is the kind of gap a reviewer finds, so all three are corrected here and the old
+wording is kept.
+
+**1. Section 2.3, "App shares the user's location with other users".**
+Old wording: "The member types a town, the server geocodes it, and other members
+see a town name and a rounded distance. No device location is ever read:
+`expo-location` is not installed."
+Why it changed: `expo-location ~19.0.8` is in `App/package.json` and the app
+reads the phone on four screens. The verdict does not move. It is still
+Approximate only, because every fix is snapped to a 0.02 degree cell by
+`src/lib/coarseLocation.js` before it can reach the network, and what another
+member sees is still a town name and a rounded distance.
+
+**2. Section 7, the App Review notes, "There is no location permission: the town
+is typed by hand."**
+Old wording: exactly that sentence, at the end of the photos paragraph.
+Why it changed: the same reason. A reviewer reading that line and then seeing
+the location prompt on the second screen of the app would be right to question
+everything else on the page. It is replaced by a short paragraph of its own that
+says what the permission is for, when it is asked, and what is kept.
+
+**3. Section 8.2, the IARC questionnaire, "Users can share their location with
+other users".**
+Old wording: "A typed town, geocoded on the server, shown as a town and a
+rounded distance. No GPS: `expo-location` is not installed."
+Why it changed: the same reason. The answer stays **Yes, town level**, which is
+what a ~2 km cell amounts to, and IARC's question is about what other users see.
+
+**What did NOT change, and is still true.** Coarse or approximate location,
+collected for app functionality, linked to the account, and NOT used for
+tracking. Foreground only: `app.json` blocks every background and always
+variant, and `App/__tests__/location-freshness.test.js` fails the build on
+`watchPositionAsync`, `startLocationUpdatesAsync`, `startGeofencingAsync`,
+`requestBackgroundPermissionsAsync` or `setInterval` anywhere under `app/` or
+`src/`. The cell numbers were re-read from `coarseLocation.js` on 2026-08-22 and
+are recorded in `privacy-labels.md`.
+
+**4. The paste-ready reviewer notes had no room for any of this.**
+The block between the `review-notes-v1` markers is an App Review field with a
+hard 4000 character limit, and it stood at 3953 before this pass. Adding a
+location paragraph meant making room, so seven sentences elsewhere in the block
+were tightened with no claim removed: the opening description of the three kinds
+of member, "all of it visible in the build", the demo-button line, guardian step
+3, the spare-seat line, the Ask AI pill line, and the consent-is-per-user line.
+The block now states its own length, 3998, and
+`App/__tests__/console-answers.test.js` checks that number against the real
+block and fails if either drifts. Every phrase that test pins is untouched: the
+demo credentials, the seven trust steps, the 7 + 5 + 3 = 15 score, START HERE,
+WHY THE APP ASKS FOR PHOTOS, "word filter on bios, help requests and Pass On
+entries" and "Private messages rely on report and block".
+
+This section was swept for em dashes before saving. There are none.

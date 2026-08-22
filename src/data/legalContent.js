@@ -209,17 +209,22 @@ export function privacySections(email) {
       p: 'Your information is kept on servers in the United States. Photos and identity '
         + 'documents are kept in Amazon S3, also in the United States.' },
 
-    // Rewritten 2026-08-19, when the app gained real device location. Every
-    // sentence below has to stay true of the code: permission is asked on the
-    // Add Friends screen and nowhere else (src/components/needs/LocationPrimer),
-    // foreground only (app.json blocks the background variants), and the fix is
-    // snapped to a 0.02 degree cell before it can reach the network
-    // (src/lib/coarseLocation). If any of those change, this changes with them.
+    // Rewritten 2026-08-19, when the app gained real device location. Widened
+    // 2026-08-22 (LOC-207), when the ask reached four screens instead of one.
+    // Every sentence below has to stay true of the code: the card is the only
+    // thing that may ask, on Add Friends, Posted Help, Offer Help and Edit
+    // Profile (src/components/location/LocationPrimer, wired through
+    // src/lib/useDevicePosition), foreground only (app.json blocks the
+    // background variants), and the fix is snapped to a 0.02 degree cell before
+    // it can reach the network (src/lib/coarseLocation). If any of those change,
+    // this changes with them.
     { h: 'Where you live',
-      p: 'Towinly asks your phone where it is so we can show you how far away each person is, '
-        + 'and show only people within the distance you choose. We ask first, on the Add '
-        + 'Friends screen, and we explain why before your phone asks. You can say no and the '
-        + 'app carries on working, you just will not see how far away somebody is.' },
+      p: 'Towinly asks your phone where it is so we can show how far away people are, and show '
+        + 'only the people and the help requests within the distance you choose. We ask on the '
+        + 'screens where it makes a difference: finding friends, after you post a request for '
+        + 'help, browsing requests to help with, and editing your profile. We explain why '
+        + 'before your phone asks. You can say no and the app carries on working, you just '
+        + 'will not see how far away somebody is.' },
 
     { h: 'What we keep, and what we do not',
       p: 'We round your position to an area of about two kilometres across before it leaves '
@@ -232,7 +237,9 @@ export function privacySections(email) {
       p: 'You can turn location off at any time in your phone settings, under Towinly. You can '
         + 'also just type the name of your town in Edit Profile instead, and we will look that '
         + 'up for a rough position without using your phone at all. Leave both blank and your '
-        + 'account carries on working.' },
+        + 'account carries on working. Once you have said yes, we read your phone again when '
+        + 'the saved position is more than a day old, and whenever you tap Update my location '
+        + 'in Edit Profile. Both happen while Towinly is open on your screen.' },
 
     { h: 'How we use your information',
       p: 'To run Towinly: showing you people nearby, letting you write to each other, working '
