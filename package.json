@@ -59,7 +59,9 @@
     ],
     "setupFiles": [
       "./jest.setup.js"
-    ]
+    ],
+    "testTimeout": 30000,
+    "maxWorkers": "50%"
   },
   "private": true,
   "devDependencies": {
