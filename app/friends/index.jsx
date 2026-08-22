@@ -6,7 +6,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from '../../src/components/icons';
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -22,7 +22,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
-import { STATUS, currentStatus, enableAndSave } from '../../src/lib/deviceLocation';
+import { STATUS } from '../../src/lib/deviceLocation';
+import useDevicePosition from '../../src/lib/useDevicePosition';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // The km control cycles through the web's radius steps; people are filtered
@@ -237,33 +238,27 @@ export default function FriendsScreen() {
 
   const radiusKm = RADIUS_STEPS[radiusIdx];
 
-  // Where this phone is, asked for on THIS screen and nowhere else: it is the
-  // only screen whose job depends on it. Read without prompting on mount, so
-  // the card can say the right thing before anyone taps (HCI 1).
-  const [locStatus, setLocStatus] = useState(null); // null = still checking
-  const [locBusy, setLocBusy] = useState(false);
-  const [primerHidden, setPrimerHidden] = useState(false);
-  useEffect(() => {
-    let alive = true;
-    currentStatus().then((st) => {
-      if (alive) setLocStatus(st);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  // Where this phone is. The asking lives in one shared hook now
+  // (src/lib/useDevicePosition), so Post Help, Offer Help and Profile Edit ask
+  // the same way and only a tap on the card below can reach the system prompt.
+  // status is null until the first read lands, so the card can say the right
+  // thing before anyone taps (HCI 1).
+  const {
+    status: locStatus,
+    busy: locBusy,
+    dismissed: primerHidden,
+    dismiss: hidePrimer,
+    enable: enableDevicePosition,
+  } = useDevicePosition();
 
   const enableLocation = useCallback(async () => {
-    setLocBusy(true);
-    const { status } = await enableAndSave();
-    setLocBusy(false);
-    setLocStatus(status);
+    const status = await enableDevicePosition();
     // A fresh position changes every distance on screen, so re-ask the server
     // rather than re-sorting a list computed against the old one.
     if (status === STATUS.allowed) {
       await queryClient.invalidateQueries({ queryKey: ['discover'] });
     }
-  }, [queryClient]);
+  }, [enableDevicePosition, queryClient]);
 
   const isHelper = user?.role === 'HELPER';
   const path = isHelper ? '/discover/elders' : '/discover/helpers';
@@ -479,7 +474,7 @@ export default function FriendsScreen() {
                     status={locStatus}
                     busy={locBusy}
                     onEnable={enableLocation}
-                    onDismiss={locStatus === STATUS.unknown ? () => setPrimerHidden(true) : undefined}
+                    onDismiss={locStatus === STATUS.unknown ? hidePrimer : undefined}
                   />
                 ) : null}
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>

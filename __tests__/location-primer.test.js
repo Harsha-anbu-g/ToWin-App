@@ -73,3 +73,103 @@ describe('the location card', () => {
     expect(noDismiss.queryByRole('button', { name: 'Not now' })).toBeNull();
   });
 });
+
+// One card now serves four moments (LOC-201). "See who is nearby" means
+// nothing to somebody who has just posted a help request, so `context` picks
+// what THIS screen loses without a position. Two things must hold for all of
+// them: the find wording never moves, and every context makes the same three
+// promises at the moment of asking.
+describe('the card in each moment', () => {
+  const CONTEXTS = ['find', 'post', 'offer', 'profile'];
+
+  test('the find wording is byte-identical to the owner-reviewed original', async () => {
+    // Transcribed from src/components/needs/LocationPrimer.jsx as it stood at
+    // 89b3d5e, before the card moved. If a rewrite is ever wanted, the owner
+    // asks for it; a refactor does not get to drift it.
+    const EXPECTED = {
+      [STATUS.unknown]: [
+        'See who is nearby',
+        'Towinly can use your location to show how far away each person is, and to show only people within the distance you choose. We save a rounded position, about a two kilometre area, never your address. Never while the app is closed.',
+      ],
+      [STATUS.refused]: [
+        'Distances are hidden',
+        'Without your location we cannot tell you how far away anyone is. You can still see everyone below, and you can turn this on whenever you like.',
+      ],
+      [STATUS.blocked]: [
+        'Location is turned off for Towinly',
+        'To show distances again, open Settings on your phone, find Towinly, and turn Location on. Everyone below still shows without it.',
+      ],
+      [STATUS.off]: [
+        'Location is turned off on this phone',
+        'Turn Location on in your phone settings and Towinly can show how far away each person is. Everyone below still shows without it.',
+      ],
+    };
+    for (const [status, [title, body]] of Object.entries(EXPECTED)) {
+      const r = await wrap(<LocationPrimer status={status} onEnable={() => {}} />);
+      expect(r.getByText(title)).toBeOnTheScreen();
+      expect(r.getByText(body)).toBeOnTheScreen();
+    }
+  });
+
+  test('every context makes the same three promises before anyone taps', async () => {
+    for (const context of CONTEXTS) {
+      const r = await wrap(
+        <LocationPrimer status={STATUS.unknown} context={context} onEnable={() => {}} />
+      );
+      expect(r.getByText(/two kilometre area/)).toBeOnTheScreen();
+      expect(r.getByText(/never your address/)).toBeOnTheScreen();
+      expect(r.getByText(/Never while the app is closed/)).toBeOnTheScreen();
+    }
+  });
+
+  test('every context says what still works after a no', async () => {
+    for (const context of CONTEXTS) {
+      for (const status of [STATUS.refused, STATUS.blocked, STATUS.off]) {
+        const r = await wrap(
+          <LocationPrimer status={status} context={context} onEnable={() => {}} />
+        );
+        expect(r.getByText(/still/)).toBeOnTheScreen();
+      }
+    }
+  });
+
+  test('each context asks about its own screen, not about Add Friends', async () => {
+    const asked = {};
+    for (const context of CONTEXTS) {
+      const r = await wrap(
+        <LocationPrimer status={STATUS.unknown} context={context} onEnable={() => {}} />
+      );
+      asked[context] = r.getByRole('header').props.children;
+    }
+    expect(new Set(Object.values(asked)).size).toBe(CONTEXTS.length);
+    expect(asked.find).toBe('See who is nearby');
+  });
+
+  test('an unknown context falls back to the find wording rather than a blank card', async () => {
+    const r = await wrap(
+      <LocationPrimer status={STATUS.unknown} context="nonsense" onEnable={() => {}} />
+    );
+    expect(r.getByText('See who is nearby')).toBeOnTheScreen();
+  });
+
+  test('a screen that already owns a filled primary gets the quiet variant', async () => {
+    // The locked rule is one filled sky-blue button per screen. Post Help and
+    // Profile Edit already spend theirs, so the card must not add a second.
+    const secondary = await wrap(
+      <LocationPrimer
+        status={STATUS.unknown}
+        context="post"
+        actionVariant="secondary"
+        onEnable={() => {}}
+      />
+    );
+    const quiet = secondary.getByRole('button', { name: 'Use my location' });
+    const filled = (
+      await wrap(<LocationPrimer status={STATUS.unknown} onEnable={() => {}} />)
+    ).getByRole('button', { name: 'Use my location' });
+
+    const bg = (node) =>
+      [].concat(node.props.style ?? []).flat().find((s) => s?.backgroundColor)?.backgroundColor;
+    expect(bg(quiet)).not.toBe(bg(filled));
+  });
+});

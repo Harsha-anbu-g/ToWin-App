@@ -25,6 +25,8 @@
 import { Platform } from 'react-native';
 import api from '../api/client';
 import { coarsen } from './coarseLocation';
+import * as Store from './storage';
+import { locationKey } from './storageKeys';
 
 const location = () => require('expo-location');
 
@@ -99,27 +101,90 @@ export async function readCoarsePosition() {
 }
 
 /**
- * Save a rounded position against the account. The endpoint already exists for
- * the website's browser geolocation (PUT /profile/location, every field
- * optional), so nothing server-side changes.
+ * What this phone recorded the last time a save went through, or null.
+ *
+ * The API cannot be asked: ProfileResponse carries `city` and no coordinates,
+ * and PUT /profile/location returns Void. So the phone keeps its own note, and
+ * that note is the app's answer to "does this person have a position yet".
+ * A town typed on the website counts as no position on purpose: replacing a
+ * town centre with a real cell is the whole point of asking.
+ *
+ * @param {string|undefined|null} userId
+ * @returns {Promise<{locationLat: number, locationLng: number, savedAt: number}|null>}
  */
-export async function savePosition(position) {
-  if (!position) return false;
+export async function readSavedPosition(userId) {
   try {
-    await api.put('/profile/location', position);
-    return true;
+    const raw = await Store.getItemAsync(locationKey(userId));
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    const coarse = coarsen({ latitude: saved?.locationLat, longitude: saved?.locationLng });
+    if (!coarse) return null;
+    // A note written by an older build, or half-written, must read as "no
+    // position" rather than as a position from the epoch.
+    const savedAt = Number.isFinite(saved?.savedAt) ? saved.savedAt : 0;
+    return { ...coarse, savedAt };
   } catch {
-    // A failed save is not worth a banner: the person asked to find friends,
-    // not to manage a sync. The next visit tries again.
-    return false;
+    // Unparseable, or a keychain that will not open: both mean the same thing
+    // to a screen, which is "ask again".
+    return null;
   }
 }
 
-/** Ask, read, save. Returns the status so the screen can say what happened. */
-export async function enableAndSave() {
+/**
+ * Save a rounded position against the account. The endpoint already exists for
+ * the website's browser geolocation (PUT /profile/location, every field
+ * optional), so nothing server-side changes.
+ *
+ * This is the ONE save path. It coarsens again before the PUT even though
+ * readCoarsePosition already did: coarsen() is idempotent on an already-snapped
+ * pair, so it costs nothing here and it closes every call site that might one
+ * day hand this function a raw fix.
+ *
+ * @param {{locationLat: number, locationLng: number}|null} position
+ * @param {string|undefined|null} userId who the record belongs to
+ */
+export async function savePosition(position, userId) {
+  const coarse = coarsen({ latitude: position?.locationLat, longitude: position?.locationLng });
+  if (!coarse) return false;
+  try {
+    await api.put('/profile/location', coarse);
+  } catch {
+    // A failed save is not worth a banner: the person asked to find friends,
+    // not to manage a sync. No record is written, so the next visit tries again.
+    return false;
+  }
+  try {
+    await Store.setItemAsync(
+      locationKey(userId),
+      JSON.stringify({ ...coarse, savedAt: Date.now() })
+    );
+  } catch {
+    // The position IS saved against the account; only this phone's note failed.
+    // Saying false here would tell the screen the save did not happen.
+  }
+  return true;
+}
+
+/**
+ * Ask, read, save. Returns the status so the screen can say what happened.
+ * @param {string|undefined|null} userId who the record belongs to
+ */
+export async function enableAndSave(userId) {
   const status = await requestPermission();
   if (status !== STATUS.allowed) return { status, position: null };
   const position = await readCoarsePosition();
-  if (position) await savePosition(position);
+  if (position) await savePosition(position, userId);
   return { status, position };
+}
+
+/**
+ * Read and save again without prompting. Only ever called where permission is
+ * already `allowed`, so no system dialog can appear.
+ * @param {string|undefined|null} userId
+ */
+export async function refreshSavedPosition(userId) {
+  const position = await readCoarsePosition();
+  if (!position) return null;
+  const saved = await savePosition(position, userId);
+  return saved ? position : null;
 }
