@@ -85,6 +85,19 @@ test('chat bubble meta ink (ink3) clears 4.5:1 inside both bubbles, day and nigh
   expect(ratio(dark.ink3, nightMine)).toBeGreaterThanOrEqual(4.5);
 });
 
+// HARD-108. The failed line is the OTHER ink in that same Text node, and it was
+// the one failing. "Didn't send. Tap to try again." is the only instruction for
+// rescuing an unsent message, and at night redDeep measured 2.56:1 on both
+// bubbles, which is under the 3:1 large-text floor let alone the 4.5 this line
+// needs at type.meta.
+test('the chat failed-message line clears 4.5:1 inside both bubbles, day and night', () => {
+  expect(ratio(light.redDeep, light.bubbleIn)).toBeGreaterThanOrEqual(4.5);
+  expect(ratio(light.redDeep, light.blueTint)).toBeGreaterThanOrEqual(4.5);
+  const nightMine = compositeOver(dark.blueTint, dark.surface);
+  expect(ratio(dark.redDeep, dark.bubbleIn)).toBeGreaterThanOrEqual(4.5);
+  expect(ratio(dark.redDeep, nightMine)).toBeGreaterThanOrEqual(4.5);
+});
+
 test('chat renders its in-bubble meta line with ink3, not the failing ink4', () => {
   const fs = require('fs');
   const path = require('path');
