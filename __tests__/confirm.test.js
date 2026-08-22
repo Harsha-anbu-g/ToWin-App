@@ -10,7 +10,7 @@
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { Pressable, Text } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
-import { ConfirmHost, ConfirmProvider, useConfirm } from '../src/context/ConfirmContext';
+import { ConfirmHost, ConfirmProvider, useConfirm, useConfirmShield } from '../src/context/ConfirmContext';
 
 // A harness that fires confirm() on press and records what it resolved to, so
 // the tests assert the PROMISE, not just the pixels. The promise is the whole
@@ -210,5 +210,92 @@ describe('ConfirmHost: dialogs inside sheets', () => {
 
     view.rerender(<Shell hosted={false} />);
     await waitFor(() => expect(onResult).toHaveBeenCalledWith(false));
+  });
+});
+
+// HARD-109. accessibilityViewIsModal is the iOS trait that tells VoiceOver to
+// ignore a modal view's SIBLINGS. The dialog card inside ConfirmDialogBody has
+// always carried it, but iOS applies it against that node's own siblings only,
+// and the card's sibling is just its backdrop. The sheet's scrim and drawer are
+// siblings of the HOST, one level up, so a person with VoiceOver on could
+// swipe straight past a "Log out?" question into the menu underneath it.
+describe('ConfirmHost: the question is a modal, not a layer', () => {
+  test('the host overlay claims modal focus away from its siblings', async () => {
+    const onResult = jest.fn();
+    const view = await render(
+      <ThemeProvider>
+        <ConfirmProvider>
+          <Harness options={OPTIONS} onResult={onResult} />
+          <ConfirmHost />
+        </ConfirmProvider>
+      </ThemeProvider>
+    );
+    fireEvent.press(view.getByLabelText('open'));
+    await view.findByText(OPTIONS.title);
+
+    const overlay = view.getByTestId('confirm-host-overlay');
+    expect(overlay.props.accessibilityViewIsModal).toBe(true);
+  });
+
+  // The MenuSheet tree is the one that fails: scrim, drawer and <ConfirmHost />
+  // are three siblings inside ONE Modal. accessibilityViewIsModal covers iOS;
+  // Android and the browser have no equivalent, so the siblings opt out here.
+  test('sibling sheet content is hidden from the screen reader while a question is up', async () => {
+    const onResult = jest.fn();
+    function Sheet() {
+      const shield = useConfirmShield();
+      return <Text testID="sheet-body" {...shield}>Menu</Text>;
+    }
+    const view = await render(
+      <ThemeProvider>
+        <ConfirmProvider>
+          <Sheet />
+          <Harness options={OPTIONS} onResult={onResult} />
+          <ConfirmHost />
+        </ConfirmProvider>
+      </ThemeProvider>
+    );
+
+    // Nothing asked yet: the sheet is ordinary content.
+    expect(view.getByTestId('sheet-body').props.accessibilityElementsHidden).toBeFalsy();
+
+    fireEvent.press(view.getByLabelText('open'));
+    await view.findByText(OPTIONS.title);
+
+    // The library's own queries walk the accessibility tree, so the strongest
+    // statement of the fix is that the sheet has left it: this is the same
+    // "can a screen reader reach it" question, asked by the same rules.
+    expect(view.queryByTestId('sheet-body')).toBeNull();
+
+    const body = view.getByTestId('sheet-body', { includeHiddenElements: true });
+    expect(body.props.accessibilityElementsHidden).toBe(true);
+    expect(body.props.importantForAccessibility).toBe('no-hide-descendants');
+
+    // And it comes back the moment the question is answered.
+    fireEvent.press(view.getByText(OPTIONS.confirmLabel));
+    await waitFor(() => expect(onResult).toHaveBeenCalledWith(true));
+    expect(view.getByTestId('sheet-body').props.accessibilityElementsHidden).toBeFalsy();
+  });
+
+  test('the root dialog path leaves ordinary screens alone', async () => {
+    // With no host mounted the dialog is its own native Modal, which the
+    // platform already scopes. Shielding there would hide the screen behind a
+    // window that is not covering it.
+    function Probe() {
+      const shield = useConfirmShield();
+      return <Text testID="probe" {...shield}>page</Text>;
+    }
+    const onResult = jest.fn();
+    const view = await render(
+      <ThemeProvider>
+        <ConfirmProvider>
+          <Probe />
+          <Harness options={OPTIONS} onResult={onResult} />
+        </ConfirmProvider>
+      </ThemeProvider>
+    );
+    fireEvent.press(view.getByLabelText('open'));
+    await view.findByText(OPTIONS.title);
+    expect(view.getByTestId('probe').props.accessibilityElementsHidden).toBeFalsy();
   });
 });

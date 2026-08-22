@@ -101,7 +101,18 @@ function MiniCard({ title, badge, stars, Icon, children }) {
         ) : null}
       </View>
       {stars ? (
-        <View accessibilityLabel="five stars" style={{ flexDirection: 'row', gap: 3, marginBottom: 4 }}>
+        <View
+          // `accessible` is what makes the label reach VoiceOver: React Native
+          // derives isAccessibilityElement from it, and on a plain View it
+          // defaults false, so the label was dropped and five unlabelled Star
+          // paths announced nothing at all. Collapsing the row into one
+          // element is the intent: the stars are a single rating, not five
+          // things.
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel="five stars"
+          style={{ flexDirection: 'row', gap: 3, marginBottom: 4 }}
+        >
           {Array.from({ length: 5 }).map((_, i) => (
             <Star key={i} size={12} color={t.trustGold} fill={t.trustGold} />
           ))}

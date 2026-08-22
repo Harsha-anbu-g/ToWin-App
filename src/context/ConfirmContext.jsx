@@ -233,10 +233,40 @@ export function ConfirmHost() {
   return (
     <View
       testID="confirm-host-overlay"
+      // The dialog card inside ConfirmDialogBody already carries
+      // accessibilityViewIsModal, but iOS only applies that against the node's
+      // OWN siblings, and the card's siblings are just its backdrop. The sheet
+      // that mounts this host renders its scrim and drawer one level up, as
+      // siblings of THIS view, so without the flag here VoiceOver swipes
+      // straight past a "Delete account?" question into the menu underneath.
+      accessibilityViewIsModal
       style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
     >
       <ConfirmDialogBody request={internal.request} settle={internal.settle} />
     </View>
+  );
+}
+
+/**
+ * Accessibility props for the sheet content a <ConfirmHost /> draws over.
+ * Spread onto every sibling the host covers.
+ *
+ * accessibilityViewIsModal on the host is an iOS-only trait; Android and the
+ * browser have no equivalent, so TalkBack and a browser screen reader can
+ * still reach the sheet behind the question. A host cannot reach its own
+ * siblings from the leaf, so the siblings opt in here instead.
+ *
+ * @returns {{accessibilityElementsHidden?: boolean, importantForAccessibility?: string}}
+ */
+export function useConfirmShield() {
+  const internal = useContext(ConfirmInternalContext);
+  const shielded = !!internal?.request && !!internal?.activeHostId;
+  return useMemo(
+    () =>
+      shielded
+        ? { accessibilityElementsHidden: true, importantForAccessibility: 'no-hide-descendants' }
+        : {},
+    [shielded]
   );
 }
 

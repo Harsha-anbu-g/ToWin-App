@@ -49,7 +49,13 @@ export default function SealedItems({
   }
 
   return (
-    <View accessibilityLabel="What is in your sealed box" style={{ gap: spacing[3] }}>
+    <View
+      // No accessibilityLabel on this group on purpose. `accessible` is what
+      // would make one reach VoiceOver, and on a container it collapses the
+      // sealed cards and the Add button into one element nobody can act on.
+      // The line of copy right below says what is in the box on its own.
+      style={{ gap: spacing[3] }}
+    >
       {/* Something to read and be reassured by, not something to act on — a
           quiet line in the trust wash, never a tappable-looking panel. */}
       <Text

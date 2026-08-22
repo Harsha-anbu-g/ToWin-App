@@ -17,6 +17,7 @@ import LegalModal from '../../src/components/LegalModal';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { PRIVACY_CONTENT, TERMS_CONTENT } from '../../src/data/legalContent';
+import { announce } from '../../src/lib/announce';
 import { yearsOld } from '../../src/lib/copy';
 import { parseFlexibleDate } from '../../src/lib/flexibleDate';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
@@ -135,6 +136,20 @@ export default function Register() {
   const focusConfirm = useCallback(() => confirmRef.current?.focus(), []);
   const submitRef = useRef(null);
   const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
+  // The submit error renders near the top of a long page, above the role
+  // cards; Create Account is at the bottom. Rejecting a duplicate email used
+  // to change something nobody could see and nothing anybody could hear, so
+  // the button read as dead. This scrolls it back under the person's eyes.
+  const scrollRef = useRef(null);
+
+  // Said out loud on the way in only. accessibilityRole="alert" below is a
+  // live region in a browser but only a trait on iOS and Android, so without
+  // this a rejected signup was silent for anyone who could not see the banner.
+  const spokenError = useRef(null);
+  useEffect(() => {
+    if (error && error !== spokenError.current) announce(error);
+    spokenError.current = error || null;
+  }, [error]);
 
   const handleSubmit = async () => {
     setError('');
@@ -197,7 +212,7 @@ export default function Register() {
     // spacing[6] gutter + spacing[5] field gaps: login.jsx's rhythm, which
     // the owner already tuned. Register is the longest page in the flow and
     // was running the tightest (audit 2026-08-19).
-    <Screen back keyboard contentStyle={{ paddingHorizontal: spacing[6] }}>
+    <Screen back keyboard scrollRef={scrollRef} contentStyle={{ paddingHorizontal: spacing[6] }}>
       {/* 3q: the form sits flat on the white page — no card chrome */}
       <View style={{ marginTop: spacing[4] }}>
         <Text
@@ -278,8 +293,15 @@ export default function Register() {
 
         {error ? (
           <View
+            testID="register-error"
             accessible
             accessibilityRole="alert"
+            // onLayout fires once the banner has a position, which is the first
+            // moment there is anywhere to scroll to. `y` is measured inside the
+            // scroll content, so it lands the banner just below the top edge.
+            onLayout={(e) => {
+              scrollRef.current?.scrollTo({ y: e.nativeEvent.layout.y, animated: true });
+            }}
             style={{
               flexDirection: 'row',
               alignItems: 'flex-start',

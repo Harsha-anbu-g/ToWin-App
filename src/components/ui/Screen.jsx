@@ -26,6 +26,10 @@ export default function Screen({
   // gesture with the themed spinner. Needs `scroll` (the default) — a
   // scroll={false} screen owns its scroller and mounts RefreshControl itself.
   onRefresh,
+  // Screens that have to move the page themselves pass a ref in and get the
+  // ScrollView (register scrolls its submit error back into view). Read-only
+  // to Screen: nothing here depends on it, so no caller is affected.
+  scrollRef,
   style,
   contentStyle,
 }) {
@@ -111,6 +115,7 @@ export default function Screen({
 
   const body = scroll ? (
     <ScrollView
+      ref={scrollRef}
       testID="screen-scroll"
       contentContainerStyle={[
         { padding: spacing[5], paddingBottom: fab ? 120 : spacing[12] },
