@@ -243,7 +243,14 @@ export default function PassOn() {
   });
   const { data: keyholders, isError: keysFailed, refetch: refetchKeys } = useQuery({
     queryKey: ['passon-keyholders'],
-    queryFn: async () => (await api.get('/passon/keyholders')).data,
+    // Same guard as the sealed box below, and for the same reason: a captive
+    // portal on public wifi answers 200 with an HTML page, so axios hands back
+    // a string. `|| []` lets that string straight through to .filter and takes
+    // the page down mid-render.
+    queryFn: async () => {
+      const r = await api.get('/passon/keyholders');
+      return Array.isArray(r.data) ? r.data : [];
+    },
     enabled,
   });
   const { data: sealedItems } = useQuery({
@@ -268,7 +275,7 @@ export default function PassOn() {
   const letters = mine?.letters || [];
   const people = peopleSheKnows(links?.activeLinks, connections);
   const family = herFamilyList(links?.activeLinks);
-  const keys = keyholders || [];
+  const keys = Array.isArray(keyholders) ? keyholders : [];
 
   // Failed AND nothing to show. A list left over from an earlier success is
   // still true, and replacing it with an error would take away the letter she

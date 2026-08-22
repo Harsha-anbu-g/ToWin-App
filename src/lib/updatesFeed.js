@@ -10,6 +10,7 @@
 // remembers what has been read the same way the red tab badges do
 // (src/lib/seenIds, web b37420d). Builders are pure so tests can hold them.
 import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import api from '../api/client';
 import { useUnseenBadge, markSeen } from './seenIds';
 import { seenKey } from './storageKeys';
@@ -240,7 +241,16 @@ export function useUpdatesFeed(user) {
     enabled: !!user && !isFamily,
   });
 
-  const items = buildFeed({ connections, needsMine, applications, familyAlerts, keyholderAsks, reviews });
+  // Memoized on the six query results, never rebuilt on a bare re-render.
+  // An unmemoized buildFeed handed the Updates screen a new `items` array on
+  // every render, which changed the identity of the useCallback it feeds to
+  // useFocusEffect (app/updates.jsx), so that effect re-ran on every render
+  // rather than once per focus. React Query keeps these references stable
+  // while the data is unchanged, so this is stable too.
+  const items = useMemo(
+    () => buildFeed({ connections, needsMine, applications, familyAlerts, keyholderAsks, reviews }),
+    [connections, needsMine, applications, familyAlerts, keyholderAsks, reviews]
+  );
   const unseen = useUnseenBadge(userId, UPDATES_CATEGORY, items.map((i) => i.token));
 
   return { items, unseen };

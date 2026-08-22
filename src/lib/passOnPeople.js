@@ -1,5 +1,11 @@
 // Who an elder can write to, and who may hold a key — pure, unit-tested
 // (web PassOn.jsx parity: peopleSheKnows / herFamilyList).
+//
+// Every list argument is checked with Array.isArray, never `|| []`. These take
+// raw query results, and a captive portal on public wifi answers 200 with an
+// HTML page, so what arrives can be a string. `|| []` passes a string straight
+// through to .filter and throws inside the caller's render (HARD-100).
+const asList = (value) => (Array.isArray(value) ? value : []);
 
 /**
  * Who she can write to: the family on her list, and the helpers she has built
@@ -8,11 +14,11 @@
  * family list is the single source for family.
  */
 export function peopleSheKnows(links, connections) {
-  const family = (links || [])
+  const family = asList(links)
     .filter((l) => l.status === 'ACTIVE' && l.otherUserId)
     .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || 'Family' }));
 
-  const helpers = (connections || [])
+  const helpers = asList(connections)
     .filter(
       (c) =>
         c.status === 'ACTIVE' &&
@@ -32,7 +38,7 @@ export function peopleSheKnows(links, connections) {
  * friend, no notary, and no helper however well she trusts them.
  */
 export function herFamilyList(links) {
-  return (links || [])
+  return asList(links)
     .filter((l) => l.status === 'ACTIVE' && l.otherUserId)
     .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || 'Family' }));
 }
