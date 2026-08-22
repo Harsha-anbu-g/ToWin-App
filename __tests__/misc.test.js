@@ -138,22 +138,47 @@ describe('DEEP-23: the Find list keeps its PersonRow memo', () => {
     { userId: 'p3', name: 'Lakshmi', trustScore: 5, distanceKm: 4 },
   ];
 
+  // Somebody the 10 km answer cannot contain, so the wider radius has a
+  // visible result of its own to wait for. Without one the assertion below
+  // could sample render counts while the new request was still in flight and
+  // call an unfinished refetch a pass (HARD-115).
+  const FAR_AWAY = { userId: 'p4', name: 'Devi', trustScore: 3, distanceKm: 30 };
+
   test('changing the distance does not re-render every person card', async () => {
-    api.get.mockImplementation(async (url) => {
-      if (url === '/discover/elders') return { data: PEOPLE };
+    api.get.mockImplementation(async (url, config) => {
+      if (url === '/discover/elders') {
+        const radiusKm = config?.params?.radiusKm;
+        // The real endpoint answers the radius it was given: 10 km cannot
+        // return somebody 30 km away.
+        return { data: radiusKm >= 30 ? [...PEOPLE, FAR_AWAY] : PEOPLE };
+      }
       if (url === '/connections') return { data: [] };
       return { data: [] };
     });
 
     const r = await wrap(<FriendsScreen />);
     await waitFor(() => expect(r.getByText('Margaret')).toBeTruthy());
+    expect(r.queryByText('Devi')).toBeNull();
 
     const before = mockAvatar.renders;
     // A radius pill is list-level state: no person's row data changed.
     await fireEvent.press(r.getByLabelText('50 kilometers'));
-    await waitFor(() => expect(r.getByLabelText('50 kilometers')).toBeTruthy());
 
-    expect(mockAvatar.renders).toBe(before);
+    // Synchronise on the round trip, both halves of it: the request that went
+    // out with the new radius, and the row that only its answer can produce.
+    await waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith('/discover/elders', { params: { radiusKm: 50 } })
+    );
+    await waitFor(() => expect(r.getByText('Devi')).toBeTruthy());
+
+    // The three people who were already on screen kept their rows: one new
+    // avatar render, Devi's, and not one more. Before the fix the list fell
+    // back to isLoading while the new radius loaded, emptied its data, and
+    // every mounted row unmounted and came back.
+    expect(mockAvatar.renders).toBe(before + 1);
+    expect(r.getByText('Margaret')).toBeTruthy();
+    expect(r.getByText('Arun')).toBeTruthy();
+    expect(r.getByText('Lakshmi')).toBeTruthy();
     r.unmount();
   });
 });

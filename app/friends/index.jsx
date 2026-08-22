@@ -3,7 +3,7 @@
 // ("Showing X near you" + km control), and person cards with gold trust or
 // "New here", distance, and a tonal Connect (neutral Requested once sent).
 // Elder-first wording: always "friends", never "connections" (HCI rule 2).
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from '../../src/components/icons';
 import { memo, useCallback, useMemo, useState } from 'react';
@@ -292,6 +292,14 @@ export default function FriendsScreen() {
   const { data: discovered, isLoading, isError: discoverFailed, refetch: refetchDiscover } = useQuery({
     queryKey: ['discover', path, radiusKm],
     queryFn: async () => (await api.get(path, { params: { radiusKm } })).data,
+    // radiusKm is part of the key, so every chip tap starts a NEW query with no
+    // data of its own. Without this the list falls back to isLoading for the
+    // length of the round trip, `data` below becomes [], and every mounted
+    // FindRow unmounts and mounts again, which is the memo defeat DEEP-23
+    // measured (HARD-115). Holding the previous radius's people on screen while
+    // the next answer arrives keeps the rows alive and keeps the list from
+    // blinking under the person's thumb.
+    placeholderData: keepPreviousData,
   });
   const { data: connections, isLoading: connsLoading, isError: connsFailed, refetch: refetchConns } = useQuery({
     queryKey: ['connections'],

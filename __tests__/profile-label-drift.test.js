@@ -91,12 +91,18 @@ const openTheDeletePath = async () => {
 };
 
 describe('the labels the deletion page quotes are the labels the app renders', () => {
-  // Memoised on purpose: the screen is rendered and driven ONCE for the whole
-  // file. A sibling suite that rendered per test took the run from 17s to 130s
-  // and timed out four unrelated files.
-  let once;
-  let seen;
-
+  // ONE render, and therefore ONE test that uses it.
+  //
+  // This file used to render the screen once and share it across five tests
+  // through a memoising beforeEach. Sharing a render across tests shares its
+  // failures too: when the render ran slow, the first test spent the budget and
+  // the other four reported "Screen is no longer attached", which is a fact
+  // about the shared render and says nothing about any label. That is a suite
+  // that lies about what broke, so the four labels are asserted in one test
+  // over the single render instead (HARD-115).
+  //
+  // Rendering per test is not the alternative: a sibling suite that did took
+  // the run from 17s to 130s and timed out four unrelated files.
   const collectRenderedLabels = async () => {
     const screen = await openTheDeletePath();
     const found = {
@@ -127,19 +133,18 @@ describe('the labels the deletion page quotes are the labels the app renders', (
     return found;
   };
 
-  beforeEach(async () => {
-    once = once || collectRenderedLabels();
-    seen = await once;
-  });
+  const QUOTED = ['Account and data', 'Send me a copy of my data', 'Delete my account', 'Delete forever'];
 
-  test.each(['Account and data', 'Send me a copy of my data', 'Delete my account', 'Delete forever'])(
-    '"%s" is rendered by the app and quoted by the page',
-    (label) => {
-      // Assert - rendered, not merely present somewhere in the source file.
+  test('every label the page quotes is one the app puts on screen', async () => {
+    // Arrange / Act - one render, driven to the second confirmation.
+    const seen = await collectRenderedLabels();
+
+    // Assert - rendered, not merely present somewhere in the source file.
+    for (const label of QUOTED) {
       for (const node of seen[label]) expect(node).toBeTruthy();
       expect(pageCopy()).toContain(label);
     }
-  );
+  });
 
   test('the second gate is named on the page, so nobody stops at the first', () => {
     // Arrange / Act
