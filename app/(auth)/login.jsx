@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle, Eye, EyeOff } from '../../src/components/icons';
-import api from '../../src/api/client';
+import api, { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
@@ -100,11 +100,11 @@ export default function Login() {
       const { data } = await api.post('/auth/login', form);
       await finishLogin(data.token);
     } catch (err) {
-      setError(
-        err?.response?.status === 429
-          ? err.response.data?.message || 'Too many attempts. Please try again later.'
-          : 'Invalid username or password.'
-      );
+      // Only a real 400 or 401 says the password is wrong. An offline phone,
+      // the 15 second timeout and a 5xx each get their own sentence, because
+      // the old single branch told an elder on weak wifi to change a password
+      // that was never checked.
+      setError(friendlyAuthError(err, 'Invalid username or password.'));
     } finally {
       setLoading(false);
     }
