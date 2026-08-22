@@ -312,7 +312,7 @@ here is a policy strike later.
 | Personal information shared with other users | **Yes** | Name, photo, bio, and, at the Phone Ready step, phone number |
 | Unrestricted access to the internet | **No** | There is no in-app browser or open web view |
 | Digital purchases | No | Nothing is sold |
-| User-generated content moderation | Describe the real controls: report a person from their profile, block from their profile, a managed block list at Profile > Blocked people, a write-time word filter on bios, help requests and Pass On entries, a report button under every AI answer, and `help@towinly.com` for reports. Say plainly that private messages rely on report and block rather than on the word filter |
+| User-generated content moderation | Describe the real controls: report a person from their profile, block from their profile, a managed block list at Profile > Blocked people, a write-time word filter on bios, help requests, Pass On entries, private messages and family reviews (widened 2026-08-22, HARD-113), a report button under every AI answer, and `help@towinly.com` for reports. Say plainly that the filter is a client-side wordlist and that report and block cover what it misses |
 
 Expect a Teen level rating rather than Everyone. That is correct and expected
 for an app with open user-to-user messaging. Do not try to argue it down.

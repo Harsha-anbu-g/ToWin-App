@@ -7,7 +7,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, ChevronRight, Send } from '../../src/components/icons';
+import { AlertCircle, ArrowLeft, ChevronRight, Send } from '../../src/components/icons';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
@@ -18,6 +18,7 @@ import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { announce } from '../../src/lib/announce';
 import { getDraft, setDraft } from '../../src/lib/chatDrafts';
+import { objectionableError } from '../../src/lib/contentFilter';
 import { haptic } from '../../src/lib/haptics';
 import { MESSAGING_STAGE, stageIndexOf } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -76,6 +77,10 @@ export default function ChatThread() {
   // swallow a half-written private message (or the other way round).
   const draftKey = isFamilyChannel ? `${connectionId}:family` : connectionId;
   const [input, setInput] = useState(getDraft(draftKey) ?? '');
+  // Apple 1.2's filter, on the surface a reviewer probes and the one where an
+  // elder is most exposed (HARD-113). Held in state rather than shown in a
+  // toast so it sits under the words it is about, the way action.jsx does it.
+  const [objection, setObjection] = useState('');
   useEffect(() => {
     setDraft(draftKey, input);
   }, [draftKey, input]);
@@ -271,10 +276,27 @@ export default function ChatThread() {
   const handleSend = () => {
     const content = input.trim();
     if (!content || send.isPending) return;
+    // Stopped before it is posted, and named: the same words the help form
+    // uses, so the app never explains one rule two ways. The message stays in
+    // the composer to be fixed (HCI rule 9) and no haptic fires, because
+    // nothing left the finger.
+    const refusal = objectionableError(content);
+    if (refusal) {
+      setObjection(refusal);
+      announce(refusal);
+      return;
+    }
+    setObjection('');
     haptic.impact(); // the message left the finger (UX-703)
     setInput('');
     setDraft(draftKey, '');
     send.mutate(content);
+  };
+
+  // A refusal left standing over corrected words would be its own bug.
+  const onChangeMessage = (value) => {
+    setInput(value);
+    setObjection((cur) => (cur ? '' : cur));
   };
 
   // Resume a paused friendship from inside the chat — the same endpoint the
@@ -619,19 +641,36 @@ export default function ChatThread() {
         ) : (
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'flex-end',
-            gap: spacing[2],
             padding: spacing[3],
             borderTopWidth: 1,
             borderTopColor: t.border,
             backgroundColor: t.canvas,
           }}
         >
+          {objection ? (
+            // Icon and colour, never colour alone, and the same shape the Input
+            // kit draws under a field (src/components/ui/Input.jsx:98-113).
+            <View
+              accessible
+              accessibilityRole="alert"
+              style={{
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                gap: spacing[1],
+                marginBottom: spacing[2],
+              }}
+            >
+              <AlertCircle size={16} color={t.redError} strokeWidth={2} style={{ marginTop: 2 }} />
+              <Text style={{ flex: 1, color: t.redError, fontSize: text.sm, lineHeight: 21 }}>
+                {objection}
+              </Text>
+            </View>
+          ) : null}
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing[2] }}>
           <TextInput
             accessibilityLabel="Message"
             value={input}
-            onChangeText={setInput}
+            onChangeText={onChangeMessage}
             placeholder="Write a message…"
             placeholderTextColor={t.ink4}
             // The iOS keyboard dresses to match the app's own opt-in night
@@ -670,6 +709,7 @@ export default function ChatThread() {
           >
             <Send size={20} color={t.actionInk} />
           </Pressable>
+          </View>
         </View>
         )}
       </KeyboardAvoider>

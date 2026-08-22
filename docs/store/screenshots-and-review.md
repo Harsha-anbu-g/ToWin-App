@@ -140,7 +140,8 @@ here is the difference in mechanics, all visible in the build:
 - Safety controls required by guideline 1.2 are all present: report a person
   from their profile, block a person from their profile (list managed under
   Profile > Blocked people), a content filter on written profiles, help
-  requests and Pass On stories, and terms agreed at signup that close an
+  requests, Pass On stories, private messages and family reviews (widened
+  2026-08-22, HARD-113), and terms agreed at signup that close an
   account for harassment, threats, or putting another person at risk.
   Contact for reports: help@towinly.com.
 
