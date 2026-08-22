@@ -73,9 +73,14 @@ browser. Results:
 - `/app/delete-account` renders the full deletion page including the in-app
   route, the write-to-us route and the seven-day reply promise.
 - `/privacy` on the marketing site renders an **older** policy. It has no
-  third-party processor section at all, and its location paragraph still says
-  "If you share your location ... you can turn it off whenever you like", which
-  describes a device location switch the app does not have and never had.
+  third-party processor section at all, and its location paragraph is a
+  paraphrase rather than the app's own wording: it never says the position is
+  rounded on the phone before it is sent, which is the one promise the location
+  card makes to every person who taps it. (Corrected 2026-08-22. This bullet
+  used to end "describes a device location switch the app does not have and
+  never had." That was true when it was written and stopped being true on
+  2026-08-19. The verdict is unchanged: the under-disclosed processors are
+  reason enough on their own.)
 
 **Use `https://www.towinly.com/app/privacy` as the App Store Connect privacy
 policy URL.** Do not use `https://www.towinly.com/privacy`. Naming the stale one
@@ -323,7 +328,7 @@ Capability and control questions, which is where this app's rating comes from:
 |---|---|
 | Does the app include chat or messaging between users? | Yes |
 | Does the app allow users to create or share content other users see? | Yes |
-| Does the app share the user's location with other users? | Approximate only, and never from the device. A user-typed town and a rounded distance. |
+| Does the app share the user's location with other users? | Approximate only. Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
 | Are there in-app controls for objectionable content? | Yes: write-time filter, report a person, block a person, terms agreed at signup. |
 | Parental controls or age assurance? | A self-declared date of birth with an 18 minimum at signup. No document check. Do not claim age verification. |
 
@@ -347,7 +352,7 @@ point of the product, not incidental dark content.
 | Violence, sexual content, language, drugs, gambling | None to all. |
 | Do users interact or exchange content? | Yes. Chat, profiles, reviews, stories. |
 | Do users share personal information with other users? | Yes. Name, town, bio, and email and phone once a pair reaches the Phone step of the trust ladder. |
-| Do users share their current physical location? | **No.** The app never reads device location. A typed town shown at city granularity is not current physical location. Record this reasoning in the answer notes so it is defensible later. |
+| Do users share their current physical location? | **Owner's call, and read the reasoning first.** The app DOES read the phone, on four screens, since 2026-08-19. What leaves the device is a 0.02 degree cell, roughly 2 km across, snapped by `src/lib/coarseLocation.js`, and what another member sees is a town name and a rounded distance. A ~2 km cell is not a current physical location, so **No** is defensible, but it is defensible only with that sentence beside it. Record the reasoning in the answer notes, and settle it together with the OPEN QUESTION at the end of `privacy-labels.md`, which covers the same gap on the Play data safety form. |
 | Digital purchases? | No. |
 | Target audience | 18 and over only. This matches the terms and the signup gate, and keeps the app out of Play's Families policy. |
 
@@ -495,3 +500,26 @@ Ordered by cost.
   `legal-deletion-claim`, `store-listing`, `web-shell-config`. 91 tests passed.
 - Backend read from `ToWin/backend`, which is reference only and was not
   modified.
+
+---
+
+## Corrections made on 2026-08-22 (HARD-101)
+
+Three passages on this page were written before `expo-location` ~19.0.8 was
+installed on 2026-08-19 and still said the app never reads the device. The old
+wording is quoted beside each correction above, in the bullet at the top and in
+the two table rows. Nothing was deleted.
+
+The verdicts did not move on the two Apple answers. Every fix is snapped to a
+0.02 degree cell by `src/lib/coarseLocation.js` before it can reach the network,
+so the sharing answer is still Approximate only and what another member sees is
+still a town name and a rounded distance. The Play row is the one that now
+carries a decision rather than an answer, because its old **No** rested on a
+sentence that is false; the verdict is left to the account holder and pointed at
+the OPEN QUESTION in `privacy-labels.md`, which is where the same gap is already
+being tracked.
+
+The Apple sharing row is now worded to match `console-answers.md` section 2.3
+and `app-store-connect-fields.md` section 3.2 word for word, and
+`__tests__/console-answers.test.js` fails if any page in this folder starts
+denying the dependency again.

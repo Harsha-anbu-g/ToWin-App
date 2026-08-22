@@ -87,9 +87,15 @@ Grepping `src/` and `app/` for permission-requiring APIs found:
   `SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY` with no `requireAuthentication`, so the
   plugin's `faceIDPermission: false` is right and `NSFaceIDUsageDescription` is
   correctly absent.
-- No location, contacts, calendar, microphone, notifications, media library writes, or
-  tracking. No `expo-location`, `expo-contacts`, `expo-camera`, `expo-notifications`,
-  `AppTrackingTransparency`, or IDFA anywhere in the app source.
+- No contacts, calendar, microphone, media library writes, or tracking. No
+  `expo-contacts`, `expo-camera`, `AppTrackingTransparency`, or IDFA anywhere in
+  the app source. (Corrected 2026-08-22. This bullet used to open "No location,
+  contacts, calendar, microphone, notifications..." and list `expo-location` and
+  `expo-notifications` among the absent packages. Both are installed:
+  `expo-location ~19.0.8` since 2026-08-19 and `expo-notifications ~0.32.17`
+  since 2026-08-16. Neither needs a purpose string it does not already have:
+  `app.json` carries `locationWhenInUsePermission`, and iOS notification
+  authorization uses no Info.plist key at all.)
 - Nothing saves to the photo library, so `NSPhotoLibraryAddUsageDescription` is
   correctly absent.
 
@@ -661,8 +667,8 @@ The prompts the app **cannot** raise, and why no string is needed for each:
 | Camera | `expo-image-picker` plugin sets `cameraPermission: false`, so the key is stripped from the plist and no camera API is reachable |
 | Microphone | `expo-image-picker` plugin sets `microphonePermission: false` |
 | Face ID | `expo-secure-store` plugin sets `faceIDPermission: false` |
-| Location | No `expo-location` in `package.json`. The app geocodes a typed town name on the server |
-| Notifications | No `expo-notifications` in `package.json` |
+| Location | **This one CAN fire, corrected 2026-08-22.** `expo-location ~19.0.8` is installed and `app.json` carries `locationWhenInUsePermission`. The prompt is asked on four screens, always behind the app's own explainer card first (`src/components/location/LocationPrimer.jsx`), and anyone who declines still types a town. The row used to read "No `expo-location` in `package.json`. The app geocodes a typed town name on the server" |
+| Notifications | **This one CAN fire, corrected 2026-08-22.** `expo-notifications ~0.32.17` is installed and `src/lib/pushNotifications.js:67` calls `requestPermissionsAsync`. iOS needs no Info.plist key for it. The row used to read "No `expo-notifications` in `package.json`" |
 | Contacts | No `expo-contacts` in `package.json`. Emergency contacts are typed by hand |
 | Speech recognition | `expo-speech` is text to speech, which is output only and needs no permission |
 
@@ -705,3 +711,27 @@ find "$SCRATCH/ios" -name PrivacyInfo.xcprivacy
 Expect the same output, with one addition: once `eas init` has run, `app.json`
 gains `extra.eas.projectId` and introspect will show it. Any other difference is
 worth reading before starting a paid build.
+
+---
+
+## Corrections made on 2026-08-22 (HARD-101)
+
+This page listed the permission prompts that "can never fire" and named two
+packages as absent that are installed. Both corrections are inline above with
+the old wording quoted beside them. Nothing was deleted.
+
+- **Location.** `expo-location ~19.0.8` landed on 2026-08-19. The prompt can
+  fire, on four screens, always behind the app's own explainer card. This is
+  what HARD-101 was raised for.
+- **Notifications.** `expo-notifications ~0.32.17` landed on 2026-08-16 and
+  `src/lib/pushNotifications.js` asks for authorization. This one is NOT part of
+  HARD-101. It was found while correcting the sentence next to it and is
+  corrected here rather than left standing, because leaving a known-false claim
+  inside a sentence being edited for truth is worse than the original error.
+  It is flagged in `ralph-hardening/progress.txt` for the store-document truth
+  pass so the owner sees it in one place with everything else.
+
+The section header above the prompts table still says these are the prompts
+that cannot fire. Two of its rows now say the opposite, in bold, with the reason
+and the file that proves it. That is deliberate: a reader scanning the table
+sees the change without having to reach the change log.
