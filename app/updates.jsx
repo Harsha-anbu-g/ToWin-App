@@ -24,8 +24,10 @@ import {
   Star,
   UsersRound,
 } from '../src/components/icons';
+import LoadError from '../src/components/ui/LoadError';
 import RefreshControl from '../src/components/ui/RefreshControl';
 import Screen from '../src/components/ui/Screen';
+import SkeletonCard from '../src/components/ui/Skeleton';
 import { useAuth } from '../src/context/AuthContext';
 import { loadSeen, unseenTokens } from '../src/lib/seenIds';
 import { seenKey } from '../src/lib/storageKeys';
@@ -117,11 +119,22 @@ function SectionHeading({ children }) {
   );
 }
 
+// The six sources this screen shows. Named once: the pull gesture and the
+// retry on the error card both walk this list.
+const FEED_KEYS = [
+  ['connections'],
+  ['needs-mine'],
+  ['needs-applications'],
+  ['family-alerts'],
+  ['passon-asked-of-me'],
+  ['reviews-mine'],
+];
+
 export default function UpdatesScreen() {
   const { t, spacing, text } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { items } = useUpdatesFeed(user);
+  const { items, isLoading, isError } = useUpdatesFeed(user);
   const [refreshing, setRefreshing] = useState(false);
 
   // Tokens that were unseen when this visit started — they stay in "New"
@@ -145,19 +158,18 @@ export default function UpdatesScreen() {
     }, [storageKey, user?.userId, items])
   );
 
+  // One list, two callers: the pull gesture and the retry on the error card.
+  // A second hand-typed copy would drift the day a seventh source is added.
+  const reload = useCallback(
+    () => Promise.all(FEED_KEYS.map((queryKey) => queryClient.invalidateQueries({ queryKey }))),
+    [queryClient]
+  );
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    const feedKeys = [
-      ['connections'],
-      ['needs-mine'],
-      ['needs-applications'],
-      ['family-alerts'],
-      ['passon-asked-of-me'],
-      ['reviews-mine'],
-    ];
-    await Promise.all(feedKeys.map((queryKey) => queryClient.invalidateQueries({ queryKey })));
+    await reload();
     setRefreshing(false);
-  }, [queryClient]);
+  }, [reload]);
 
   const fresh = items.filter((i) => newThisVisit.current.has(i.token));
   const earlier = items.filter((i) => !newThisVisit.current.has(i.token));
@@ -169,7 +181,17 @@ export default function UpdatesScreen() {
 
   return (
     <Screen back title="Updates" scroll={false}>
-      {items.length === 0 ? (
+      {items.length === 0 && isLoading ? (
+        // Nothing to show YET. Six sources feed this list and the first paint
+        // happens before any of them answer.
+        <SkeletonCard lines={3} />
+      ) : items.length === 0 && isError ? (
+        // The rule this screen used to break: a dropped request is never
+        // dressed up as quiet. Six sources fed one `items.length === 0`, so a
+        // total fetch failure and a genuinely empty week looked identical, and
+        // the person was told there was nothing new when nothing had loaded.
+        <LoadError what="your updates" onRetry={reload} />
+      ) : items.length === 0 ? (
         <View style={{ alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }}>
           <Bell size={40} color={t.inkFaint2} strokeWidth={1.5} />
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center' }}>
@@ -178,6 +200,11 @@ export default function UpdatesScreen() {
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={
+            // Some sources answered and some did not. The rows that arrived
+            // still show; the gap is named above them rather than hidden.
+            isError ? <LoadError what="all of your updates" onRetry={reload} bare /> : null
+          }
           data={rows}
           keyExtractor={(row, i) => ('heading' in row ? `h:${row.heading}:${i}` : row.token)}
           renderItem={({ item: row }) =>

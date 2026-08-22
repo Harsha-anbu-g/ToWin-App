@@ -4,7 +4,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Text } from 'react-native';
-import api from '../../src/api/client';
+import api, { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import PasswordInput from '../../src/components/ui/PasswordInput';
@@ -40,8 +40,14 @@ export default function ResetPassword() {
       await api.post('/auth/reset-password', { token, newPassword: pw });
       setDone(true);
     } catch (err) {
+      // A dropped request used to read as a dead link, which sent the person
+      // off to ask for another one that would fail exactly the same way. The
+      // link is only called expired when the server actually refused it.
       setFieldErrors({
-        confirm: err?.response?.data?.message || 'This reset link is invalid or has expired.',
+        confirm: friendlyAuthError(
+          err,
+          err?.response?.data?.message || 'This reset link is invalid or has expired.'
+        ),
       });
     } finally {
       setLoading(false);

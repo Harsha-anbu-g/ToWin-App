@@ -198,25 +198,25 @@ export function useUpdatesFeed(user) {
 
   // Query keys match the screens that already fetch these — react-query
   // dedupes, so the bell rides the same cache instead of doubling traffic.
-  const { data: connections } = useQuery({
+  const connectionsQuery = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
     refetchInterval: POLL_MS,
     enabled: !!user,
   });
-  const { data: needsMine } = useQuery({
+  const needsMineQuery = useQuery({
     queryKey: ['needs-mine'],
     queryFn: async () => (await api.get('/needs/mine')).data,
     refetchInterval: POLL_MS,
     enabled: !!user && isElderSeat,
   });
-  const { data: applications } = useQuery({
+  const applicationsQuery = useQuery({
     queryKey: ['needs-applications'],
     queryFn: async () => (await api.get('/needs/applications')).data,
     refetchInterval: POLL_MS,
     enabled: !!user && isHelperSeat,
   });
-  const { data: familyAlerts } = useQuery({
+  const familyAlertsQuery = useQuery({
     queryKey: ['family-alerts'],
     // Unwrapped, exactly like FamilyAlertsFeed: two observers of one key
     // must put the same shape in the cache or one of them breaks.
@@ -224,7 +224,7 @@ export function useUpdatesFeed(user) {
     refetchInterval: POLL_MS,
     enabled: !!user && isFamily,
   });
-  const { data: keyholderAsks } = useQuery({
+  const keyholderAsksQuery = useQuery({
     queryKey: ['passon-asked-of-me'],
     // Array-guarded, exactly like KeyholderAsk (shared cache key, one shape).
     queryFn: async () => {
@@ -234,12 +234,40 @@ export function useUpdatesFeed(user) {
     refetchInterval: POLL_MS,
     enabled: !!user,
   });
-  const { data: reviews } = useQuery({
+  const reviewsQuery = useQuery({
     queryKey: ['reviews-mine'],
     queryFn: async () => (await api.get('/reviews/mine')).data,
     refetchInterval: POLL_MS,
     enabled: !!user && !isFamily,
   });
+
+  // Each query is enabled for some roles and not others, so the aggregate must
+  // fold in ONLY the ones this role actually runs. A disabled query never
+  // fetches and never errors, and counting it would be harmless today and
+  // wrong the moment react-query changes what a disabled query reports.
+  const enabledQueries = [
+    [true, connectionsQuery],
+    [isElderSeat, needsMineQuery],
+    [isHelperSeat, applicationsQuery],
+    [isFamily, familyAlertsQuery],
+    [true, keyholderAsksQuery],
+    [!isFamily, reviewsQuery],
+  ]
+    .filter(([runs]) => !!user && runs)
+    .map(([, query]) => query);
+
+  // `some`, not `every`: the screen must never dress a dropped request up as
+  // "Nothing new right now". One source failing means the feed is incomplete,
+  // and the person is told so rather than told there is nothing.
+  const isLoading = enabledQueries.some((query) => query.isLoading);
+  const isError = enabledQueries.some((query) => query.isError);
+
+  const connections = connectionsQuery.data;
+  const needsMine = needsMineQuery.data;
+  const applications = applicationsQuery.data;
+  const familyAlerts = familyAlertsQuery.data;
+  const keyholderAsks = keyholderAsksQuery.data;
+  const reviews = reviewsQuery.data;
 
   // Memoized on the six query results, never rebuilt on a bare re-render.
   // An unmemoized buildFeed handed the Updates screen a new `items` array on
@@ -253,7 +281,7 @@ export function useUpdatesFeed(user) {
   );
   const unseen = useUnseenBadge(userId, UPDATES_CATEGORY, items.map((i) => i.token));
 
-  return { items, unseen };
+  return { items, unseen, isLoading, isError };
 }
 
 /** The Updates screen calls this once its list is on screen. */
