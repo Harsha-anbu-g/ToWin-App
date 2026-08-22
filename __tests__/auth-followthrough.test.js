@@ -36,6 +36,7 @@ jest.mock('../src/api/client', () => ({
 
 import api from '../src/api/client';
 import FinishSetup from '../app/(auth)/finish-setup';
+import { clearPendingOnboarding, setPendingOnboarding } from '../src/lib/pendingOnboarding';
 import Register from '../app/(auth)/register';
 import DemoAccountsCard from '../src/components/DemoAccountsCard';
 
@@ -67,14 +68,26 @@ const REJECTED = { data: { token: 'not-a-jwt' } };
 
 // Google hands finish-setup an onboarding token; without one the screen is only
 // the "sign in with Google first" guard.
+//
+// HARD-105 moved that handoff off the URL. oauth-callback now stashes the
+// exchange response in memory (src/lib/pendingOnboarding.js) and navigates with
+// no params, because reading it off useLocalSearchParams() meant a crafted
+// towinly:// link chose the name, the email and the token this screen spent.
+// So these tests seed the record the way oauth-callback does. mockParams is
+// still set alongside it, deliberately: finish-setup must ignore it, and
+// __tests__/finish-setup-deeplink.test.js proves it does.
 const ONBOARDING = { onboardingToken: 'ob-123', email: 'margaret@example.com', name: 'Margaret Lee' };
 
 beforeEach(() => {
   mockParams = { ...ONBOARDING };
+  setPendingOnboarding(ONBOARDING);
   api.post.mockReset();
   api.post.mockResolvedValue({ data: {} });
 });
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  clearPendingOnboarding();
+  jest.clearAllMocks();
+});
 
 describe('DEEP-16: finish-setup asks the role question the way register does', () => {
   const DESCRIPTIONS = ['Looking for friends or help', 'Want to help others'];

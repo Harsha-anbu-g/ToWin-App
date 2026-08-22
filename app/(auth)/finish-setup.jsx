@@ -2,7 +2,7 @@
 // Google sign-in (role + username + phone → POST /auth/oauth/complete). Google
 // OAuth itself is deferred to the release phase, so this screen is only
 // reachable once that lands — the no-token guard mirrors web behavior.
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle } from '../../src/components/icons';
@@ -14,6 +14,7 @@ import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
 import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
+import { clearPendingOnboarding, getPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // Heading and group label read from one string, so they cannot drift apart.
@@ -28,7 +29,15 @@ export default function FinishSetup() {
   const { t, spacing, radius, text, type, fontFamily } = useTheme();
   const { login } = useAuth();
   const router = useRouter();
-  const { onboardingToken, email: googleEmail, name: googleName } = useLocalSearchParams();
+  // From the in-memory handoff oauth-callback wrote, never from the URL. This
+  // screen used to read all three off the URL params behind a bare
+  // presence check, so a crafted towinly:// link chose the name and email it
+  // showed and the token it posted. Latched once with a lazy initialiser so
+  // clearing the record on success cannot blank the screen mid-navigation.
+  const [pendingFlow] = useState(getPendingOnboarding);
+  const onboardingToken = pendingFlow?.onboardingToken;
+  const googleEmail = pendingFlow?.email;
+  const googleName = pendingFlow?.name;
 
   // No preselected identity (rulebook: nothing optional is preselected).
   const [role, setRole] = useState('');
@@ -40,7 +49,9 @@ export default function FinishSetup() {
   // Return-key path (UX-708): Next on the username lands in the phone field.
   const phoneRef = useRef(null);
 
-  // Guard: only reachable right after signing in with Google (mirrors web)
+  // Guard: reachable only right after THIS app completed a Google exchange.
+  // With no pending flow, every unsolicited deep link lands here (mirrors web,
+  // and mirrors the refusal oauth-callback.jsx already gives).
   if (!onboardingToken) {
     return (
       <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
@@ -84,6 +95,10 @@ export default function FinishSetup() {
         setError("Could not sign you in on this device. Please check your phone's date and time.");
         return;
       }
+      // Spent. A failure above deliberately leaves it, so the person can fix
+      // the clock and press the button again without signing in with Google
+      // all over.
+      clearPendingOnboarding();
       router.replace('/');
     } catch (err) {
       setError(err?.response?.data?.message || 'Something went wrong. Please try again.');
@@ -258,7 +273,12 @@ export default function FinishSetup() {
             a person on the wrong Google account was trapped here before. */}
         <TextLink
           label="Cancel and use a different account"
-          onPress={() => router.replace('/(auth)/login')}
+          onPress={() => {
+            // Walking away spends nothing, so the record must not sit in memory
+            // for the rest of the session waiting to be reused.
+            clearPendingOnboarding();
+            router.replace('/(auth)/login');
+          }}
           muted
           style={{ marginTop: spacing[2] }}
         />
