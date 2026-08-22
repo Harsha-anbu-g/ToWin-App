@@ -433,7 +433,12 @@ export default function Landing() {
             </ScrollView>
             {i === last ? (
               <View style={{ paddingHorizontal: 28, paddingBottom: Math.max(insets.bottom, 16) + 8 }}>
-                <Button title="Start" onPress={() => go('/(auth)/login')} />
+                {/* The end of a first-run story is read by somebody who has
+                    no account yet, so it opens account creation. It used to
+                    say "Start" and land on the login form, which is a door
+                    they have no key to. Returning people still have the Log in
+                    link in the top bar, where it has always been. */}
+                <Button title="Create my account" onPress={() => go('/(auth)/register')} />
               </View>
             ) : null}
           </View>

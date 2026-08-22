@@ -120,7 +120,16 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
 // boundary: handing PersonRow a freshly created element and a fresh arrow on
 // every list render made its memo() comparison fail every time, so a radius tap
 // or a refresh tick re-rendered every mounted card (UX-705, deep audit).
-const FindRow = memo(function FindRow({ person, status, sending, busy, onOpen, onConnect }) {
+const FindRow = memo(function FindRow({
+  person,
+  status,
+  sending,
+  accepting,
+  busy,
+  onOpen,
+  onConnect,
+  onAcceptInvite,
+}) {
   const { t, type } = useTheme();
   return (
     <PersonRow
@@ -131,6 +140,16 @@ const FindRow = memo(function FindRow({ person, status, sending, busy, onOpen, o
           <Text style={{ fontSize: type.meta, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
         ) : status === 'requested' ? (
           <TonalChip label="Requested" neutral />
+        ) : status === 'invited-me' ? (
+          // They asked first. This row used to show Connect, which is the one
+          // action that cannot succeed here: the pair already has a pending
+          // request, so the backend refuses a second one. Saying yes is what
+          // is actually left to do (HCI heuristic 3, and heuristic 5: never
+          // offer a control whose only outcome is an error).
+          <TonalChip
+            label={accepting ? 'Accepting…' : 'Accept'}
+            onPress={busy ? undefined : () => onAcceptInvite(person)}
+          />
         ) : (
           <TonalChip
             label={sending ? 'Sending…' : 'Connect'}
@@ -375,18 +394,42 @@ export default function FriendsScreen() {
     [confirm, respondMutate]
   );
 
+  // Reuses the existing respond mutation, so the invite answered from the Find
+  // list gets the same toast, the same error handling and the same cache
+  // invalidation as the one answered from the Invites tab.
+  const acceptInviteFrom = useCallback(
+    (p) => {
+      const c = conns.find(
+        (x) => x.otherUserId === p.userId && x.status === 'PENDING' && !x.initiatedByMe
+      );
+      if (c) respondMutate({ id: c.id, accept: true });
+    },
+    [conns, respondMutate]
+  );
+
   const renderFindRow = useCallback(
     ({ item: p }) => (
       <FindRow
         person={p}
         status={statusOf(p.userId)}
         sending={request.isPending && request.variables === p.userId}
-        busy={request.isPending}
+        accepting={respond.isPending && respond.variables?.accept === true}
+        busy={request.isPending || respond.isPending}
         onOpen={openProfile}
         onConnect={connectTo}
+        onAcceptInvite={acceptInviteFrom}
       />
     ),
-    [statusOf, request.isPending, request.variables, openProfile, connectTo]
+    [
+      statusOf,
+      request.isPending,
+      request.variables,
+      respond.isPending,
+      respond.variables,
+      openProfile,
+      connectTo,
+      acceptInviteFrom,
+    ]
   );
 
   const renderPendingRow = useCallback(

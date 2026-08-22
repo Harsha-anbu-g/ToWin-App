@@ -46,11 +46,30 @@ const ROLE_TAB_ORDER = {
   FAMILY: ['helpers', 'groups', 'family'],
 };
 const DEFAULT_TAB_ORDER = ['elders', 'helpers', 'groups', 'family'];
+// Two of these used to send the person to a "dashboard". There is no such
+// screen: app/(tabs)/dashboard.jsx is a redirect stub kept for old links and
+// carries href: null in the tab bar, so nobody can navigate to it and nobody
+// can see it. An instruction naming a place that is not there is worse than no
+// instruction. Each tab that HAS somewhere to go now names it and offers the
+// button, the same shape as the "No conversations yet" state below. The other
+// two describe a condition rather than a destination, so they stay as they are.
 const EMPTY_TAB_COPY = {
-  groups: 'No group chats yet. When a friendship is shared with family, its updates will show here.',
-  elders: 'No chats with elders yet. Offer to help on your dashboard to start one.',
-  helpers: 'No chats with helpers yet. Connect with someone on your dashboard to start one.',
-  family: 'No family chats yet. When a family member joins you here, your chat with them will show up.',
+  groups: {
+    text: 'No group chats yet. When a friendship is shared with family, its updates will show here.',
+  },
+  elders: {
+    text: 'No chats with elders yet. A chat opens when you offer to help with a request.',
+    actionLabel: 'Offer help',
+    href: '/(tabs)/action',
+  },
+  helpers: {
+    text: 'No chats with helpers yet. A chat opens when someone offers to help, or when you become friends.',
+    actionLabel: 'Find friends',
+    href: '/friends',
+  },
+  family: {
+    text: 'No family chats yet. When a family member joins you here, your chat with them will show up.',
+  },
 };
 
 // Relative timestamp for inbox rows — glanceable, never a full date string.
@@ -415,8 +434,16 @@ export default function MessagesInbox() {
                   maxWidth: 380,
                 }}
               >
-                {EMPTY_TAB_COPY[currentTab]}
+                {EMPTY_TAB_COPY[currentTab]?.text}
               </Text>
+              {EMPTY_TAB_COPY[currentTab]?.href ? (
+                <Button
+                  title={EMPTY_TAB_COPY[currentTab].actionLabel}
+                  variant="primary"
+                  onPress={() => router.push(EMPTY_TAB_COPY[currentTab].href)}
+                  style={{ marginTop: spacing[5] }}
+                />
+              ) : null}
             </View>
           )
         }
