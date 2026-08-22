@@ -14,6 +14,16 @@ import FontGate from '../src/components/FontGate';
 import OfflineBanner from '../src/components/OfflineBanner';
 import PushRegistrar from '../src/components/PushRegistrar';
 import LiveRegion from '../src/components/ui/LiveRegion';
+import { ErrorFallback } from '../src/components/AppErrorBoundary';
+
+// expo-router looks for an `ErrorBoundary` export on a route module and wraps
+// that route in <Try catch={ErrorBoundary}> (useScreens.js). Exporting it from
+// the ROOT layout puts one net under every screen in the app, because every
+// other route renders inside this one. Without it a single render throw
+// unmounts the whole tree and leaves a blank phone with no way back.
+// The fallback renders in place of RootLayout, so it deliberately depends on
+// none of the providers below it. See AppErrorBoundary.jsx.
+export { ErrorFallback as ErrorBoundary };
 
 const queryClient = new QueryClient({
   defaultOptions: {

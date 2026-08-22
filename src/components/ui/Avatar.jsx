@@ -5,8 +5,19 @@ import { Image } from 'expo-image';
 import { Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
-function initialsOf(name = '') {
-  return name
+// A default parameter fires on undefined and NOT on null, and the API really
+// does send `"name": null` (backend registration never sets fullName, the
+// column is nullable, ProfileResponse has no NON_NULL include). The old
+// `name = ''` default therefore let null through to .trim(), which threw a
+// TypeError mid-render and, with no boundary above it, blanked the whole app.
+// Coerce here rather than at the 12+ call sites: one door, one guard.
+// Non-text (objects, arrays, booleans) yields no initials rather than
+// "[object Object]" initials.
+const asText = (name) =>
+  typeof name === 'string' || typeof name === 'number' ? String(name) : '';
+
+function initialsOf(name) {
+  return asText(name)
     .trim()
     .split(/\s+/)
     .map((w) => w[0])
@@ -30,7 +41,14 @@ export default function Avatar({ name, uri, size = 44, style }) {
   return (
     // `accessible` groups the avatar into one element announced by the person's
     // name — otherwise the initials fallback is read out letter by letter ("J D").
-    <View accessible accessibilityLabel={name} accessibilityRole="image" style={[base, style]}>
+    <View
+      accessible
+      // Same coercion: a non-string accessibilityLabel is a native type error,
+      // and an empty label is dropped so the group is not announced as blank.
+      accessibilityLabel={asText(name).trim() || undefined}
+      accessibilityRole="image"
+      style={[base, style]}
+    >
       {uri ? (
         <Image
           source={{ uri }}
