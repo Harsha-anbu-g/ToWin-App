@@ -37,8 +37,11 @@ module.exports = defineConfig([
     },
   },
   {
-    // Build-time scripts run under Node, never in the app bundle
-    files: ['scripts/**'],
+    // Build-time scripts run under Node, never in the app bundle. The icon
+    // baker under docs/design/icon-source lives outside scripts/ and is the
+    // same kind of thing: `node build-final.js` writes the four asset SVGs.
+    // Without it here, `npx eslint .` exits 1 on one `__dirname` (HARD-118).
+    files: ['scripts/**', 'docs/design/icon-source/**/*.js'],
     languageOptions: {
       globals: {
         __dirname: 'readonly',
