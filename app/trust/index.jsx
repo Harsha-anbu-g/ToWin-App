@@ -319,6 +319,20 @@ export default function TrustScreen() {
             'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.'}
       </Text>
 
+      {/* HARD-114. The five review points are real and the backend awards them,
+          but there is no review form in this app for an elder or a helper: the
+          only POST /reviews here is the family member writing on a parent's
+          behalf (src/components/family/FamilyReviewForParent.jsx). Both seats
+          write their own on the website (ToWin/frontend ElderDashboard.jsx and
+          HelperDashboard.jsx). Saying so beats leaving somebody hunting a
+          screen that does not exist. The family seat is excluded because it is
+          the one seat that CAN leave a review in the app. */}
+      {!isFamily ? (
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 6 }}>
+          Reviews are written on the Towinly website. You cannot leave one from the app yet.
+        </Text>
+      ) : null}
+
       {isLoading ? (
         <SkeletonCard lines={3} />
       ) : isError ? (

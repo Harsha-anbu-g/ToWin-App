@@ -114,6 +114,66 @@ test('helper: copy unchanged, no family card, no Family meter row', async () => 
   expect(r.queryByText('Family')).toBeNull();
 });
 
+// HARD-114: the five review points are real, and there is no way for an elder
+// or a helper to leave a review from this app. The only POST /reviews in the
+// tree is the family member writing on a parent's behalf. Both other seats
+// write theirs on the website. The screen says so rather than leaving somebody
+// hunting for a form that was never ported. The score split itself is untouched
+// and still reads as the real 7 + 5 + 3 and 7 + 5 + 2 + 1.
+describe('the review points say where a review comes from', () => {
+  const WHERE = 'Reviews are written on the Towinly website. You cannot leave one from the app yet.';
+
+  test('a helper is told, and still reads the real 15 point split', async () => {
+    mockRole = 'HELPER';
+    stubScore({ totalScore: 8, tier: 'Getting Started', family: null, customers: [helperCustomer] });
+    const r = await wrap(<TrustScreen />);
+
+    r.getByText(
+      'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
+    );
+    r.getByText(WHERE);
+  });
+
+  test('an elder is told too', async () => {
+    mockRole = 'ELDER';
+    stubScore({ totalScore: 10, tier: 'Getting Started', family: { earned: 1, max: 1 }, customers: [elderCustomer] });
+    const r = await wrap(<TrustScreen />);
+
+    r.getByText(WHERE);
+  });
+
+  test('the family seat is not told, because it is the one seat that can', async () => {
+    // src/components/family/FamilyReviewForParent.jsx posts /reviews with
+    // onBehalfOfElderId, under the parent's LEAVE_REVIEWS grant.
+    mockRole = 'FAMILY';
+    stubScore({ totalScore: 1, tier: 'Getting Started', family: null, customers: [] });
+    const r = await wrap(<TrustScreen />);
+
+    expect(r.queryByText(WHERE)).toBeNull();
+  });
+
+  test('the app still has no review form for an elder or a helper', () => {
+    // The claim above is only honest while this stays true. If a review form
+    // ships for either seat, delete the line and this test together.
+    const fs = require('fs');
+    const path = require('path');
+    const roots = ['app', 'src'];
+    const hits = [];
+    const walk = (dir) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.jsx?$/.test(entry.name)) {
+          const code = fs.readFileSync(full, 'utf8');
+          if (/post\(\s*['`]\/reviews['`]/.test(code)) hits.push(path.relative(path.join(__dirname, '..'), full));
+        }
+      }
+    };
+    roots.forEach((r) => walk(path.join(__dirname, '..', r)));
+    expect(hits).toEqual(['src/components/family/FamilyReviewForParent.jsx']);
+  });
+});
+
 // FAM-407: FAMILY viewers have no helpers, no reviews, and no add-friends
 // surface anywhere in their app — the elder scoring rules and the "add
 // someone" empty state would be dishonest dead ends (HCI 2/7). Their points
