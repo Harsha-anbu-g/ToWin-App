@@ -264,7 +264,7 @@ facts, not the exact labels.
 |---|---|
 | Chat or messaging between users? | Yes |
 | Users create or share content other users see? | Yes |
-| Does the app share the user's location with other users? | Approximate only, and never read from the device. A hand typed town and a rounded distance. |
+| Does the app share the user's location with other users? | Approximate only. Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
 | In app controls for objectionable content? | Yes: write time filter, report a person, block a person, terms agreed at signup |
 | Parental controls or age assurance? | A self declared date of birth with an 18 minimum at signup. No document check. **Do not claim age verification.** |
 
@@ -750,3 +750,31 @@ personal or legal data.
      guarded by a test that fails if that sentence ever comes back.
   3. `console-answers.md` was added as the console-day sheet for both stores.
      This file is now the reasoning behind the Apple half of it.
+
+- 2026-08-22: one correction, in section 3.2. See below.
+
+---
+
+## Corrections made on 2026-08-22 (HARD-101)
+
+One answer on this page said the app never reads the device. It was true when
+it was written and stopped being true on 2026-08-19, when `expo-location`
+~19.0.8 was installed and `app.json` grew `locationWhenInUsePermission`.
+`console-answers.md` was corrected by LOC-207 on 2026-08-22 and this page was
+not, so the two files disagreed. This page is the one whose rows get typed
+straight into App Store Connect, so the wrong row would have reached Apple
+verbatim while the corrected file sat beside it.
+
+**Section 3.2, "Does the app share the user's location with other users?"**
+Old wording: "Approximate only, and never read from the device. A hand typed
+town and a rounded distance."
+
+Why it changed: `expo-location` is in `App/package.json` and the app reads the
+phone on four screens (Add friends, Post help, Offer help, Edit profile). The
+verdict does not move. It is still Approximate only, because every fix is
+snapped to a 0.02 degree cell by `src/lib/coarseLocation.js` before it can
+reach the network, and what another member sees is still a town name and a
+rounded distance. The new row is worded to match `console-answers.md` section
+2.3 and section 8.2 word for word, so the two sheets can no longer drift apart
+without a test catching it (`__tests__/console-answers.test.js`, "no store
+document denies a dependency the binary holds").

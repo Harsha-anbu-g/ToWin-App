@@ -162,7 +162,11 @@ pages:
 - Copyright: `2026 <the legal identity from Part 0.1>`.
 
 **Use `/app/privacy` and never `/privacy`.** The shorter address is an older
-document that describes a location switch this app does not have.
+document with no processor list and no contact address, and its location
+paragraph never says the position is rounded on the phone before it is sent.
+(Corrected 2026-08-22. The reason used to read "describes a location switch this
+app does not have", which stopped being true on 2026-08-19 when `expo-location`
+was installed. The instruction is unchanged.)
 
 App Review notes: paste the block between `<!-- review-notes-v1:start -->` and
 `<!-- review-notes-v1:end -->` in `console-answers.md`. It is 3,967 of Apple's

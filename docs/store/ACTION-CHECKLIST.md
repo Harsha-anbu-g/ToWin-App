@@ -231,8 +231,13 @@ hour spent here is an hour not spent on the meter.
   `https://www.towinly.com/app/privacy` and
   `https://www.towinly.com/app/support`. Do not use
   `https://www.towinly.com/privacy`: that is an older document with no contact
-  address and a location paragraph describing a device setting the app does not
-  have.
+  address, no processor list, and a location paragraph that never says the
+  position is rounded on the phone before it is sent. (Corrected 2026-08-22.
+  The reason used to read "a location paragraph describing a device setting the
+  app does not have", which stopped being true on 2026-08-19 when
+  `expo-location` was installed. The instruction is unchanged: the missing
+  processor list is reason enough on its own. Same correction as
+  `README.md` and `PAY-DAY-RUNBOOK.md`.)
 - [x] **Aggregate the iOS privacy manifest, before there is a build.** DONE
   2026-08-15. `App/docs/store/privacy-manifest-aggregate.md` holds the union of
   the 8 library manifests found under `App/node_modules`: 4 API categories, 7

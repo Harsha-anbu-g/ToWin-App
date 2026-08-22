@@ -141,3 +141,86 @@ describe('the content filter claim stays true', () => {
     expect(notes).toContain('Private messages rely on report and block');
   });
 });
+
+/**
+ * HARD-101. Every store document, tied to the dependency rather than to a line
+ * number.
+ *
+ * `expo-location` landed on 2026-08-19. Several store pages had been written
+ * before that and said, in so many words, that the app never reads the device.
+ * console-answers.md was corrected by LOC-207; the pages beside it were not,
+ * and app-store-connect-fields.md is the one whose rows get typed straight into
+ * App Store Connect, so its wrong row would have reached Apple verbatim.
+ *
+ * The check hangs off package.json, so it cannot rot the way a line number
+ * does. Install the dependency and every denial in the folder goes red. Remove
+ * it one day and the check turns itself off.
+ *
+ * Preserved history is exempt, and only preserved history: a dated
+ * "Corrections made on" section, struck-through text beside its correction, and
+ * a quoted "Old wording:" block. That is the practice this repo already uses
+ * and it must stay readable, so the old sentence keeps its place on the page.
+ */
+describe('no store document denies a dependency the binary holds', () => {
+  const STORE_DIR = path.join(__dirname, '..', 'docs', 'store');
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
+
+  // Sentences that only make sense if the app reads no device location.
+  const DENIALS = [
+    /never read from the device/i,
+    /never from the device/i,
+    /never reads? (the )?device('s)? location/i,
+    /no device location/i,
+    /does not read (the )?device('s)? location/i,
+    /no `?expo-location`?/i,
+    /location (switch|setting) (this app|the app) does not have/i,
+    /device location (switch|setting) the app does not have/i,
+    /device (setting|switch) the app does not have/i,
+    /no location permission/i,
+    /there is no gps/i,
+    /no `?ACCESS_(FINE|COARSE)_LOCATION`?/i,
+  ];
+
+  /** A page with its preserved history removed, whitespace flattened. */
+  const liveTextOf = (file) => {
+    const raw = fs.readFileSync(path.join(STORE_DIR, file), 'utf8');
+    const cut = raw.search(/^#{2,3} Corrections made on /m);
+    return (cut === -1 ? raw : raw.slice(0, cut))
+      .replace(/~~[\s\S]*?~~/g, '')
+      .replace(/Old wording:[\s\S]*?\n\s*\n/g, '')
+      .replace(/used to (end|say|read)\s+"[\s\S]*?"/g, '')
+      .replace(/\s+/g, ' ');
+  };
+
+  const storeDocs = fs.readdirSync(STORE_DIR).filter((f) => f.endsWith('.md'));
+
+  test('the dependency this check hangs off is actually installed', () => {
+    // If this fails the app stopped reading the device and every sentence
+    // below may be written the old way again. Delete the check then, on
+    // purpose, rather than letting it pass by accident.
+    expect(pkg.dependencies['expo-location']).toBeTruthy();
+  });
+
+  test('the folder holds more than one page, so the sweep is a sweep', () => {
+    expect(storeDocs.length).toBeGreaterThan(5);
+  });
+
+  test.each(storeDocs)('%s never says the device is not read', (file) => {
+    if (!pkg.dependencies['expo-location']) return;
+    const live = liveTextOf(file);
+    const found = DENIALS.filter((re) => re.test(live)).map((re) => {
+      const m = live.match(re);
+      return `${re}: ...${live.slice(Math.max(0, m.index - 70), m.index + 110)}...`;
+    });
+    expect(found).toEqual([]);
+  });
+
+  test('preserved history is exempt, and is still on the page', () => {
+    // console-answers.md keeps the old wording under its LOC-207 correction.
+    // The sweep must not force that sentence off the page.
+    const raw = fs.readFileSync(path.join(STORE_DIR, 'console-answers.md'), 'utf8');
+    expect(raw).toContain('Corrections made on 2026-08-22');
+    expect(raw).toContain('No device location is ever read');
+    expect(liveTextOf('console-answers.md')).not.toMatch(/No device location is ever read/i);
+  });
+});
