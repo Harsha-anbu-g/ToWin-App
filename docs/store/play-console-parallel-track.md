@@ -207,8 +207,16 @@ with the SDK 54 pin.
 
 **What is absent, and this is the important part:**
 
-- No `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION`. Location is a town the
-  user types in.
+- ~~No `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION`. Location is a town the
+  user types in.~~ **Corrected 2026-08-22.** The manifest HAS held
+  `ACCESS_FINE_LOCATION` since 2026-08-19, declared by the `expo-location`
+  plugin. Nothing precise is ever transmitted: every fix is snapped to a 0.02
+  degree cell, roughly 2 km across, by `src/lib/coarseLocation.js` before it
+  reaches the network, and the typed town still works for anyone who declines.
+  The gap between the permission held and the data collected is deliberate and
+  is the OPEN QUESTION at the end of `privacy-labels.md`, which recommends
+  answering Play with Approximate = Yes and Precise = Yes and explaining in the
+  Data safety free text. Decide that before the next Play submission.
 - No `CAMERA`, no `RECORD_AUDIO`. Both are actively removed with
   `tools:node="remove"` in `android/app/src/main/AndroidManifest.xml`, backed by
   `blockedPermissions` in `app.json`.
@@ -249,9 +257,9 @@ Every one of these is free and can be filled the hour the account verifies.
 URL: `https://www.towinly.com/app/privacy`. Corrected 2026-08-15: this row used
 to say "the website's `/privacy` page", and the bare
 `https://www.towinly.com/privacy` is a different, older document with no
-third-party processor section and a location paragraph describing a device
-setting this app does not have. Naming it would put an under-disclosing policy
-in front of Play review. Both addresses answer 200, so a status code will not
+third-party processor section and a location paragraph that never says the
+position is rounded on the phone before it is sent. Naming it would put an
+under-disclosing policy in front of Play review. Both addresses answer 200, so a status code will not
 catch the mistake. Use the `/app/` path.
 
 It is live and reachable without logging in: HTTP 200 on 2026-08-15.
@@ -300,7 +308,7 @@ here is a policy strike later.
 | Drugs, alcohol, tobacco | No | None present |
 | Gambling, simulated gambling, real money | No | `app/game.jsx` is a local memory game with no wagering, no prizes, no currency |
 | Users can interact or exchange content | **Yes** | 1:1 chat, help requests posted to a feed other members browse |
-| Users can share their location with other users | **Yes**, town level | The user types a town, it is geocoded server side, and the city is shown to members. There is no GPS |
+| Users can share their location with other users | **Yes**, town level | A typed town geocoded server side, or the phone read in the foreground and snapped to a ~2 km cell on the device. Members see a town and a rounded distance, never a point on a map (corrected 2026-08-22; this cell used to end "There is no GPS") |
 | Personal information shared with other users | **Yes** | Name, photo, bio, and, at the Phone Ready step, phone number |
 | Unrestricted access to the internet | **No** | There is no in-app browser or open web view |
 | Digital purchases | No | Nothing is sold |

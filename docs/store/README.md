@@ -217,10 +217,15 @@ set an address" sentence. **Retired.**
 Both pages were rendered. `https://www.towinly.com/app/privacy` carries the full
 processor list, Amazon, Twilio, OpenStreetMap, Groq and Railway, plus the
 contact address. `https://www.towinly.com/privacy` is a different and older
-document: no contact address, no processor list, and it still says "If you share
-your location, we use it only to show you people who are nearby" and that you
-can "turn it off whenever you like". The app has no device location at all, so
-that page describes a switch that does not exist.
+document: no contact address and no processor list, so it names none of Amazon,
+Twilio, OpenStreetMap, Groq or Railway. Its location paragraph is also a
+paraphrase rather than the app's own wording: it does not say the position is
+rounded on the phone before it is sent, which is the one promise the location
+card makes to every person who taps it.
+(Corrected 2026-08-22. This paragraph used to end "The app has no device
+location at all, so that page describes a switch that does not exist." That was
+true when it was written and stopped being true on 2026-08-19, when
+`expo-location` was installed. The verdict is unchanged, for the reasons above.)
 **Settled: use `https://www.towinly.com/app/privacy`. Never the other one.**
 
 **5. Does a Support URL already exist?**

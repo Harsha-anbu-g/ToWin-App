@@ -32,15 +32,38 @@ Facts these labels rest on, each verified in code:
   and account deletion, and transits Expo's push service (a processor named
   in the privacy policy). No advertising ID, no analytics identifier. The
   other identifier on the wire is the account JWT.
-- **Device location, rounded on the phone (changed 2026-08-19).**
-  `expo-location ~19.0.8` is installed and asked for on the Add Friends screen
-  only, foreground only (`app.json` blocks every background/always variant).
+- **Device location, rounded on the phone (changed 2026-08-19, widened
+  2026-08-22).** `expo-location ~19.0.8` is installed and asked for on four
+  screens, foreground only (`app.json` blocks every background/always variant).
+  The four are Add Friends (`app/friends/index.jsx`), Posted Help
+  (`src/components/needs/PostedHelpList.jsx`, straight after a request is
+  posted), Offer Help (`src/components/needs/OfferHelpList.jsx`) and Edit
+  Profile (`app/profile-edit.jsx`). All four ask through one card,
+  `src/components/location/LocationPrimer.jsx`, wired through one hook,
+  `src/lib/useDevicePosition.js`, which holds the rule that only a tap on that
+  card may raise the system prompt.
+
+  Once permission is granted, the hook reads again on the mount of one of those
+  screens when the saved position is missing or more than 24 hours old
+  (`STALE_AFTER_MS`), and when the person taps Update my location in Edit
+  Profile. Both are foreground reads on a screen the person opened. There is no
+  timer, no watcher, no geofence and no background task:
+  `App/__tests__/location-freshness.test.js` reads the source of every file
+  under `app/` and `src/` and fails on `watchPositionAsync`,
+  `startLocationUpdatesAsync`, `startGeofencingAsync`,
+  `requestBackgroundPermissionsAsync` or `setInterval`.
+
   Every fix is snapped to a 0.02 degree cell by `src/lib/coarseLocation.js`
-  BEFORE it reaches the network, so what is transmitted and stored is a
-  ~2.2 x 1.7 km area (3.5 to 4.9 sq km), never a street. That is above Play's
-  3 sq km "approximate" line and at two decimal places, below Apple's
-  three-decimal "Precise Location" line. The hand-typed town
-  (`app/profile-edit.jsx`) remains as the fallback for anyone who declines.
+  BEFORE it reaches the network, so what is transmitted and stored is an area
+  rather than a street. Read from that file on 2026-08-22: `GRID_DEGREES` is
+  0.02 and a degree of latitude is 111.32 km, so the cell is 2.23 km north to
+  south everywhere, and 2.23 km east to west at the equator narrowing to 1.56 km
+  at Montreal's 45.5 N. The area runs from 3.47 sq km at that latitude to
+  4.96 sq km at the equator. That is above Play's 3 sq km "approximate" line,
+  and the stored pair carries two decimal places, below Apple's three-decimal
+  "Precise Location" line. The hand-typed town (`app/profile-edit.jsx`) remains
+  as the fallback for anyone who declines.
+
   Rounding is also the only defence available against a live backend weakness:
   `/discover` accepts caller-supplied lat/lng and returns distances rounded to
   0.1 km, which trilaterates a stored point to ~100 m. See OPEN QUESTION below.
@@ -113,7 +136,7 @@ Functionality** for all types unless a second purpose is listed.
 | Health & Fitness | all | No | | |
 | Financial Info | all | No | | |
 | Location | Precise Location | No | | The phone is read, but the fix is rounded to a ~4 sq km cell before it leaves the device (`src/lib/coarseLocation.js`); nothing at three decimal places is ever transmitted or stored. |
-| Location | Coarse Location | **Yes** (optional) | App Functionality | Two sources: the device fix rounded to a ~2 km cell (Add Friends, foreground only, permission asked), and the hand-typed town geocoded server-side via OpenStreetMap. Only the rounded/town-level coordinate and the city are stored; the city is shown to members. |
+| Location | Coarse Location | **Yes** (optional) | App Functionality | Two sources: the device fix rounded to a ~2 km cell (Add Friends, Posted Help, Offer Help and Edit Profile, foreground only, permission asked), and the hand-typed town geocoded server-side via OpenStreetMap. Only the rounded/town-level coordinate and the city are stored; the city is shown to members. |
 | Sensitive Info | Sensitive Info | No | | Apple's definition (race, sexual orientation, religion, biometrics, etc.) matches nothing collected. DOB and gender are declared under Other Data Types. |
 | Contacts | Contacts | No | | The address book is never read. |
 | User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to Groq after explicit per-user consent. |
@@ -224,7 +247,8 @@ network call must re-check the row (and section 6).
 | Profile photo | `app/profile-edit.jsx:144-166` (expo-image-picker) -> `PUT /profile/photo` multipart | User Content > Photos or Videos | Photos and videos: Photos | No (AWS S3 stores it) |
 | Government ID photo | `app/profile-edit.jsx:176-189` -> `POST /auth/verify-id` multipart | User Content > Photos or Videos | Photos: Photos (+ Fraud prevention purpose) | No (S3 + staff review) |
 | Phone number | `app/profile-edit.jsx:242` -> `PUT /profile/phone` | Contact Info > Phone Number | Personal info: Phone number | No (Twilio = service provider) |
-| Town / coarse location | `app/profile-edit.jsx:246-247` -> `GET /geocode/search` + `PUT /profile/location` | Location > Coarse Location | Location: Approximate location | No (server geocodes the bare town via OSM Nominatim) |
+| Town / coarse location | `app/profile-edit.jsx` -> `GET /geocode/search` + `PUT /profile/location` | Location > Coarse Location | Location: Approximate location | No (server geocodes the bare town via OSM Nominatim) |
+| Device position, rounded | `src/lib/deviceLocation.js` -> `PUT /profile/location` with the snapped pair, asked on four screens through `src/components/location/LocationPrimer.jsx` | Location > Coarse Location | Location: Approximate location | No |
 | Private messages | `app/chat/*`, `app/messages/*` -> `POST /messages/{id}/send` | User Content > Emails or Text Messages | Messages: Other in-app messages | No |
 | AI questions + chat history (+ first name, trust score added server-side) | `src/components/AskAiAssistant.jsx:149` -> `POST /assistant/chat`; consent `src/lib/aiConsent.js`; backend enrichment `ToWin/backend/.../AssistantService.java:174-179` | User Content > Emails or Text Messages; Contact Info > Name; Other Data (trust score) | Messages: Other in-app messages; Personal info: Name, Other info | **Yes: Groq**, only after per-user consent |
 | Emergency contacts (third party) | `app/emergency-contacts.jsx:64` -> `POST /emergency/contacts` | Contact Info > Other User Contact Info | Contacts | No (Twilio texts them). SOS button is dormant: `SosCard.jsx` unmounted. |
@@ -348,3 +372,53 @@ more than you collect is never penalised; declaring less can be.
 location = Yes, and use the Data safety free-text to say the precise fix never
 leaves the device. Apple's questionnaire asks about what is collected, so its
 rows stay as they are above. Decide this before the next Play submission.
+
+
+## Corrected on 2026-08-22 (LOC-207)
+
+The location entries were written on 2026-08-19, when one screen asked. Four
+screens ask now, so the sentences that named one were no longer true. Each entry
+gives the old wording, what replaced it and the evidence. History is kept so a
+future reader can see what moved and why.
+
+**1. "asked for on the Add Friends screen only".**
+Old wording: "`expo-location ~19.0.8` is installed and asked for on the Add
+Friends screen only, foreground only".
+Why it changed: LOC-203 through LOC-205 put the same card on Posted Help, Offer
+Help and Edit Profile. All four ask through one component,
+`src/components/location/LocationPrimer.jsx`, and one hook,
+`src/lib/useDevicePosition.js`. Foreground-only is unchanged and still verified
+by `app.json`, which blocks every background and always variant.
+
+**2. The Coarse Location row named one screen.**
+Old wording: "the device fix rounded to a ~2 km cell (Add Friends, foreground
+only, permission asked)".
+Why it changed: the same four screens. The answer itself does not move. Coarse
+Location stays **Yes / App Functionality / linked to the account / not used for
+tracking**, and Precise Location stays **No**, because what leaves the phone is
+still the snapped cell.
+
+**3. The cell size was carried forward as "~2.2 x 1.7 km".**
+Old wording: "what is transmitted and stored is a ~2.2 x 1.7 km area (3.5 to
+4.9 sq km)".
+Why it changed: the numbers were re-derived from `src/lib/coarseLocation.js` on
+2026-08-22 rather than copied. `GRID_DEGREES` is 0.02 and a degree of latitude
+is 111.32 km, so the cell is 2.23 km north to south everywhere, and east to west
+it runs from 2.23 km at the equator down to 1.56 km at Montreal's 45.5 N. The
+area is 3.47 sq km at that latitude and 4.96 sq km at the equator. The old
+"1.7 km" figure belongs to about 40 N, which is neither of the app's two
+markets. Both store thresholds are unaffected: the smallest cell is still above
+Play's 3 sq km line for approximate, and two decimal places is still below
+Apple's three-decimal line for Precise Location. The comment block at the top of
+`coarseLocation.js` carries the same slip and is left as it is: this document is
+the store answer, and the file is not part of LOC-207.
+
+**4. Nothing was said about reading again.**
+What is new: once permission is granted, the hook reads again on the mount of
+one of those four screens when the saved position is missing or older than 24
+hours, and when the person taps Update my location in Edit Profile. Both are
+foreground reads on a screen the person opened, so neither changes any answer on
+this page. `App/__tests__/location-freshness.test.js` reads the source of every
+file under `app/` and `src/` and fails the build on `watchPositionAsync`,
+`startLocationUpdatesAsync`, `startGeofencingAsync`,
+`requestBackgroundPermissionsAsync` or `setInterval`.

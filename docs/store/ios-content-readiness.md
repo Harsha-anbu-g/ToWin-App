@@ -271,11 +271,21 @@ Established by reading the code, not by assumption:
   `Linking.openURL` calls are a `mailto:` on the deletion page, the fixed
   deletion-page URL in the privacy policy, and the founder links on the feedback
   card. A user cannot navigate to an arbitrary address from inside the app.
-- **No device location.** No `expo-location` dependency, no location permission
-  in the Android manifest (checked: only INTERNET, VIBRATE, READ_EXTERNAL_STORAGE,
-  plus four permissions explicitly removed), and no call site. The user types a
-  town, the backend geocodes it, and other members see a town name and a rounded
-  kilometre figure.
+- **Device location, optional and rounded on the phone (corrected 2026-08-22).**
+  Old wording: "No device location. No `expo-location` dependency, no location
+  permission in the Android manifest (checked: only INTERNET, VIBRATE,
+  READ_EXTERNAL_STORAGE, plus four permissions explicitly removed), and no call
+  site." That was true when this page was written and stopped being true on
+  2026-08-19, when `expo-location ~19.0.8` was installed. What is true now:
+  permission is foreground only (`app.json` blocks every background and always
+  variant), it is asked only by a tap on one card
+  (`src/components/location/LocationPrimer.jsx`) that explains itself first, and
+  that card appears on four screens: Add Friends, Posted Help, Offer Help and
+  Edit Profile. Every fix is snapped to a 0.02 degree cell, roughly 2 km across,
+  by `src/lib/coarseLocation.js` before it can reach the network. Anyone who
+  says no keeps a working app and types a town instead, the backend geocodes it,
+  and other members see a town name and a rounded kilometre figure either way.
+  Full store answers in `privacy-labels.md`.
 - AI: replies come from Groq through the backend. The system prompt forbids
   medical, legal and financial advice and redirects emergencies to the SOS
   button and local emergency services. Consent is asked once per account before
