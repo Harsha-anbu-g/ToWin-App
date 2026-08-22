@@ -82,6 +82,34 @@ describe('the words on it', () => {
     everyString.forEach((s) => expect(s).not.toContain('—'));
   });
 
+  // Every instruction on this page was walked against the screen it names
+  // (HARD-112). The one that sent people to a menu was the reason: MenuSheet
+  // is not mounted by any file in app/, so "open the menu" pointed at nothing.
+  test('it sends people to controls that exist', () => {
+    const joined = everyString.join(' ');
+
+    // The Guide is a row in the always-visible card on the Profile tab
+    // (app/(tabs)/profile.jsx, Row label="Guide" -> /guide).
+    expect(joined).toContain('Profile');
+    expect(joined).toContain('Guide');
+    expect(joined.toLowerCase()).not.toContain('the menu');
+
+    // Deleting quotes the two rows a person taps, the same words the deletion
+    // page quotes and profile-label-drift.test.js proves are rendered.
+    expect(joined).toContain('Account and data');
+    expect(joined).toContain('Delete my account');
+  });
+
+  test('it names no part of the product that does not exist', () => {
+    const joined = everyString.join(' ').toLowerCase();
+
+    // "parent circle" was on this page and nowhere else in the app: grep the
+    // tree and it appears in no screen, no label and no test. The seat is
+    // called My Family, and a family member asks with "Add your parent".
+    expect(joined).not.toContain('parent circle');
+    expect(joined).not.toContain('circle');
+  });
+
   test('it promises no reply time we have never measured', () => {
     // "within 24 hours" and friends are the classic support-page lie. We are
     // one person reading a mailbox, and the copy says so instead.

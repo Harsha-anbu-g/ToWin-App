@@ -19,6 +19,7 @@ import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { DELETE_ACCOUNT_PAGE, deletionContactEmail } from '../src/data/deleteAccountPage';
+import { SUPPORT_PAGE } from '../src/data/supportPage';
 import api from '../src/api/client';
 import ProfileScreen from '../app/(tabs)/profile';
 
@@ -42,6 +43,20 @@ const FEEDS = {
   '/streaks/me': {},
   '/reviews/mine': [],
 };
+
+/**
+ * Every word the get-help page renders, as one string. That page is the Support
+ * URL App Store Connect holds, and it quotes app labels by hand exactly the way
+ * the deletion page does, so it gets the same guard (HARD-112).
+ */
+const supportCopy = () =>
+  [
+    SUPPORT_PAGE.title,
+    SUPPORT_PAGE.intro,
+    ...SUPPORT_PAGE.sections.flatMap((s) => [s.h, s.p]),
+    SUPPORT_PAGE.actionLabel,
+    SUPPORT_PAGE.deletionLinkLabel,
+  ].join('\n');
 
 /** Every word the deletion page renders, as one string. */
 const pageCopy = () =>
@@ -106,6 +121,10 @@ describe('the labels the deletion page quotes are the labels the app renders', (
   const collectRenderedLabels = async () => {
     const screen = await openTheDeletePath();
     const found = {
+      // The get-help page tells a stranger to open Profile and tap Guide. That
+      // row sits in the always-visible card, so it is read before the account
+      // card is opened.
+      Guide: [screen.getByText('Guide')],
       // Both halves of "Account and data": the visible row AND the label a
       // screen reader hears. Renaming either one alone used to pass.
       'Account and data': [
@@ -133,16 +152,29 @@ describe('the labels the deletion page quotes are the labels the app renders', (
     return found;
   };
 
-  const QUOTED = ['Account and data', 'Send me a copy of my data', 'Delete my account', 'Delete forever'];
+  const QUOTED_BY_DELETION_PAGE = [
+    'Account and data',
+    'Send me a copy of my data',
+    'Delete my account',
+    'Delete forever',
+  ];
+  // The get-help page names fewer controls, and every one of them has to be
+  // real: its previous instruction sent people to a menu no screen mounts.
+  const QUOTED_BY_SUPPORT_PAGE = ['Guide', 'Account and data', 'Delete my account'];
 
-  test('every label the page quotes is one the app puts on screen', async () => {
-    // Arrange / Act - one render, driven to the second confirmation.
+  test('every label these two pages quote is one the app puts on screen', async () => {
+    // Arrange / Act - one render, driven to the second confirmation. Both
+    // assertions share it, because a second test would mean a second render.
     const seen = await collectRenderedLabels();
 
     // Assert - rendered, not merely present somewhere in the source file.
-    for (const label of QUOTED) {
+    for (const label of QUOTED_BY_DELETION_PAGE) {
       for (const node of seen[label]) expect(node).toBeTruthy();
       expect(pageCopy()).toContain(label);
+    }
+    for (const label of QUOTED_BY_SUPPORT_PAGE) {
+      for (const node of seen[label]) expect(node).toBeTruthy();
+      expect(supportCopy()).toContain(label);
     }
   });
 

@@ -1,10 +1,18 @@
 // Emergency contacts — port of EmergencyContacts.jsx: list, add, remove
 // (create/read/delete only — no edit endpoint exists). The SOS button is
 // hidden app-wide for now (user call 2026-07-17); contacts remain manageable.
+//
+// Each contact is one tap from a call (HARD-112). The card used to say "these
+// are the people to reach quickly if something ever happens" above a list where
+// the numbers were plain text and nothing on the screen could reach anybody:
+// SOS is not mounted (app/(tabs)/home.jsx:160) and the only thing that reaches
+// a contact by itself is the first-meet SMS the backend sends
+// (TrustService.java:123 -> SosService.notifyFirstMeet). The sentence now
+// names the tap and that message, and the row makes the tap real.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Trash2 } from '../src/components/icons';
+import { Linking, Pressable, Text, View } from 'react-native';
+import { Phone, Trash2 } from '../src/components/icons';
 import api, { friendlyWriteError } from '../src/api/client';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
@@ -83,6 +91,13 @@ export default function EmergencyContacts() {
 
   // Undo over confirmation (rulebook): removing is reversible — we hold the
   // contact's own data, so the toast's Undo re-adds it in one tap.
+  // A dialer that refuses must not leave a dead tap: the person is trying to
+  // reach somebody, so the failure speaks and hands the number back to dial by
+  // hand (the CreatorCard ending, DEEP-30). react-native-web resolves openURL
+  // either way, so this only ever runs on a device with no dialer.
+  const dialerRefused = (contact) =>
+    showToast(`Could not open the phone app. ${contact.name}'s number is ${contact.phone}.`, 'error');
+
   const remove = useMutation({
     mutationFn: (contact) => api.delete(`/emergency/contacts/${contact.id}`),
     onSuccess: (_r, contact) => {
@@ -125,7 +140,8 @@ export default function EmergencyContacts() {
 
       <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-          These are the people to reach quickly if something ever happens.
+          Tap a name to call them. Towinly also sends each of them a text message when you and a
+          friend agree to meet in person for the first time.
         </Text>
       </Card>
 
@@ -158,13 +174,36 @@ export default function EmergencyContacts() {
               }}
             >
               <Avatar name={c.name} size={44} />
-              <View style={{ flex: 1 }}>
+              {/* The name leads the label: a screen reader user choosing
+                  between two contacts hears who it is before a run of digits.
+                  blueDeep, not blue: 5.30:1 on the card by day and 7.30:1 at
+                  night, where blue measures 2.81:1 and would fail the 3:1
+                  non-text floor on the icon.
+                  role="link" and the openURL inline, both on purpose: this row
+                  hands the person to the dialer, which is not a screen this app
+                  owns, and __tests__/link-role.test.js reads the element itself
+                  to tell a hand-off from an in-app route change. */}
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel={`Call ${c.name}${c.relationship ? `, ${c.relationship}` : ''}, ${c.phone}`}
+                accessibilityHint="Opens your phone app"
+                onPress={() => Linking.openURL(`tel:${c.phone}`).catch(() => dialerRefused(c))}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  minHeight: 44,
+                  justifyContent: 'center',
+                  opacity: pressed ? 0.6 : 1,
+                })}
+              >
                 <Text style={{ fontSize: text.base, color: t.ink }}>{c.name}</Text>
-                <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 1 }}>
-                  {c.relationship ? `${c.relationship} · ` : ''}
-                  {c.phone}
-                </Text>
-              </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                  <Phone size={14} color={t.blueDeep} strokeWidth={1.8} />
+                  <Text style={{ fontSize: text.sm, color: t.blueDeep }}>
+                    {c.relationship ? `${c.relationship} · ` : ''}
+                    {c.phone}
+                  </Text>
+                </View>
+              </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={`Remove ${c.name}`}
