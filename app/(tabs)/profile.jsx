@@ -194,6 +194,18 @@ export default function ProfileScreen() {
     if (second) deleteAccount.mutate();
   };
 
+  const confirmLogout = async () => {
+    const ok = await confirm({
+      title: 'Log out?',
+      message:
+        'You will need your username and password to get back in. If you are not sure you have them, stay logged in.',
+      cancelLabel: 'Stay logged in',
+      // A verb naming the consequence, never a bare "Continue" (rulebook).
+      confirmLabel: 'Log out',
+    });
+    if (ok) logout();
+  };
+
   const [exporting, setExporting] = useState(false);
 
   /**
@@ -445,7 +457,18 @@ export default function ProfileScreen() {
         </Card>
       ) : null}
 
-      <Button title="Log out" variant="secondary" onPress={logout} style={{ marginTop: spacing[5] }} />
+      {/* HCI heuristic 3, user control and freedom. One tap used to end the
+          session outright. For this audience, finding a username and password
+          again is the single most likely way to lose an account for good, so
+          the tap that costs that much asks first. Account deletion keeps its
+          own two confirmations further down; this is one, because logging out
+          is recoverable for anyone who has their password. */}
+      <Button
+        title="Log out"
+        variant="secondary"
+        onPress={confirmLogout}
+        style={{ marginTop: spacing[5] }}
+      />
 
       {/* Account — folded away behind one row so "Delete my account" is never
           sitting in the open where a mis-tap can reach it (user call
