@@ -3,11 +3,15 @@
 One entry point for every store document in this folder. Read this page first,
 then open only the document you need.
 
-- **App:** Towinly, `com.towinly.app`, version 1.0.0, Expo SDK 54 (pinned).
+- **App:** Towinly, `com.towinly.app`, version 1.1.0, Expo SDK 54 (pinned).
+  Build 10 of 1.1.0 is already uploaded to App Store Connect.
 - **Markets:** United States and India.
 - **Verdict today:** the app itself is ready. Every remaining blocker is an
   account, a mailbox, a console form, or a decision. None of them is app code.
-- **Last verified:** 2026-08-12, against commit `af22521`.
+- **Last verified:** 2026-08-22, on branch `ralph/store-hardening`. Every number
+  on this page is recomputed from the tree by
+  `App/__tests__/store-docs-numbers.test.js`, so a stale figure fails the suite
+  rather than waiting to be noticed.
 
 ---
 
@@ -45,19 +49,23 @@ Read them in this order the first time.
 | **privacy-labels.md** | Exact answers for the Apple App Privacy questionnaire and the Play Data safety form, each traced to a line of code. | Filling either privacy form. Do not improvise these. |
 | **listings.md** | Title, subtitle, keywords and descriptions for four listings: Apple US, Play US, Apple India, Play India. | Writing the listing. Note the name clash in section 5. |
 | **screenshots-and-review.md** | The 8 shot plan, the sizes, the baked captions, and the App Review notes. | Capturing and rendering screenshots. |
-| **screenshots/** | 13 raw captures, `raw-01` to `raw-13`. Not final. No caption bands, wrong sizes. | Rendering the final store images. |
+| **screenshots/** | 16 raw captures, `raw-01` to `raw-16`, plus the 8 baked iOS shots under `final/ios/`. | Rendering the final store images. |
 
 Two documents live outside this folder and are still load bearing:
 
 - `../../../docs/store-listing.md` at the project root. This is the file
-  `App/__tests__/store-listing.test.js` actually reads. It passes today, 34 of
-  34 tests.
+  `App/__tests__/store-listing.test.js` actually reads. It passes today, 39 of 39 tests.
 - `../../src/data/legalContent.js`. The policy and terms users agree to, and
   the source of the contact address on every legal page.
 
 ---
 
-## 3. The 16 open blockers
+## 3. The blockers, and what is left of them
+
+**Swept 2026-08-22 (HARD-116).** This section was written as 16 open blockers
+on 2026-08-12. Eight of them have closed since. Rows are kept and marked rather
+than deleted, so the list still reads as the full set. What is genuinely open
+today: A2, A4, and all of group B except B5.
 
 Grouped by whether they need a paid account. Nothing in group A is waiting on
 Apple or Google, so all of it can close before enrollment.
@@ -66,14 +74,14 @@ Apple or Google, so all of it can close before enrollment.
 
 | # | Blocker | Owner |
 |---|---|---|
-| A1 | **No Support URL exists.** App Store Connect will not accept a submission without one. | Human decision, then repo |
+| A1 | ~~**No Support URL exists.**~~ **CLOSED.** `https://www.towinly.com/app/support` is live and renders `app/support.jsx`. Only the console paste remains. | Done |
 | A2 | **The app name is written two ways.** Settle it before the App Store Connect record is created, because renaming later needs a version review. | Human decision |
 | A3 | **help@towinly.com reaches a person.** CLOSED 2026-08-15: owner confirmed delivery. Five public pages, both store contact fields and App Review all write to it. | Human, done |
 | A4 | **A reviewer testing account deletion can permanently destroy a demo seat.** | Backend, or seed a spare seat |
-| A5 | **EAS is not set up.** eas-cli is not installed, the project is not linked, and EAS Update is not configured. | Human, free Expo account |
-| A6 | **The production PostHog flag is unverified.** If it is on, both privacy forms change. | Human, one command |
-| A7 | **The photo permission sentence is too narrow.** | Repo, one line |
-| A8 | **No final screenshots exist.** 13 raw captures, none rendered to store sizes. | Repo, then human review |
+| A5 | ~~**EAS is not set up.**~~ **CLOSED.** `app.json` carries `owner: harshavardhan_ag` and `extra.eas.projectId: 6cf0141c-c99a-4663-87df-12f271989e7b`. A fresh shell still needs `eas login`. | Done |
+| A6 | ~~**The production PostHog flag is unverified.**~~ **CLOSED 2026-08-15.** It was set, the owner cleared it, the backend redeployed, and the read-back showed the key absent. The privacy forms stand as written. | Done |
+| A7 | ~~**The photo permission sentence is too narrow.**~~ **CLOSED.** `app.json` `photosPermission` now names the profile picture and the optional ID photo. | Done |
+| A8 | ~~**No final screenshots exist.**~~ **PARTLY CLOSED.** 8 shots are baked under `screenshots/final/ios/`, which clears both store minimums. They show the pre-2026-08-17 UI and need re-capturing: see HARD-117. | Repo, then human review |
 
 ### Group B: these need the paid accounts
 
@@ -83,7 +91,7 @@ Apple or Google, so all of it can close before enrollment.
 | B2 | Google Play developer registration, 25 USD once, plus identity verification. Takes 1 to 3 days. | Human |
 | B3 | `com.towinly.app` has never been checked for global uniqueness. Registering the App ID is the last cheap moment to find a clash. | Human, enrollment day |
 | B4 | iOS signing credentials. EAS makes these on the first production build. | Human, enrollment day |
-| B5 | `eas.json` `submit.production` is empty. iOS needs ascAppId, appleId and appleTeamId. Android needs a service account key. The repo side is now done: `submit-config.md` says where each value lives and `npm run submit:config` writes them after validating all three. What remains is the values themselves, which need the accounts. | Human |
+| B5 | ~~`eas.json` `submit.production` is empty.~~ **CLOSED for iOS.** It now holds `appleId`, `ascAppId 6802125342` and `appleTeamId G6RRNXL9BV`. Android still needs a service account key, so this row stays open on the Play side only. | Human, Android half |
 | B6 | Console forms: App Privacy, Data safety, age rating, content ratings, target audience. | Human |
 | B7 | Play closed test: 12 testers, 14 consecutive days. | Human, longest item |
 | B8 | Two checks that only exist after the first build: diff the aggregated `PrivacyInfo.xcprivacy` against `privacy-labels.md`, and confirm `ITSAppUsesNonExemptEncryption` is present and false in the built Info.plist. | Repo, after first build |
@@ -186,7 +194,7 @@ documents.
 **1. Is the photo permission sentence a problem?**
 `ios-build-readiness.md` calls the purpose strings complete and minimal.
 `privacy-labels.md` and `ACTION-CHECKLIST.md` say the sentence is too narrow.
-Both are half right. `pickImage()` at `app/profile-edit.jsx:151` is shared by
+Both are half right. `pickImage()` in `app/profile-edit.jsx` is shared by
 `changePhoto`, which sends `PUT /profile/photo`, and `uploadId`, which sends
 `POST /auth/verify-id`. One permission covers both, so no new key is needed and
 the list really is complete. The sentence still says only "so you can choose a
@@ -197,7 +205,7 @@ profile picture" while the same picker also takes a government ID.
 The root `docs/store-listing.md` says `Towinly: Trusted Help`. This folder's
 `listings.md` proposes `Towinly: Elder Care Companion` for the US and
 `Towinly: Senior Citizen Care` for India. The root file is the one
-`__tests__/store-listing.test.js` reads, and it passes today at 34 of 34, so the
+`__tests__/store-listing.test.js` reads, and it passes today at 39 of 39, so the
 two cannot both stay green. **Settled: a human picks one, then both files change
 together and the test is re-run.** Tracked as A2.
 
@@ -206,7 +214,7 @@ together and the test is re-run.** Tracked as A2.
 saying the Vercel project never sets `EXPO_PUBLIC_LEGAL_CONTACT_EMAIL`, so the
 pages render "has not set an address to write to yet".
 **This is out of date and is not a blocker.** `legalContactEmail()` in
-`src/data/legalContent.js:74` falls back to a hard coded `help@towinly.com` when
+`src/data/legalContent.js` falls back to a hard coded `help@towinly.com` when
 the variable is empty, which was audit fix V5. Both pages were rendered in a
 browser to confirm: `/app/privacy` returns 6,951 characters including
 help@towinly.com, and `/app/delete-account` returns 2,658 characters including
@@ -266,33 +274,38 @@ was about `https://www.towinly.com/support` on the website, which is still not
 a page. Use the `/app/support` address. Only the console paste remains.
 
 **A7, "The photo permission sentence is too narrow", is closed.**
-`app.json` line 65 now names both the profile picture and the optional ID
-photo. Contradiction 1 above settled the analysis correctly and the fix landed
-afterwards.
+`app.json` `photosPermission` now names both the profile picture and the
+optional ID photo. Contradiction 1 above settled the analysis correctly and the
+fix landed afterwards.
 
-**A6, "The production PostHog flag is unverified", is answered, and the answer
-changes the privacy forms.** `POSTHOG_API_KEY` is **set** on the production
-backend. The server sends the plaintext email address to PostHog as the signup
-event id. See `privacy-labels.md` section 5 item 1 for the two paths and the
-three label rows this decides. Do not submit either privacy form until the
-owner picks one.
+**A6, "The production PostHog flag is unverified", is answered AND acted on.**
+`POSTHOG_API_KEY` was set on the production backend, so the server was sending
+the plaintext email address to PostHog as the signup event id. The owner cleared
+the key on 2026-08-15 and the backend redeployed; the read-back showed 38
+variables with the key absent. Both privacy forms stand exactly as written in
+`privacy-labels.md`, and section 5 item 1 there keeps the full trace.
+(Corrected 2026-08-22. This paragraph ended "Do not submit either privacy form
+until the owner picks one" for a week after they had picked.)
 
-**A8, "No final screenshots exist", is partly closed.** Five of the eight
-planned shots are baked to both store sizes under
-`App/docs/store/screenshots/final/`. That clears both store minimums. The
-canonical output path is now that folder and not `docs/store-images/`, because
-the git repository root is `App/` and the project root is not versioned.
+**A8, "No final screenshots exist", is partly closed.** All eight planned shots
+are baked under `App/docs/store/screenshots/final/ios/`, which clears both store
+minimums. The canonical output path is that folder and not `docs/store-images/`,
+because the git repository root is `App/` and the project root is not versioned.
+(Corrected 2026-08-22: this said five of eight. `ls` returns eight. What is
+actually wrong with them is their age, not their number: every one shows the
+pre-2026-08-17 UI. See HARD-117 and the owner runbook.)
 
 Checked and confirmed while resolving the above:
 
 - All three demo logins answer HTTP 200 on the production API right now: elder,
   helper, and demo.sarah@towin.app. Re-check them on submission day.
-- The PostHog risk is real, not theoretical. `AuthService.java:92` calls
-  `capture("pending:" + request.getEmail(), ...)`, so the plain email is the
-  identifier. `PostHogService` does nothing when the key is blank, which is why
-  reading the production variable settles it either way.
-- `eas.json` `submit.production` is `{}` and `app.json` has no
-  `extra.eas.projectId` and no `owner`.
+- The PostHog risk was real, not theoretical. `AuthService.capture` in the
+  reference backend sent `"pending:" + request.getEmail()` as the distinct id,
+  so the plain email was the identifier. `PostHogService` does nothing when the
+  key is blank, which is why clearing the production variable settled it.
+- `eas.json` `submit.production` now holds `appleId`, `ascAppId` and
+  `appleTeamId`, and `app.json` carries `owner` and `extra.eas.projectId`.
+  (Corrected 2026-08-22. Both were empty when this line was written.)
 
 ---
 

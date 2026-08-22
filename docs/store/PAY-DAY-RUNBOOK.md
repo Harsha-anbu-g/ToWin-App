@@ -24,7 +24,8 @@ paste.
 | The whole Android track | `play-console-parallel-track.md` |
 
 Frozen, never edited on the day: bundle identifier and Android package
-`com.towinly.app`, Expo slug and scheme `towinly`, version `1.0.0`, Expo SDK 54.
+`com.towinly.app`, Expo slug and scheme `towinly`, Expo SDK 54. The version is
+`1.1.0` and it is read from `app.json`, never typed from memory.
 
 ---
 

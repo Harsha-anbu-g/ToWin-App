@@ -106,16 +106,17 @@ tier and record what it returns.
 **Unrestricted web access, proved rather than asserted.** Three checks, all run
 on 2026-08-15:
 
-1. No web view or browser package is installed. A name scan over all 32 runtime
+1. No web view or browser package is installed. A name scan over all 38 runtime
    dependencies for `webview`, `web-browser`, `browser` and `iframe` returns
    nothing. `react-native-webview` and `expo-web-browser` are both absent.
 2. Every `Linking.openURL` call site in `app/` and `src/` opens a fixed
-   destination: a `mailto:` address on `app/support.jsx:42`,
-   `app/delete-account.jsx:59` and `src/components/feedback/CreatorCard.jsx:34`,
-   the deletion page on `app/support.jsx:93`, and the policy links in
-   `src/components/legal/LegalSections.jsx:32`. None takes a user-typed address.
+   destination: a `mailto:` from `supportMailto` in `app/support.jsx`, from
+   `deletionMailto` in `app/delete-account.jsx` and from `open` in
+   `src/components/feedback/CreatorCard.jsx`, the deletion page from
+   `SUPPORT_PAGE.deletionUrl` in `app/support.jsx`, and the policy links in
+   `src/components/legal/LegalSections.jsx`. None takes a user-typed address.
 3. Members can save a Facebook or Instagram URL on their own profile
-   (`app/profile-edit.jsx:552` and `:562`), and no screen renders another
+   (the Facebook and Instagram fields in `app/profile-edit.jsx`), and no screen renders another
    member's URL as a tappable link. A repo sweep for `facebook` and `instagram`
    outside the edit form and the legal text returns one hit, and it is the
    founder's own link on the feedback screen.
@@ -131,7 +132,7 @@ guideline 1.2's filtering requirement.
 | Users can create or share content other users see | Yes | Bios, help requests, reviews, Pass On entries, messages. |
 | App shares the user's location with other users | Approximate only | Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
 | In-app controls for objectionable content | Yes | Report from a profile, block from a profile, a managed block list, a write-time word filter on posts and on private messages, and zero tolerance terms agreed at signup. Section 6 states exactly what the filter does and does not cover. |
-| Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/register.jsx:52` sets `MIN_AGE = 18` and line 181 refuses the signup. No document check happens. |
+| Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/register.jsx` sets `MIN_AGE = 18` and its submit handler refuses a younger date of birth. No document check happens. |
 
 ### 2.4 Expect a teen tier, and do not argue with it
 
@@ -169,7 +170,7 @@ is the answer.
 
 Free means the Paid Applications Agreement, the bank account and the tax forms
 are all skipped. That is the largest single piece of enrollment paperwork, and
-Towinly does not owe it. The evidence: none of the 32 runtime dependencies in
+Towinly does not owe it. The evidence: none of the 38 runtime dependencies in
 `App/package.json` is a purchase, subscription or billing SDK.
 
 Mac and Vision Pro are off because `app.json` sets `ios.supportsTablet: false`
@@ -221,12 +222,16 @@ of it is exempt.
 
 The answer is No on both stores. It was proved by scanning rather than assumed,
 because a renamed package would slip past a glance at `package.json`. All four
-checks ran on 2026-08-15 and every one returned zero.
+checks ran on 2026-08-15 and every one returned zero. The two package-name
+scans were RE-RUN on 2026-08-22 against the tree as it stands, because the
+dependency count had moved: 38 runtime deps, 9 dev deps, 970 installed packages,
+still 0 hits. The two native symbol scans were not re-run and their 2026-08-15
+result is what the table reports.
 
 | Check | Scope | Result |
 |---|---|---|
-| Package-name scan against a 40-term pattern (admob, adjust, appsflyer, branch, fbsdk, firebase, amplitude, mixpanel, segment, posthog, sentry, bugsnag, onesignal, singular, kochava, tenjin, applovin, unity-ads, ironsource, vungle, chartboost, inmobi, tapjoy, criteo, moengage, clevertap, braze, airship, leanplum, smartlook, fullstory, heap, matomo, flurry, appmetrica, tracking-transparency, idfa, advertising-id and more) | 32 runtime deps and 9 dev deps | **0 hits** |
-| Same pattern over the whole installed tree | **956 installed packages** under `node_modules`, scoped packages included | **0 hits** |
+| Package-name scan against a 40-term pattern (admob, adjust, appsflyer, branch, fbsdk, firebase, amplitude, mixpanel, segment, posthog, sentry, bugsnag, onesignal, singular, kochava, tenjin, applovin, unity-ads, ironsource, vungle, chartboost, inmobi, tapjoy, criteo, moengage, clevertap, braze, airship, leanplum, smartlook, fullstory, heap, matomo, flurry, appmetrica, tracking-transparency, idfa, advertising-id and more) | 38 runtime deps and 9 dev deps | **0 hits** |
+| Same pattern over the whole installed tree | **970 installed packages** under `node_modules`, scoped packages included | **0 hits** |
 | iOS symbol scan for `ASIdentifierManager`, `advertisingIdentifier`, `AppTrackingTransparency`, `ATTrackingManager` | every `.h`, `.m`, `.mm` and `.swift` under `node_modules` | **0 files** |
 | Android scan for `com.google.android.gms.permission.AD_ID`, `com.google.android.gms.ads`, `AdvertisingIdClient` | every bundled `AndroidManifest.xml`, `.gradle`, `.java` and `.kt` | **0 files** |
 
@@ -259,31 +264,44 @@ against real network traffic.
 |---|---|
 | Data Used to Track You | None. Nothing is linked with third-party data for advertising and nothing goes to a data broker. |
 | Data Not Linked to You | None. Nothing is collected outside a signed-in session. |
-| Data Linked to You | Eleven data types are Yes, all App Functionality, all Used for Tracking: No. See `privacy-labels.md` section 1.2. |
+| Data Linked to You | 12 data types are Yes, all App Functionality, all Used for Tracking: No. See `privacy-labels.md` section 1.2. |
 
-**BLOCKING, and it changed on 2026-08-15.** `POSTHOG_API_KEY` **is set** on the
-production backend, read with `railway variable list` against the `backend`
-service of the `towin` project, production environment. The key is 48
-characters. Values were not printed.
-`ToWin/backend/.../auth/service/AuthService.java:92` captures
-`user_signup_started` with the plaintext email address as the distinct id, and
-`App/app/(auth)/register.jsx:192` is the call that triggers it.
+**RESOLVED 2026-08-15. The analytics rows are None and they may be submitted.**
+`POSTHOG_API_KEY` was set on the production backend, the owner deleted it, and
+the backend redeployed the same hour. The read-back showed 38 variables with the
+key absent. `PostHogService` is a documented no-op with a blank key, so the
+labels below stand exactly as written and no legal page changes.
+`privacy-labels.md` section 5 item 1 holds the full trace and both paths.
 
-So the analytics rows are not the None they were written as. Two honest paths,
-and the owner picks one before either form is submitted:
+<details>
+<summary>The wording this replaced, kept so the decision can be re-read
+(marked BLOCKING here until 2026-08-22, when this page was swept)</summary>
 
-- **Keep PostHog on.** Apple `Usage Data / Product Interaction` becomes
-  collected and linked, Play `Personal info / Email address` becomes shared
-  with an analytics third party, and Play `App activity / App interactions`
-  becomes collected. PostHog also has to join the processor list in
-  `src/data/legalContent.js`, which today names Amazon, Twilio, OpenStreetMap,
-  Groq and Railway.
-- **Clear `POSTHOG_API_KEY` on the production backend.** One owner command.
-  `PostHogService` is a documented no-op when the key is blank, so the labels
-  stand exactly as written and no legal page changes.
+> **BLOCKING, and it changed on 2026-08-15.** `POSTHOG_API_KEY` **is set** on
+> the production backend, read with `railway variable list` against the
+> `backend` service of the `towin` project, production environment. The key is
+> 48 characters. Values were not printed. `AuthService.capture` in the reference
+> backend sends `user_signup_started` with the plaintext email address as the
+> distinct id, and the `/auth/register` post in `App/app/(auth)/register.jsx` is
+> what triggers it.
+>
+> So the analytics rows are not the None they were written as. Two honest paths,
+> and the owner picks one before either form is submitted:
+>
+> - **Keep PostHog on.** Apple `Usage Data / Product Interaction` becomes
+>   collected and linked, Play `Personal info / Email address` becomes shared
+>   with an analytics third party, and Play `App activity / App interactions`
+>   becomes collected. PostHog also has to join the processor list in
+>   `src/data/legalContent.js`, which today names Amazon, Twilio, OpenStreetMap,
+>   Groq and Railway.
+> - **Clear `POSTHOG_API_KEY` on the production backend.** One owner command.
+>   `PostHogService` is a documented no-op when the key is blank, so the labels
+>   stand exactly as written and no legal page changes.
 
-Either answer is fine. Submitting the old labels with the key set is a false
-declaration on two stores.
+The owner took the second path on the day it was written. This page kept saying
+BLOCKING for a week after it was closed, which is the drift this sweep exists to
+stop.
+</details>
 
 Never claim end-to-end encryption in this questionnaire or in the listing. The
 Sealed box is encrypted by the backend, the app holds no key, and the privacy
@@ -531,12 +549,12 @@ answer below is free and can be filled the hour the account verifies.
 | Government apps | No | READY |
 | Financial features | None. No lending, no payments, no crypto, no banking. | READY |
 | Health apps | No health features declared | READY |
-| Advertising ID | **No.** The permission is absent from the merged manifest and no ad SDK exists in 956 installed packages. | READY, section 4.3 |
+| Advertising ID | **No.** The permission is absent from the merged manifest and no ad SDK exists in 970 installed packages. | READY, section 4.3 |
 
 The 18-and-over answer is backed by a real gate, which is what Google looks
-for: `app/(auth)/register.jsx:52` sets `MIN_AGE = 18`, line 181 refuses the
-signup with `You have to be 18 or over to join Towinly.`, and line 55 sets
-`MAX_AGE = 120` so a four-digit typo lands on an error instead of passing.
+for: `app/(auth)/register.jsx` sets `MIN_AGE = 18` and its submit handler refuses the
+signup with `You have to be 18 or over to join Towinly.`, and `MAX_AGE = 120`
+means a four-digit typo lands on an error instead of passing.
 `__tests__/register-age-gate.test.js` guards it.
 
 One caution on the health answer. "Company isn't a luxury. Company is
@@ -652,6 +670,11 @@ Everything above this line is answerable today. Everything below needs a paid
 account, a console session, or the owner's own legal data. Nothing here is an
 open question. Each one is a paste or a click.
 
+**Swept 2026-08-22 (HARD-116).** Seven of the twenty had already been done and
+this list had not caught up: items 4, 5, 6, 16, 17, 18 and 20. Each now carries
+what closed it and where the value lives. Rows are marked done rather than
+removed, so the list still reads as the full set of things a submission needs.
+
 **Needs the Apple account, in order:**
 
 | # | Item | Why it waits |
@@ -659,9 +682,9 @@ open question. Each one is a paste or a click.
 | 1 | Enrollment type: individual or organization | DECIDED 2026-08-15: **individual**. Seller name is the owner's legal personal name. Record in `enrollment-decision.md`. |
 | 2 | Legal entity name, postal address | Real legal identity. Never guessed. |
 | 3 | D-U-N-S number | Only for an organization enrollment, and the wait lands entirely before the payment step. |
-| 4 | Register `com.towinly.app` as an explicit App ID | The New App dialog will not offer the bundle ID until it exists in the developer portal. |
-| 5 | Create the app record | The numeric Apple ID is generated here. `eas submit` wants it as `ascAppId`. |
-| 6 | Team ID, ten characters, from Membership | `eas submit` wants it as `appleTeamId`. |
+| 4 | Register `com.towinly.app` as an explicit App ID | **DONE.** The App Store Connect record exists, so the App ID does too. |
+| 5 | Create the app record | **DONE.** `ascAppId` is `6802125342`, in `eas.json` `submit.production.ios`. |
+| 6 | Team ID, ten characters, from Membership | **DONE.** `appleTeamId` is `G6RRNXL9BV`, in `eas.json` `submit.production.ios`. |
 | 7 | App Review contact: first name, last name, phone with country code, email | Section 6.1. |
 | 8 | Legal, Technical and Marketing contacts | Account settings. The same person at this size. |
 | 9 | Copyright line, `2026 <owner's legal name>` | Item 1 is decided: individual. Only the exact spelling against the photo ID remains. |
@@ -681,11 +704,11 @@ open question. Each one is a paste or a click.
 
 | # | Item | Why |
 |---|---|---|
-| 16 | A free Expo account, then `eas login` and `eas init` | Free, no Apple money, but it opens a browser. `eas whoami` prints `Not logged in` today. |
-| 17 | Send a test message to `help@towinly.com` and confirm a person receives it | Five public pages, both store contact fields and App Review all write there. Apple writes there first. |
-| 18 | The PostHog decision in section 5 | One command either way, and it changes both privacy forms. |
+| 16 | A free Expo account, then `eas login` and `eas init` | **DONE.** `app.json` carries `owner: harshavardhan_ag` and `extra.eas.projectId: 6cf0141c-c99a-4663-87df-12f271989e7b`. A fresh shell still needs `eas login` before any build command. |
+| 17 | Send a test message to `help@towinly.com` and confirm a person receives it | **DONE 2026-08-15**, owner confirmed delivery. Five public pages, both store contact fields and App Review all write there. |
+| 18 | The PostHog decision in section 5 | **DONE 2026-08-15.** The key was cleared on the production backend and the backend redeployed. The privacy forms stand as written. |
 | 19 | A spare demo seat for deletion testing, or the backend fix in section 6.3 | Protects the three review seats. |
-| 20 | Decide whether the "Draft: a lawyer has not checked this yet" banner stays | It renders above the first section of the live privacy policy. No guideline forbids it. Every reviewer reads it. |
+| 20 | Decide whether the "Draft: a lawyer has not checked this yet" banner stays | **DECIDED: it stays.** A documented owner decision, recorded in the header of `src/data/legalContent.js` and pinned by `__tests__/legal-retention-claim.test.js`. No guideline forbids it. |
 
 ---
 
@@ -722,7 +745,7 @@ a real browser render, and re-fetched again for this document.
 Old wording: "No ad SDK, no attribution SDK, no analytics SDK anywhere in the
 dependency list."
 Why it changed: the answer was right and the proof was thin. It now rests on
-956 scanned packages, a native symbol scan on both platforms, and
+970 scanned packages, a native symbol scan on both platforms, and
 `NSPrivacyTracking` read out of all eight bundled privacy manifests.
 
 **4. The demo seats were last tested on 2026-08-11.**

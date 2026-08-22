@@ -36,7 +36,7 @@ hour spent here is an hour not spent on the meter.
   is yes. See the box in section 2 for the evidence and for what it changes.
   **This is the highest-value item on the page: submitting the privacy forms
   without it would have been a false declaration on both stores.**
-- [x] **Reword `photosPermission`.** DONE. `App/app.json` line 65 already
+- [x] **Reword `photosPermission`.** DONE. `App/app.json` `photosPermission` already
   covers both the profile picture and the optional ID photo. Evidence in
   section 3.
 - [x] **Prove the privacy page and the support page are live and correct.**
@@ -78,7 +78,7 @@ hour spent here is an hour not spent on the meter.
   DONE 2026-08-15. One sheet for both stores at
   `App/docs/store/console-answers.md`: console label on the left, answer on the
   right. Age rating every question with its reason, export compliance,
-  advertising identifier proved by scan rather than assumed (956 installed
+  advertising identifier proved by scan rather than assumed (970 installed
   packages, 0 hits; 0 IDFA symbols; `NSPrivacyTracking` false in all 8 bundled
   manifests), category, price, territories, the whole Play IARC questionnaire,
   and the review notes at 3967 of Apple's 4000 characters. All three demo seats
@@ -133,7 +133,7 @@ hour spent here is an hour not spent on the meter.
   steps fail with a vague authentication error. Play requires identity
   verification on the developer account. Towinly is free and ships no in-app
   purchase, so Apple's Paid Applications Agreement and the banking and tax
-  forms behind it do not apply. Evidence for the free claim: none of the 32
+  forms behind it do not apply. Evidence for the free claim: none of the 38
   runtime dependencies in `App/package.json` is a purchase, subscription or
   billing SDK.
 - [x] **Run `railway variables` on the production backend and check
@@ -148,8 +148,8 @@ hour spent here is an hour not spent on the meter.
   `postHogService.capture("pending:" + request.getEmail(),
   "user_signup_started", Map.of("role", ...))`. The distinct id is the
   **plaintext email address**. The mobile app reaches that endpoint:
-  `App/app/(auth)/register.jsx:192` posts `/auth/register`, which
-  `AuthController.java:24` maps to `AuthService.register`. The second event,
+  the `/auth/register` post in `App/app/(auth)/register.jsx` reaches
+  `AuthService.register` through `AuthController`. The second event,
   `user_signed_up` at `AuthService.java:173`, keys on the user UUID instead, so
   only the first one carries the address.
 
@@ -166,17 +166,20 @@ hour spent here is an hour not spent on the meter.
   Data safety form). Only the account holder can fill console forms. Blocks
   launch because neither store accepts a submission without them. Read the
   PostHog box above before you type anything.
-- [x] **Capture the raw store screenshots.** DONE 2026-08-11. Thirteen captures
-  in `App/docs/store/screenshots/`, every one at 1320 x 2868 (Apple's iPhone 6.9
-  inch size), taken from the live phone web build with real seeded data on all
-  three demo seats. No Xcode, Android SDK or physical phone was needed.
+- [x] **Capture the raw store screenshots.** DONE 2026-08-11, extended later to
+  16 captures (`raw-01` to `raw-16`) in `App/docs/store/screenshots/`, every one
+  at 1320 x 2868 (Apple's iPhone 6.9 inch size), taken from the live phone web
+  build with real seeded data on all three demo seats. No Xcode, Android SDK or
+  physical phone was needed. **They are now stale:** every one shows the
+  pre-2026-08-17 UI. See HARD-117.
+  (Corrected 2026-08-22: this said thirteen.)
 - [ ] **Recruit 12 testers for Google's closed test and keep them enrolled 14
   consecutive days.** [owner] Required before a personal Play account gets
   production access. Blocks the Android launch and is the longest single item,
   about three weeks including setup, so start it the day the Play account
   exists. One day below 12 testers restarts the run.
 - [ ] **Decide on the lawyer review of the legal pages.** [owner] Both policies
-  ship with a visible draft notice: `App/src/data/legalContent.js:14` exports
+  ship with a visible draft notice: `App/src/data/legalContent.js` exports
   `DRAFT` with `asOf: 'Draft of 16 August 2026'` (bumped when the push
   processor language landed), and the notice renders live at
   `https://www.towinly.com/app/privacy` above the first section. Neither store
@@ -196,14 +199,13 @@ hour spent here is an hour not spent on the meter.
   in `App/eas.json` are live now: a store build can be produced the moment the
   paid accounts exist.
 - [x] **Reword `photosPermission` in `App/app.json`.** DONE, and the earlier
-  entry was stale. `app.json` line 65 reads: "Towinly uses your photo library
+  entry was stale. `app.json` `photosPermission` reads: "Towinly uses your photo library
   so you can choose a profile picture, and so you can send a photo of your ID
   if you choose to verify who you are." That covers both uses of the picker.
-  `App/app/profile-edit.jsx:156` defines one `pickImage()` that calls
-  `ImagePicker.requestMediaLibraryPermissionsAsync()` at line 160, and two
-  callers share it: `changePhoto` at line 179, which sends
-  `PUT /profile/photo`, and `uploadId` at line 204, which sends
-  `POST /auth/verify-id` at line 216. One permission, two uses, one sentence
+  `App/app/profile-edit.jsx` defines one `pickImage()` that calls
+  `ImagePicker.requestMediaLibraryPermissionsAsync()`, and two callers share
+  it: `changePhoto`, which sends `PUT /profile/photo`, and `uploadId`, which
+  sends `POST /auth/verify-id`. One permission, two uses, one sentence
   that names both. No second key is needed. `grep -rn ImagePicker app src`
   returns matches in that one file only, so no other screen can trigger the
   prompt.
@@ -289,7 +291,7 @@ Three reasons, in order of weight:
    asset nobody can roll back.
 2. `App/scripts/bake_screenshots.py` already writes to the `final/` folders, so
    the tooling and the path agree with no change.
-3. The 13 raw captures and every screenshot document already live under
+3. The 16 raw captures and every screenshot document already live under
    `App/docs/store/`. Splitting raw from baked across two trees is how the
    wrong image gets uploaded.
 
@@ -308,7 +310,7 @@ it. History is kept so a future reader can see what moved and why.
 Old wording: "Reword `photosPermission` in `App/app.json`. The string covers
 only the profile picture, but `App/app/profile-edit.jsx` uses the same picker
 to upload a government ID to `/auth/verify-id`."
-Why it changed: the string in `app.json` line 65 already names both uses. It
+Why it changed: the `photosPermission` string in `app.json` already names both uses. It
 was reworded at some point after the checklist was written on 2026-08-12 and
 the box was never ticked. Checked against `app/profile-edit.jsx` lines 156, 179
 and 204, which confirm one shared picker and two callers.
@@ -346,11 +348,16 @@ Why it changed: `eas whoami` prints `Not logged in`, and `eas login` opens a
 browser. The repo cannot start this. The label is now [owner then repo] so the
 dependency is visible from the list rather than from the sentence.
 
-**6. Baking screenshots was ticked as done. It is five of eight.**
+**6. Baking screenshots was ticked as done. It was five of eight.**
 Old wording: "Bake the store-ready versions. DONE."
-Why it changed: `ls App/docs/store/screenshots/final/ios` returns 5 files, and
-the plan in `screenshots-and-review.md` is 8. Five clears both store minimums,
-so nothing is blocked, but the box was overstating the work.
+Why it changed: on 2026-08-15 `ls App/docs/store/screenshots/final/ios` returned
+5 files against a plan of 8 in `screenshots-and-review.md`. Five cleared both
+store minimums, so nothing was blocked, but the box was overstating the work.
+
+**Update 2026-08-22 (HARD-116).** That same `ls` now returns 8. The set is
+complete and the count is no longer the problem: all eight show the
+pre-2026-08-17 UI, which is a Guideline 2.3 accurate-metadata risk rather than a
+missing-asset one. HARD-117 carries the re-capture runbook.
 
 ---
 

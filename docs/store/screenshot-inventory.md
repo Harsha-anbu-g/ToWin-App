@@ -200,7 +200,17 @@ must hide it the same way.
 ## Before uploading, re-check
 
 Raws 01 to 13 came from the build that was live on 2026-08-11, commit
-`af22521`. Raws 14 to 16 came from the build live on 2026-08-15. The elder Edit Profile crash fix and the audit fixes are committed
-after that and are not deployed yet. None of the 13 shots contain Edit Profile,
-so all 13 remain accurate. Re-run the capture pass after the next deploy anyway,
-and re-bake if any screen moved.
+`af22521`. Raws 14 to 16 came from the build live on 2026-08-15. Sixteen raws in
+total, and none of them contains Edit Profile.
+
+**All sixteen are now stale, and so are the eight baked shots (2026-08-22).**
+The owner's normal-density redesign of 2026-08-17 removed the elder oversizing,
+changed the type ramp and moved the cards to white, and the location run changed
+four more screens after that. Every capture predates both. Re-capture before the
+next submission: the runbook is in the store owner-actions page and the
+pinned recipe is in this file. Nothing here is deleted; superseded files move to
+`screenshots/superseded/`.
+
+(This paragraph used to end "None of the 13 shots contain Edit Profile, so all
+13 remain accurate." It was written when there were thirteen, and it stayed
+after the count reached sixteen and after the UI changed under all of them.)

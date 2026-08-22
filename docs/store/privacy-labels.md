@@ -72,7 +72,8 @@ Facts these labels rest on, each verified in code:
   `app.json android.blockedPermissions` and `tools:node="remove"` in
   `android/app/src/main/AndroidManifest.xml`. The Ask AI mic button only
   focuses the text field so the OS keyboard's own dictation can be used;
-  audio never reaches the app (`src/components/AskAiAssistant.jsx:132`).
+  audio never reaches the app (`src/components/AskAiAssistant.jsx`, which mounts
+  no recorder at all).
 - **No address book access.** Emergency contacts and family-link identifiers
   are typed by hand. No contacts permission exists in the manifest.
 - **expo-updates is ENABLED since 2026-08-16** (`eas update:configure` wrote
@@ -82,16 +83,18 @@ Facts these labels rest on, each verified in code:
   and app metadata to Expo. Covered honestly: the Device ID rows below are
   already Yes and the privacy policy already names Expo as a processor.
 - **Google sign-in never runs in store builds.**
-  `src/components/auth/GoogleLoginButton.jsx:46` returns null when
+  `src/components/auth/GoogleLoginButton.jsx` returns null when
   `Platform.OS !== 'web'`, and `src/lib/oauthFlow.js` documents that v1
   native never begins OAuth. `/auth/oauth/complete` is web-only traffic.
 - **SOS is dormant.** `src/components/home/SosCard.jsx` (POST
   `/emergency/sos`) exists but is not imported by any screen;
-  `app/(tabs)/home.jsx:154` documents the removal. Emergency contacts are
+  `app/(tabs)/home.jsx` documents the removal in the comment where `SosCard`
+  used to mount. Emergency contacts are
   still collected, and the backend texts them at trust milestones per
   `docs/store-listing.md`.
 - **AI assistant is consent-gated per user.** The first question triggers a
-  plain-words dialog naming Groq (`src/components/AskAiAssistant.jsx:89`),
+  plain-words dialog naming Groq (the consent gate in
+  `src/components/AskAiAssistant.jsx`, stored by `src/lib/aiConsent.js`),
   persisted per account (`src/lib/aiConsent.js`, key from
   `src/lib/storageKeys.js aiConsentKey`). The app sends `{message, history}`
   to `POST /assistant/chat`; the backend appends the user's first name and
@@ -132,7 +135,7 @@ Functionality** for all types unless a second purpose is listed.
 | Contact Info | Email Address | **Yes** | App Functionality, Account Management (declare as App Functionality; Apple has no separate account purpose) | Signup, login, verification email. |
 | Contact Info | Phone Number | **Yes** (optional) | App Functionality | Profile field; delivered to Twilio for SMS codes; revealed to a connection only at the Phone Ready trust step. |
 | Contact Info | Physical Address | No | | Only a town is collected; declared under Coarse Location. |
-| Contact Info | Other User Contact Info | **Yes** | App Functionality | Third-party data the user types: emergency contact name, phone, relationship (`app/emergency-contacts.jsx`), and the elder's username or email in a family link request (`src/components/family/AddParentForm.jsx:48`). |
+| Contact Info | Other User Contact Info | **Yes** | App Functionality | Third-party data the user types: emergency contact name, phone, relationship (`app/emergency-contacts.jsx`), and the elder's username or email in a family link request (the `/family/requests` post in `src/components/family/AddParentForm.jsx`). |
 | Health & Fitness | all | No | | |
 | Financial Info | all | No | | |
 | Location | Precise Location | No | | The phone is read, but the fix is rounded to a ~4 sq km cell before it leaves the device (`src/lib/coarseLocation.js`); nothing at three decimal places is ever transmitted or stored. |
@@ -143,7 +146,7 @@ Functionality** for all types unless a second purpose is listed.
 | User Content | Photos or Videos | **Yes** (optional) | App Functionality | Profile photo (`PUT /profile/photo`) and the optional government ID photo (`POST /auth/verify-id`, +3 trust points, staff review only, stored in AWS S3). Both picked from the photo library, never the camera. |
 | User Content | Audio Data | No | | Mic blocked; OS keyboard dictation never reaches the app. |
 | User Content | Gameplay Content | No | | `app/game.jsx` is fully on-device. |
-| User Content | Customer Support | **Yes** | App Functionality | Feedback form: message, seven optional 1 to 5 ratings, optional name and email (`app/feedback.jsx:83`). Reported AI answers arrive here too. |
+| User Content | Customer Support | **Yes** | App Functionality | Feedback form: message, seven optional 1 to 5 ratings, optional name and email (the `/feedback` post in `app/feedback.jsx`). Reported AI answers arrive here too. |
 | User Content | Other User Content | **Yes** | App Functionality | Bio, interests or skills, hobbies or looking-for, help requests (`/needs`), reviews (`/reviews`), abuse reports (`/reports`), Pass On stories, letters, sheet answers and Sealed box items (`/passon/*`). Sealed items travel over HTTPS like everything else; at-rest sealing is backend behavior, so do not claim end-to-end encryption anywhere. |
 | Browsing History | all | No | | |
 | Search History | all | No | | No in-app search history is stored; the geocode query is the location field above. |
@@ -242,21 +245,21 @@ network call must re-check the row (and section 6).
 
 | Data | Where in code (collection point -> endpoint) | Apple label | Play label | Shared with a third party? |
 |---|---|---|---|---|
-| Username, email, password, DOB, role | `app/(auth)/register.jsx:192` -> `POST /auth/register` | Identifiers > User ID; Contact Info > Email; Other Data (DOB) | Personal info: User IDs, Email, Other info | No |
+| Username, email, password, DOB, role | `app/(auth)/register.jsx` -> `POST /auth/register` | Identifiers > User ID; Contact Info > Email; Other Data (DOB) | Personal info: User IDs, Email, Other info | No |
 | Profile name, bio, interests/skills, hobbies/looking-for, languages, occupation, gender, Facebook/Instagram URLs | `app/profile-edit.jsx` -> `PUT /profile/elder` or `/profile/helper` | Contact Info > Name; User Content > Other; Other Data | Personal info: Name, Other info; App activity: Other UGC | No |
-| Profile photo | `app/profile-edit.jsx:144-166` (expo-image-picker) -> `PUT /profile/photo` multipart | User Content > Photos or Videos | Photos and videos: Photos | No (AWS S3 stores it) |
-| Government ID photo | `app/profile-edit.jsx:176-189` -> `POST /auth/verify-id` multipart | User Content > Photos or Videos | Photos: Photos (+ Fraud prevention purpose) | No (S3 + staff review) |
-| Phone number | `app/profile-edit.jsx:242` -> `PUT /profile/phone` | Contact Info > Phone Number | Personal info: Phone number | No (Twilio = service provider) |
+| Profile photo | `pickImage` + `changePhoto` in `app/profile-edit.jsx` (expo-image-picker) -> `PUT /profile/photo` multipart | User Content > Photos or Videos | Photos and videos: Photos | No (AWS S3 stores it) |
+| Government ID photo | `pickImage` + `uploadId` in `app/profile-edit.jsx` -> `POST /auth/verify-id` multipart | User Content > Photos or Videos | Photos: Photos (+ Fraud prevention purpose) | No (S3 + staff review) |
+| Phone number | the phone field in `app/profile-edit.jsx` -> `PUT /profile/phone` | Contact Info > Phone Number | Personal info: Phone number | No (Twilio = service provider) |
 | Town / coarse location | `app/profile-edit.jsx` -> `GET /geocode/search` + `PUT /profile/location` | Location > Coarse Location | Location: Approximate location | No (server geocodes the bare town via OSM Nominatim) |
 | Device position, rounded | `src/lib/deviceLocation.js` -> `PUT /profile/location` with the snapped pair, asked on four screens through `src/components/location/LocationPrimer.jsx` | Location > Coarse Location | Location: Approximate location | No |
 | Private messages | `app/chat/*`, `app/messages/*` -> `POST /messages/{id}/send` | User Content > Emails or Text Messages | Messages: Other in-app messages | No |
-| AI questions + chat history (+ first name, trust score added server-side) | `src/components/AskAiAssistant.jsx:149` -> `POST /assistant/chat`; consent `src/lib/aiConsent.js`; backend enrichment `ToWin/backend/.../AssistantService.java:174-179` | User Content > Emails or Text Messages; Contact Info > Name; Other Data (trust score) | Messages: Other in-app messages; Personal info: Name, Other info | **Yes: Groq**, only after per-user consent |
-| Emergency contacts (third party) | `app/emergency-contacts.jsx:64` -> `POST /emergency/contacts` | Contact Info > Other User Contact Info | Contacts | No (Twilio texts them). SOS button is dormant: `SosCard.jsx` unmounted. |
-| Family link request (elder's username/email, relationship) | `src/components/family/AddParentForm.jsx:48` -> `POST /family/requests` | Contact Info > Other User Contact Info | Contacts | No |
+| AI questions + chat history (+ first name, trust score added server-side) | `src/components/AskAiAssistant.jsx` -> `POST /assistant/chat`; consent `src/lib/aiConsent.js`; backend enrichment `ToWin/backend/.../AssistantService.java:174-179` | User Content > Emails or Text Messages; Contact Info > Name; Other Data (trust score) | Messages: Other in-app messages; Personal info: Name, Other info | **Yes: Groq**, only after per-user consent |
+| Emergency contacts (third party) | the `add` mutation in `app/emergency-contacts.jsx` -> `POST /emergency/contacts` | Contact Info > Other User Contact Info | Contacts | No (Twilio texts them). SOS button is dormant: `SosCard.jsx` unmounted. |
+| Family link request (elder's username/email, relationship) | the `send` mutation in `src/components/family/AddParentForm.jsx` -> `POST /family/requests` | Contact Info > Other User Contact Info | Contacts | No |
 | Help requests | needs screens -> `POST /needs` | User Content > Other | App activity: Other UGC | No |
-| Reviews | `src/components/family/FamilyReviewForParent.jsx:67` and elder flows -> `POST /reviews` | User Content > Other | App activity: Other UGC | No |
-| Feedback + reported AI answers | `app/feedback.jsx:83` -> `POST /feedback` (optional name/email, message, 7 ratings) | User Content > Customer Support | App activity: Other UGC | No |
-| Abuse reports | `app/user/[id].jsx:116`, `app/passed-on/[ownerId].jsx:57` -> `POST /reports` | User Content > Other | App activity: Other UGC | No |
+| Reviews | the `save` mutation in `src/components/family/FamilyReviewForParent.jsx`, the only review form in the app -> `POST /reviews` | User Content > Other | App activity: Other UGC | No |
+| Feedback + reported AI answers | `app/feedback.jsx` -> `POST /feedback` (optional name/email, message, 7 ratings) | User Content > Customer Support | App activity: Other UGC | No |
+| Abuse reports | the `report` mutations in `app/user/[id].jsx` and `app/passed-on/[ownerId].jsx` -> `POST /reports` | User Content > Other | App activity: Other UGC | No |
 | Pass On stories, letters, sheet, Sealed items | `app/pass-on/*` -> `/passon/*` | User Content > Other | App activity: Other UGC | No. HTTPS in transit; sealing at rest is backend behavior, never claim E2E. |
 | Trust ladder actions | trust screens -> `POST /trust/{id}/confirm|pause|resume` | Other Data > Other Data Types | App activity: Other actions | No |
 | Streak check-ins | `app/checkin.jsx`, `app/streaks.jsx` -> `POST /streaks/checkin` | Other Data > Other Data Types | App activity: Other actions | No |
@@ -287,15 +290,14 @@ No ads. No data brokers. No sale of personal data.
    `POSTHOG_API_KEY` is set, 48 characters. Values were not printed.
 
    Traced through the code:
-   `ToWin/backend/.../auth/service/AuthService.java:92` calls
+   `AuthService.register` in the reference backend calls
    `postHogService.capture("pending:" + request.getEmail(),
    "user_signup_started", Map.of("role", ...))`. **The distinct id is the
    plaintext email address**, so the address itself reaches PostHog, a US
    third-party analytics processor. The mobile app triggers it:
-   `App/app/(auth)/register.jsx:192` posts `/auth/register`, mapped at
-   `AuthController.java:24`. The second event, `user_signed_up` at
-   `AuthService.java:173`, keys on the user UUID, so only the first carries an
-   address.
+   the `/auth/register` post in `App/app/(auth)/register.jsx` reaches it through
+   `AuthController`. The second event, `user_signed_up`, keys on the user UUID,
+   so only the first carries an address.
 
    **DECIDED AND DONE 2026-08-15: the owner chose the second path.**
    `POSTHOG_API_KEY` was deleted from the production backend (verified by a
@@ -321,9 +323,13 @@ No ads. No data brokers. No sale of personal data.
    `app-store-connect-fields.md`.
 2. **iOS privacy manifest.** Diff the aggregated `PrivacyInfo.xcprivacy` in
    the first EAS iOS build artifact against section 1.
-3. **Photo purpose string.** `app.json` `photosPermission` names only the
-   profile picture; the same picker uploads the government ID. Reword before
-   Apple review so the string covers both uses.
+3. **Photo purpose string. DONE.** `app.json` `photosPermission` now reads
+   "Towinly uses your photo library so you can choose a profile picture, and so
+   you can send a photo of your ID if you choose to verify who you are", which
+   covers both uses of the one picker (`pickImage` in `app/profile-edit.jsx`,
+   shared by `changePhoto` and `uploadId`).
+   (Corrected 2026-08-22. This item read "names only the profile picture ...
+   reword before Apple review" after the rewording had already landed.)
 
 ---
 

@@ -291,10 +291,10 @@ Different hashes, so the setting **is** baked into the native iOS bundle.
 The impact was then traced to the call sites, and it is small:
 
 - `usePathname()` returns the clean `pathname` field, which is **not** prefixed. The
-  app's only use of it, `src/components/AskAiAssistant.jsx:52`, is unaffected.
+  app's only use of it, in `src/components/AskAiAssistant.jsx`, is unaffected.
 - Only `unstable_globalHref` gets the `/app` prefix. Nothing in the app reads it.
 - `TabTrigger` from `expo-router/ui` also prefixes, but the app uses the standard
-  `Tabs` from `expo-router` (`app/(tabs)/_layout.jsx:11`), so this path is never hit.
+  `Tabs` from `expo-router` (`app/(tabs)/_layout.jsx`), so this path is never hit.
 - `stripBaseUrl` on an incoming native deep link like `towinly:///profile` finds no
   `/app` prefix and returns the path unchanged, so deep links still resolve.
 
@@ -668,7 +668,7 @@ The prompts the app **cannot** raise, and why no string is needed for each:
 | Microphone | `expo-image-picker` plugin sets `microphonePermission: false` |
 | Face ID | `expo-secure-store` plugin sets `faceIDPermission: false` |
 | Location | **This one CAN fire, corrected 2026-08-22.** `expo-location ~19.0.8` is installed and `app.json` carries `locationWhenInUsePermission`. The prompt is asked on four screens, always behind the app's own explainer card first (`src/components/location/LocationPrimer.jsx`), and anyone who declines still types a town. The row used to read "No `expo-location` in `package.json`. The app geocodes a typed town name on the server" |
-| Notifications | **This one CAN fire, corrected 2026-08-22.** `expo-notifications ~0.32.17` is installed and `src/lib/pushNotifications.js:67` calls `requestPermissionsAsync`. iOS needs no Info.plist key for it. The row used to read "No `expo-notifications` in `package.json`" |
+| Notifications | **This one CAN fire, corrected 2026-08-22.** `expo-notifications ~0.32.17` is installed and `src/lib/pushNotifications.js` calls `requestPermissionsAsync`. iOS needs no Info.plist key for it. The row used to read "No `expo-notifications` in `package.json`" |
 | Contacts | No `expo-contacts` in `package.json`. Emergency contacts are typed by hand |
 | Speech recognition | `expo-speech` is text to speech, which is output only and needs no permission |
 

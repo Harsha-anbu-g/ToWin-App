@@ -1,7 +1,9 @@
 # App Store Connect: every field, with Towinly's answer
 
-Version 1.0.0, first submission, iOS only. Written 2026-08-11, before the Apple
-Developer account exists, so that submission day is copy and paste.
+Version 1.1.0, iOS only. Written 2026-08-11 for 1.0.0, before the Apple
+Developer account existed, so that submission day is copy and paste. Re-pointed
+at 1.1.0 on 2026-08-22: build 10 of 1.1.0 is already uploaded to App Store
+Connect, and `app.json` is the source of the number.
 
 Read the value out of the `answer` line, paste it into the console, tick the box
 next to it here. Where a value is not settled, the row says why and what closes
@@ -361,7 +363,7 @@ at the console:
 |---|---|
 | Data Used to Track You | **None.** Nothing is linked with third party data for advertising, nothing goes to a data broker, and no App Tracking Transparency prompt exists in the app. |
 | Data Not Linked to You | **None.** Nothing is collected outside a signed in session. |
-| Data Linked to You | Eleven data types are Yes. See `privacy-labels.md` section 1.2. Every one is App Functionality and every one is Used for Tracking: No. |
+| Data Linked to You | 12 data types are Yes. See `privacy-labels.md` section 1.2. Every one is App Functionality and every one is Used for Tracking: No. |
 | Analytics and Diagnostics | **No** for every row, but see the pending check below. |
 
 Two checks that must pass before this section is submitted, both from
@@ -380,7 +382,7 @@ the privacy policy says so.
 
 ---
 
-## 6. Version 1.0.0 page
+## 6. Version 1.1.0 page
 
 ### 6.1 Media
 
@@ -402,12 +404,12 @@ Ship the still set, add a preview when the app has usage to film.
 
 | Field | Answer | State |
 |---|---|---|
-| Promotional Text (170) | `listings.md` section 1, `promo` (161 of 170) | READY |
-| Description (4000) | `listings.md`, the block between `apple-us-description:start` and `:end` (1591 chars) | READY |
+| Promotional Text (170) | `listings.md` section 1, `promo` (159 of 170) | READY |
+| Description (4000) | `listings.md`, the block between `apple-us-description:start` and `:end` (1673 chars) | READY |
 | Keywords (100) | `listings.md` section 1, `keywords` (97 of 100) | READY |
 | Support URL | `https://www.towinly.com/app/support` | READY, corrected 2026-08-15 |
 | Marketing URL | `https://www.towinly.com` | READY |
-| Version | `1.0.0` | READY, matches `app.json` |
+| Version | `1.1.0` | READY, matches `app.json` |
 | Copyright | `2026 <owner's legal name>`, individual enrollment decided 2026-08-15 | **USER INPUT NEEDED**, spelling per photo ID |
 | Routing App Coverage File | Leave empty. Towinly is not a maps app. | READY |
 | Build | Select after TestFlight finishes processing | AFTER BUILD |
@@ -504,10 +506,9 @@ on one claim this draft got wrong.
 The wrong claim, kept here so the correction is visible rather than quiet: the
 bullet below tells Apple there is "a content filter on posts and messages".
 There is no filter on messages. `objectionableError` from
-`src/lib/contentFilter.js` has three call sites, and the chat composer is not
-one of them: `app/profile-edit.jsx:236` for the bio,
-`app/(tabs)/action.jsx:99` to `:101` for a help request, and
-`app/pass-on/index.jsx:299` for a Pass On entry.
+`src/lib/contentFilter.js` had three call sites, and the chat composer was not
+one of them: the bio field in `app/profile-edit.jsx`, the help request in
+`app/(tabs)/action.jsx`, and the Pass On entry in `app/pass-on/index.jsx`.
 `app/chat/[connectionId].jsx` posted to `/messages/{id}/send` with no check,
 and the Spring Boot backend has no filter either. A reviewer could disprove that
 sentence in thirty seconds by typing a slur into a chat.
@@ -641,9 +642,10 @@ approval and the date have both passed.
 
 ### 8.2 Phased release, stated plainly
 
-Phased release rolls an update out to existing users over seven days. Version
-1.0.0 has no existing users, so the setting does nothing at launch. Leaving it on
-means it is already correct at 1.0.1, when it does matter: a bad update reaches
+Phased release rolls an update out to existing users over seven days. The first
+version to ship has no existing users, so the setting does nothing at launch.
+Leaving it on means it is already correct at the first update, when it does
+matter: a bad update reaches
 one percent of users on day one instead of all of them, and the rollout can be
 paused. There is no reason to turn it off.
 

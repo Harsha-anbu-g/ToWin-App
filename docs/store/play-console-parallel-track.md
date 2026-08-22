@@ -326,11 +326,11 @@ Target audience and content**.
 
 The evidence that backs this answer, in case Google asks:
 
-- `app/(auth)/register.jsx:52` sets `const MIN_AGE = 18`.
-- `app/(auth)/register.jsx:181` refuses the signup with the exact words
+- `app/(auth)/register.jsx` sets `const MIN_AGE = 18`.
+- Its submit handler refuses the signup with the exact words
   `You have to be ${MIN_AGE} or over to join Towinly.`
-- `app/(auth)/register.jsx:55` sets `MAX_AGE = 120` so a four digit year typo
-  lands on an error instead of quietly passing the check.
+- The same file sets `MAX_AGE = 120` so a four digit year typo lands on an
+  error instead of quietly passing the check.
 - The field is a required, validated date of birth with the helper text
   `For example 14 May 1953. You have to be 18 or over to join.`
 - The comment above the constant names this requirement directly: "Google Play
