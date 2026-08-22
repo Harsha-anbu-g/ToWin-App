@@ -146,8 +146,8 @@ here is the difference in mechanics, all visible in the build:
 
 DEMO ACCOUNTS (please review all three)
 
-The one-tap demo buttons are compiled out of production builds on purpose.
-Type these into the login fields instead:
+One-tap demo buttons sit below the login form, one per seat. The fields also
+take a username or an email, so these can be typed instead:
 
 - Elder: username "elder", password "12345678" (Margaret, with helpers
   already at different trust steps)
@@ -260,3 +260,17 @@ person is already in a giving mood. Nothing else qualifies.
   success toast, never blocking it.
 - Honor the trigger conditions on the elder seat exactly as on the helper
   seat: elders finish help requests too, and their rating is worth the same.
+
+---
+
+## Correction made on 2026-08-22 (HARD-102)
+
+**The DEMO ACCOUNTS paragraph.**
+Old wording: "The one-tap demo buttons are compiled out of production builds on
+purpose. Type these into the login fields instead:"
+
+Why it changed: `eas.json` sets `EXPO_PUBLIC_SHOW_DEMO=1` on the production
+profile, so the buttons ship. `src/lib/appEnv.js` records the owner decision of
+2026-08-16 behind that. The credentials below are still correct and still worth
+giving a reviewer, because the field accepts them typed; what was wrong was
+telling a reviewer the buttons are not on the screen they are on.

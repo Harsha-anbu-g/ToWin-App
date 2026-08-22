@@ -172,10 +172,13 @@ Notes that matter for review:
   reviewer can type `elder` as-is. No email format is enforced.
 - All three tokens carry `ev: true`, so no reviewer is stopped at an
   email-verification wall.
-- The one-tap demo buttons are compiled out of the production build.
-  `src/lib/appEnv.js` shows them only when `__DEV__` is true or
-  `EXPO_PUBLIC_SHOW_DEMO=1`, and `eas.json` sets that flag on the `preview`
-  profile only. The reviewer must type the credentials.
+- The one-tap demo buttons DO ship in the production build (corrected
+  2026-08-22). `src/lib/appEnv.js` shows them when `__DEV__` is true or
+  `EXPO_PUBLIC_SHOW_DEMO=1`, and `eas.json` sets that flag on the `production`
+  profile as well as `preview`, an owner decision of 2026-08-16. A reviewer can
+  tap a seat or type the credentials; both work. This bullet used to end "and
+  `eas.json` sets that flag on the `preview` profile only. The reviewer must
+  type the credentials."
 - The login rate limiter cannot lock a reviewer out on a correct password.
   `LoginRateLimiter` counts failures only, and `AuthService` short-circuits on a
   correct password before the check runs. The comment in `DemoAccountsCard.jsx`
@@ -523,3 +526,14 @@ The Apple sharing row is now worded to match `console-answers.md` section 2.3
 and `app-store-connect-fields.md` section 3.2 word for word, and
 `__tests__/console-answers.test.js` fails if any page in this folder starts
 denying the dependency again.
+
+## Correction made on 2026-08-22 (HARD-102)
+
+The demo-accounts note said the one-tap buttons are compiled out of the
+production build and that a reviewer must type the credentials. Both were false
+from 2026-08-16, when the owner turned `EXPO_PUBLIC_SHOW_DEMO=1` on the
+production profile in `eas.json` and `src/lib/appEnv.js` was rewritten to
+record why. The old wording is quoted in the bullet itself. The credentials are
+unchanged and still worth giving a reviewer, because the field accepts them
+typed. `__tests__/demo-buttons-claim.test.js` ties every copy of this sentence
+to the flag, so the two cannot drift apart again.
