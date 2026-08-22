@@ -15,11 +15,14 @@ import ChipsField from '../src/components/ui/ChipsField';
 import Chip from '../src/components/ui/Chip';
 import Input from '../src/components/ui/Input';
 import LoadError from '../src/components/ui/LoadError';
+import LocationPrimer from '../src/components/location/LocationPrimer';
 import Screen from '../src/components/ui/Screen';
 import SkeletonCard from '../src/components/ui/Skeleton';
 import { useAuth } from '../src/context/AuthContext';
 import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
+import { STATUS } from '../src/lib/deviceLocation';
+import useDevicePosition from '../src/lib/useDevicePosition';
 import { parseFlexibleDate } from '../src/lib/flexibleDate';
 import { buildUpload } from '../src/lib/uploadFile';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -147,6 +150,48 @@ export default function ProfileEdit() {
       setPrefilled(true);
     }
   }, [me, isHelper, prefilled]);
+
+  // The phone's own position, offered beside the town box. Read-only on mount:
+  // the iOS prompt is spent by a tap on the card and nowhere else.
+  const {
+    status: locStatus,
+    busy: locBusy,
+    hasPosition,
+    enable: enableLocation,
+    dismissed: locDismissed,
+    dismiss: hideLocationCard,
+  } = useDevicePosition();
+  // `locStatus` stays null until the first read lands, so the card waits rather
+  // than flashing the wrong words.
+  const shouldAskForLocation = !!locStatus && !hasPosition && !locDismissed;
+
+  // Saving the phone's position makes the backend reverse-geocode a town onto
+  // the account (ProfileService.java:93-97). The box has to be told what that
+  // town is, or the save handler below reads form.city !== me.city, forward-
+  // geocodes the OLD typed text, and PUTs that town's single centre point over
+  // the ~2 km cell this just saved. One press of Save would undo the thing the
+  // person came here to do.
+  const savePositionFromPhone = useCallback(async () => {
+    const status = await enableLocation();
+    // Refused, off, unsupported: the card says what happened and the typed town
+    // carries on working exactly as it did.
+    if (status !== STATUS.allowed) return;
+    let town = '';
+    try {
+      const { data: fresh } = await refetchMe();
+      town = fresh?.city ?? '';
+    } catch {
+      // A refetch that will not land is not worth a banner: the position IS
+      // saved against the account. An empty box is the safe answer, because the
+      // guard below needs a non-empty city before it geocodes anything, so a
+      // dropped connection can never end with a town centre written over the
+      // cell that was just saved.
+    }
+    setForm((f) => ({ ...f, city: town }));
+    // Cancel compares against this snapshot. The town is already saved, so
+    // offering to discard it would name a change nobody made.
+    initialFormRef.current = { ...initialFormRef.current, city: town };
+  }, [enableLocation, refetchMe]);
 
   // One picker at a time. A second tap while the sheet is opening is what an
   // elder does when nothing seems to happen, and Android answers it with
@@ -538,6 +583,19 @@ export default function ProfileEdit() {
           onSubmitEditing={focusPhone}
           style={FIELD_GAP}
         />
+        {shouldAskForLocation ? (
+          // Secondary: this screen pins one filled sky-blue button and it is
+          // Save Changes (HCI 8). Dismissible, because a typed town has to keep
+          // working for anybody who says no (HCI 3).
+          <LocationPrimer
+            status={locStatus}
+            busy={locBusy}
+            context="profile"
+            actionVariant="secondary"
+            onEnable={savePositionFromPhone}
+            onDismiss={hideLocationCard}
+          />
+        ) : null}
         <Input
           ref={phoneRef}
           label="Phone number"
