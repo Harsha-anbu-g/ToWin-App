@@ -28,7 +28,7 @@ import {
 } from '../icons';
 import { useAuth } from '../../context/AuthContext';
 import focusForScreenReader from '../../lib/focusForScreenReader';
-import { ConfirmHost, useConfirm } from '../../context/ConfirmContext';
+import { ConfirmHost, useConfirm, useConfirmShield } from '../../context/ConfirmContext';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
@@ -139,6 +139,11 @@ export default function MenuSheet({ visible, onClose }) {
   // no needs, streaks, or discovery surfaces (no Daily check-in row).
   const isFamily = user?.role === 'FAMILY';
 
+  // While the Log out question is up it draws through <ConfirmHost /> as a
+  // sibling of the scrim and the drawer, so both have to step out of the
+  // screen reader's way or a person can swipe past the question into the menu.
+  const shield = useConfirmShield();
+
   const go = (href) => {
     onClose();
     router.push(href);
@@ -157,11 +162,12 @@ export default function MenuSheet({ visible, onClose }) {
       onShow={() => focusForScreenReader(headerRef)}
     >
       {/* Scrim — tap anywhere outside the drawer to close */}
-      <Animated.View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
+      <Animated.View {...shield} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
         <Pressable testID="menu-scrim" accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
       </Animated.View>
 
       <Animated.View
+        {...shield}
         style={{
           position: 'absolute',
           top: 0,

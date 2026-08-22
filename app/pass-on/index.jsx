@@ -448,7 +448,14 @@ export default function PassOn() {
       {/* Swiping the boxes left/right steps the segments, iOS-style. */}
       <SwipeSegments keys={TABS.map((s) => s.key)} value={tab} onChange={changeTab}>
       {tab === 'stories' ? (
-        <View accessibilityLabel="Your story box" style={{ gap: spacing[3] }}>
+        <View
+          // No accessibilityLabel on this group on purpose. `accessible` is
+          // what would make one reach VoiceOver, and on a container it
+          // collapses every card and button inside into a single element
+          // nobody can act on. The segmented control above already announces
+          // which box is open.
+          style={{ gap: spacing[3] }}
+        >
           {writingHere('STORY') ? (
             <PassOnItemForm
               kind="STORY"
@@ -484,7 +491,14 @@ export default function PassOn() {
       ) : null}
 
       {tab === 'letters' ? (
-        <View accessibilityLabel="Your letters" style={{ gap: spacing[3] }}>
+        <View
+          // No accessibilityLabel on this group on purpose. `accessible` is
+          // what would make one reach VoiceOver, and on a container it
+          // collapses every card and button inside into a single element
+          // nobody can act on. The segmented control above already announces
+          // which box is open.
+          style={{ gap: spacing[3] }}
+        >
           {/* Both halves of the Letter box, said before she writes anything —
               including the part that matters most: nothing here happens on
               its own. */}
@@ -539,7 +553,14 @@ export default function PassOn() {
       ) : null}
 
       {tab === 'sealed' ? (
-        <View accessibilityLabel="Your sealed box" style={{ gap: spacing[4] }}>
+        <View
+          // No accessibilityLabel on this group on purpose. `accessible` is
+          // what would make one reach VoiceOver, and on a container it
+          // collapses every card and button inside into a single element
+          // nobody can act on. The segmented control above already announces
+          // which box is open.
+          style={{ gap: spacing[4] }}
+        >
           {/* Three states, one at a time: the teaching card before she has
               decided anything, the three steps while she is deciding, and who
               holds a key once she has. A failed or pending setup fetch says

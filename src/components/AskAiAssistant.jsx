@@ -23,7 +23,7 @@ import {
 import { Flag, Mic, Send, Volume2, X } from './icons';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { ConfirmHost, useConfirm } from '../context/ConfirmContext';
+import { ConfirmHost, useConfirm, useConfirmShield } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { announce } from '../lib/announce';
 import focusForScreenReader from '../lib/focusForScreenReader';
@@ -257,6 +257,10 @@ export default function AskAiAssistant() {
 
   const { user } = useAuth();
   const confirm = useConfirm();
+  // The AI consent question draws through <ConfirmHost /> as a sibling of
+  // the sheet body below, so the body steps out of the screen reader's way
+  // while the question is up.
+  const shield = useConfirmShield();
   const [aiConsented, setAiConsented] = useState(false);
   useEffect(() => {
     hasAiConsent(user?.userId).then((ok) => {
@@ -444,6 +448,7 @@ export default function AskAiAssistant() {
             instead of a bottom sheet. On iOS the pageSheet already starts
             below the status bar, so only Android/web pad for it. */}
         <View
+          {...shield}
           style={{
             flex: 1,
             backgroundColor: t.surface,

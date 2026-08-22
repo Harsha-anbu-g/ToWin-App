@@ -7,6 +7,10 @@ export default function TrustBadge({ score, label = 'trust', style }) {
   const { t, spacing, radius, text, fontScaleCaps } = useTheme();
   return (
     <View
+      // Without `accessible` the label never reaches VoiceOver (View defaults
+      // isAccessibilityElement to false), so the chip read as a bare number
+      // beside a bare word. The chip is one idea, so collapsing it is right.
+      accessible
       accessibilityLabel={`Trust score ${score}`}
       style={[
         {

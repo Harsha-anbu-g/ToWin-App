@@ -1,12 +1,14 @@
 // Input — Material outlined text field (react-native-paper) under the app's
-// own API: label, error (announced), helper, and an optional rightSlot overlay
-// (used for the password eye toggles). Elder rules: >=48pt, 18px text.
+// own API: label, error (announced out loud on the way in), helper, and an
+// optional rightSlot overlay (used for the password eye toggles).
+// Elder rules: >=48pt, 18px text.
 // memo'd: Paper inputs animate a floating label, so sibling fields skipping
 // re-renders per keystroke is what keeps slow typists free of keyboard lag.
 import { AlertCircle } from '../icons';
-import { memo } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 import { TextInput as PaperInput } from 'react-native-paper';
+import { announce } from '../../lib/announce';
 import { useTheme } from '../../theme/ThemeContext';
 
 export default memo(function Input({
@@ -21,6 +23,20 @@ export default memo(function Input({
   ...rest
 }) {
   const { t, spacing, radius, text, fontScaleCaps } = useTheme();
+
+  // The header above has claimed "announced" since this file was written, and
+  // it was not true: accessibilityRole="alert" on the row below is a trait on
+  // iOS and Android, not a live region, so nothing was ever spoken. A person
+  // who cannot see the red row pressed Save and heard silence.
+  //
+  // Only on the way IN. Re-announcing an unchanged message on every keystroke
+  // would talk over the typing it is meant to correct, and announcing on the
+  // way out would say the error again just as it is fixed.
+  const spoken = useRef(null);
+  useEffect(() => {
+    if (error && error !== spoken.current) announce(error);
+    spoken.current = error || null;
+  }, [error]);
 
   return (
     <View style={style}>
