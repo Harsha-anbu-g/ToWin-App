@@ -169,7 +169,7 @@ function linkSites() {
 }
 
 // Handing the person to an address this app does not own: the browser, the
-// mail app, the OAuth page on the backend.
+// mail app, the dialer, the OAuth page on the backend.
 const HANDS_OFF = /Linking\.openURL|window\.location|open\(href\)|https?:\/\/|mailto:/;
 
 test('nothing announced as a link merely changes the screen inside the app', () => {
@@ -186,10 +186,18 @@ test('nothing announced as a link merely changes the screen inside the app', () 
 });
 
 // The other half of the same rule: fixing this by calling everything a button
-// would strip the promise from the three controls that do keep it.
-test('the three hand-offs out of the app are still announced as links', () => {
+// would strip the promise from the controls that do keep it. The list is an
+// inventory, so it grows when a real hand-off is added and never when an
+// in-app route change is mislabelled.
+//
+// emergency-contacts.jsx joined it on 2026-08-22 (HARD-112): each contact row
+// opens `tel:` through the dialer, the same kind of hand-off as CreatorCard's
+// mailto rows. Nothing was relaxed to let it in. It satisfies the rule above on
+// its own merits, and the test that forbids in-app links is unchanged.
+test('the hand-offs out of the app are still announced as links', () => {
   const files = new Set(linkSites().map(({ where }) => where.split(':')[0]));
   expect([...files].sort()).toEqual([
+    'app/emergency-contacts.jsx',
     'src/components/auth/GoogleLoginButton.jsx',
     'src/components/feedback/CreatorCard.jsx',
     'src/components/legal/LegalSections.jsx',

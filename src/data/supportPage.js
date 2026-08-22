@@ -75,24 +75,42 @@ export const SUPPORT_PAGE = {
         'on the account.',
     },
     {
+      // Walked against the app on 2026-08-22 (HARD-112). This used to say "open
+      // the menu and choose Guide": MenuSheet.jsx carries a Guide row but no
+      // file in app/ mounts it, so there is no menu to open. The real control is
+      // a Row labelled "Guide" in the always-visible card on the Profile tab
+      // (app/(tabs)/profile.jsx -> /guide). The contents listed here are the
+      // Guide's own four cards, not the walk-through of every screen the old
+      // sentence promised: the trust score has no section in it at all.
       h: 'Learning your way around',
       p:
-        'The Guide inside the app walks through every screen in plain words: check-ins, ' +
-        'the trust score, the trust ladder, messages, and what your family can and cannot ' +
-        'see. Open the menu and choose Guide. You can read it as many times as you like.',
+        'The Guide inside the app explains what you can do in your part of Towinly, all seven ' +
+        'steps of the trust ladder and what each one means, and how to stay safe when you meet ' +
+        'somebody. Open Profile at the bottom of the screen and tap Guide. You can read it as ' +
+        'many times as you like.',
     },
     {
+      // "A parent circle" was a name for something the product does not have: it
+      // appears in no screen, no label and no test. The seat is My Family, and a
+      // family member asks to join with "+ Add your parent" on Home
+      // (FamilyHomePanel.jsx:112, posting /family/requests). Nothing is shared
+      // before the parent accepts (AddParentForm COPY.elder), and every setting
+      // and power starts off (app/family/index.jsx: "Everything starts off.").
       h: 'Helping an older parent',
       p:
-        'Families can join a parent circle and see what that parent chooses to share. ' +
-        'The elder is always in charge: every sharing setting and every power starts off, ' +
-        'and only the elder can turn it on. If you are setting Towinly up for a parent and ' +
-        'get stuck, write to us and say so.',
+        'A family member joins by asking. On the Home screen, tap "Add your parent" and type ' +
+        'the name your parent uses on Towinly. Nothing is shared until your parent says yes. ' +
+        'After that the elder stays in charge: every sharing setting and every power starts ' +
+        'off, and only the elder can turn one on. If you are setting Towinly up for a parent ' +
+        'and get stuck, write to us and say so.',
     },
     {
+      // The same two rows the deletion page quotes, so a person reading either
+      // one taps the same words. profile-label-drift.test.js renders the profile
+      // screen and proves both pages quote what the app puts on screen.
       h: 'Closing your account',
       p:
-        'You can delete your account from inside the app, under Profile. If you cannot get ' +
+        'Open Profile, tap "Account and data", then "Delete my account". If you cannot get ' +
         'in, you can ask us on the web instead, without installing anything.',
     },
   ],
