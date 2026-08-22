@@ -62,7 +62,7 @@ title: 29/30
 subtitle: 30/30
 promo: 159/170
 keywords: 97/100
-full_description: 1629/4000
+full_description: 1673/4000
 ```
 
 The promo opened "Your parent asks with one tap" until 2026-08-15.
@@ -102,7 +102,7 @@ FOR FAMILIES
 FOR HELPERS
 • See who needs a hand near you and offer to help.
 • Earn a Trust Score with every step you climb and every review you receive.
-• Each person you help can earn you up to 15 points: 7 for the trust steps, 5 for their review, 3 for your profile.
+• Each person you help can earn you up to 15 points: 7 for the trust steps, 5 for their review, 3 for your profile. Reviews are written on the Towinly website.
 • Make real friendships.
 
 HOW TRUST WORKS
@@ -127,6 +127,19 @@ What changed in this block on 2026-08-15, and why:
   `App/app/trust/index.jsx` and the pinned screenshot caption both use. The sum
   is unchanged.
 
+- *"Each person you help can earn you up to 15 points: 7 for the trust steps, 5
+  for their review, 3 for your profile."* on its own read as a review system
+  inside the app. There is none for an elder or a helper: the only
+  `api.post('/reviews')` in `App/` is
+  `src/components/family/FamilyReviewForParent.jsx`, a family member writing on
+  a parent's behalf under the LEAVE_REVIEWS grant. Both other seats write theirs
+  on the website (`ToWin/frontend/src/pages/ElderDashboard.jsx:472` and
+  `HelperDashboard.jsx:443`). The bullet now says where a review is written.
+  The five points were NOT deleted: they are real, the backend awards them, and
+  removing them would leave the listing describing a 10-point score while the
+  app describes 15. `App/app/trust/index.jsx` carries the same sentence for the
+  same reason. See HARD-114 in `ralph-hardening/progress.txt`, OWNER ACTION.
+
 ---
 
 ## 2. Google Play, United States (English U.S.)
@@ -139,7 +152,7 @@ short_description: Trusted help and company for aging parents. Trust grows in 7 
 ```store-field-counts
 title: 29/30
 short_description: 73/80
-full_description: 1629/4000
+full_description: 1673/4000
 ```
 
 - Play has no keyword field. It indexes the title, the short description, and
@@ -176,7 +189,7 @@ title: 28/30
 subtitle: 27/30
 promo: 155/170
 keywords: 94/100
-full_description: 1675/4000
+full_description: 1719/4000
 ```
 
 **Adopted in part.** The title, subtitle and keyword line above are pinned in
@@ -218,7 +231,7 @@ FOR FAMILIES
 FOR HELPERS
 • See which senior citizens near you need a hand: errands, a lift, or company.
 • Earn a Trust Score with every step you climb and every review you receive.
-• Each person you help can earn you up to 15 points: 3 for your profile, 7 for the Trust Ladder, 5 for their review.
+• Each person you help can earn you up to 15 points: 3 for your profile, 7 for the Trust Ladder, 5 for their review. Reviews are written on the Towinly website.
 • Your Trust Score goes with you to every new family you meet.
 
 HOW TRUST WORKS
@@ -247,7 +260,7 @@ short_description: Care and company for your parents. Trust grows in 7 steps, at
 ```store-field-counts
 title: 28/30
 short_description: 73/80
-full_description: 1675/4000
+full_description: 1719/4000
 ```
 
 Full description: use the same block as section 3
