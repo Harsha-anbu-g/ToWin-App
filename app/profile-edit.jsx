@@ -158,24 +158,24 @@ export default function ProfileEdit() {
     busy: locBusy,
     hasPosition,
     enable: enableLocation,
+    refresh: refreshPosition,
     dismissed: locDismissed,
     dismiss: hideLocationCard,
   } = useDevicePosition();
   // `locStatus` stays null until the first read lands, so the card waits rather
-  // than flashing the wrong words.
+  // than flashing the wrong words. With a position it becomes the update offer
+  // instead of the ask, because somebody who moved this morning has a record
+  // that is hours old and only they know it is wrong (LOC-206).
   const shouldAskForLocation = !!locStatus && !hasPosition && !locDismissed;
+  const canUpdateLocation = hasPosition && locStatus === STATUS.allowed;
 
-  // Saving the phone's position makes the backend reverse-geocode a town onto
-  // the account (ProfileService.java:93-97). The box has to be told what that
-  // town is, or the save handler below reads form.city !== me.city, forward-
-  // geocodes the OLD typed text, and PUTs that town's single centre point over
-  // the ~2 km cell this just saved. One press of Save would undo the thing the
-  // person came here to do.
-  const savePositionFromPhone = useCallback(async () => {
-    const status = await enableLocation();
-    // Refused, off, unsupported: the card says what happened and the typed town
-    // carries on working exactly as it did.
-    if (status !== STATUS.allowed) return;
+  // Any save of the phone's position makes the backend reverse-geocode a town
+  // onto the account (ProfileService.java:93-97). The box has to be told what
+  // that town is, or the save handler below reads form.city !== me.city,
+  // forward-geocodes the OLD typed text, and PUTs that town's single centre
+  // point over the ~2 km cell that was just saved. One press of Save would undo
+  // the thing the person came here to do.
+  const adoptSavedTown = useCallback(async () => {
     let town = '';
     try {
       const { data: fresh } = await refetchMe();
@@ -191,7 +191,21 @@ export default function ProfileEdit() {
     // Cancel compares against this snapshot. The town is already saved, so
     // offering to discard it would name a change nobody made.
     initialFormRef.current = { ...initialFormRef.current, city: town };
-  }, [enableLocation, refetchMe]);
+  }, [refetchMe]);
+
+  const savePositionFromPhone = useCallback(async () => {
+    const status = await enableLocation();
+    // Refused, off, unsupported: the card says what happened and the typed town
+    // carries on working exactly as it did.
+    if (status !== STATUS.allowed) return;
+    await adoptSavedTown();
+  }, [enableLocation, adoptSavedTown]);
+
+  // Permission is already granted here, so this cannot raise a system dialog.
+  const updatePositionFromPhone = useCallback(async () => {
+    await refreshPosition();
+    await adoptSavedTown();
+  }, [refreshPosition, adoptSavedTown]);
 
   // One picker at a time. A second tap while the sheet is opening is what an
   // elder does when nothing seems to happen, and Android answers it with
@@ -583,17 +597,19 @@ export default function ProfileEdit() {
           onSubmitEditing={focusPhone}
           style={FIELD_GAP}
         />
-        {shouldAskForLocation ? (
+        {shouldAskForLocation || canUpdateLocation ? (
           // Secondary: this screen pins one filled sky-blue button and it is
-          // Save Changes (HCI 8). Dismissible, because a typed town has to keep
-          // working for anybody who says no (HCI 3).
+          // Save Changes (HCI 8). Dismissible only while it is asking, because a
+          // typed town has to keep working for anybody who says no (HCI 3); the
+          // update offer is a standing control, not a request.
           <LocationPrimer
             status={locStatus}
             busy={locBusy}
             context="profile"
             actionVariant="secondary"
             onEnable={savePositionFromPhone}
-            onDismiss={hideLocationCard}
+            onRefresh={updatePositionFromPhone}
+            onDismiss={canUpdateLocation ? undefined : hideLocationCard}
           />
         ) : null}
         <Input

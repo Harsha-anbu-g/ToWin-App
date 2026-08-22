@@ -203,6 +203,64 @@ describe('the offer to use the phone instead of a typed town', () => {
   });
 });
 
+describe('the person who moved, and already has a position (LOC-206)', () => {
+  test('gets an explicit update action instead of the ask', async () => {
+    givePosition();
+    mockLocation.getForegroundPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: false });
+    const r = await wrap();
+    await loaded(r);
+
+    await waitFor(() => expect(r.getByText('Your position comes from your phone')).toBeOnTheScreen());
+    expect(r.getByRole('button', { name: 'Update my location' })).toBeOnTheScreen();
+    // Nothing left to ask for, so the asking words are gone.
+    expect(r.queryByText(ASK_TITLE)).toBeNull();
+    // And it is still Save Changes that carries the one filled button.
+    const filled = r.queryAllByRole('button').filter((b) => fills(b).includes(light.actionFill));
+    expect(filled).toHaveLength(1);
+    expect(fills(r.getByRole('button', { name: 'Save Changes' }))).toContain(light.actionFill);
+  });
+
+  test('tapping it reads again, saves the cell, and never prompts', async () => {
+    givePosition();
+    mockLocation.getForegroundPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: false });
+    const r = await wrap();
+    await loaded(r);
+    await waitFor(() => expect(r.getByText('Your position comes from your phone')).toBeOnTheScreen());
+    api.get.mockImplementation(async (url) => {
+      if (url.startsWith('/geocode/search')) return { data: { lat: 45.51, lng: -73.58, city: 'Laval' } };
+      return { data: { ...ME, city: 'Ville-Marie' } };
+    });
+
+    await fireEvent.press(r.getByRole('button', { name: 'Update my location' }));
+
+    await waitFor(() => expect(r.getByDisplayValue('Ville-Marie')).toBeTruthy());
+    expect(api.put).toHaveBeenCalledWith('/profile/location', {
+      locationLat: 45.5,
+      locationLng: -73.56,
+    });
+    expect(mockLocation.requestForegroundPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  test('and Save afterwards still does not geocode the town', async () => {
+    givePosition();
+    mockLocation.getForegroundPermissionsAsync.mockResolvedValue({ granted: true, canAskAgain: false });
+    const r = await wrap();
+    await loaded(r);
+    await waitFor(() => expect(r.getByText('Your position comes from your phone')).toBeOnTheScreen());
+    api.get.mockImplementation(async (url) => {
+      if (url.startsWith('/geocode/search')) return { data: { lat: 45.51, lng: -73.58, city: 'Laval' } };
+      return { data: { ...ME, city: 'Ville-Marie' } };
+    });
+    await fireEvent.press(r.getByRole('button', { name: 'Update my location' }));
+    await waitFor(() => expect(r.getByDisplayValue('Ville-Marie')).toBeTruthy());
+
+    await fireEvent.press(r.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(api.put).toHaveBeenCalledWith('/profile/elder', expect.any(Object)));
+    expect(getsMatching('/geocode/search')).toHaveLength(0);
+  });
+});
+
 describe('using the phone, then pressing Save', () => {
   test('saves the coarsened cell and puts the town it resolved into the box', async () => {
     // The backend reverse-geocodes the cell and answers the new town on the
