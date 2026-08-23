@@ -14,7 +14,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
-import { catLabel, NEED_STATUS } from '../../lib/needs';
+import { catLabel } from '../../lib/needs';
 import LocationPrimer from '../location/LocationPrimer';
 import useDevicePosition from '../../lib/useDevicePosition';
 import { markSeen } from '../../lib/seenIds';
@@ -29,26 +29,6 @@ import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
-
-function StatusPill({ status }) {
-  const { t, radius, type } = useTheme();
-  const pill = NEED_STATUS[status] ?? NEED_STATUS.OPEN;
-  return (
-    // A label, not a button: soft fill, no border, so it can't be mistaken
-    // for something tappable next to the real View action.
-    <View
-      style={{
-        backgroundColor: status === 'OPEN' ? t.surfaceFill : t[pill.bg],
-        borderRadius: radius.pill,
-        paddingHorizontal: 9,
-        paddingVertical: 4,
-        alignSelf: 'flex-start',
-      }}
-    >
-      <Text style={{ fontSize: type.meta, fontWeight: '600', color: t[pill.color] }}>{pill.label}</Text>
-    </View>
-  );
-}
 
 // Memoized with primitive pending props, so one card's Accept spinner or a
 // list-level render never re-renders every other card (UX-705).
@@ -71,7 +51,8 @@ const NeedCard = memo(function NeedCard({
   const acceptedHelper =
     need.status !== 'OPEN' ? applicants.find((a) => a.status === 'ACCEPTED') : null;
   const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
-    need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null].filter(Boolean).join(' · ');
+    need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null,
+    need.status === 'CANCELLED' ? 'Cancelled' : null].filter(Boolean).join(' · ');
 
   return (
     // Each request is its own bordered card on the page (user call 2026-07-26:
@@ -86,12 +67,14 @@ const NeedCard = memo(function NeedCard({
         marginTop: 12,
       }}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
-        <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, flex: 1, color: t.ink }}>
-          {need.title}
-        </Text>
-        <StatusPill status={need.status} />
-      </View>
+      {/* No status pill: the segment above already names the status of every
+          card under it, so the pill said the same thing beside every title and
+          squeezed long titles into early wraps (owner report 2026-08-22). The
+          one status a segment does not carry — a cancelled request in
+          Completed — rides the meta line below instead. */}
+      <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, color: t.ink }}>
+        {need.title}
+      </Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 6 }}>{meta}</Text>
 
       {/* WHO is helping — tap opens their profile (message from there). */}
@@ -469,9 +452,12 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
             // 'Waiting', not 'Looking for Help': three segments share one
             // phone width, and the long label truncated to dots on device
             // (owner report 2026-08-17). The row pills keep the full phrase.
-            { key: 'open', label: 'Waiting', count: looking.length },
-            { key: 'progress', label: 'In Progress', count: inProgress.length },
-            { key: 'done', label: 'Completed', count: finished.length },
+            // No counts (owner call 2026-08-22: "remove the numbers in the
+            // top") — three small numerals were competing with the one that
+            // matters, the red badge on the tab bar.
+            { key: 'open', label: 'Waiting' },
+            { key: 'progress', label: 'In Progress' },
+            { key: 'done', label: 'Completed' },
           ]}
           value={seg}
           onChange={setSeg}

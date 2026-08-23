@@ -2,13 +2,15 @@
 // top right corner (owner call 2026-08-19: "like Instagram"). Friend
 // requests, new friends, offers on posted help, where my own offers stand,
 // family alerts, keyholder asks, reviews, unread chats: one list, newest
-// first, split into New and Earlier like Instagram's activity feed.
+// first, NEW ONLY (owner call 2026-08-22: "only new notification should be
+// shown" — the Earlier section is gone; anything already seen on a past
+// visit lives on its own screen, not here).
 //
-// What "New" means here: unseen when this visit started. The rows are marked
+// What "new" means here: unseen when this visit started. The rows are marked
 // seen the moment the list is on screen — the bell badge clears — but the
-// section holds for the whole visit, so what was new stays visibly new while
-// the person reads it (HCI 1: the screen tells you what changed; marking
-// instantly and collapsing the section would erase the answer mid-read).
+// list holds for the whole visit, so what was new stays visibly new while
+// the person reads it (HCI 1: marking instantly and emptying the list would
+// erase the answer mid-read).
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -63,8 +65,11 @@ function UpdateRow({ item, isNew }) {
         alignItems: 'center',
         gap: 14,
         paddingVertical: 12,
-        marginHorizontal: -spacing[4],
-        paddingHorizontal: spacing[4],
+        // Bleed across the WHOLE gutter: Screen pads spacing[5], and the old
+        // -spacing[4] left a 4pt white edge beside the wash (owner report
+        // 2026-08-22: "the blue is not full").
+        marginHorizontal: -spacing[5],
+        paddingHorizontal: spacing[5],
         backgroundColor: pressed ? t.surfaceFill : isNew ? t.blueWash : 'transparent',
       })}
     >
@@ -96,26 +101,6 @@ function UpdateRow({ item, isNew }) {
         </Text>
       ) : null}
     </Pressable>
-  );
-}
-
-function SectionHeading({ children }) {
-  const { t, type, spacing } = useTheme();
-  return (
-    <Text
-      accessibilityRole="header"
-      style={{
-        fontSize: type.meta,
-        fontWeight: '600',
-        color: t.inkSlate,
-        textTransform: 'uppercase',
-        letterSpacing: 0.4,
-        marginTop: spacing[4],
-        marginBottom: spacing[1],
-      }}
-    >
-      {children}
-    </Text>
   );
 }
 
@@ -172,26 +157,20 @@ export default function UpdatesScreen() {
   }, [reload]);
 
   const fresh = items.filter((i) => newThisVisit.current.has(i.token));
-  const earlier = items.filter((i) => !newThisVisit.current.has(i.token));
-  // One flat list with heading rows: two FlatLists can't share one scroll.
-  const rows = [
-    ...(fresh.length ? [{ heading: 'New' }, ...fresh] : []),
-    ...(earlier.length ? [{ heading: fresh.length ? 'Earlier' : null }, ...earlier] : []),
-  ].filter((r) => !('heading' in r) || r.heading);
 
   return (
     <Screen back title="Updates" scroll={false}>
-      {items.length === 0 && isLoading ? (
+      {fresh.length === 0 && isLoading ? (
         // Nothing to show YET. Six sources feed this list and the first paint
         // happens before any of them answer.
         <SkeletonCard lines={3} />
-      ) : items.length === 0 && isError ? (
+      ) : fresh.length === 0 && isError ? (
         // The rule this screen used to break: a dropped request is never
         // dressed up as quiet. Six sources fed one `items.length === 0`, so a
         // total fetch failure and a genuinely empty week looked identical, and
         // the person was told there was nothing new when nothing had loaded.
         <LoadError what="your updates" onRetry={reload} />
-      ) : items.length === 0 ? (
+      ) : fresh.length === 0 ? (
         <View style={{ alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }}>
           <Bell size={40} color={t.inkFaint2} strokeWidth={1.5} />
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center' }}>
@@ -205,15 +184,9 @@ export default function UpdatesScreen() {
             // still show; the gap is named above them rather than hidden.
             isError ? <LoadError what="all of your updates" onRetry={reload} bare /> : null
           }
-          data={rows}
-          keyExtractor={(row, i) => ('heading' in row ? `h:${row.heading}:${i}` : row.token)}
-          renderItem={({ item: row }) =>
-            'heading' in row ? (
-              <SectionHeading>{row.heading}</SectionHeading>
-            ) : (
-              <UpdateRow item={row} isNew={newThisVisit.current.has(row.token)} />
-            )
-          }
+          data={fresh}
+          keyExtractor={(row) => row.token}
+          renderItem={({ item: row }) => <UpdateRow item={row} isNew />}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
