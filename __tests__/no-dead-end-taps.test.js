@@ -23,6 +23,7 @@ import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import api from '../src/api/client';
 import ProfileScreen from '../app/(tabs)/profile';
+import AdminScreen from '../app/admin';
 import Landing from '../app/(auth)/landing';
 import Messages from '../app/(tabs)/messages';
 import FriendsScreen from '../app/friends/index';
@@ -121,6 +122,22 @@ describe('log out asks first', () => {
     await fireEvent.press(r.getByRole('button', { name: 'Stay logged in' }));
 
     expect(mockLogout).not.toHaveBeenCalled();
+  });
+
+  // The admin landing stub has the app's only other Log out button; it must
+  // ask the same question the profile screen does.
+  test('the admin screen asks first too, and yes still logs out', async () => {
+    const r = await wrap(<AdminScreen />);
+    await waitFor(() => expect(r.getByRole('button', { name: 'Log out' })).toBeTruthy());
+
+    await fireEvent.press(r.getByRole('button', { name: 'Log out' }));
+
+    await waitFor(() => expect(r.getByText('Log out?')).toBeTruthy());
+    expect(mockLogout).not.toHaveBeenCalled();
+
+    const answers = r.getAllByRole('button', { name: 'Log out' });
+    await fireEvent.press(answers[answers.length - 1]);
+    await waitFor(() => expect(mockLogout).toHaveBeenCalled());
   });
 
   test('saying yes still logs out', async () => {
