@@ -6,7 +6,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MapPin } from '../../src/components/icons';
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api, { friendlyWriteError } from '../../src/api/client';
@@ -265,6 +265,7 @@ export default function FriendsScreen() {
   const {
     status: locStatus,
     busy: locBusy,
+    savedAt: locSavedAt,
     dismissed: primerHidden,
     dismiss: hidePrimer,
     enable: enableDevicePosition,
@@ -278,6 +279,27 @@ export default function FriendsScreen() {
       await queryClient.invalidateQueries({ queryKey: ['discover'] });
     }
   }, [enableDevicePosition, queryClient]);
+
+  // The tap above is not the only way the position moves. useDevicePosition
+  // also refreshes a record older than a day quietly on mount, and that lands
+  // AFTER this screen has painted. The discover key is ['discover', path,
+  // radiusKm] and carries no position, so nothing about it changes and the
+  // distances on screen stay the ones the server computed from the OLD
+  // position, with nothing telling the person to pull down. Offer Help never
+  // had this: its key is ['needs-nearby', lat, lng, radiusKm], so a new
+  // position changes the key and refetches by itself.
+  //
+  // Only a CHANGE re-asks. The first value is the record arriving from storage,
+  // which the opening fetch already used, and invalidating on that would make
+  // every ordinary mount fetch the same list twice.
+  const lastSavedAt = useRef(null);
+  useEffect(() => {
+    if (locSavedAt === null) return;
+    const previous = lastSavedAt.current;
+    lastSavedAt.current = locSavedAt;
+    if (previous === null || previous === locSavedAt) return;
+    queryClient.invalidateQueries({ queryKey: ['discover'] });
+  }, [locSavedAt, queryClient]);
 
   const isHelper = user?.role === 'HELPER';
   const path = isHelper ? '/discover/elders' : '/discover/helpers';
