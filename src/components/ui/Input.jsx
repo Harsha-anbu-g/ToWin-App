@@ -1,7 +1,14 @@
 // Input — Material outlined text field (react-native-paper) under the app's
-// own API: label, error (announced out loud on the way in), helper, and an
-// optional rightSlot overlay (used for the password eye toggles).
+// own API: label, error (announced out loud on the way in), helper, an
+// optional leading `icon`, and an optional rightSlot overlay (used for the
+// password eye toggles).
 // Elder rules: >=48pt, 18px text.
+//
+// The leading icon goes through Paper's own `left` slot rather than the
+// absolute overlay rightSlot uses. The overlay trick works on the right because
+// nothing else lives there; on the left it would sit on top of the floating
+// label, which starts at the same x. Paper's slot is the control that knows to
+// move the label out of the icon's way (2026-08-19).
 // memo'd: Paper inputs animate a floating label, so sibling fields skipping
 // re-renders per keystroke is what keeps slow typists free of keyboard lag.
 import { AlertCircle } from '../icons';
@@ -19,6 +26,7 @@ export default memo(function Input({
   helper,
   style,
   inputStyle,
+  icon: LeadingIcon,
   rightSlot,
   ...rest
 }) {
@@ -57,6 +65,20 @@ export default memo(function Input({
             inputStyle,
           ]}
           outlineStyle={{ borderRadius: radius.input }}
+          left={
+            LeadingIcon ? (
+              <PaperInput.Icon
+                // Decorative: the field's own label already says what belongs
+                // here, so a screen reader announcing "email icon" before
+                // "Email" is one more thing to listen past. Only
+                // importantForAccessibility is used — accessibilityElementsHidden
+                // and focusable are native-only and react-native-web forwards
+                // them to the DOM as an invalid `accessible` attribute.
+                importantForAccessibility="no"
+                icon={() => <LeadingIcon size={20} color={t.ink3} strokeWidth={2} />}
+              />
+            ) : undefined
+          }
           {...rest}
         />
         {rightSlot ? (

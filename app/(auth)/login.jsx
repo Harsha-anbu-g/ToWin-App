@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AlertCircle, Eye, EyeOff } from '../../src/components/icons';
+import { AlertCircle, Eye, EyeOff, Lock, UserRound } from '../../src/components/icons';
 import api, { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
@@ -188,6 +188,7 @@ export default function Login() {
 
         <Input
           label="Username, Gmail, or phone"
+          icon={UserRound}
           value={form.identifier}
           onChangeText={setIdentifier}
           error={fieldErrors.identifier}
@@ -204,6 +205,7 @@ export default function Login() {
         <Input
           ref={passwordRef}
           label="Password"
+          icon={Lock}
           value={form.password}
           onChangeText={setPassword}
           error={fieldErrors.password}

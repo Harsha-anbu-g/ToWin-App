@@ -5,7 +5,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { AlertCircle, Check } from '../../src/components/icons';
+import { AlertCircle, CalendarCheck, Check, Lock, Mail, UserRound } from '../../src/components/icons';
 import api from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
@@ -331,6 +331,7 @@ export default function Register() {
 
         <Input
           label="Username"
+          icon={UserRound}
           value={form.username}
           onChangeText={setUsername}
           error={fieldErrors.username}
@@ -348,6 +349,7 @@ export default function Register() {
         <Input
           ref={emailRef}
           label="Email"
+          icon={Mail}
           value={form.email}
           onChangeText={setEmail}
           error={fieldErrors.email}
@@ -369,6 +371,7 @@ export default function Register() {
         <Input
           ref={dobRef}
           label="Date of birth"
+          icon={CalendarCheck}
           value={form.dateOfBirth}
           onChangeText={setDateOfBirth}
           error={fieldErrors.dateOfBirth}
@@ -390,6 +393,7 @@ export default function Register() {
         <PasswordInput
           ref={passwordRef}
           label="Password"
+          icon={Lock}
           value={form.password}
           onChangeText={setPassword}
           error={fieldErrors.password}
@@ -425,6 +429,7 @@ export default function Register() {
         <PasswordInput
           ref={confirmRef}
           label="Re-enter password"
+          icon={Lock}
           value={form.confirmPassword}
           onChangeText={setConfirmPassword}
           error={fieldErrors.confirmPassword}
