@@ -319,9 +319,9 @@ export default function TabsLayout() {
   // the bar is Home · Messages · Profile.
   const ActionIcon = action?.key === 'find' ? Search : Plus;
   // The visible slots, in render order — the glass lens maps pathname → slot.
-  // On the floating bar the action is NOT a slot — it floats beside the
-  // capsule as its own glass circle (FloatingActionCircle). Docked bars keep
-  // the center slot the 2026-07-27 pass built.
+  // The action keeps its center slot on every platform (owner call
+  // 2026-08-22: "keep the original format and order" — the Apple side-circle
+  // grammar was built and reverted the same day).
   const slots = [
     'home',
     ...(second?.name === 'posted-help' ? ['posted-help'] : []),
