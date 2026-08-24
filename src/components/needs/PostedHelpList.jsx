@@ -127,8 +127,8 @@ const NeedCard = memo(function NeedCard({
               paddingHorizontal: 16,
               paddingVertical: 8,
               borderRadius: radius.pill,
-              // iOS tonal pill — neutral gray fill, colored text (owner call 2026-08-17)
-              backgroundColor: t.surfaceFill,
+              // iOS plain button — colored text, no fill (owner call
+              // 2026-08-22: "the View button has a background, remove it").
               alignItems: 'center',
               justifyContent: 'center',
               opacity: pressed ? 0.7 : 1,

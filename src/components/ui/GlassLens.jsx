@@ -2,35 +2,24 @@
 // call 2026-08-17: "see the family switch code and create the slide like
 // WhatsApp"). The family switch is perfect because Apple draws it; this
 // does the same for the gliding lens: on an iPhone that can draw Liquid
-// Glass (iOS 26+), the capsule IS Apple's real glass via expo-glass-effect.
-// Everywhere else — older iOS, Android, web, Jest — it falls back to the
-// blur-and-wash composite. Purely a material: the parent owns size,
-// position, borders, and motion.
+// Glass (iOS 26+), the capsule IS Apple's real glass. Everywhere else —
+// older iOS, Android, web, Jest — it falls back to the blur-and-wash
+// composite. Purely a material: the parent owns size, position, borders,
+// and motion.
+//
+// The availability probe moved to ./glass 2026-08-22, when the tab bar and
+// the Ask AI pill started asking the same question.
 import { Platform, View } from 'react-native';
 import { BlurView } from 'expo-blur';
+import { FILL, GlassView } from './glass';
 
-// Guarded require, like pushNotifications' lazy expo-notifications: if the
-// native module is missing (older Expo Go, web, tests) the require or the
-// availability probe throws or answers false, and the fallback ships —
-// the bar must never crash over a nicety.
-let GlassView = null;
-try {
-  const glass = require('expo-glass-effect');
-  if (Platform.OS === 'ios' && glass?.isLiquidGlassAvailable?.()) {
-    GlassView = glass.GlassView;
-  }
-} catch {
-  GlassView = null;
-}
-
-// Parents drop their hairline border when the real glass draws its own edge.
-export const hasLiquidGlass = !!GlassView;
-
-const FILL = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 };
+export { hasLiquidGlass } from './glass';
 
 export default function GlassLens({ tint, washColor, washOpacity = 0.75 }) {
   if (GlassView) {
-    return <GlassView style={FILL} glassEffectStyle="regular" tintColor={washColor} />;
+    // colorScheme={tint}: the app's night mode is opt-in only — the glass
+    // must follow the app's theme, never the OS setting.
+    return <GlassView style={FILL} glassEffectStyle="regular" tintColor={washColor} colorScheme={tint} />;
   }
   return (
     <>

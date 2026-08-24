@@ -401,8 +401,10 @@ export default function MyEldersPanel() {
         segments={[
           // Building Trust leads, mirroring MyHelpersPanel (owner call
           // 2026-08-17) and matching the default segment.
-          { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
-          { key: 'trusted', label: 'Trusted Elders', count: trusted.length + pausedTrusted.length },
+          // No counts on these labels (owner call 2026-08-22, same rule as
+          // MyHelpersPanel: no number near Building Trust / Trusted).
+          { key: 'building', label: 'Building Trust' },
+          { key: 'trusted', label: 'Trusted Elders' },
         ]}
         value={seg}
         onChange={setSeg}

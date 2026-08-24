@@ -1,8 +1,10 @@
-// Top nav row: person-search · wordmark · gold trust pill · bell.
+// Top nav row: person-search · wordmark (centered) · gold trust pill · bell.
 // The wordmark is the one non-serif brand mark: SF 19/600 in blueTeal,
-// -0.4 tracking. Icon buttons are labeled 44pt columns (audit 2026-07-17:
-// icon-only glyphs aren't self-evident for elders; captions use the tab-bar
-// label size, same convention).
+// -0.4 tracking. It sits dead-center in the row (owner call 2026-08-22:
+// "on the top make towinly in middle"), absolutely positioned so the uneven
+// clusters either side can't drag it off axis. Icon buttons are labeled 44pt
+// columns (audit 2026-07-17: icon-only glyphs aren't self-evident for elders;
+// captions use the tab-bar label size, same convention).
 // Owner calls 2026-08-19: the Menu button is gone (its four orphan pages
 // moved onto Profile), Add friends took its left slot with a person-search
 // glyph — UserRoundPlus kept reading as the Profile tab's person — and the
@@ -10,7 +12,7 @@
 // lands. Trust pill only renders once the score is known — no flash of
 // "undefined".
 import { useRouter } from 'expo-router';
-import { Bell, UserRoundSearch } from '../icons';
+import { Bell, ShieldCheck, UserRoundSearch } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -38,8 +40,9 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
       <View>
         {children}
         {badgeCount > 0 ? (
-          // The red "new activity" storm, same voice as the tab badges.
-          // Hidden from assistive tech: the count is folded into `label`.
+          // The "new activity" count, same voice as the tab badges — badgeFill,
+          // the settled non-inverting badge blue (owner call 2026-08-22 retired
+          // the red). Hidden from assistive tech: the count is folded into `label`.
           <Text
             numberOfLines={1}
             accessibilityElementsHidden
@@ -58,8 +61,8 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
               textAlign: 'center',
               fontSize: 12,
               fontWeight: '600',
-              backgroundColor: t.red,
-              color: t.canvas,
+              backgroundColor: t.badgeFill,
+              color: t.badgeText,
             }}
           >
             {badgeCount}
@@ -94,7 +97,26 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
         style,
       ]}
     >
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginLeft: -8 }}>
+      {/* Centered across the FULL row (owner call 2026-08-22), not between
+          the clusters — absolute so the wide right cluster can't push it off
+          axis. pointerEvents none: it is a mark, never a target. */}
+      <Text
+        pointerEvents="none"
+        maxFontSizeMultiplier={fontScaleCaps.chrome}
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          textAlign: 'center',
+          fontSize: type.wordmark,
+          fontWeight: '600',
+          color: t.greenDeep, // website navbar wordmark green (--green-deep)
+          letterSpacing: -0.4,
+        }}
+      >
+        Towinly
+      </Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
         {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
             — no handler, no button, instead of a dead target. */}
         {onAddFriends ? (
@@ -102,18 +124,6 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
             <UserRoundSearch size={26} color={t.blueDeep} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
-        <Text
-          maxFontSizeMultiplier={fontScaleCaps.chrome}
-          style={{
-            fontSize: type.wordmark,
-            fontWeight: '600',
-            color: t.greenDeep, // website navbar wordmark green (--green-deep)
-            letterSpacing: -0.4,
-            marginLeft: onAddFriends ? 0 : 8, // no button → wordmark holds the edge
-          }}
-        >
-          Towinly
-        </Text>
       </View>
       {/* Air between the three things on the right (owner call 2026-08-19:
           "give space for the friend trust and updates"). */}
@@ -140,6 +150,10 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
               opacity: pressed ? 0.6 : 1,
             })}
           >
+            {/* Trust wears a symbol (owner call 2026-08-22: "the trust need a
+                symbol") — the shield-check, trust's own glyph, in the same
+                gold as its number. */}
+            <ShieldCheck size={15} color={t.trustGold} strokeWidth={2} />
             <Text
               maxFontSizeMultiplier={fontScaleCaps.chrome}
               style={{

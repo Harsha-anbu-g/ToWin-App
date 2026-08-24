@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { friendlyWriteError } from '../../src/api/client';
 import OfferHelpList from '../../src/components/needs/OfferHelpList';
 import Button from '../../src/components/ui/Button';
@@ -17,6 +18,7 @@ import { useToast } from '../../src/context/ToastContext';
 import { objectionableError } from '../../src/lib/contentFilter';
 import { CATEGORY } from '../../src/lib/needs';
 import { centerActionFor } from '../../src/lib/roles';
+import { tabBarSpace } from '../../src/lib/tabBarMetrics';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
 
@@ -40,6 +42,7 @@ function FieldLabel({ children }) {
 function PostNeedForm({ title }) {
   const { t, type, fontFamily } = useTheme();
   const { showToast } = useToast();
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -143,10 +146,23 @@ function PostNeedForm({ title }) {
         {/* One question, one answer: a labelled radiogroup so a screen reader
             says what is being asked and which chip answers it, instead of
             reading five unrelated buttons. */}
-        <View
+        {/* ONE row (owner call 2026-08-22: "make all the kind of help in a
+            same row") — five options cannot physically share a phone's width
+            at this text size, so the row scrolls sideways, the native iOS
+            chip-rail pattern. The trailing chip peeking past the edge is the
+            scroll affordance. */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           accessibilityRole="radiogroup"
           accessibilityLabel="Kind of help"
-          style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2], marginBottom: spacing[4] }}
+          keyboardShouldPersistTaps="handled"
+          style={{ marginBottom: spacing[4], marginHorizontal: -spacing[4] }}
+          contentContainerStyle={{
+            flexDirection: 'row',
+            gap: spacing[2],
+            paddingHorizontal: spacing[4],
+          }}
         >
           {Object.entries(CATEGORY).map(([value, label]) => (
             <Chip
@@ -157,7 +173,7 @@ function PostNeedForm({ title }) {
               onPress={categoryHandlers[value]}
             />
           ))}
-        </View>
+        </ScrollView>
 
         {form.category === 'OTHER' ? (
           <Input
@@ -200,8 +216,18 @@ function PostNeedForm({ title }) {
         />
       </ScrollView>
 
-      {/* Bottom-pinned primary — the ONE filled action on this screen */}
-      <View style={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: spacing[3] }}>
+      {/* Bottom-pinned primary — the ONE filled action on this screen. Its
+          clearance is the bar's real footprint (shared tabBarMetrics): the bar
+          floats as a capsule and scenes run full-height beneath it, so a plain
+          12pt pad left this button dead inside the bar's band on zero-inset
+          iPhones (verify sweep 2026-08-22). */}
+      <View
+        style={{
+          paddingHorizontal: spacing[4],
+          paddingTop: spacing[2],
+          paddingBottom: tabBarSpace(insets) + spacing[3],
+        }}
+      >
         <Button
           title={post.isPending ? 'Posting…' : 'Post Help'}
           variant="primary"

@@ -226,7 +226,7 @@ describe('DEEP-36: a paused trusted elder stays in Trusted Elders', () => {
     currentTrustLevel: 'TRUSTED',
   };
 
-  test('the paused card and its count stay in the segment it was paused from', async () => {
+  test('the paused card stays in the segment it was paused from', async () => {
     api.get.mockImplementation(async (url) => {
       if (url === '/connections') return { data: [PAUSED_TRUSTED] };
       if (url === '/trust/my-score') return { data: { customers: [] } };
@@ -235,9 +235,9 @@ describe('DEEP-36: a paused trusted elder stays in Trusted Elders', () => {
 
     const r = await wrap(<MyEldersPanel />);
     // Building Trust is the default segment: a trusted friend must not be
-    // sitting in it.
-    await waitFor(() => expect(r.getByLabelText('Trusted Elders, 1')).toBeTruthy());
-    expect(r.getByLabelText('Building Trust, 0')).toBeTruthy();
+    // sitting in it. (Segment labels carry no counts — owner call 2026-08-22.)
+    await waitFor(() => expect(r.getByLabelText('Trusted Elders')).toBeTruthy());
+    expect(r.getByLabelText('Building Trust')).toBeTruthy();
     expect(r.queryByText('Resume')).toBeNull();
 
     await fireEvent.press(r.getByLabelText(/Trusted Elders/));

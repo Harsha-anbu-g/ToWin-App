@@ -12,8 +12,11 @@ HARD-118), on branch `ralph/store-hardening`.
 - **No `eas build` was run in this loop. No `eas submit` was run either.** No
   build quota was consumed and no binary was produced. Version 1.1.0 build 10,
   already in App Store Connect, is still the most recent upload.
-- **Nothing was pushed to any remote.** `git log origin/main..HEAD` lists 28
-  local commits, 20 of them from this run. They are yours to review and push.
+- **Nothing was pushed to any remote.** `git log origin/main..HEAD` lists 29
+  local commits: 8 from the location run (`89b3d5e..36fded9`), 1 pinning the
+  jest config (`921017d`), and 20 from this run. They are yours to review and
+  push. Counted again after the last commit landed; an earlier draft of this
+  file said 28 because it counted before its own final commit.
 - **Nothing was spent.** No enrolment, no purchase, no interactive login.
 - **`ToWin/` was not written to.** It is the read-only reference and it stayed
   that way.

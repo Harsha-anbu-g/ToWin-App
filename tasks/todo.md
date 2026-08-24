@@ -1,3 +1,37 @@
+# LOC-2: the phone's location works everywhere it matters (SHIPPED 2026-08-22)
+
+Branch `ralph/location-everywhere`, run by the ralph loop from `ralph/prd.json`.
+Full plan with every verified fact and its file and line:
+`docs/superpowers/plans/2026-08-22-location-everywhere.md` (project root, outside this repo).
+
+- [x] LOC-201 one shared hook and card (`src/lib/useDevicePosition.js`, primer moved to `src/components/location/`)
+- [x] LOC-202 lock the on-behalf rule: `POST /needs` never carries coordinates
+- [x] LOC-203 Post Help asks right after posting (owner call: after, never during)
+- [x] LOC-204 Offer Help gets a real distance via `GET /needs/nearby` (owner call: make it real)
+- [x] LOC-205 Profile Edit can use the phone, without Save wiping it afterwards
+- [x] LOC-206 freshness at 24 hours, never on a timer
+- [x] LOC-207 store paperwork stays true
+- [x] LOC-208 verification sweep with evidence
+
+Owner decisions locked 2026-08-22: the Offer Help distance chips become real; the
+Post Help ask lands after the request is posted.
+
+All eight committed on `ralph/location-everywhere` (`cf2dfbc..36fded9`), now carried by
+`ralph/store-hardening`. Independently re-verified 2026-08-22: 148 suites, 1250 tests,
+all passing with `--forceExit`, exit 0.
+
+- [x] Pushed 2026-08-22: `origin/main` 89b3d5e -> 0c3e70c, 29 commits.
+- [x] TestFlight build 12, v1.1.0, from 0c3e70c, submitted to App Store Connect.
+- [ ] Walk it on the phone once Apple finishes processing: Post Help, Offer Help,
+      Profile Edit, Add Friends.
+
+- [x] The Add Friends finding is CLOSED (`ad58eaa`, pushed): a position that actually
+      changed now invalidates `['discover']`. A first-arrival record does not, or every
+      ordinary mount would fetch the same list twice.
+      Test: `__tests__/friends-location-refresh.test.js`, three cases.
+
+---
+
 # Mobile port — What I Pass On (+ check-in family visibility, role landing)
 
 Porting the Towinly website surface shipped in `088893c..f94d437` (47 commits) to the

@@ -323,8 +323,10 @@ export default function MyHelpersPanel() {
           // Building Trust leads (owner call 2026-08-17): it is the working
           // list, where the next step lives; Trusted Friends is the trophy
           // shelf. The order now matches the default segment below.
-          { key: 'building', label: 'Building Trust', count: building.length + pausedBuilding.length },
-          { key: 'trusted', label: 'Trusted Friends', count: trusted.length + pausedTrusted.length },
+          // No counts on these labels (owner call 2026-08-22: "it should not
+          // show the number near the building trust, trusted friends").
+          { key: 'building', label: 'Building Trust' },
+          { key: 'trusted', label: 'Trusted Friends' },
         ]}
         value={seg}
         onChange={setSeg}

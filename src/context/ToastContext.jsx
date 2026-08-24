@@ -11,13 +11,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { announce } from '../lib/announce';
 import { haptic } from '../lib/haptics';
 import { useTheme } from '../theme/ThemeContext';
+import { tabBarSpace } from '../lib/tabBarMetrics';
 
 const ToastContext = createContext(null);
 
-// The tab bar is 76pt + the safe-area inset (app/(tabs)/_layout.jsx); non-tab
-// screens have no bar, but a constant clearance keeps the toast in one place
-// instead of jumping between screens.
-const TAB_BAR_CLEARANCE = 76;
+// The toast floats above the tab bar's band (shared tabBarMetrics — a
+// floating capsule on iOS); non-tab screens have no bar, but the constant
+// clearance keeps the toast in one place instead of jumping between screens.
 
 export function ToastProvider({ children }) {
   const { t, spacing, radius, text } = useTheme();
@@ -76,7 +76,7 @@ export function ToastProvider({ children }) {
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: TAB_BAR_CLEARANCE + insets.bottom + spacing[4],
+            bottom: tabBarSpace(insets) + spacing[4],
             alignItems: 'center',
           }}
         >

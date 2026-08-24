@@ -10,9 +10,18 @@
 // own screen is open. Tab bar is a translucent surface with a hairline top
 // border — no shadows.
 import { useQuery } from '@tanstack/react-query';
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, usePathname, useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
-import { useEffect } from 'react';
+import { FILL, GlassView, hasLiquidGlass } from '../../src/components/ui/glass';
+import {
+  TAB_BAR_GAP,
+  TAB_BAR_HEIGHT,
+  TAB_BAR_MARGIN,
+  TAB_BAR_RADIUS,
+  isFloatingTabBar,
+  tabBarSpace,
+} from '../../src/lib/tabBarMetrics';
+import { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   MessageCircle,
@@ -21,8 +30,26 @@ import {
   UserRound,
   UsersRound,
 } from '../../src/components/icons';
-import { Platform, Pressable, Text, View } from 'react-native';
+import {
+  Animated,
+  PanResponder,
+  Platform,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import GlassLens from '../../src/components/ui/GlassLens';
+import {
+  LENS_H,
+  LENS_RADIUS,
+  LENS_TOP,
+  lensWidthFor,
+  lensXFor,
+} from '../../src/lib/tabLensGeometry';
+import { useReducedMotion } from '../../src/lib/useReducedMotion';
+import { DURATION, EASE } from '../../src/theme/motion';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import { useAuth } from '../../src/context/AuthContext';
@@ -36,12 +63,11 @@ import { useTheme } from '../../src/theme/ThemeContext';
 // Badge Text exposes no maxFontSizeMultiplier, so at large OS text an uncapped
 // count would balloon out of the bar (UX-701).
 //
-// Every badge is the same red (owner call 2026-08-19: "the message
-// notification should also in the red color") — Messages used to wear a
-// gentler deep sky while new-activity counts wore red, and one bar carrying
-// two badge colors read as two different kinds of thing. Red on white clears
-// 5.89:1; in night mode the red lightens and the numeral takes the dark
-// canvas, which lands at the same ratio.
+// Every badge is the same color — one bar carrying two badge colors read as
+// two different kinds of thing (owner call 2026-08-19). That one color is now
+// badgeFill (owner call 2026-08-22: "this red is not good"): the settled
+// non-inverting badge blue, 4.60:1 with white and ≥3:1 on every surface in
+// both themes, so the numeral stays constant white day and night.
 const tabIcon = (Icon, count) =>
   function TabIcon({ color, focused }) {
     const { t, fontScaleCaps } = useTheme();
@@ -77,8 +103,10 @@ const tabIcon = (Icon, count) =>
               textAlign: 'center',
               fontSize: 11,
               fontWeight: '600',
-              backgroundColor: t.red,
-              color: t.canvas,
+              // badgeFill, the settled non-inverting badge blue — the unread
+              // red retired app-wide (owner call 2026-08-22).
+              backgroundColor: t.badgeFill,
+              color: t.badgeText,
             }}
           >
             {shown}
@@ -98,19 +126,94 @@ function tabA11yLabel(label, count = 0, noun = '') {
   return count > 0 ? withCount : undefined;
 }
 
-// The bar's own glass: content scrolls beneath and blurs through. Android's
-// view blur is costly — its bar stays a solid surface. The gliding lens that
-// used to ride on top of this is gone (owner call 2026-08-19).
-function TabBarBackground() {
-  const { mode } = useTheme();
-  if (Platform.OS === 'android') return null;
+// The bar's own material. On an iPhone that can draw it (iOS 26+) this is
+// Apple's real Liquid Glass: content refracts at the bar's edge and the
+// specular rim tracks the phone's tilt. That edge bending is the whole effect,
+// and it is the part a hand-drawn blur can never fake — which is why the
+// gliding lens that tried was removed 2026-08-19. Older iOS keeps the
+// blur-and-wash it always had. Android's view blur is costly and uneven, so
+// its bar stays the solid surface it has always been.
+// The bar's sheet + the finger-following lens, back from 17313a4^ (owner call
+// 2026-08-22, pointing at WhatsApp and Instagram: "I need the lens on bottom
+// like whatsapp"). The 2026-08-19 removal was a verdict on the MATERIAL — the
+// TestFlight build drew the milky blur-and-wash fallback, not glass. On iOS 26
+// the lens is now Apple's real Liquid Glass, untinted, the exact material
+// WhatsApp's bar wears. Purely visual: it renders as the bar's BACKGROUND
+// layer, so every real tab button, badge, and screen-reader label stays
+// exactly as the library renders it. The layout owns the animated values.
+function GlassTabBackground({ animX, animW, shown, scale, ready }) {
+  const { t, mode } = useTheme();
   return (
-    <BlurView
-      intensity={30}
-      tint={mode === 'dark' ? 'dark' : 'light'}
-      style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-    />
+    <View style={{ flex: 1 }}>
+      {/* The sheet. iOS 26: real glass, radiused so the rim highlight and the
+          edge refraction follow the capsule's own corners, not the parent's
+          clip. Older iOS: the blur it always had. Android: solid (costly,
+          uneven view blur) — the bar's own backgroundColor carries it. */}
+      {Platform.OS !== 'android' ? (
+        hasLiquidGlass ? (
+          <GlassView
+            glassEffectStyle="regular"
+            // The app's night mode is opt-in only, never OS-driven (theme
+            // rules) — without this the glass follows the OS and can go dark
+            // under light-theme labels (verify sweep 2026-08-22).
+            colorScheme={mode === 'dark' ? 'dark' : 'light'}
+            // Frost, like WhatsApp's bar: untinted regular glass over the
+            // app's white screens was near-invisible (owner report 2026-08-22,
+            // "capsule should be big and well seem by eyes"). The tint keeps
+            // the refraction and the rim while giving the capsule a body.
+            tintColor={mode === 'dark' ? 'rgba(38,37,35,0.55)' : 'rgba(255,255,255,0.55)'}
+            style={[FILL, isFloatingTabBar && { borderRadius: TAB_BAR_RADIUS }]}
+          />
+        ) : (
+          <BlurView intensity={30} tint={mode === 'dark' ? 'dark' : 'light'} style={FILL} />
+        )
+      ) : null}
+      {ready ? (
+        <Animated.View
+          pointerEvents="none"
+          style={{
+            position: 'absolute',
+            top: LENS_TOP,
+            height: LENS_H,
+            width: animW,
+            // A rounded rectangle, not a pill: a pill's corner radius is half
+            // its height, and the label reads down inside that curve
+            // (tabLensGeometry, owner report 2026-08-19).
+            borderRadius: LENS_RADIUS,
+            overflow: 'hidden',
+            // Real Liquid Glass draws its own edge; only the fallback
+            // composite needs the hairline to read as a capsule.
+            borderWidth: hasLiquidGlass ? 0 : 1,
+            borderColor: t.blueSoft,
+            opacity: shown,
+            transform: [{ translateX: animX }, { scale }],
+          }}
+        >
+          {/* Untinted glass-on-glass, the WhatsApp material. The blueTint wash
+              stays fallback-only: laid over real glass it is just a wash. */}
+          {hasLiquidGlass ? (
+            <GlassView
+              glassEffectStyle="regular"
+              colorScheme={mode === 'dark' ? 'dark' : 'light'}
+              style={FILL}
+            />
+          ) : (
+            <GlassLens tint={mode === 'dark' ? 'dark' : 'light'} washColor={t.blueTint} />
+          )}
+        </Animated.View>
+      ) : null}
+    </View>
   );
+}
+
+// The bar's fill sits UNDER TabBarBackground, so it has to get out of the way
+// when the real glass draws — a 72%-opaque wash laid over Liquid Glass is just
+// a wash, and the effect disappears. Android draws no background layer at all,
+// so its fill stays the opaque canvas.
+function tabBarFill(t, mode) {
+  if (Platform.OS === 'android') return t.canvas;
+  if (hasLiquidGlass) return 'transparent';
+  return mode === 'dark' ? 'rgba(32,31,29,0.78)' : 'rgba(255,255,255,0.72)';
 }
 
 function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps, pressRipple }) {
@@ -215,6 +318,173 @@ export default function TabsLayout() {
   // FAMILY has no center action at all (roles.js) — the slot disappears and
   // the bar is Home · Messages · Profile.
   const ActionIcon = action?.key === 'find' ? Search : Plus;
+  // The visible slots, in render order — the glass lens maps pathname → slot.
+  // On the floating bar the action is NOT a slot — it floats beside the
+  // capsule as its own glass circle (FloatingActionCircle). Docked bars keep
+  // the center slot the 2026-07-27 pass built.
+  const slots = [
+    'home',
+    ...(second?.name === 'posted-help' ? ['posted-help'] : []),
+    ...(action ? ['action'] : []),
+    'messages',
+    'profile',
+  ];
+
+  // ---- The gliding glass lens (back per owner call 2026-08-22) ----
+  // The lens springs to the active tab on navigation and rides directly under
+  // the finger during a horizontal drag on the bar. Geometry needs no
+  // onLayout: the bar is the window minus its capsule margins, so slot width
+  // is barW / slots. All lens coordinates are BAR-relative — the lens renders
+  // inside tabBarBackground, so the capsule's left margin never enters them;
+  // only the drag responder (which reads window pageX) subtracts it.
+  const { width: winW, height: winH } = useWindowDimensions();
+  const pathname = usePathname();
+  const router = useRouter();
+  const reducedMotion = useReducedMotion();
+  const barLeft = isFloatingTabBar ? TAB_BAR_MARGIN : 0;
+  const barW = winW - 2 * barLeft;
+  const slotW = slots.length > 0 ? barW / slots.length : 0;
+  const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
+  const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';
+
+  // The capsule hugs each tab's CONTENT, WhatsApp-style (owner report
+  // 2026-08-17: a fixed width let long words poke out and drowned short
+  // ones). Every rendered label reports its true width from onLayout —
+  // covering the OS text-size setting — and the lens resizes as it glides.
+  const [labelWidths, setLabelWidths] = useState({});
+  const noteLabel = (title, w) =>
+    setLabelWidths((prev) => (Math.abs((prev[title] ?? 0) - w) < 1 ? prev : { ...prev, [title]: w }));
+  const slotTitles = {
+    home: homeTab.label,
+    'posted-help': 'Posted Help',
+    messages: 'Messages',
+    profile: 'Profile',
+  };
+  const lensWFor = (i, sw, widths) => {
+    if (sw <= 0) return 0;
+    const measured = widths[slotTitles[slots[i]]];
+    // Before the first measurement lands, hug the icon row alone rather than
+    // guessing a width the letters might not fit inside.
+    return lensWidthFor(measured ?? 22, sw);
+  };
+
+  const lensX = useRef(new Animated.Value(0)).current;
+  const lensWAnim = useRef(new Animated.Value(0)).current;
+  const lensShown = useRef(new Animated.Value(0)).current;
+  const lensScale = useRef(new Animated.Value(1)).current;
+  const dragging = useRef(false);
+  const placed = useRef(false); // first render positions without animating
+
+  // One spring voice for every lens move: quick, critically damped — the
+  // organic WhatsApp glide, no visible bounce (Emil rule still holds).
+  // JS-driven: width is a layout prop the native driver can't animate, and
+  // one view can't mix drivers — the bar is a single small view, so the JS
+  // driver keeps up fine.
+  const LENS_SPRING = { damping: 26, stiffness: 320, mass: 0.9, useNativeDriver: false };
+  const centerOf = lensXFor;
+
+  useEffect(() => {
+    if (slotW <= 0 || dragging.current) return;
+    if (!lensable) {
+      if (reducedMotion) lensShown.setValue(0);
+      else Animated.timing(lensShown, { toValue: 0, duration: DURATION.fast, easing: EASE.exit, useNativeDriver: false }).start();
+      return;
+    }
+    const lw = lensWFor(activeIndex, slotW, labelWidths);
+    const dest = centerOf(activeIndex, slotW, lw);
+    if (reducedMotion || !placed.current) {
+      placed.current = true;
+      lensX.setValue(dest);
+      lensWAnim.setValue(lw);
+      lensShown.setValue(1);
+      return;
+    }
+    Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: false }).start();
+    Animated.spring(lensX, { toValue: dest, ...LENS_SPRING }).start();
+    Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
+    // The spring config is a stable literal and the Animated.Values are refs —
+    // only real geometry/route/measure changes should re-run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeIndex, lensable, slotW, labelWidths, reducedMotion]);
+
+  // Live state for the drag responder (created once; reads through the ref).
+  const live = useRef({ hovered: -1 });
+  live.current = {
+    ...live.current,
+    slots, slotW, barW, barLeft, winH, activeIndex, lensable, labelWidths,
+    barSpace: tabBarSpace(insets),
+    grab: () => {
+      dragging.current = true;
+      live.current.hovered = -1;
+      haptic.selection();
+      Animated.spring(lensScale, { toValue: 1.08, ...LENS_SPRING }).start();
+      Animated.timing(lensShown, { toValue: 1, duration: DURATION.fast, easing: EASE.out, useNativeDriver: false }).start();
+    },
+    track: (pageX) => {
+      const { barW: w, barLeft: bl, slots: s, slotW: sw, labelWidths: widths } = live.current;
+      // Window → bar coordinates: the floating capsule starts 12pt in.
+      const x = pageX - bl;
+      // Hug whichever tab the finger is over: the width morphs mid-glide.
+      const over = Math.min(s.length - 1, Math.max(0, Math.floor(x / sw)));
+      if (over !== live.current.hovered) {
+        live.current.hovered = over;
+        Animated.spring(lensWAnim, { toValue: lensWFor(over, sw, widths), ...LENS_SPRING }).start();
+      }
+      const lw = lensWFor(over, sw, widths);
+      lensX.setValue(Math.min(Math.max(x - lw / 2, 2), w - lw - 2));
+    },
+    drop: (pageX) => {
+      const { barLeft: bl, slots: s, slotW: sw, activeIndex: cur, labelWidths: widths } = live.current;
+      dragging.current = false;
+      Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
+      const x = pageX - bl;
+      let idx = Math.min(s.length - 1, Math.max(0, Math.floor(x / sw)));
+      if (s[idx] === 'action') {
+        // The FAB opens a form — a drag never lands on it; roll to the
+        // nearer ordinary tab instead.
+        idx = x / sw - idx < 0.5 ? Math.max(0, idx - 1) : Math.min(s.length - 1, idx + 1);
+        if (s[idx] === 'action') idx = Math.max(0, cur);
+      }
+      const lw = lensWFor(idx, sw, widths);
+      Animated.spring(lensX, { toValue: centerOf(idx, sw, lw), ...LENS_SPRING }).start();
+      Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
+      if (idx !== cur && s[idx]) {
+        haptic.impact();
+        router.push(`/${s[idx]}`);
+      }
+    },
+    cancel: () => {
+      const { slotW: sw, activeIndex: cur, lensable: ok, labelWidths: widths } = live.current;
+      dragging.current = false;
+      Animated.spring(lensScale, { toValue: 1, ...LENS_SPRING }).start();
+      if (ok) {
+        const lw = lensWFor(cur, sw, widths);
+        Animated.spring(lensX, { toValue: centerOf(cur, sw, lw), ...LENS_SPRING }).start();
+        Animated.spring(lensWAnim, { toValue: lw, ...LENS_SPRING }).start();
+      }
+    },
+  };
+
+  // Captures only a clearly horizontal drag that starts INSIDE the bar's
+  // band; taps fall through to the real tab buttons untouched, and gestures
+  // anywhere else on the screen never reach this.
+  const barPan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: (e, g) => {
+        const { winH: h, barSpace } = live.current;
+        return (
+          e.nativeEvent.pageY > h - barSpace &&
+          Math.abs(g.dx) > 10 &&
+          Math.abs(g.dx) > Math.abs(g.dy) * 1.5
+        );
+      },
+      onPanResponderGrant: () => live.current.grab(),
+      onPanResponderMove: (e) => live.current.track(e.nativeEvent.pageX),
+      onPanResponderRelease: (e) => live.current.drop(e.nativeEvent.pageX),
+      onPanResponderTerminate: () => live.current.cancel(),
+    })
+  ).current;
+
   // The app icon's badge mirrors unread conversations (owner call
   // 2026-08-17: Apple behavior everywhere) — cleared when the count is,
   // and on logout, when unread goes undefined → 0.
@@ -229,7 +499,7 @@ export default function TabsLayout() {
   if (booted && !user) return <Redirect href="/(auth)/login" />;
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }} {...barPan.panHandlers}>
     <Tabs
       // UX-703: every tab press answers back. The bar emits tabPress from every
       // slot's onPress (the center FAB's custom button included), so one
@@ -248,10 +518,18 @@ export default function TabsLayout() {
           <Text
             numberOfLines={1}
             maxFontSizeMultiplier={fontScaleCaps.chrome}
+            // Each label reports its rendered width so the lens can hug it.
+            onLayout={(e) => noteLabel(children, e.nativeEvent.layout.width)}
             style={{
               fontSize: type.tabLabel,
               fontWeight: '600',
               color,
+              // No maxWidth cap: the full name always shows (owner call
+              // 2026-08-22, "no ...... in the bar it should show full name").
+              // This retires the 2026-08-19 truncate-inside-the-lens cap: the
+              // real glass lens draws no hard border, so a letter grazing its
+              // corner arc at the largest text sizes is invisible, while a
+              // "Posted He…" ellipsis is not.
             }}
           >
             {children}
@@ -261,26 +539,61 @@ export default function TabsLayout() {
         // content scrolls beneath it and blurs through TabBarBackground. The
         // wash over the blur keeps icons and labels at full contrast. Android
         // skips the blur, so its bar stays the solid canvas it always was.
-        tabBarStyle: {
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor:
-            Platform.OS === 'android'
-              ? t.canvas
-              : mode === 'dark'
-                ? 'rgba(32,31,29,0.78)'
-                : 'rgba(255,255,255,0.72)',
-          borderTopWidth: 1,
-          borderTopColor: t.border,
-          // 76, not 64: room for the center circle to sit fully INSIDE its
-          // Pressable (Android drops touches outside parent bounds).
-          height: 76 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 8),
-        },
-        tabBarBackground: () => <TabBarBackground />,
+        // iOS: a detached capsule floating above the home indicator, content
+        // visible around it — the iOS 26 grammar the owner pointed at in
+        // WhatsApp and Instagram (2026-08-22). Android keeps its platform's own
+        // edge-to-edge bar; a floating iOS capsule there would be a hand-drawn
+        // copy of another platform's control (native controls first).
+        tabBarStyle: isFloatingTabBar
+          ? {
+              position: 'absolute',
+              left: TAB_BAR_MARGIN,
+              right: TAB_BAR_MARGIN,
+              bottom: insets.bottom + TAB_BAR_GAP,
+              height: TAB_BAR_HEIGHT,
+              borderRadius: TAB_BAR_RADIUS,
+              // Clips the blur fallback to the capsule; the GlassView carries
+              // its own radius so the rim follows the shape.
+              overflow: 'hidden',
+              backgroundColor: tabBarFill(t, mode),
+              // A hairline ring on glass too: the frosted capsule needs a
+              // findable edge on white screens (owner report 2026-08-22 — the
+              // borderless capsule could not be seen). Repeated per-side on
+              // purpose: the library sets its own borderTopWidth, and in RN a
+              // per-side value always beats our generic borderWidth.
+              borderWidth: 1,
+              borderTopWidth: 1,
+              borderColor: t.border,
+              // 8/6, not symmetric: the label rides 2pt higher so it clears
+              // the lens's bottom corner arc at the elder 11pt floor
+              // (tabLensGeometry, floating variants). The safe-area padding
+              // that lived inside the bar is gone — the capsule floats.
+              paddingTop: 8,
+              paddingBottom: 6,
+            }
+          : {
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: tabBarFill(t, mode),
+              borderTopWidth: 1,
+              borderTopColor: t.border,
+              // 76, not 64: room for the center circle to sit fully INSIDE its
+              // Pressable (Android drops touches outside parent bounds).
+              height: TAB_BAR_HEIGHT + insets.bottom,
+              paddingTop: 8,
+              paddingBottom: Math.max(insets.bottom, 8),
+            },
+        tabBarBackground: () => (
+          <GlassTabBackground
+            animX={lensX}
+            animW={lensWAnim}
+            shown={lensShown}
+            scale={lensScale}
+            ready={slotW > 0}
+          />
+        ),
         sceneStyle: { backgroundColor: t.surface },
       }}
     >

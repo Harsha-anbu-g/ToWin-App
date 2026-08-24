@@ -88,7 +88,11 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             key={seg.key}
             accessibilityRole="tab"
             accessibilityLabel={
-              seg.count != null ? `${seg.label}, ${seg.count}` : seg.label
+              seg.badge > 0
+                ? `${seg.label}, ${seg.badge} unread`
+                : seg.count != null
+                  ? `${seg.label}, ${seg.count}`
+                  : seg.label
             }
             // Both spellings on purpose: the web build drops accessibilityState
             // on Pressable (react-native-web forwards aria-* and role only), so
@@ -154,6 +158,33 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
                   }}
                 >
                   {seg.count}
+                </Text>
+              ) : null}
+              {seg.badge > 0 ? (
+                // New-activity count riding the segment (owner call 2026-08-22:
+                // the Family tab must announce waiting messages) — same badgeFill
+                // voice as the tab bar's badges. Spoken via the label above.
+                <Text
+                  numberOfLines={1}
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants"
+                  maxFontSizeMultiplier={fontScaleCaps.chrome}
+                  style={{
+                    minWidth: 16,
+                    height: 16,
+                    lineHeight: 15,
+                    borderRadius: 8,
+                    paddingHorizontal: 4,
+                    overflow: 'hidden',
+                    textAlign: 'center',
+                    fontSize: 10,
+                    fontWeight: '700',
+                    backgroundColor: t.badgeFill,
+                    color: t.badgeText,
+                    fontVariant: ['tabular-nums'],
+                  }}
+                >
+                  {seg.badge}
                 </Text>
               ) : null}
             </View>
