@@ -23,6 +23,12 @@ const SCAN_DIRS = ['app', 'src'];
 // `useColorScheme` is the hook, `Appearance` the imperative API, and
 // `colorScheme` catches the react-native-web / Paper spellings of the same idea.
 const OS_APPEARANCE_RE = /\buseColorScheme\b|\bAppearance\b|\bcolorScheme\b/;
+// A JSX prop being SET (`colorScheme={...}`, `colorScheme="dark"`) supplies a
+// value; it never asks the OS anything. The glass surfaces pin their scheme to
+// the app's own mode this way, which is the opposite of the fault this test
+// guards against — a value read from the OS inside the braces still trips the
+// hook/API patterns above. `(?!=)` keeps `colorScheme ===` counted as a read.
+const PROP_WRITE_RE = /\bcolorScheme=(?!=)/g;
 
 function walk(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -58,7 +64,10 @@ test('nothing in the app asks the OS what colour scheme it is', () => {
       const lines = fs.readFileSync(file, 'utf8').split('\n');
       lines.forEach((line, i) => {
         // Comments explain the rule; only real code can break it.
-        const code = line.replace(/\/\/.*$/, '').replace(/\/\*.*?\*\//g, '');
+        const code = line
+          .replace(/\/\/.*$/, '')
+          .replace(/\/\*.*?\*\//g, '')
+          .replace(PROP_WRITE_RE, '');
         if (OS_APPEARANCE_RE.test(code)) {
           offenders.push(`${path.relative(ROOT, file)}:${i + 1} ${line.trim()}`);
         }
@@ -66,6 +75,24 @@ test('nothing in the app asks the OS what colour scheme it is', () => {
     }
   }
   expect(offenders).toEqual([]);
+});
+
+test('every Liquid Glass surface pins its scheme to the app theme, never the OS', () => {
+  // expo-glass-effect follows the OS appearance unless told otherwise, so an
+  // unpinned GlassView goes dark under light-theme labels the moment the phone
+  // does (verify sweep 2026-08-22). Each surface must carry the pin itself.
+  const unpinned = [];
+  for (const dir of SCAN_DIRS) {
+    for (const file of walk(path.join(ROOT, dir))) {
+      const source = fs.readFileSync(file, 'utf8');
+      // Attribute expressions here never contain `>`, so the first `>` closes
+      // the tag; a `=>` inside a prop would need a real JSX parser instead.
+      for (const tag of source.match(/<GlassView\b[^>]*>/g) ?? []) {
+        if (!/\bcolorScheme=/.test(tag)) unpinned.push(`${path.relative(ROOT, file)}: ${tag.replace(/\s+/g, ' ')}`);
+      }
+    }
+  }
+  expect(unpinned).toEqual([]);
 });
 
 test('the theme starts light and only a stored preference moves it', async () => {

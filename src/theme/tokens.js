@@ -42,6 +42,7 @@ export const light = {
   // deeper while every button keeps the sky-blue fill untouched. Deliberately
   // NOT blueDeep: that token flips pale at night and would strand white text.
   badgeFill: '#2E7DA6', // 4.60:1 with white; ≥3:1 on every surface, both themes
+  badgeText: '#ffffff', // the numeral on badgeFill — constant, like its bed, in both themes
 
   // Neutral slate — avatars & trust badge
   slateTint: '#EEF1F4',

@@ -28,6 +28,8 @@ import { useToast } from '../context/ToastContext';
 import { announce } from '../lib/announce';
 import focusForScreenReader from '../lib/focusForScreenReader';
 import KeyboardAvoider from './ui/KeyboardAvoider';
+import { FILL, GlassView, hasLiquidGlass } from './ui/glass';
+import { tabBarSpace } from '../lib/tabBarMetrics';
 import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
@@ -45,6 +47,10 @@ const SUGGESTIONS = [
 ];
 
 const mascot = require('../../assets/ai-tortoise-small.png');
+
+// Module scope, like keyOf below: a fresh style object every render would
+// remount the native glass view and restart its materialize animation.
+const GLASS_PILL = { ...FILL, borderRadius: 22 };
 
 // Module scope so the list's key function never changes identity (see the
 // memoization note in AskAiAssistant).
@@ -406,23 +412,42 @@ export default function AskAiAssistant() {
         style={({ pressed }) => ({
           position: 'absolute',
           right: 16,
-          // Clear of the tab bar (76 + safe-area) and the raised center button.
-          bottom: 76 + insets.bottom + 16,
+          // Clear of the tab bar's band (shared tabBarMetrics — the bar
+          // floats as a capsule on iOS) and the raised center button.
+          bottom: tabBarSpace(insets) + 16,
           height: 44,
           paddingHorizontal: 14,
           borderRadius: 22,
           // Quiet float (owner report 2026-08-17: "so many blue"): the
           // mascot and label carry the identity; the pill itself is the
-          // neutral surface with a hairline, floating over content.
-          backgroundColor: t.surface,
-          borderWidth: 1,
+          // neutral surface with a hairline, floating over content. On iOS 26
+          // that surface IS Apple's glass, which draws its own edge — the
+          // hairline and the solid fill step aside for it.
+          backgroundColor: hasLiquidGlass ? 'transparent' : t.surface,
+          borderWidth: hasLiquidGlass ? 0 : 1,
           borderColor: t.border,
+          overflow: 'hidden', // clips the glass layer to the pill's radius
           flexDirection: 'row',
           alignItems: 'center',
           gap: 7,
-          opacity: pressed ? 0.85 : 1,
+          // Real glass answers a press by deforming, the way a drop of liquid
+          // does. Dimming the whole pill as well would read as two different
+          // reactions to one tap, so the opacity dip is the fallback's job.
+          opacity: pressed && !hasLiquidGlass ? 0.85 : 1,
         })}
       >
+        {/* First child, so it sits behind the mascot and label. isInteractive
+            is what gives the press its squish — the single most convincing
+            part of the material. */}
+        {hasLiquidGlass ? (
+          <GlassView
+            glassEffectStyle="regular"
+            // App night mode is opt-in, never OS-driven — pin the glass to it.
+            colorScheme={mode === 'dark' ? 'dark' : 'light'}
+            isInteractive
+            style={GLASS_PILL}
+          />
+        ) : null}
         <Image source={mascot} style={{ width: 24, height: 24 }} resizeMode="contain" />
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Ask AI</Text>
       </Pressable>

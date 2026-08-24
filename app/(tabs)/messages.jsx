@@ -193,16 +193,16 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
         </Text>
       </View>
       {conn.unreadCount > 0 ? (
-        // Red, like every other unread count in the app (owner call
-        // 2026-08-19) — this row's badge and the Messages tab's badge count
-        // the same thing, so they cannot be two different colors.
+        // badgeFill, like every other unread count in the app (owner call
+        // 2026-08-22 retired the red) — this row's badge and the Messages
+        // tab's badge count the same thing, so they cannot be two colors.
         <View
           style={{
             minWidth: 22,
             height: 22,
             borderRadius: 11,
             paddingHorizontal: 6,
-            backgroundColor: t.red,
+            backgroundColor: t.badgeFill,
             alignItems: 'center',
             justifyContent: 'center',
           }}
@@ -211,7 +211,9 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
             style={{
               fontSize: 12,
               fontWeight: '700',
-              color: t.canvas,
+              // badgeText, not t.canvas — canvas goes dark at night and would
+              // vanish into the non-inverting badgeFill.
+              color: t.badgeText,
               fontVariant: ['tabular-nums'],
             }}
           >
@@ -289,9 +291,19 @@ export default function MessagesInbox() {
   // Tabs stay fixed per role; a tab with no chats shows a friendly empty note
   // instead of disappearing (web f6e5e84).
   const tabKeys = ROLE_TAB_ORDER[user?.role] || DEFAULT_TAB_ORDER;
-  const sections = tabKeys.map((key) => ({ key, label: GROUP_LABELS[key] }));
   const rowsOf = (key) =>
     key === 'groups' ? groupThreads : active.filter((c) => groupOf(c) === key);
+  // Waiting messages announce themselves ON the tab (owner call 2026-08-22:
+  // "the family should show a notification on top") — otherwise unread family
+  // chats are invisible while another tab is open. Groups threads carry no
+  // unread counts, so that tab never badges.
+  const unreadOf = (key) =>
+    key === 'groups' ? 0 : rowsOf(key).reduce((n, c) => n + (c.unreadCount || 0), 0);
+  const sections = tabKeys.map((key) => ({
+    key,
+    label: GROUP_LABELS[key],
+    badge: unreadOf(key),
+  }));
   // Land on the first tab that has a conversation, not on an empty one.
   const currentTab = sections.some((s) => s.key === activeTab)
     ? activeTab

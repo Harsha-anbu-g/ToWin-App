@@ -9,12 +9,14 @@ import { useRouter } from 'expo-router';
 import { MapPin } from '../icons';
 import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RefreshControl from '../ui/RefreshControl';
 import api from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
+import { tabBarSpace } from '../../lib/tabBarMetrics';
 import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import LocationPrimer from '../location/LocationPrimer';
@@ -229,6 +231,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
 
 export default function OfferHelpList() {
   const { t, radius, spacing, type, fontFamily } = useTheme();
+  const insets = useSafeAreaInsets();
   // Blocks are per account (blockList.js), so the read is keyed by who is in.
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -360,7 +363,14 @@ export default function OfferHelpList() {
       data={isLoading && seg === 'available' ? [] : shown}
       keyExtractor={(n) => n.id}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-      contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: 64, gap: 12 }}
+      // The bar floats over full-height scenes: 64 left the last card's Apply
+      // button trapped inside the bar's band, untappable at full scroll
+      // (verify sweep 2026-08-22). The clearance is the bar's real footprint.
+      contentContainerStyle={{
+        paddingHorizontal: spacing[4],
+        paddingBottom: tabBarSpace(insets) + spacing[4],
+        gap: 12,
+      }}
       ListHeaderComponent={
         <View>
           <Text
