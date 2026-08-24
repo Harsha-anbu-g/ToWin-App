@@ -17,6 +17,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const appJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'app.json'), 'utf8'));
+const tokens = require('../src/theme/tokens');
 const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
 
 const SCAN_DIRS = ['app', 'src'];
@@ -52,9 +53,11 @@ test('expo-system-ui is installed at the SDK 54 version, which is what makes the
   // SDK 54 ships expo-system-ui 6.x. A major bump here means the SDK moved,
   // and the SDK is locked at 54 for the owner's Expo Go client.
   expect(version).toMatch(/^[~^]?6\./);
-  // The root view behind every screen is the brand parchment, not white or
-  // black. Without expo-system-ui this line does nothing at all.
-  expect(appJson.expo.backgroundColor).toBe('#f6f4ef');
+  // The root view behind every screen is set explicitly — the same white the
+  // page canvas paints (launch-assets.test.js pins the splash to it too), so
+  // the OS can never show black through a gap. Without expo-system-ui this
+  // line does nothing at all.
+  expect(appJson.expo.backgroundColor).toBe(tokens.light.surface);
 });
 
 test('nothing in the app asks the OS what colour scheme it is', () => {

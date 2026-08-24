@@ -24,3 +24,13 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: { Success: 'success', Warning: 'warning', Error: 'error' },
   ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Heavy: 'heavy' },
 }));
+
+// The root layout holds the native launch screen at module scope
+// (src/lib/splash.js), and several suites render that layout. There is no
+// native splash under Jest; jest-expo ships no mock for this module either.
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(() => Promise.resolve(true)),
+  hideAsync: jest.fn(() => Promise.resolve()),
+  hide: jest.fn(),
+  setOptions: jest.fn(),
+}));
