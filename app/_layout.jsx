@@ -15,6 +15,8 @@ import OfflineBanner from '../src/components/OfflineBanner';
 import PushRegistrar from '../src/components/PushRegistrar';
 import LiveRegion from '../src/components/ui/LiveRegion';
 import { ErrorFallback } from '../src/components/AppErrorBoundary';
+import SplashRelease from '../src/components/SplashRelease';
+import { holdSplash } from '../src/lib/splash';
 
 // expo-router looks for an `ErrorBoundary` export on a route module and wraps
 // that route in <Try catch={ErrorBoundary}> (useScreens.js). Exporting it from
@@ -24,6 +26,12 @@ import { ErrorFallback } from '../src/components/AppErrorBoundary';
 // The fallback renders in place of RootLayout, so it deliberately depends on
 // none of the providers below it. See AppErrorBoundary.jsx.
 export { ErrorFallback as ErrorBoundary };
+
+// Module scope, before any component renders: the native launch screen (the
+// mark, "from Towinly" at the foot) holds until SplashRelease lets it go, so
+// a phone never sees the font-gate skeleton between launch image and first
+// screen. See src/lib/splash.js for the ceiling that guarantees it drops.
+holdSplash();
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -138,6 +146,9 @@ export default function RootLayout() {
                     tap routing. Inside AuthProvider (it watches the user)
                     and outside AppFrame (it draws nothing to frame). */}
                 <PushRegistrar />
+                {/* Renders nothing: drops the native launch screen once the
+                    session restore lands (src/lib/splash.js). */}
+                <SplashRelease />
                 <AppFrame>
                   <ThemedShell />
                 </AppFrame>

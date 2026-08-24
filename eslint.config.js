@@ -41,7 +41,8 @@ module.exports = defineConfig([
     // baker under docs/design/icon-source lives outside scripts/ and is the
     // same kind of thing: `node build-final.js` writes the four asset SVGs.
     // Without it here, `npx eslint .` exits 1 on one `__dirname` (HARD-118).
-    files: ['scripts/**', 'docs/design/icon-source/**/*.js'],
+    // Config plugins under plugins/ run inside `expo prebuild` — Node again.
+    files: ['scripts/**', 'plugins/**', 'docs/design/icon-source/**/*.js'],
     languageOptions: {
       globals: {
         __dirname: 'readonly',
