@@ -1,3 +1,24 @@
+# Ship 2026-08-24: "push all to live and in test flight"
+
+- [x] Committed the 2026-08-22 owner pass as one commit, `87ebb28`, and pushed:
+      `origin/main` ad19e25 -> 87ebb28, `origin/ralph/store-hardening` same.
+- [x] Phone web (towinly.com/app) deployed to Vercel production from the same tree,
+      `dpl_3CHUhJzRGtjkU2M3fDG84TCvVP39`; live bundle verified (badgeText, tabBarSpace,
+      towin-token / towin-seen- / demo.sarah@towin.app intact).
+- [x] TestFlight build 15, v1.1.0, from 87ebb28 (`50e9cd74`), finished 15:42 ET.
+      The auto-submit sat IN_QUEUE for 25 min with no worker; cancelled it and
+      resubmitted the same build (`eas submit --id`), submission `3bb8aab7`
+      FINISHED 16:21 ET. Apple processing follows.
+- [x] Gate: 149 suites / 1255 tests green (`--forceExit`), eslint clean, web export
+      builds. `night-mode-optin` now ignores `colorScheme=` prop writes and requires
+      the pin on every `<GlassView`.
+- [ ] Walk build 15 on the phone: badge blue everywhere, centred wordmark, glass
+      capsule + lens, chips row, tier tabs, Messages badges.
+- [ ] App Store listing: the owner-only forms in `docs/store/owner-actions.md`,
+      then pick build 15 and Submit for Review.
+
+---
+
 # LOC-2: the phone's location works everywhere it matters (SHIPPED 2026-08-22)
 
 Branch `ralph/location-everywhere`, run by the ralph loop from `ralph/prd.json`.
