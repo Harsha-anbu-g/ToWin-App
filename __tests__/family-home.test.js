@@ -127,6 +127,8 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   const r = await wrap(<FamilyHomePanel />);
 
   await r.findByText('margaret');
+  // A linked parent folds to the name (owner call 2026-08-26): open it.
+  await fireEvent.press(r.getByText('margaret'));
   r.getByText("You're their daughter");
   r.getByText('Linked');
 
@@ -235,4 +237,28 @@ test('add form: no API call on a blank identifier; trimmed payload posts side el
     side: 'elder',
   });
   await r.findByText('Request sent. You become family here once they accept.');
+});
+
+
+// Owner call 2026-08-26, "do the same for the family": a linked parent is a
+// name-only row; one touch opens the relationship, the Linked label, the
+// status line and "See <name>". Requests never fold.
+test('a linked parent shows the name alone until touched; requests stay open', async () => {
+  stubGet(fullLinks, []);
+  const r = await wrap(<FamilyHomePanel />);
+
+  await r.findByText('margaret');
+  expect(r.queryByText("You're their daughter")).toBeNull();
+  expect(r.queryByText('Linked')).toBeNull();
+  expect(r.queryByLabelText('See margaret')).toBeNull();
+  // The sentence still reaches a screen reader through the row's label.
+  r.getByRole('button', { name: "margaret. You're their daughter", expanded: false });
+  // The incoming request keeps its choice in view without any touch.
+  r.getByText("wants you as their family here (as their niece). It's your choice.");
+  r.getByRole('button', { name: 'Accept' });
+
+  await fireEvent.press(r.getByText('margaret'));
+  r.getByText("You're their daughter");
+  r.getByText('Linked');
+  r.getByLabelText('See margaret');
 });

@@ -5,7 +5,7 @@
 //
 //   ActionChip.jsx        36pt — the Message · End · Accept chip, ~25 call sites
 //   OfferHelpList.jsx     30pt — the distance pill, the worst of the three
-//   PostedHelpList.jsx    34pt — View helpers, the elder's trust decision
+//   PostedHelpList.jsx    34pt — the request title (was View helpers), the elder's trust decision
 //
 // Every assertion here measures the rendered box, never the slop: a control
 // propped up by hitSlop would pass a "can I press it" test and still be a 30pt
@@ -175,27 +175,28 @@ describe('the distance pill on Offer Help', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Posted Help — "View" opens the applicant rows, which is where the elder
-// reads who wants to help and decides. Missing that tap means the request
-// looks like it has no helpers at all.
+// Posted Help — the request's title opens the applicant rows (owner call
+// 2026-08-26: title-only cards, one touch for every detail), which is where
+// the elder reads who wants to help and decides. Missing that tap means the
+// request looks like it has no helpers at all.
 // ---------------------------------------------------------------------------
-describe('the View helpers control on Posted Help', () => {
+describe('the request title control on Posted Help', () => {
   test('is a real 44pt box', async () => {
     // Arrange / Act
     const r = await wrap(<PostedHelpList />);
-    const view = await waitFor(() => r.getByLabelText('View helpers'));
+    const title = await waitFor(() => r.getByLabelText(/^A ride to the clinic on Thursday\./));
 
     // Assert
-    expectRealTarget(view);
+    expectRealTarget(title);
   }, 30_000);
 
   test('still opens the helper who applied', async () => {
     // Arrange
     const r = await wrap(<PostedHelpList />);
-    const view = await waitFor(() => r.getByLabelText('View helpers'));
+    const title = await waitFor(() => r.getByLabelText(/^A ride to the clinic on Thursday\./));
 
     // Act
-    await fireEvent.press(view);
+    await fireEvent.press(title);
 
     // Assert
     await waitFor(() => expect(r.getByText('Daniel')).toBeTruthy());
@@ -208,7 +209,7 @@ describe('the View helpers control on Posted Help', () => {
   test('and the helper row it reveals is a real 44pt box too', async () => {
     // Arrange
     const r = await wrap(<PostedHelpList />);
-    await fireEvent.press(await waitFor(() => r.getByLabelText('View helpers')));
+    await fireEvent.press(await waitFor(() => r.getByLabelText(/^A ride to the clinic on Thursday\./)));
 
     // Act — the helper who wrote no message: nothing pads their row.
     const row = await waitFor(() => r.getByLabelText("View Marta's profile"));

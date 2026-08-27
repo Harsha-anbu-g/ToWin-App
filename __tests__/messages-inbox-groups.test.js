@@ -212,3 +212,36 @@ test('the journey thread wins the dedupe when it is my own connection too', asyn
   r.getByText('Margaret & Harsha');
   expect(r.queryByText('You & Margaret')).toBeNull();
 });
+
+// Owner call 2026-08-26: the Helpers tab read 7 when four helpers had written
+// ("it should be 4"). A tab badge counts PEOPLE waiting, the same unit the
+// Messages badge in the bar already uses, so the tabs add up to it.
+test('a tab badge counts the people waiting, not the messages they sent', async () => {
+  mockRole = 'ELDER';
+  stubGet([
+    conn({ id: 'h1', otherUserId: 'u1', otherUserName: 'Priya', otherUserRole: 'HELPER', unreadCount: 2 }),
+    conn({ id: 'h2', otherUserId: 'u2', otherUserName: 'Tom', otherUserRole: 'HELPER', unreadCount: 1 }),
+    conn({ id: 'h3', otherUserId: 'u3', otherUserName: 'Claire', otherUserRole: 'HELPER', unreadCount: 0 }),
+    conn({ id: 'f1', otherUserId: 'u4', otherUserName: 'Sarah', otherUserRole: 'FAMILY', unreadCount: 4 }),
+  ]);
+  const r = await wrap(<MessagesInbox />);
+
+  // Two helpers wrote, three messages between them — the tab says two.
+  await r.findByRole('tab', { name: 'Helpers, 2 unread' });
+  expect(r.queryByRole('tab', { name: 'Helpers, 3 unread' })).toBeNull();
+  // One family member wrote, four messages — the tab says one.
+  r.getByRole('tab', { name: 'Family, 1 unread' });
+  // Nobody is waiting in Groups, so it carries no count at all.
+  r.getByRole('tab', { name: 'Groups' });
+});
+
+test('a single row still shows how many messages that one person sent', async () => {
+  mockRole = 'ELDER';
+  stubGet([
+    conn({ id: 'h1', otherUserId: 'u1', otherUserName: 'Priya', otherUserRole: 'HELPER', unreadCount: 2 }),
+  ]);
+  const r = await wrap(<MessagesInbox />);
+
+  await r.findByText('Priya');
+  r.getByText('2'); // the row's own badge, unchanged
+});

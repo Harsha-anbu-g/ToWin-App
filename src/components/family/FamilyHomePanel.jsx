@@ -231,6 +231,7 @@ export default function FamilyHomePanel() {
                       : 'Your family member'
                   }
                   first={i === 0}
+                  collapsible
                   badge={
                     // A label, not a button — a soft neutral wash so it can't
                     // be mistaken for something tappable (the fill carries no

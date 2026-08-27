@@ -100,9 +100,10 @@ test('accepting a helper refreshes both the requests and the connections', async
   await waitFor(() => expect(callsTo('/needs/mine')).toBe(1));
   await waitFor(() => expect(callsTo('/connections')).toBe(1));
 
-  // The elder opens the applicant row and picks Meera, then says yes to the
-  // confirm gate (the dialog's own Accept, not the row's).
-  fireEvent.press(await view.findByLabelText('View helpers'));
+  // The elder opens the request (title-only until touched, owner call
+  // 2026-08-26) and picks Meera, then says yes to the confirm gate (the
+  // dialog's own Accept, not the row's).
+  fireEvent.press(await view.findByText('A ride to the clinic on Thursday'));
   fireEvent.press(await view.findByLabelText('Accept'));
   const dialog = await view.findByTestId('confirm-modal');
   fireEvent.press(within(dialog).getByLabelText('Accept'));

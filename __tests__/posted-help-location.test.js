@@ -242,7 +242,9 @@ describe('posting is never blocked by the position', () => {
 
     await waitFor(() => expect(r.getByText('A ride to the clinic on Thursday')).toBeOnTheScreen());
     // Whatever the card says, or does not say, the request is readable.
-    expect(r.getByText(/Rides/)).toBeOnTheScreen();
+    // The category rides the title's spoken label now that cards fold to the
+    // title alone (owner call 2026-08-26); the eye gets it on one touch.
+    expect(r.getByLabelText(/Rides/)).toBeOnTheScreen();
   });
 
   test('a dismissed card leaves the next post working', async () => {

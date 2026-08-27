@@ -446,6 +446,7 @@ export default function MyFamilyScreen() {
                   name={l.otherUserName}
                   line={l.relationship || 'Family member'}
                   first={i === 0}
+                  collapsible
                   badge={
                     l.isPrimary ? (
                       // A label, not a button — the trust token marks the one

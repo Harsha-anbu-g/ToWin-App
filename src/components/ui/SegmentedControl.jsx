@@ -88,8 +88,11 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             key={seg.key}
             accessibilityRole="tab"
             accessibilityLabel={
+              // The badge's noun belongs to the caller: unread for chats,
+              // offers for Posted Help. A count and a badge can ride together
+              // ("Waiting, 3, 2 offers").
               seg.badge > 0
-                ? `${seg.label}, ${seg.badge} unread`
+                ? `${seg.label}, ${seg.count != null ? `${seg.count}, ` : ''}${seg.badge} ${seg.badgeNoun ?? 'unread'}`
                 : seg.count != null
                   ? `${seg.label}, ${seg.count}`
                   : seg.label

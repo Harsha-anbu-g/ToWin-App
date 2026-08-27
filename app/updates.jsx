@@ -2,15 +2,18 @@
 // top right corner (owner call 2026-08-19: "like Instagram"). Friend
 // requests, new friends, offers on posted help, where my own offers stand,
 // family alerts, keyholder asks, reviews, unread chats: one list, newest
-// first, NEW ONLY (owner call 2026-08-22: "only new notification should be
-// shown" — the Earlier section is gone; anything already seen on a past
-// visit lives on its own screen, not here).
+// first, and it STAYS (owner call 2026-08-26: "it all goes when I click it,
+// why? It should stay always, no clears in notification updates"). This
+// retires the 2026-08-22 new-only rule: a person who opened the bell, read
+// nothing, and came back found an empty screen and no way to see what the
+// badge had counted.
 //
-// What "new" means here: unseen when this visit started. The rows are marked
-// seen the moment the list is on screen — the bell badge clears — but the
-// list holds for the whole visit, so what was new stays visibly new while
-// the person reads it (HCI 1: marking instantly and emptying the list would
-// erase the answer mid-read).
+// What clears is the badge, never the list, the way WhatsApp and Instagram
+// do it. Rows unseen when this visit started are marked seen the moment the
+// list is on screen, and they keep their "new" wash for the whole visit so
+// what was new stays visibly new while the person reads it (HCI 1). A row
+// leaves only when the thing it announced is over: a chat read, a request
+// answered.
 import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
@@ -156,21 +159,21 @@ export default function UpdatesScreen() {
     setRefreshing(false);
   }, [reload]);
 
-  const fresh = items.filter((i) => newThisVisit.current.has(i.token));
+  const isNew = (item) => newThisVisit.current.has(item.token);
 
   return (
     <Screen back title="Updates" scroll={false}>
-      {fresh.length === 0 && isLoading ? (
+      {items.length === 0 && isLoading ? (
         // Nothing to show YET. Six sources feed this list and the first paint
         // happens before any of them answer.
         <SkeletonCard lines={3} />
-      ) : fresh.length === 0 && isError ? (
+      ) : items.length === 0 && isError ? (
         // The rule this screen used to break: a dropped request is never
         // dressed up as quiet. Six sources fed one `items.length === 0`, so a
         // total fetch failure and a genuinely empty week looked identical, and
         // the person was told there was nothing new when nothing had loaded.
         <LoadError what="your updates" onRetry={reload} />
-      ) : fresh.length === 0 ? (
+      ) : items.length === 0 ? (
         <View style={{ alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }}>
           <Bell size={40} color={t.inkFaint2} strokeWidth={1.5} />
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center' }}>
@@ -184,9 +187,9 @@ export default function UpdatesScreen() {
             // still show; the gap is named above them rather than hidden.
             isError ? <LoadError what="all of your updates" onRetry={reload} bare /> : null
           }
-          data={fresh}
+          data={items}
           keyExtractor={(row) => row.token}
-          renderItem={({ item: row }) => <UpdateRow item={row} isNew />}
+          renderItem={({ item: row }) => <UpdateRow item={row} isNew={isNew(row)} />}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}

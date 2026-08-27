@@ -1,7 +1,9 @@
 // My Elders (4a) — the helper's relationship hub, shared by Home and the
-// My Elders tab: each elder as a card with contact actions (Message · View
-// Profile · End), the 7-node trust ladder, and the mutual-consent step.
-// Data: ACTIVE connections merged with /trust/my-score for stage/points.
+// My Elders tab: one row per elder, name only until touched (owner call
+// 2026-08-26, "do the same for the helper" as My Helpers), opening to the
+// 7-node trust ladder, why the ladder exists, the family behind it, and the
+// mutual-consent step. Data: ACTIVE connections merged with /trust/my-score
+// for stage/points, and /needs/applications for the request behind it.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ChevronRight, Phone } from '../icons';
@@ -12,6 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
+import { trustOriginLine } from '../../lib/trustOrigin';
 import { LEVEL_INDEX, SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
@@ -24,217 +27,224 @@ import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
-function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onConfirm, onPause }) {
-  const { t, radius, type, fontFamily } = useTheme();
+function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onConfirm, onPause, divider, originLine }) {
+  const { t, type, fontFamily } = useTheme();
   const router = useRouter();
-  // Family folds under a small arrow, mirroring HelperCard (owner call
-  // 2026-08-17: the card shows the person, the steps line, the next action).
-  const [familyOpen, setFamilyOpen] = useState(false);
+  // The row is the person alone, like a WhatsApp chat row, mirroring
+  // HelperCard (owner call 2026-08-26: "do the same for the helper"). One
+  // touch on the name opens the ladder AND the family section — no second
+  // arrow; the photo opens the profile.
+  const [open, setOpen] = useState(false);
   const stageIndex = scoreCard?.stageIndex ?? LEVEL_INDEX[conn.currentTrustLevel] ?? 0;
   const atTop = stageIndex >= 6;
+  const stageNo = Math.min(stageIndex + 1, 7);
+  const stageName = SHORT_STAGES[Math.min(stageIndex, 6)];
   const waiting = conn.confirmedByMe && !conn.confirmedByOther;
   const next = SHORT_STAGES[Math.min(stageIndex + 1, 6)];
+  const hasFamily = familyBehind.length > 0 || conn.sharedWithFamily;
 
   return (
-    <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.card, padding: 14, marginTop: 12 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-        {/* The person IS the link to their profile (user call 2026-07-26):
-            tapping the photo or the name opens it, so the card no longer
-            carries a separate "View Profile" chip. */}
+    <View style={divider ? { borderTopWidth: 1, borderTopColor: t.hairline } : null}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`View ${conn.otherUserName}'s profile`}
           onPress={() => router.push(`/user/${conn.otherUserId}`)}
           hitSlop={6}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={48} />
+        </Pressable>
+        {/* The stage rides the spoken label so folding never hides status
+            from a screen reader (HCI rule 1); the eye gets it on open. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`${conn.otherUserName}. Stage ${stageNo} of 7, ${stageName}`}
+          accessibilityState={{ expanded: open }}
+          onPress={() => setOpen((o) => !o)}
           style={({ pressed }) => ({
             flex: 1,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 12,
+            gap: 8,
+            minHeight: 64,
             opacity: pressed ? 0.6 : 1,
           })}
         >
-          <Avatar name={conn.otherUserName} uri={conn.otherUserPhotoUrl} size={40} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}>
-              {conn.otherUserName}
-            </Text>
-            {conn.otherUserAge ? (
-              <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
-                Age {conn.otherUserAge}
+          <Text
+            numberOfLines={1}
+            style={{ flex: 1, fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}
+          >
+            {conn.otherUserName}
+          </Text>
+          <ChevronRight
+            size={18}
+            color={t.inkFaint2}
+            strokeWidth={1.8}
+            style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}
+          />
+        </Pressable>
+      </View>
+
+      {open ? (
+        <View style={{ paddingBottom: 14 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
+                Stage {stageNo} of 7 · {stageName}
+              </Text>
+              {/* Why this ladder exists and when it started (owner call
+                  2026-08-26): a friendship, or one of their requests I was
+                  accepted on, by name. */}
+              {originLine ? (
+                <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>{originLine}</Text>
+              ) : null}
+              {conn.otherUserAge ? (
+                <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>
+                  Age {conn.otherUserAge}
+                </Text>
+              ) : null}
+            </View>
+            {/* Message rides the stage line, like HelperCard (owner call
+                2026-08-17: it does not need a line of its own). */}
+            <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${conn.id}`)} />
+            {scoreCard ? (
+              <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
+                {scoreCard.total}
+                <Text style={{ fontWeight: '400', fontSize: type.caption, fontVariant: ['tabular-nums'] }}>/{scoreCard.totalMax}</Text>
               </Text>
             ) : null}
           </View>
-        </Pressable>
-        {/* Message rides the header row, like HelperCard (owner call
-            2026-08-17: it does not need a line of its own). */}
-        <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${conn.id}`)} />
-        {scoreCard ? (
-          <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-            {scoreCard.total}
-            <Text style={{ fontWeight: '400', fontSize: type.caption, fontVariant: ['tabular-nums'] }}>/{scoreCard.totalMax}</Text>
-          </Text>
-        ) : null}
-      </View>
 
-      {conn.otherUserPhone ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
-          <Phone size={14} color={t.blueDeep} strokeWidth={1.8} />
-          <Text style={{ fontSize: type.meta, color: t.blueDeep, fontVariant: ['tabular-nums'] }}>
-            {conn.otherUserPhone}
-          </Text>
-        </View>
-      ) : null}
+          {conn.otherUserPhone ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <Phone size={14} color={t.blueDeep} strokeWidth={1.8} />
+              <Text style={{ fontSize: type.meta, color: t.blueDeep, fontVariant: ['tabular-nums'] }}>
+                {conn.otherUserPhone}
+              </Text>
+            </View>
+          ) : null}
 
-      <TrustLadder stageIndex={stageIndex} style={{ marginTop: 12 }} />
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
-        {!atTop ? (
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
-        ) : null}
-        <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
-      </View>
+          <TrustLadder stageIndex={stageIndex} style={{ marginTop: 12 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
+            {!atTop ? (
+              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+            ) : null}
+            <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
+          </View>
 
-      {/* Backend rule (website ea03935): the elder starts each step — the
-          helper only ever ACCEPTS, and never sees a dead start button. */}
-      {atTop ? (
-        // The product's headline achievement gets a moment, not one meta line
-        // (rulebook: peak-end — engineer the peak).
-        <View
-          style={{
-            backgroundColor: t.greenTint,
-            borderWidth: 1,
-            borderColor: t.greenLine,
-            borderRadius: 12,
-            padding: 12,
-            marginTop: 12,
-          }}
-        >
-          <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.greenDeep }}>
-            Fully trusted
-          </Text>
-          <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 18, marginTop: 2 }}>
-            Seven steps, climbed together. The whole ladder is complete.
-          </Text>
-        </View>
-      ) : conn.confirmedByOther && !conn.confirmedByMe ? (
-        <Button
-          title="Accept the next step"
-          variant="secondary"
-          size="small"
-          onPress={() => onConfirm(conn)}
-          style={{ marginTop: 12 }}
-        />
-      ) : waiting ? (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-          Waiting for {conn.otherUserName} to accept the next step. They'll get a tap on their side.
-        </Text>
-      ) : (
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-          {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
-        </Text>
-      )}
-
-      {/* One quiet utility line, mirroring HelperCard: family folds under a
-          small arrow on the left; pause and End share the right corner. */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
-        {familyBehind.length > 0 || conn.sharedWithFamily ? (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`Family options${conn.sharedWithFamily ? ', sharing is on' : ''}`}
-            accessibilityState={{ expanded: familyOpen }}
-            onPress={() => setFamilyOpen((open) => !open)}
-            hitSlop={8}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              minHeight: 36,
-              opacity: pressed ? 0.7 : 1,
-            })}
-          >
-            <ChevronRight
-              size={14}
-              color={t.inkSlate}
-              style={{ transform: [{ rotate: familyOpen ? '90deg' : '0deg' }] }}
+          {/* Backend rule (website ea03935): the elder starts each step — the
+              helper only ever ACCEPTS, and never sees a dead start button. */}
+          {atTop ? (
+            // The product's headline achievement gets a moment, not one meta line
+            // (rulebook: peak-end — engineer the peak).
+            <View
+              style={{
+                backgroundColor: t.greenTint,
+                borderWidth: 1,
+                borderColor: t.greenLine,
+                borderRadius: 12,
+                padding: 12,
+                marginTop: 12,
+              }}
+            >
+              <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.greenDeep }}>
+                Fully trusted
+              </Text>
+              <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 18, marginTop: 2 }}>
+                Seven steps, climbed together. The whole ladder is complete.
+              </Text>
+            </View>
+          ) : conn.confirmedByOther && !conn.confirmedByMe ? (
+            <Button
+              title="Accept the next step"
+              variant="secondary"
+              size="small"
+              onPress={() => onConfirm(conn)}
+              style={{ marginTop: 12 }}
             />
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
-              Family{familyBehind.length > 0 ? ` (${familyBehind.length})` : ''}
+          ) : waiting ? (
+            <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
+              Waiting for {conn.otherUserName} to accept the next step. They'll get a tap on their side.
             </Text>
-          </Pressable>
-        ) : (
-          <View />
-        )}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, never crowding the CTA */}
-          <Button
-            title="Take a break"
-            variant="text"
-            onPress={() => onPause(conn)}
-            accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
-            style={{ paddingHorizontal: 0 }}
-          />
-          <ActionChip label="End" destructive onPress={() => onEnd(conn)} />
-        </View>
-      </View>
+          ) : (
+            <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
+              {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
+            </Text>
+          )}
 
-      {/* The family standing behind this friendship (FAM-512) — same
-          server-side derivation as their side, so this names exactly the
-          people who can already see it and message this helper, nested
-          under the elder they belong to (web 2026-07-26). Revealed by the
-          arrow above. */}
-      {familyOpen && familyBehind.length > 0 ? (
-        <View style={{ borderTopWidth: 1, borderTopColor: t.hairline, marginTop: 4, paddingTop: 10 }}>
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, marginBottom: 8 }}>
-            {conn.otherUserName ? `${conn.otherUserName}'s family` : 'Their family'}
-          </Text>
-          {familyBehind.map((f) => {
-            // The family coordination connection (auto-materialized while the
-            // elder shares this friendship) carries the chat.
-            const famConn = famConnFor?.(f.familyUserId);
-            return (
-              <View
-                key={f.familyUserId}
-                style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}
-              >
-                <Avatar name={f.familyName} uri={f.familyPhotoUrl} size={36} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>
-                    {f.familyName}
-                    {f.relationship ? (
-                      <Text style={{ fontWeight: '400', color: t.inkSlate }}>
-                        {`, ${conn.otherUserName ? `${conn.otherUserName}'s` : 'their'} ${f.relationship.toLowerCase()}`}
+          {/* The family standing behind this friendship (FAM-512) — same
+              server-side derivation as their side, so this names exactly the
+              people who can already see it and message this helper, nested
+              under the elder they belong to (web 2026-07-26). Open with the
+              row, no second arrow (owner call 2026-08-26). */}
+          {familyBehind.length > 0 ? (
+            <View style={{ borderTopWidth: 1, borderTopColor: t.hairline, marginTop: 12, paddingTop: 10 }}>
+              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, marginBottom: 8 }}>
+                {conn.otherUserName ? `${conn.otherUserName}'s family` : 'Their family'}
+              </Text>
+              {familyBehind.map((f) => {
+                // The family coordination connection (auto-materialized while the
+                // elder shares this friendship) carries the chat.
+                const famConn = famConnFor?.(f.familyUserId);
+                return (
+                  <View
+                    key={f.familyUserId}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}
+                  >
+                    <Avatar name={f.familyName} uri={f.familyPhotoUrl} size={36} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>
+                        {f.familyName}
+                        {f.relationship ? (
+                          <Text style={{ fontWeight: '400', color: t.inkSlate }}>
+                            {`, ${conn.otherUserName ? `${conn.otherUserName}'s` : 'their'} ${f.relationship.toLowerCase()}`}
+                          </Text>
+                        ) : null}
                       </Text>
+                      <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
+                        {famConn
+                          ? 'You can message each other while this friendship stays shared.'
+                          : 'Can see how this friendship is going and may message you.'}
+                      </Text>
+                    </View>
+                    {famConn ? (
+                      <ActionChip
+                        label="Message"
+                        tonal
+                        onPress={() => router.push(`/chat/${famConn.id}`)}
+                      />
                     ) : null}
-                  </Text>
-                  <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
-                    {famConn
-                      ? 'You can message each other while this friendship stays shared.'
-                      : 'Can see how this friendship is going and may message you.'}
-                  </Text>
-                </View>
-                {famConn ? (
-                  <ActionChip
-                    label="Message"
-                    tonal
-                    onPress={() => router.push(`/chat/${famConn.id}`)}
-                  />
-                ) : null}
-              </View>
-            );
-          })}
-        </View>
-      ) : null}
+                  </View>
+                );
+              })}
+            </View>
+          ) : null}
 
-      {/* Updates for the family — only while the elder shares this
-          friendship (FAM-511 entry point, helper side). Lives in the
-          folded family section. */}
-      {familyOpen && conn.sharedWithFamily ? (
-        <ActionChip
-          label="Open the family group"
-          onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
-          style={{ marginTop: 8, alignSelf: 'flex-start' }}
-        />
+          {/* Updates for the family — only while the elder shares this
+              friendship (FAM-511 entry point, helper side). */}
+          {conn.sharedWithFamily ? (
+            <ActionChip
+              label="Open the family group"
+              onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
+              style={{ marginTop: hasFamily ? 8 : 12, alignSelf: 'flex-start' }}
+            />
+          ) : null}
+
+          {/* Pause and End share the right corner (HCI rule 3) — quiet, never
+              crowding the CTA. */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+            <Button
+              title="Take a break"
+              variant="text"
+              onPress={() => onPause(conn)}
+              accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
+              style={{ paddingHorizontal: 0 }}
+            />
+            <ActionChip label="End" destructive onPress={() => onEnd(conn)} />
+          </View>
+        </View>
       ) : null}
     </View>
   );
@@ -263,6 +273,13 @@ export default function MyEldersPanel() {
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
+  // My offers, to say which request an elder's ladder grew from
+  // (trustOrigin.js, helper seat). Same key as My Jobs and the Updates feed.
+  const { data: applicationsData } = useQuery({
+    queryKey: ['needs-applications'],
+    queryFn: async () => (await api.get('/needs/applications')).data,
+  });
+  const myOffers = Array.isArray(applicationsData) ? applicationsData : applicationsData?.content ?? [];
 
   // Who stands behind each elder friendship — derived server-side from the
   // elder's sharing, so it names exactly the people who could already reach
@@ -427,9 +444,11 @@ export default function MyEldersPanel() {
           <Button title="Find elders" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />
         </View>
       ) : (
-        shown.map((conn) => (
+        shown.map((conn, i) => (
           <ElderCard
             key={conn.id}
+            divider={i > 0}
+            originLine={trustOriginLine(conn, myOffers, { seat: 'helper' })}
             conn={conn}
             scoreCard={scoreOf(conn.id)}
             familyBehind={behindFor(conn.id)}
