@@ -106,7 +106,7 @@ tier and record what it returns.
 **Unrestricted web access, proved rather than asserted.** Three checks, all run
 on 2026-08-15:
 
-1. No web view or browser package is installed. A name scan over all 38 runtime
+1. No web view or browser package is installed. A name scan over all 40 runtime
    dependencies for `webview`, `web-browser`, `browser` and `iframe` returns
    nothing. `react-native-webview` and `expo-web-browser` are both absent.
 2. Every `Linking.openURL` call site in `app/` and `src/` opens a fixed
@@ -170,7 +170,7 @@ is the answer.
 
 Free means the Paid Applications Agreement, the bank account and the tax forms
 are all skipped. That is the largest single piece of enrollment paperwork, and
-Towinly does not owe it. The evidence: none of the 38 runtime dependencies in
+Towinly does not owe it. The evidence: none of the 40 runtime dependencies in
 `App/package.json` is a purchase, subscription or billing SDK.
 
 Mac and Vision Pro are off because `app.json` sets `ios.supportsTablet: false`
@@ -224,13 +224,13 @@ The answer is No on both stores. It was proved by scanning rather than assumed,
 because a renamed package would slip past a glance at `package.json`. All four
 checks ran on 2026-08-15 and every one returned zero. The two package-name
 scans were RE-RUN on 2026-08-22 against the tree as it stands, because the
-dependency count had moved: 38 runtime deps, 9 dev deps, 970 installed packages,
+dependency count had moved: 40 runtime deps, 10 dev deps, 970 installed packages,
 still 0 hits. The two native symbol scans were not re-run and their 2026-08-15
 result is what the table reports.
 
 | Check | Scope | Result |
 |---|---|---|
-| Package-name scan against a 40-term pattern (admob, adjust, appsflyer, branch, fbsdk, firebase, amplitude, mixpanel, segment, posthog, sentry, bugsnag, onesignal, singular, kochava, tenjin, applovin, unity-ads, ironsource, vungle, chartboost, inmobi, tapjoy, criteo, moengage, clevertap, braze, airship, leanplum, smartlook, fullstory, heap, matomo, flurry, appmetrica, tracking-transparency, idfa, advertising-id and more) | 38 runtime deps and 9 dev deps | **0 hits** |
+| Package-name scan against a 40-term pattern (admob, adjust, appsflyer, branch, fbsdk, firebase, amplitude, mixpanel, segment, posthog, sentry, bugsnag, onesignal, singular, kochava, tenjin, applovin, unity-ads, ironsource, vungle, chartboost, inmobi, tapjoy, criteo, moengage, clevertap, braze, airship, leanplum, smartlook, fullstory, heap, matomo, flurry, appmetrica, tracking-transparency, idfa, advertising-id and more) | 40 runtime deps and 10 dev deps | **0 hits** |
 | Same pattern over the whole installed tree | **970 installed packages** under `node_modules`, scoped packages included | **0 hits** |
 | iOS symbol scan for `ASIdentifierManager`, `advertisingIdentifier`, `AppTrackingTransparency`, `ATTrackingManager` | every `.h`, `.m`, `.mm` and `.swift` under `node_modules` | **0 files** |
 | Android scan for `com.google.android.gms.permission.AD_ID`, `com.google.android.gms.ads`, `AdvertisingIdClient` | every bundled `AndroidManifest.xml`, `.gradle`, `.java` and `.kt` | **0 files** |

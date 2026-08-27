@@ -133,7 +133,7 @@ hour spent here is an hour not spent on the meter.
   steps fail with a vague authentication error. Play requires identity
   verification on the developer account. Towinly is free and ships no in-app
   purchase, so Apple's Paid Applications Agreement and the banking and tax
-  forms behind it do not apply. Evidence for the free claim: none of the 38
+  forms behind it do not apply. Evidence for the free claim: none of the 40
   runtime dependencies in `App/package.json` is a purchase, subscription or
   billing SDK.
 - [x] **Run `railway variables` on the production backend and check
