@@ -14,16 +14,16 @@ and descriptions), `privacy-labels.md` (nutrition labels and Play Data safety),
 
 ## Verdict
 
-| # | Prerequisite | State |
-|---|---|---|
-| 1 | Privacy policy URL | Ready. Use `https://www.towinly.com/app/privacy`. |
-| 1b | Terms URL | Ready. `https://www.towinly.com/app/terms`. |
-| 1c | Support URL | **BLOCKING.** No support page exists anywhere. |
-| 1d | Marketing URL | Ready. `https://www.towinly.com` (optional field). |
-| 2 | Demo accounts | Ready. All three log in. Two review-notes gaps below. |
-| 3 | Age rating | Answers worked out below. No blockers. |
-| 4 | Export compliance | Correct as configured. One post-build check. |
-| 5 | In-app account deletion | Real. Apple 5.1.1(v) is satisfied. |
+| #   | Prerequisite            | State                                                 |
+| --- | ----------------------- | ----------------------------------------------------- |
+| 1   | Privacy policy URL      | Ready. Use `https://www.towinly.com/app/privacy`.     |
+| 1b  | Terms URL               | Ready. `https://www.towinly.com/app/terms`.           |
+| 1c  | Support URL             | **BLOCKING.** No support page exists anywhere.        |
+| 1d  | Marketing URL           | Ready. `https://www.towinly.com` (optional field).    |
+| 2   | Demo accounts           | Ready. All three log in. Two review-notes gaps below. |
+| 3   | Age rating              | Answers worked out below. No blockers.                |
+| 4   | Export compliance       | Correct as configured. One post-build check.          |
+| 5   | In-app account deletion | Real. Apple 5.1.1(v) is satisfied.                    |
 
 Blocking items: **1** (support URL). Two more are one-line fixes that should be
 done before the account exists, listed under "Fix before submission".
@@ -53,14 +53,14 @@ drift.
 
 All over HTTPS, all with HSTS, none looping.
 
-| URL | Status | Result |
-|---|---|---|
-| `https://towinly.com/app/privacy` | 308 | Redirects once to the `www` host. |
-| `https://www.towinly.com/app/privacy` | 200 | Real page. |
-| `https://www.towinly.com/app/terms` | 200 | Real page. |
-| `https://www.towinly.com/app/delete-account` | 200 | Real page. |
-| `https://www.towinly.com/privacy` | 200 | Real page, but stale. See below. |
-| `https://www.towinly.com/terms` | 200 | Real page (website copy). |
+| URL                                          | Status | Result                            |
+| -------------------------------------------- | ------ | --------------------------------- |
+| `https://towinly.com/app/privacy`            | 308    | Redirects once to the `www` host. |
+| `https://www.towinly.com/app/privacy`        | 200    | Real page.                        |
+| `https://www.towinly.com/app/terms`          | 200    | Real page.                        |
+| `https://www.towinly.com/app/delete-account` | 200    | Real page.                        |
+| `https://www.towinly.com/privacy`            | 200    | Real page, but stale. See below.  |
+| `https://www.towinly.com/terms`              | 200    | Real page (website copy).         |
 
 Every one of these is an HTML shell that React fills in, so `curl` alone proves
 nothing about the content. Each was therefore also rendered in a real headless
@@ -159,11 +159,11 @@ in `public/index.html` conditional or drop it in favour of the header.
 Each was posted to `https://backend-production-cef3.up.railway.app/api/auth/login`
 on 2026-08-11. All three returned HTTP 200 with a token.
 
-| Seat | Identifier | Password | Role in token | Email verified |
-|---|---|---|---|---|
-| Elder | `elder` | `12345678` | ELDER | yes (`ev: true`) |
-| Helper | `helper` | `123456789` | HELPER | yes |
-| Family | `demo.sarah@towin.app` | `DemoSarah!2026` | FAMILY | yes |
+| Seat   | Identifier             | Password         | Role in token | Email verified   |
+| ------ | ---------------------- | ---------------- | ------------- | ---------------- |
+| Elder  | `elder`                | `12345678`       | ELDER         | yes (`ev: true`) |
+| Helper | `helper`               | `123456789`      | HELPER        | yes              |
+| Family | `demo.sarah@towin.app` | `DemoSarah!2026` | FAMILY        | yes              |
 
 Notes that matter for review:
 
@@ -309,31 +309,31 @@ Established by reading the code, not by assumption:
 
 Answer every content category **None**:
 
-| Category | Answer | Why |
-|---|---|---|
-| Cartoon or fantasy violence | None | No violence of any kind. |
-| Realistic violence | None | Same. |
-| Prolonged or sadistic violence | None | Same. |
-| Sexual content or nudity | None | None present, and explicit words are filtered at write time. |
-| Profanity or crude humor | None | Filtered at write time. |
-| Alcohol, tobacco or drug use | None | Not referenced. |
-| Mature or suggestive themes | None | See the note below on bereavement. |
-| Horror or fear themes | None | None. |
-| Medical or treatment information | None | The assistant is instructed to refuse medical advice and to redirect to a doctor or emergency services. Check-ins and SOS record and alert, they do not advise. |
-| Simulated gambling | None | None. |
-| Real gambling | None | None. |
-| Contests | None | Streaks are a personal habit counter with no prize. |
-| Unrestricted web access | **No** | No WebView, no in-app browser, no user-entered URLs. This answer is defensible from the dependency list alone. |
+| Category                         | Answer | Why                                                                                                                                                             |
+| -------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cartoon or fantasy violence      | None   | No violence of any kind.                                                                                                                                        |
+| Realistic violence               | None   | Same.                                                                                                                                                           |
+| Prolonged or sadistic violence   | None   | Same.                                                                                                                                                           |
+| Sexual content or nudity         | None   | None present, and explicit words are filtered at write time.                                                                                                    |
+| Profanity or crude humor         | None   | Filtered at write time.                                                                                                                                         |
+| Alcohol, tobacco or drug use     | None   | Not referenced.                                                                                                                                                 |
+| Mature or suggestive themes      | None   | See the note below on bereavement.                                                                                                                              |
+| Horror or fear themes            | None   | None.                                                                                                                                                           |
+| Medical or treatment information | None   | The assistant is instructed to refuse medical advice and to redirect to a doctor or emergency services. Check-ins and SOS record and alert, they do not advise. |
+| Simulated gambling               | None   | None.                                                                                                                                                           |
+| Real gambling                    | None   | None.                                                                                                                                                           |
+| Contests                         | None   | Streaks are a personal habit counter with no prize.                                                                                                             |
+| Unrestricted web access          | **No** | No WebView, no in-app browser, no user-entered URLs. This answer is defensible from the dependency list alone.                                                  |
 
 Capability and control questions, which is where this app's rating comes from:
 
-| Question | Answer |
-|---|---|
-| Does the app include chat or messaging between users? | Yes |
-| Does the app allow users to create or share content other users see? | Yes |
-| Does the app share the user's location with other users? | Approximate only. Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
-| Are there in-app controls for objectionable content? | Yes: write-time filter, report a person, block a person, terms agreed at signup. |
-| Parental controls or age assurance? | A self-declared date of birth with an 18 minimum at signup. No document check. Do not claim age verification. |
+| Question                                                             | Answer                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Does the app include chat or messaging between users?                | Yes                                                                                                                                                                                                                                                                                                                          |
+| Does the app allow users to create or share content other users see? | Yes                                                                                                                                                                                                                                                                                                                          |
+| Does the app share the user's location with other users?             | Approximate only. Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
+| Are there in-app controls for objectionable content?                 | Yes: write-time filter, report a person, block a person, terms agreed at signup.                                                                                                                                                                                                                                             |
+| Parental controls or age assurance?                                  | A self-declared date of birth with an 18 minimum at signup. No document check. Do not claim age verification.                                                                                                                                                                                                                |
 
 Expected outcome: the content answers are all clean, so the rating is driven by
 the messaging and user-generated content answers. Under Apple's current tiers
@@ -350,14 +350,14 @@ point of the product, not incidental dark content.
 
 ### Google Play content rating (IARC)
 
-| Question | Answer |
-|---|---|
-| Violence, sexual content, language, drugs, gambling | None to all. |
-| Do users interact or exchange content? | Yes. Chat, profiles, reviews, stories. |
-| Do users share personal information with other users? | Yes. Name, town, bio, and email and phone once a pair reaches the Phone step of the trust ladder. |
-| Do users share their current physical location? | **Owner's call, and read the reasoning first.** The app DOES read the phone, on four screens, since 2026-08-19. What leaves the device is a 0.02 degree cell, roughly 2 km across, snapped by `src/lib/coarseLocation.js`, and what another member sees is a town name and a rounded distance. A ~2 km cell is not a current physical location, so **No** is defensible, but it is defensible only with that sentence beside it. Record the reasoning in the answer notes, and settle it together with the OPEN QUESTION at the end of `privacy-labels.md`, which covers the same gap on the Play data safety form. |
-| Digital purchases? | No. |
-| Target audience | 18 and over only. This matches the terms and the signup gate, and keeps the app out of Play's Families policy. |
+| Question                                              | Answer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Violence, sexual content, language, drugs, gambling   | None to all.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| Do users interact or exchange content?                | Yes. Chat, profiles, reviews, stories.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Do users share personal information with other users? | Yes. Name, town, bio, and email and phone once a pair reaches the Phone step of the trust ladder.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Do users share their current physical location?       | **Owner's call, and read the reasoning first.** The app DOES read the phone, on four screens, since 2026-08-19. What leaves the device is a 0.02 degree cell, roughly 2 km across, snapped by `src/lib/coarseLocation.js`, and what another member sees is a town name and a rounded distance. A ~2 km cell is not a current physical location, so **No** is defensible, but it is defensible only with that sentence beside it. Record the reasoning in the answer notes, and settle it together with the OPEN QUESTION at the end of `privacy-labels.md`, which covers the same gap on the Play data safety form. |
+| Digital purchases?                                    | No.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Target audience                                       | 18 and over only. This matches the terms and the signup gate, and keeps the app out of Play's Families policy.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 Two Play declarations that go with it:
 

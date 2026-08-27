@@ -97,7 +97,9 @@
           "isAndroidBackgroundLocationEnabled": false,
           "isAndroidForegroundServiceEnabled": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "./plugins/withSpaceSafeBundleScript"
     ],
     "updates": {
       "url": "https://u.expo.dev/6cf0141c-c99a-4663-87df-12f271989e7b",
