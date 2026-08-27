@@ -92,8 +92,9 @@ test('family rows nest under the elder they stand behind, with the relationship'
   stub({ entries: [sarah] });
   const r = await wrap(<MyEldersPanel />);
 
-  // Folded by default (owner call 2026-08-17): the arrow reveals the family.
-  await fireEvent.press(await r.findByLabelText(/Family options/));
+  // Name-only until touched (owner call 2026-08-26): the name opens the
+  // family with the ladder — no second arrow.
+  await fireEvent.press(await r.findByText('Margaret'));
   await r.findByText("Margaret's family");
   r.getByText(/Sarah/);
   r.getByText(/, Margaret's daughter/);
@@ -112,7 +113,7 @@ test('the chat appears only with the FAMILY coordination connection', async () =
   });
   const r = await wrap(<MyEldersPanel />);
 
-  await fireEvent.press(await r.findByLabelText(/Family options/));
+  await fireEvent.press(await r.findByText('Margaret'));
   await r.findByText("Margaret's family");
   r.getByText('You can message each other while this friendship stays shared.');
 });
@@ -128,6 +129,6 @@ test('the updates-thread link rides only on shared friendships', async () => {
   stub({ connections: [conn({ sharedWithFamily: true })] });
   const r = await wrap(<MyEldersPanel />);
   await r.findByText('Margaret');
-  await fireEvent.press(await r.findByLabelText(/Family options/));
+  await fireEvent.press(await r.findByText('Margaret'));
   r.getByLabelText('Open the family group');
 });

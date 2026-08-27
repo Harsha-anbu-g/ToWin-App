@@ -297,8 +297,15 @@ export default function MessagesInbox() {
   // "the family should show a notification on top") — otherwise unread family
   // chats are invisible while another tab is open. Groups threads carry no
   // unread counts, so that tab never badges.
+  //
+  // The count is PEOPLE waiting, not messages (owner call 2026-08-26: a
+  // Helpers tab reading 7 when four helpers had written was wrong — "it should
+  // be 4"). This is the same unit the Messages tab badge in the bar already
+  // uses (/messages/unread-count counts conversations, MessageService.java),
+  // so the tabs across the top now add up to the badge underneath them. A
+  // single row still shows how many messages that one person sent.
   const unreadOf = (key) =>
-    key === 'groups' ? 0 : rowsOf(key).reduce((n, c) => n + (c.unreadCount || 0), 0);
+    key === 'groups' ? 0 : rowsOf(key).filter((c) => (c.unreadCount || 0) > 0).length;
   const sections = tabKeys.map((key) => ({
     key,
     label: GROUP_LABELS[key],

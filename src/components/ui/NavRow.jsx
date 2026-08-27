@@ -1,4 +1,4 @@
-// Top nav row: person-search · wordmark (centered) · gold trust pill · bell.
+// Top nav row: person-search · wordmark (centered) · trust shield · bell.
 // The wordmark is the one non-serif brand mark: SF 19/600 in blueTeal,
 // -0.4 tracking. It sits dead-center in the row (owner call 2026-08-22:
 // "on the top make towinly in middle"), absolutely positioned so the uneven
@@ -9,8 +9,10 @@
 // moved onto Profile), Add friends took its left slot with a person-search
 // glyph — UserRoundPlus kept reading as the Profile tab's person — and the
 // bell in the right corner opens Updates, the one place every notification
-// lands. Trust pill only renders once the score is known — no flash of
-// "undefined".
+// lands. Trust only renders once the score is known — no flash of
+// "undefined". 2026-08-26: the gold trust pill became a third IconTarget,
+// the same button shape as Friends and Updates (owner: it "look[ed] like a
+// batch", a label rather than a doorway).
 import { useRouter } from 'expo-router';
 import { Bell, ShieldCheck, UserRoundSearch } from '../icons';
 import { Pressable, Text, View } from 'react-native';
@@ -69,18 +71,24 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
           </Text>
         ) : null}
       </View>
-      <Text
-        maxFontSizeMultiplier={fontScaleCaps.chrome}
-        style={{ fontSize: type.caption, fontWeight: '600', color: captionColor }}
-      >
-        {caption}
-      </Text>
+      {typeof caption === 'string' ? (
+        <Text
+          maxFontSizeMultiplier={fontScaleCaps.chrome}
+          style={{ fontSize: type.caption, fontWeight: '600', color: captionColor }}
+        >
+          {caption}
+        </Text>
+      ) : (
+        // Trust's caption is the score plus its word, two nodes rather than
+        // one — the number carries its own weight and tabular figures.
+        caption
+      )}
     </Pressable>
   );
 }
 
 export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount = 0, style }) {
-  const { t, radius, type, fontScaleCaps, pressRipple } = useTheme();
+  const { t, type, fontScaleCaps } = useTheme();
   const router = useRouter();
 
   return (
@@ -125,50 +133,46 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
           </IconTarget>
         ) : null}
       </View>
-      {/* Air between the three things on the right (owner call 2026-08-19:
-          "give space for the friend trust and updates"). */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+      {/* Air between the two things on the right (owner call 2026-08-19:
+          "give space for the friend trust and updates"). 4, not 12: both are
+          56pt targets now and carry their own breathing room inside. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginRight: -8 }}>
         {trustScore != null ? (
-          // The score is the doorway to the Trust Score page (user call
-          // 2026-07-26) — it was a dead label before.
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={`${trustScore} trust. Open your Trust Score page`}
+          // A button, the same shape as Friends and Updates (owner call
+          // 2026-08-26: the old gold pill "look[ed] like a batch" — a chip
+          // reads as a label you cannot press, not a doorway). Icon over
+          // caption, 56pt target, opening the Trust Score page (user call
+          // 2026-07-26); the shield-check is trust's own glyph (owner call
+          // 2026-08-22: "the trust need a symbol") and the score keeps the
+          // gold that is reserved for trust everywhere else.
+          <IconTarget
+            label={`${trustScore} trust. Open your Trust Score page`}
+            captionColor={t.trustGold}
             onPress={() => router.push('/trust')}
-            android_ripple={pressRipple}
-            hitSlop={{ top: 8, bottom: 8, left: 6, right: 6 }}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 4,
-              backgroundColor: t.blueWash,
-              borderWidth: 1,
-              borderColor: t.blueSoft,
-              borderRadius: radius.pill,
-              paddingVertical: 7,
-              paddingHorizontal: 13,
-              opacity: pressed ? 0.6 : 1,
-            })}
+            caption={
+              <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 3 }}>
+                <Text
+                  maxFontSizeMultiplier={fontScaleCaps.chrome}
+                  style={{
+                    fontSize: type.caption,
+                    fontWeight: '700',
+                    color: t.trustGold,
+                    fontVariant: ['tabular-nums'],
+                  }}
+                >
+                  {trustScore}
+                </Text>
+                <Text
+                  maxFontSizeMultiplier={fontScaleCaps.chrome}
+                  style={{ fontSize: type.caption, fontWeight: '600', color: t.trustGold }}
+                >
+                  trust
+                </Text>
+              </View>
+            }
           >
-            {/* Trust wears a symbol (owner call 2026-08-22: "the trust need a
-                symbol") — the shield-check, trust's own glyph, in the same
-                gold as its number. */}
-            <ShieldCheck size={15} color={t.trustGold} strokeWidth={2} />
-            <Text
-              maxFontSizeMultiplier={fontScaleCaps.chrome}
-              style={{
-                fontSize: type.meta,
-                fontWeight: '600',
-                color: t.trustGold,
-                fontVariant: ['tabular-nums'],
-              }}
-            >
-              {trustScore}
-            </Text>
-            <Text maxFontSizeMultiplier={fontScaleCaps.chrome} style={{ fontSize: type.caption, color: t.trustGold }}>
-              trust
-            </Text>
-          </Pressable>
+            <ShieldCheck size={26} color={t.trustGold} strokeWidth={1.8} />
+          </IconTarget>
         ) : null}
         {onAlerts ? (
           <IconTarget

@@ -13,7 +13,11 @@ import { Platform } from 'react-native';
 
 export const TAB_BAR_HEIGHT = 76; // room for the raised center circle (2026-07-27)
 export const TAB_BAR_GAP = 6; // air between the capsule and the home indicator
-export const TAB_BAR_MARGIN = 12; // the capsule's inset from the screen sides
+// 20, not 12 (owner report 2026-08-26: "the bottom bar touches the edge on
+// both sides, see WhatsApp"). At 12 the capsule hugged the phone's rounded
+// corners and read as edge-to-edge; WhatsApp's iOS 26 bar floats clear of
+// them with visible screen either side.
+export const TAB_BAR_MARGIN = 20; // the capsule's inset from the screen sides
 export const TAB_BAR_RADIUS = TAB_BAR_HEIGHT / 2; // fully round ends = capsule
 
 export const isFloatingTabBar = Platform.OS === 'ios';

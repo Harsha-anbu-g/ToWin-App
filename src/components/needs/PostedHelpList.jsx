@@ -1,11 +1,13 @@
 // Posted Help (3f) — the elder's requests in three segments: Looking for
-// Help / In Progress / Completed. Each request is a row straight on the page,
-// hairline-separated (user call 2026-07-12: outlined boxes read as a website):
-// title + neutral status pill, plain meta line ("Shopping · Normal · posted
-// yesterday"), then "N helpers want to help" with a tonal View that expands
-// the applicant rows. Accept, complete, and remove keep their confirm dialogs
-// (HCI rule 5). Shared by the elder's second tab and the pushed My requests
-// screen (one source).
+// Help / In Progress / Completed. Each request is a hairline row showing its
+// title alone until touched (owner call 2026-08-26: "just title, and once click it
+// should show other details like remove and view, without clicking again").
+// One touch opens everything: the meta line ("Shopping · Normal · posted
+// yesterday"), who is helping, every helper who offered with their Accept,
+// and Remove / Mark completed. The old "View" toggle inside the card is
+// gone — it was a second click. Accept, complete, and remove keep their
+// confirm dialogs (HCI rule 5). Shared by the elder's second tab and the
+// pushed My requests screen (one source).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChevronRight } from '../icons';
@@ -15,6 +17,7 @@ import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
+import { trustStandingFor } from '../../lib/trustStanding';
 import LocationPrimer from '../location/LocationPrimer';
 import useDevicePosition from '../../lib/useDevicePosition';
 import { markSeen } from '../../lib/seenIds';
@@ -30,6 +33,11 @@ import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 
+// Helpers who offered on a request and are still waiting for an answer. An
+// OPEN request's applications are all pending: the moment one is accepted the
+// request leaves OPEN (NeedService.acceptHelper), so no status filter here.
+const offersOn = (need) => (need.status === 'OPEN' ? (need.applications ?? []).length : 0);
+
 // Memoized with primitive pending props, so one card's Accept spinner or a
 // list-level render never re-renders every other card (UX-705).
 const NeedCard = memo(function NeedCard({
@@ -40,11 +48,15 @@ const NeedCard = memo(function NeedCard({
   acceptingHelperId,
   completing,
   removing,
+  divider,
+  helperTrust,
 }) {
-  const { t, radius, type } = useTheme();
+  const { t, type } = useTheme();
   const router = useRouter();
+  // One fold per card: the title opens everything beneath it.
   const [open, setOpen] = useState(false);
   const applicants = need.applications ?? [];
+  const offers = offersOn(need);
   // Once the request leaves OPEN, the person who took it must stay visible
   // (owner report 2026-08-17: "helper found" never said WHO). The backend
   // marks them ACCEPTED in the applications list.
@@ -53,168 +65,196 @@ const NeedCard = memo(function NeedCard({
   const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
     need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null,
     need.status === 'CANCELLED' ? 'Cancelled' : null].filter(Boolean).join(' · ');
+  // The folded In Progress row says WHO and where trust stands, without a
+  // touch: that pair is the whole point of the segment.
+  const helperLine =
+    need.status === 'ASSIGNED' && acceptedHelper
+      ? [acceptedHelper.helperName, helperTrust?.word].filter(Boolean).join(' · ')
+      : null;
 
   return (
-    // Each request is its own bordered card on the page (user call 2026-07-26:
-    // hairline-separated rows ran together and read as one long list).
-    <View
-      style={{
-        backgroundColor: t.canvas,
-        borderWidth: 1,
-        borderColor: t.border,
-        borderRadius: radius.card,
-        padding: 16,
-        marginTop: 12,
-      }}
-    >
-      {/* No status pill: the segment above already names the status of every
-          card under it, so the pill said the same thing beside every title and
-          squeezed long titles into early wraps (owner report 2026-08-22). The
-          one status a segment does not carry — a cancelled request in
-          Completed — rides the meta line below instead. */}
-      <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, color: t.ink }}>
-        {need.title}
-      </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 6 }}>{meta}</Text>
-
-      {/* WHO is helping — tap opens their profile (message from there). */}
-      {acceptedHelper ? (
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={`View ${acceptedHelper.helperName}'s profile`}
-          onPress={() => router.push(`/user/${acceptedHelper.helperId}`)}
-          style={({ pressed }) => ({
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 10,
-            minHeight: 44,
-            marginTop: 10,
-            opacity: pressed ? 0.7 : 1,
-          })}
-        >
-          <Avatar name={acceptedHelper.helperName} uri={acceptedHelper.helperPhotoUrl} size={36} />
-          <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>
-              {acceptedHelper.helperName}
-            </Text>
-            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
-              {need.status === 'ASSIGNED'
-                ? 'Is helping you with this. Tap to see their profile.'
-                : 'Helped you with this.'}
-            </Text>
-          </View>
-          <ChevronRight size={16} color={t.inkFaint2} strokeWidth={2} />
-        </Pressable>
-      ) : null}
-
-      {/* View sits right beside the count (owner call 2026-08-17): the
-          button belongs to the sentence, not to the far edge of the row. */}
-      {need.status === 'OPEN' && applicants.length > 0 ? (
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flexShrink: 1 }}>
-            {applicantsLabel(applicants.length)}
+    // A plain row, hairline-separated, the same line the My Helpers rows draw
+    // (owner call 2026-08-26: "it should not show like a tab, it should show
+    // like normal lines, like in My Helpers"). This retires the 2026-07-26
+    // bordered card: with the cards folded to a title each, a box per title
+    // read as a row of tabs.
+    <View style={divider ? { borderTopWidth: 1, borderTopColor: t.hairline } : null}>
+      {/* The title is the whole card until touched. The meta rides the spoken
+          label so folding never hides status from a screen reader (HCI 1). */}
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${need.title}. ${helperLine ? `${helperLine}. ` : ''}${offers > 0 ? `${applicantsLabel(offers)}. ` : ''}${meta}`}
+        accessibilityState={{ expanded: open }}
+        onPress={() => setOpen((v) => !v)}
+        style={({ pressed }) => ({
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          minHeight: 60,
+          opacity: pressed ? 0.7 : 1,
+        })}
+      >
+        {/* No status pill: the segment above already names the status of
+            every card under it (owner report 2026-08-22). The one status a
+            segment does not carry — a cancelled request in Completed — rides
+            the meta line inside. */}
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, color: t.ink }}>
+            {need.title}
           </Text>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={open ? 'Hide helpers' : 'View helpers'}
-            accessibilityState={{ expanded: open }}
-            onPress={() => setOpen((v) => !v)}
-            style={({ pressed }) => ({
-              // A real 44pt box, not 34 plus hitSlop the web build throws away
-              // (DEEP-08). min, not fixed: the label grows with the user's text
-              // size instead of clipping.
-              minHeight: 44,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: radius.pill,
-              // iOS plain button — colored text, no fill (owner call
-              // 2026-08-22: "the View button has a background, remove it").
+          {helperLine ? (
+            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>{helperLine}</Text>
+          ) : null}
+        </View>
+        {offers > 0 ? (
+          // Helpers waiting on this request, worn on the folded title the way
+          // an unread chat row wears its count — the fold must not hide that
+          // someone is waiting (HCI 1). badgeFill, like every count badge in
+          // the app; spoken through the label above.
+          <View
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+            style={{
+              minWidth: 22,
+              height: 22,
+              borderRadius: 11,
+              paddingHorizontal: 6,
+              backgroundColor: t.badgeFill,
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: pressed ? 0.7 : 1,
-            })}
+            }}
           >
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-              {open ? 'Hide' : 'View'}
+            <Text style={{ fontSize: 12, fontWeight: '700', color: t.badgeText, fontVariant: ['tabular-nums'] }}>
+              {offers}
             </Text>
-          </Pressable>
-        </View>
-      ) : null}
+          </View>
+        ) : null}
+        <ChevronRight
+          size={18}
+          color={t.inkFaint2}
+          strokeWidth={1.8}
+          style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}
+        />
+      </Pressable>
 
-      {open && need.status === 'OPEN'
-        ? applicants.map((app) => (
-            <View key={app.helperId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
-              {/* The elder is making the platform's core trust decision here —
-                  tapping the person opens their full profile (bio, trust,
-                  reviews), the same link helpers get to elders. */}
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`View ${app.helperName}'s profile`}
-                onPress={() => router.push(`/user/${app.helperId}`)}
-                hitSlop={6}
-                style={({ pressed }) => ({
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 12,
-                  flex: 1,
-                  // A helper who wrote no message leaves this row at the 40pt
-                  // avatar, and hitSlop was carrying the last 4 (DEEP-08 again,
-                  // one line below). The slop stays as a native-only bonus.
-                  minHeight: 44,
-                  opacity: pressed ? 0.7 : 1,
-                })}
-              >
-                <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: type.body, color: t.ink }}>{app.helperName}</Text>
-                  {app.message ? (
-                    <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate }}>
-                      {app.message}
-                    </Text>
-                  ) : null}
-                </View>
-              </Pressable>
-              <Button
-                title="Accept"
-                variant="secondary"
-                loading={acceptingHelperId === app.helperId}
-                onPress={() => onAccept(need, app)}
-              />
-            </View>
-          ))
-        : null}
+      {open ? (
+        <View style={{ paddingBottom: 12 }}>
+          <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{meta}</Text>
 
-      {/* Card actions sit on one right-aligned row: a full-width red Remove
-          under every request shouted louder than the request itself.
-          Remove must not live inside the applicant expansion — a request with
-          zero applicants has no expansion, yet still has to be deletable (HCI rule 3). */}
-      {need.status === 'ASSIGNED' || need.status === 'OPEN' ? (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            gap: 8,
-            marginTop: 14,
-          }}
-        >
-          {need.status === 'ASSIGNED' ? (
-            <Button
-              title="Mark completed"
-              variant="secondary"
-              size="small"
-              loading={completing}
-              onPress={() => onComplete(need)}
-            />
+          {/* WHO is helping — tap opens their profile (message from there). */}
+          {acceptedHelper ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${acceptedHelper.helperName}'s profile`}
+              onPress={() => router.push(`/user/${acceptedHelper.helperId}`)}
+              style={({ pressed }) => ({
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 10,
+                minHeight: 44,
+                marginTop: 10,
+                opacity: pressed ? 0.7 : 1,
+              })}
+            >
+              <Avatar name={acceptedHelper.helperName} uri={acceptedHelper.helperPhotoUrl} size={36} />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>
+                  {acceptedHelper.helperName}
+                </Text>
+                <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
+                  {need.status !== 'ASSIGNED'
+                    ? 'Helped you with this.'
+                    : helperTrust
+                      ? `${helperTrust.word} · Stage ${helperTrust.stageNo} of 7, ${helperTrust.stageName}. Tap to see their profile.`
+                      : 'Is helping you with this. Tap to see their profile.'}
+                </Text>
+              </View>
+              <ChevronRight size={16} color={t.inkFaint2} strokeWidth={2} />
+            </Pressable>
           ) : null}
-          {need.status === 'OPEN' ? (
-            <Button
-              title="Remove"
-              variant="text"
-              size="small"
-              loading={removing}
-              onPress={() => onRemove(need)}
-            />
+
+          {/* Every helper who offered, straight away — no View to press. */}
+          {need.status === 'OPEN' && applicants.length > 0 ? (
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, marginTop: 12 }}>
+              {applicantsLabel(applicants.length)}
+            </Text>
+          ) : null}
+          {need.status === 'OPEN'
+            ? applicants.map((app) => (
+                <View key={app.helperId} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 }}>
+                  {/* The elder is making the platform's core trust decision here —
+                      tapping the person opens their full profile (bio, trust,
+                      reviews), the same link helpers get to elders. */}
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={`View ${app.helperName}'s profile`}
+                    onPress={() => router.push(`/user/${app.helperId}`)}
+                    hitSlop={6}
+                    style={({ pressed }) => ({
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
+                      flex: 1,
+                      // A helper who wrote no message leaves this row at the 40pt
+                      // avatar, and hitSlop was carrying the last 4 (DEEP-08 again,
+                      // one line below). The slop stays as a native-only bonus.
+                      minHeight: 44,
+                      opacity: pressed ? 0.7 : 1,
+                    })}
+                  >
+                    <Avatar name={app.helperName} uri={app.helperPhotoUrl} size={40} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: type.body, color: t.ink }}>{app.helperName}</Text>
+                      {app.message ? (
+                        <Text numberOfLines={2} style={{ fontSize: type.meta, color: t.inkSlate }}>
+                          {app.message}
+                        </Text>
+                      ) : null}
+                    </View>
+                  </Pressable>
+                  <Button
+                    title="Accept"
+                    variant="secondary"
+                    loading={acceptingHelperId === app.helperId}
+                    onPress={() => onAccept(need, app)}
+                  />
+                </View>
+              ))
+            : null}
+
+          {/* Card actions sit on one right-aligned row: a full-width red Remove
+              under every request shouted louder than the request itself. A
+              request with zero applicants still has to be deletable (HCI rule 3),
+              so Remove rides here, not on an applicant row. */}
+          {need.status === 'ASSIGNED' || need.status === 'OPEN' ? (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                gap: 8,
+                marginTop: 10,
+              }}
+            >
+              {need.status === 'ASSIGNED' ? (
+                <Button
+                  title="Mark completed"
+                  variant="secondary"
+                  size="small"
+                  loading={completing}
+                  onPress={() => onComplete(need)}
+                />
+              ) : null}
+              {need.status === 'OPEN' ? (
+                <Button
+                  title="Remove"
+                  variant="text"
+                  size="small"
+                  loading={removing}
+                  onPress={() => onRemove(need)}
+                />
+              ) : null}
+            </View>
           ) : null}
         </View>
       ) : null}
@@ -260,6 +300,12 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     queryFn: async () => (await api.get('/needs/mine')).data,
   });
   const needs = data?.content ?? [];
+  // The friendships behind In Progress requests — where trust stands with
+  // each helper. Same key as the tab shell and My Helpers, so one fetch.
+  const { data: connections } = useQuery({
+    queryKey: ['connections'],
+    queryFn: async () => (await api.get('/connections')).data,
+  });
 
   // Reading this list clears the red "new applicants" tab badge (web
   // b37420d: the dashboard marks its tab's tokens seen on open).
@@ -385,13 +431,28 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const looking = needs.filter((n) => n.status === 'OPEN');
   const inProgress = needs.filter((n) => n.status === 'ASSIGNED');
   const finished = needs.filter((n) => n.status === 'COMPLETED' || n.status === 'CANCELLED');
+  // Helpers waiting on the elder's answer, across every Waiting request — the
+  // Waiting segment wears it as a notification (owner call 2026-08-26: "if
+  // someone offers help it should show like a notification in the Waiting").
+  // People, not requests, the unit every badge in the app counts; it stays
+  // until the elder accepts, because an unanswered offer is still news.
+  const offersWaiting = looking.reduce((n, need) => n + offersOn(need), 0);
   const shown = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
   const settled = !isLoading && !isError;
 
   const renderNeed = useCallback(
-    ({ item: need }) => (
+    ({ item: need, index }) => (
       <NeedCard
         need={need}
+        divider={index > 0}
+        helperTrust={
+          need.status === 'ASSIGNED'
+            ? trustStandingFor(
+                (need.applications ?? []).find((a) => a.status === 'ACCEPTED')?.helperId,
+                connections
+              )
+            : null
+        }
         onAccept={confirmAccept}
         onComplete={confirmComplete}
         onRemove={confirmRemove}
@@ -405,6 +466,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       />
     ),
     [
+      connections,
       confirmAccept,
       confirmComplete,
       confirmRemove,
@@ -452,21 +514,21 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
             // 'Waiting', not 'Looking for Help': three segments share one
             // phone width, and the long label truncated to dots on device
             // (owner report 2026-08-17). The row pills keep the full phrase.
-            // No counts (owner call 2026-08-22: "remove the numbers in the
-            // top") — three small numerals were competing with the one that
-            // matters, the red badge on the tab bar.
-            { key: 'open', label: 'Waiting' },
-            { key: 'progress', label: 'In Progress' },
-            { key: 'done', label: 'Completed' },
+            // Counts are back (owner call 2026-08-26: "show the number at the
+            // top in the heading, how many it has"), reversing 2026-08-22's
+            // "remove the numbers in the top". Waiting also wears the offers
+            // badge, the same voice as the Messages tabs.
+            { key: 'open', label: 'Waiting', count: looking.length, badge: offersWaiting, badgeNoun: 'offers' },
+            { key: 'progress', label: 'In Progress', count: inProgress.length },
+            { key: 'done', label: 'Completed', count: finished.length },
           ]}
           value={seg}
           onChange={setSeg}
-          // marginBottom 2 restores the old list container's top offset so
-          // the first card sits exactly where it always has. The card above
-          // brings its own 14 when it is there, so this one stands down.
+          // Rows carry no top margin of their own (they are lines, not cards),
+          // so the control keeps 8pt of air below itself when there is a list.
           style={{
             marginTop: shouldAskForLocation ? 0 : 14,
-            marginBottom: settled && shown.length > 0 ? 2 : 0,
+            marginBottom: settled && shown.length > 0 ? 8 : 0,
           }}
         />
         </>

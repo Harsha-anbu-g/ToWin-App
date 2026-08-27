@@ -118,6 +118,7 @@ describe('the parent status line', () => {
   test('says so plainly when the parent has checked in today', async () => {
     stubGet();
     const r = await wrap(<FamilyHomePanel />);
+    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
     expect(await r.findByText('Checked in today')).toBeTruthy();
   });
 
@@ -126,12 +127,14 @@ describe('the parent status line', () => {
       elders: [{ ...JOURNEY.elders[0], checkedInToday: false, openNeedsCount: 0, openNeeds: [] }],
     });
     const r = await wrap(<FamilyHomePanel />);
+    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
     expect(await r.findByText('No check-in yet today')).toBeTruthy();
   });
 
   test('counts open help requests, pluralised', async () => {
     stubGet();
     const r = await wrap(<FamilyHomePanel />);
+    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
     expect(await r.findByText('2 help requests open')).toBeTruthy();
   });
 
@@ -142,6 +145,7 @@ describe('the parent status line', () => {
       ],
     });
     const r = await wrap(<FamilyHomePanel />);
+    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
     expect(await r.findByText('1 help request open')).toBeTruthy();
   });
 });
@@ -220,6 +224,7 @@ describe('resilience', () => {
     });
     const r = await wrap(<FamilyHomePanel />);
     expect(await r.findByText('Margaret')).toBeTruthy();
+    await fireEvent.press(r.getByText('Margaret')); // name-only until touched
     expect(r.getByText('Linked')).toBeTruthy();
   });
 });

@@ -152,9 +152,11 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
 
   await openMembersTab(r);
   await r.findByText('sarah');
+  // Members fold to the name until touched (owner call 2026-08-26): open both.
+  await fireEvent.press(r.getByText('sarah'));
   r.getByText('Daughter');
   r.getByText('Main contact'); // gold badge on the primary row
-  r.getByText('tom');
+  await fireEvent.press(r.getByText('tom'));
   r.getByText('Family member'); // relationship fallback
   // Only the non-primary member offers promotion.
   expect(r.getAllByRole('button', { name: 'Make main contact' })).toHaveLength(1);
@@ -189,6 +191,7 @@ test('remove: confirm quotes the web danger message; DELETE fires only on confir
   await r.findByText('My Family (4/5)');
   await openMembersTab(r);
   await r.findByText('sarah');
+  await fireEvent.press(r.getByText('sarah')); // name-only until touched
 
   // Members render sarah (primary) then tom — press sarah's Remove.
   // NOT awaited: the handler returns confirm()'s promise, which only settles
@@ -215,6 +218,7 @@ test('remove: keeping the family member fires no DELETE', async () => {
   await r.findByText('My Family (4/5)');
   await openMembersTab(r);
   await r.findByText('sarah');
+  await fireEvent.press(r.getByText('sarah')); // name-only until touched
 
   fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
   await r.findByText('Remove sarah from your family?');
@@ -230,6 +234,8 @@ test('make main contact POSTs primary and toasts', async () => {
   await r.findByText('My Family (4/5)');
   await openMembersTab(r);
   await r.findByText('tom');
+
+  await fireEvent.press(await r.findByText('tom')); // tom's row is name-only until touched
 
   await fireEvent.press(r.getByRole('button', { name: 'Make main contact' }));
   expect(api.post).toHaveBeenCalledWith('/family/links/m2/primary');
@@ -374,6 +380,7 @@ test('Message opens the family chat through the server', async () => {
   await r.findByText('My Family (4/5)');
   await openMembersTab(r);
   await r.findByText('sarah');
+  await fireEvent.press(r.getByText('sarah')); // name-only until touched
 
   await fireEvent.press(r.getAllByRole('button', { name: 'Message' })[0]);
   expect(api.post).toHaveBeenCalledWith('/family/chat/f1');

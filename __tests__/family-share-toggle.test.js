@@ -168,17 +168,19 @@ test('server-truth re-sync: a changed prop updates the toggle in place', async (
   r.getByText('Kept private from family. Only you can change this.');
 });
 
-test('MyHelpersPanel keeps the switch on every card, folded under the Family arrow', async () => {
+test('MyHelpersPanel keeps the switch on every row, opening with the row', async () => {
   stubGet(
     [conn(), conn({ id: 'c2', otherUserId: 'u2', otherUserName: 'Priya', sharedWithFamily: true })],
     [customer(), customer({ connectionId: 'c2', customerName: 'Priya', stageIndex: 2 })]
   );
   const r = await wrap(<MyHelpersPanel />);
   await r.findByText('Harsha');
-  // Folded by default (owner call 2026-08-17): the arrow reveals the switch.
-  const arrows = r.getAllByLabelText(/Family options/);
-  expect(arrows).toHaveLength(2);
-  for (const arrow of arrows) await fireEvent.press(arrow);
+  // Rows are name-only until touched (owner call 2026-08-26), and one touch
+  // opens the switch with the ladder — no second arrow ("no double clicking").
+  expect(r.queryByLabelText('Let my family see this friendship')).toBeNull();
+  await fireEvent.press(r.getByText('Harsha'));
+  await fireEvent.press(r.getByText('Priya'));
+  expect(r.queryByLabelText(/Family options/)).toBeNull();
   expect(r.getAllByLabelText('Let my family see this friendship')).toHaveLength(2);
 });
 
