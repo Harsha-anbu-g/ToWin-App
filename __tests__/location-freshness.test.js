@@ -265,11 +265,19 @@ describe('nothing in this app watches where anybody is', () => {
     'setInterval(',
   ];
 
+  // The one timer that is allowed, and what it is for. The offline gate asks
+  // the API again every few seconds WHILE OFFLINE so a stale "no internet"
+  // reading from the OS cannot hold every screen empty until somebody restarts
+  // the app (2026-08-28). It reads no position and touches no location module;
+  // the guard below this one still proves that.
+  const ALLOWED = { 'src/lib/useIsOffline.js': ['setInterval('] };
+
   test('no watcher, no background updates, no geofence, no timer', () => {
     const offenders = [];
     for (const file of sourceFiles()) {
       const source = read(file);
       for (const call of CALLS) {
+        if (ALLOWED[file]?.includes(call)) continue;
         if (source.includes(call)) offenders.push(`${file} calls ${call})`);
       }
     }

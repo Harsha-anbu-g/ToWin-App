@@ -11,12 +11,19 @@ import { API_BASE_URL } from './config';
 
 let getToken = () => null;
 let onSessionExpired = () => {};
+// Told whenever the server answers at all — success or refusal. The offline
+// gate (src/lib/useIsOffline) uses it as proof that the network path is alive,
+// whatever the OS's own connectivity reading says. See probeApiReachable.
+let onResponseSeen = () => {};
 
 export const setTokenGetter = (fn) => {
   getToken = fn;
 };
 export const setOnSessionExpired = (fn) => {
   onSessionExpired = fn;
+};
+export const setOnResponseSeen = (fn) => {
+  onResponseSeen = fn;
 };
 
 // A hard timeout so a dead connection rejects instead of hanging forever —
@@ -33,8 +40,15 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    onResponseSeen();
+    return res;
+  },
   (error) => {
+    // An answer of any kind — 401, 403, 500 — still proves the path is alive.
+    // Only a request that never got a response (offline, DNS, timeout) says
+    // nothing either way.
+    if (error?.response) onResponseSeen();
     const status = error?.response?.status;
     const hadToken = !!error?.config?.headers?.Authorization;
     if (status === 401 && hadToken) onSessionExpired();
@@ -80,5 +94,35 @@ export const friendlyAuthError = (error, refusalMessage) => {
   if (res.status === 400 || res.status === 401) return refusalMessage;
   return res.data?.message || 'Something went wrong. Please try again.';
 };
+
+/**
+ * Reachability probe for the offline gate. Answers "can this phone reach the
+ * API right now?" with one small request, because the OS's own "no internet"
+ * reading can be stale (2026-08-28: a simulator that had run for days kept
+ * reporting no internet after the Mac slept, while the network was fine, and
+ * every screen sat empty on that word alone).
+ *
+ * ANY HTTP answer counts, including a refusal — the question is whether the
+ * server can be reached, not whether it likes the request — so every status is
+ * accepted and only a request that gets no response at all means unreachable.
+ * Bare axios rather than `api`: no token goes out, so a 401 here can never be
+ * mistaken for a dead session by the interceptor above.
+ *
+ * @param {number} [timeoutMs] how long to wait for an answer (default 5s)
+ * @returns {Promise<boolean>} true when the API host answered
+ */
+const PROBE_PATH = '/health';
+const PROBE_TIMEOUT_MS = 5_000;
+export async function probeApiReachable(timeoutMs = PROBE_TIMEOUT_MS) {
+  try {
+    await axios.get(`${API_BASE_URL}${PROBE_PATH}`, {
+      timeout: timeoutMs,
+      validateStatus: () => true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export default api;
