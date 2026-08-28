@@ -517,6 +517,13 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,
         tabBarInactiveTintColor: t.inkSlate,
+        // The library pads every tab 5pt on all sides. In a 72pt slot that
+        // left 62pt for the label, and "Posted Help" / "My Helpers" truncated
+        // to dots on the web build (seen 2026-08-28 at iPhone 16 Pro width) —
+        // the exact thing ruled out on 2026-08-22 ("no ...... in the bar").
+        // Sides go to 0 so the label gets the whole slot; the vertical 5 stays
+        // (tabLensGeometry counts on it).
+        tabBarItemStyle: { paddingHorizontal: 0 },
         // Custom label, not tabBarLabelStyle: the library's Label offers no
         // maxFontSizeMultiplier, and at large OS text an uncapped 11px label
         // wraps the whole bar (UX-701). 11 stays the hard platform floor.
