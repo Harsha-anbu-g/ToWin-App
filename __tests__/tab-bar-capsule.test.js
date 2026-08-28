@@ -52,14 +52,16 @@ test('the capsule is 72pt tall and everything pinned above it starts where it en
   expect(tabBarSpace({ bottom: 34 })).toBe(23 + 72);
 });
 
-test('the capsule is placed by two equal insets, never left + width', () => {
-  // The library's tab bar style carries right: 0. With left + width on top,
-  // the owner's iPhone drew the capsule against the left edge (2026-08-28)
-  // while desktop Chrome centred it. Equal insets centre on every engine.
+test('the capsule is placed with start/end, the axis the library uses, never left/right or width', () => {
+  // @react-navigation/bottom-tabs positions the bar with start: 0, end: 0.
+  // On native, Yoga lets start/end win over left/right when both are set, so
+  // left: 21 / right: 21 drew a full-width bar on the phone while the web
+  // showed the gap (Radon simulator vs Chrome, 2026-08-28). Only start/end
+  // of our own can override the library's.
   const fs = require('fs');
   const path = require('path');
   const layout = fs.readFileSync(path.join(__dirname, '..', 'app', '(tabs)', '_layout.jsx'), 'utf8');
-  expect(layout).toMatch(/left: barLeft,\s*right: barLeft,/);
-  expect(layout).not.toMatch(/left: barLeft,\s*width: barW/);
+  expect(layout).toMatch(/start: barLeft,\s*end: barLeft,/);
+  expect(layout).not.toMatch(/left: barLeft,\s*(right: barLeft|width: barW)/);
 });
 
