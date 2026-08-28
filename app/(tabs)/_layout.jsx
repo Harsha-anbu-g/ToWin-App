@@ -517,36 +517,38 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,
         tabBarInactiveTintColor: t.inkSlate,
-        // The library pads every tab 5pt on all sides. In a 72pt slot that
-        // left 62pt for the label, and "Posted Help" / "My Helpers" truncated
-        // to dots on the web build (seen 2026-08-28 at iPhone 16 Pro width) —
-        // the exact thing ruled out on 2026-08-22 ("no ...... in the bar").
-        // Sides go to 0 so the label gets the whole slot; the vertical 5 stays
-        // (tabLensGeometry counts on it).
-        tabBarItemStyle: { paddingHorizontal: 0 },
         // Custom label, not tabBarLabelStyle: the library's Label offers no
         // maxFontSizeMultiplier, and at large OS text an uncapped 11px label
         // wraps the whole bar (UX-701). 11 stays the hard platform floor.
+        // The label gets a box as wide as its whole slot. The library pads
+        // its inner button 5pt on every side (tabVerticalUiKit) and that
+        // padding is out of tabBarItemStyle's reach, so in a 72pt slot a bare
+        // Text had 62pt and "Posted Help" / "My Helpers" showed dots at
+        // iPhone 16 Pro width (seen on the web build 2026-08-28) — the exact
+        // thing ruled out on 2026-08-22 ("no ...... in the bar it should show
+        // full name"). The slot-wide View overflows that padding evenly on
+        // both sides; the Text inside keeps its own measured width, which is
+        // what the lens hugs.
         tabBarLabel: ({ color, children }) => (
-          <Text
-            numberOfLines={1}
-            maxFontSizeMultiplier={fontScaleCaps.chrome}
-            // Each label reports its rendered width so the lens can hug it.
-            onLayout={(e) => noteLabel(children, e.nativeEvent.layout.width)}
-            style={{
-              fontSize: type.tabLabel,
-              fontWeight: '600',
-              color,
-              // No maxWidth cap: the full name always shows (owner call
-              // 2026-08-22, "no ...... in the bar it should show full name").
-              // This retires the 2026-08-19 truncate-inside-the-lens cap: the
-              // real glass lens draws no hard border, so a letter grazing its
-              // corner arc at the largest text sizes is invisible, while a
-              // "Posted He…" ellipsis is not.
-            }}
-          >
-            {children}
-          </Text>
+          <View style={{ width: slotW, alignItems: 'center' }}>
+            <Text
+              numberOfLines={1}
+              maxFontSizeMultiplier={fontScaleCaps.chrome}
+              // Each label reports its rendered width so the lens can hug it.
+              onLayout={(e) => noteLabel(children, e.nativeEvent.layout.width)}
+              style={{
+                fontSize: type.tabLabel,
+                fontWeight: '600',
+                color,
+                // No maxWidth cap (see above). This retires the 2026-08-19
+                // truncate-inside-the-lens cap: the real glass lens draws no
+                // hard border, so a letter grazing its corner arc at the
+                // largest text sizes is invisible, while an ellipsis is not.
+              }}
+            >
+              {children}
+            </Text>
+          </View>
         ),
         // Floating translucent bar (owner call 2026-08-17: the iOS look) —
         // content scrolls beneath it and blurs through TabBarBackground. The
