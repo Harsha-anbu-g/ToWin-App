@@ -583,8 +583,15 @@ export default function TabsLayout() {
               // the capsule shoved to the left edge (2026-08-28 screenshot)
               // while desktop Chrome centred it. Two equal insets cannot be
               // read two ways.
-              left: barLeft,
-              right: barLeft,
+              // `start`/`end`, NOT `left`/`right`: the library places the bar with
+              // `start: 0, end: 0`, and on native Yoga the RTL-aware start/end win over
+              // left/right whenever both are set — so `left: 21, right: 21` drew a
+              // full-width bar on the phone (Radon simulator, 2026-08-28) while the
+              // web, where both map to one CSS property and the later wins, showed 21.
+              // With `left` + `width` the same rule shoved the capsule to the left
+              // edge. Same axis as the library, so ours is the one read.
+              start: barLeft,
+              end: barLeft,
               // Inside the home-indicator zone, as WhatsApp's sits (tabBarMetrics).
               bottom: tabBarBottom(insets),
               height: TAB_BAR_HEIGHT,
