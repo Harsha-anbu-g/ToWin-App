@@ -343,7 +343,13 @@ export default function TabsLayout() {
   // BAR-relative — the lens renders inside tabBarBackground, so the capsule's
   // left edge never enters them; only the drag responder (which reads window
   // pageX) subtracts it.
-  const { width: winW, height: winH } = useWindowDimensions();
+  const { width: windowW, height: winH } = useWindowDimensions();
+  // The capsule is centred inside the bar's own shell, not the window. On the
+  // phone the two are the same width; on a wide web window the shell is the
+  // centred column, and a window-based `left` parked the capsule off-centre
+  // (seen 2026-08-28). Measured once per layout, window width until then.
+  const [shellW, setShellW] = useState(null);
+  const winW = shellW ?? windowW;
   const pathname = usePathname();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
@@ -505,7 +511,14 @@ export default function TabsLayout() {
   if (booted && !user) return <Redirect href="/(auth)/login" />;
 
   return (
-    <View style={{ flex: 1 }} {...barPan.panHandlers}>
+    <View
+      style={{ flex: 1 }}
+      {...barPan.panHandlers}
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width;
+        setShellW((prev) => (prev === w ? prev : w));
+      }}
+    >
     <Tabs
       // UX-703: every tab press answers back. The bar emits tabPress from every
       // slot's onPress (the center FAB's custom button included), so one
