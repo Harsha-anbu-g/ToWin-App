@@ -33,25 +33,23 @@ export const TAB_BAR_FAB_SIZE = 50;
  */
 export const TAB_BAR_INDICATOR_OVERLAP = 11;
 export const TAB_BAR_LIFT = 8;
-// The capsule is sized to its tabs, not stretched between margins: iOS 26
-// draws its tab bar as wide as its items and centres it, which is why
-// WhatsApp's reads as a small floating pill with screen either side. Ours was
-// still a full-width slab at 20pt in, and the owner saw it "touch the edges"
-// on the iPhone build even after the 12 → 20 change (2026-08-26, 2026-08-28).
-// Each slot gets SLOT_WIDTH; the minimum inset is the floor a small phone
-// falls back to, so a 5-slot bar on a 375pt screen still clears the corners.
-export const TAB_BAR_SLOT_WIDTH = 72; // 5 slots = 360, WhatsApp's width; "Posted Help" at 11pt/600 is ~62pt
-export const TAB_BAR_MARGIN = 20; // the capsule's smallest inset from a screen side
+// The capsule spans the screen with a small, fixed gap either side, the way
+// WhatsApp's does (owner, 2026-08-28: "it will not touch both the edge of the
+// phone, it will have a very very small gap"). A capsule sized to its tabs
+// was tried the same afternoon and left 36pt of screen either side on a Pro
+// Max, which read as too much. 16, not 12: 12 was called "touching" on
+// 2026-08-26; WhatsApp's own gap measures ~21pt, and the owner reads that as
+// very small.
+export const TAB_BAR_MARGIN = 16; // the capsule's inset from each screen side
 export const TAB_BAR_RADIUS = TAB_BAR_HEIGHT / 2; // fully round ends = capsule
 
 /**
- * The floating capsule's width for this many slots on this screen width:
- * slots × SLOT_WIDTH, never wider than the screen minus twice the minimum
- * inset. The layout and the glass lens both read this, so they agree.
+ * The floating capsule's width on this screen width: the screen minus the
+ * gap on each side. The layout and the glass lens both read this, so they
+ * agree.
  */
-export function tabBarCapsuleWidth(windowWidth, slotCount) {
-  const hug = Math.max(1, slotCount) * TAB_BAR_SLOT_WIDTH;
-  return Math.min(hug, windowWidth - 2 * TAB_BAR_MARGIN);
+export function tabBarCapsuleWidth(windowWidth) {
+  return windowWidth - 2 * TAB_BAR_MARGIN;
 }
 
 export const isFloatingTabBar = Platform.OS !== 'android';

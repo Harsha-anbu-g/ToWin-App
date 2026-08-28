@@ -338,8 +338,8 @@ export default function TabsLayout() {
   // ---- The gliding glass lens (back per owner call 2026-08-22) ----
   // The lens springs to the active tab on navigation and rides directly under
   // the finger during a horizontal drag on the bar. Geometry needs no
-  // onLayout: the capsule is sized to its slots (tabBarCapsuleWidth) and
-  // centred, so slot width is barW / slots. All lens coordinates are
+  // onLayout: the capsule is the screen minus a fixed gap each side
+  // (tabBarCapsuleWidth) and centred, so slot width is barW / slots. All lens coordinates are
   // BAR-relative — the lens renders inside tabBarBackground, so the capsule's
   // left edge never enters them; only the drag responder (which reads window
   // pageX) subtracts it.
@@ -353,7 +353,7 @@ export default function TabsLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const barW = isFloatingTabBar ? tabBarCapsuleWidth(winW, slots.length) : winW;
+  const barW = isFloatingTabBar ? tabBarCapsuleWidth(winW) : winW;
   const barLeft = isFloatingTabBar ? (winW - barW) / 2 : 0;
   const slotW = slots.length > 0 ? barW / slots.length : 0;
   const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
@@ -575,9 +575,9 @@ export default function TabsLayout() {
         tabBarStyle: isFloatingTabBar
           ? {
               position: 'absolute',
-              // Sized to its tabs and centred, the iOS 26 way (owner call
-              // 2026-08-28: "reduce the size like WhatsApp"); barW/barLeft are
-              // the same numbers the lens glides by. Symmetric insets, never
+              // A small fixed gap each side, WhatsApp's shape (owner call
+              // 2026-08-28); barW/barLeft are the same numbers the lens
+              // glides by. Symmetric insets, never
               // `left` + `width`: the library's own style already carries
               // `right: 0`, and on the owner's iPhone that trio resolved with
               // the capsule shoved to the left edge (2026-08-28 screenshot)

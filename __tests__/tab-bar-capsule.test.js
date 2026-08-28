@@ -1,14 +1,15 @@
-// The floating tab bar wears the geometry measured off the owner's WhatsApp
-// screenshot (2026-08-28, iPhone 16 Pro, "see this, I need like this"): about
-// 360pt wide on a 402pt screen, 72pt tall, its bottom edge ~23pt above the
-// screen's bottom edge. Build 17 had the side inset right but floated the
-// capsule 40pt up, on a shelf above the home indicator; WhatsApp's sits
-// inside that zone. These pins keep the numbers from drifting back.
+// The floating tab bar wears the geometry taken from the owner's WhatsApp
+// screenshot (2026-08-28, iPhone 16 Pro, "see this, I need like this"): the
+// screen's width minus a small fixed gap each side ("it will have a very
+// very small gap"), 72pt tall, its bottom edge ~23pt above the screen's
+// bottom edge. Build 17 floated the capsule 40pt up, on a shelf above the
+// home indicator; WhatsApp's sits inside that zone. A capsule sized to its
+// tabs was tried and left 36pt either side on a Pro Max: too much. These
+// pins keep the numbers from drifting back.
 // jest-expo runs with Platform.OS === 'ios', the seat this geometry is for.
 const {
   TAB_BAR_HEIGHT,
   TAB_BAR_MARGIN,
-  TAB_BAR_SLOT_WIDTH,
   isFloatingTabBar,
   tabBarBottom,
   tabBarCapsuleWidth,
@@ -16,28 +17,24 @@ const {
 } = require('../src/lib/tabBarMetrics');
 
 const IPHONE_16_PRO = { width: 402, bottomInset: 34 };
+const IPHONE_16_PRO_MAX = { width: 430, bottomInset: 34 };
 const IPHONE_SE_3 = { width: 375, bottomInset: 0 };
 
 test('on iOS the bar floats', () => {
   expect(isFloatingTabBar).toBe(true);
 });
 
-test("an elder's five slots make WhatsApp's 360pt capsule on a 16 Pro, 21pt from each side", () => {
-  const w = tabBarCapsuleWidth(IPHONE_16_PRO.width, 5);
-  expect(w).toBe(360);
-  expect((IPHONE_16_PRO.width - w) / 2).toBe(21);
-  expect(TAB_BAR_SLOT_WIDTH * 5).toBe(360);
+test('the capsule is the screen minus a very small gap each side, on every phone', () => {
+  expect(TAB_BAR_MARGIN).toBe(16);
+  for (const phone of [IPHONE_16_PRO, IPHONE_16_PRO_MAX, IPHONE_SE_3]) {
+    const w = tabBarCapsuleWidth(phone.width);
+    expect(w).toBe(phone.width - 32);
+    expect((phone.width - w) / 2).toBe(16);
+  }
 });
 
-test('fewer slots make a narrower capsule, the way iOS 26 sizes a bar to its tabs', () => {
-  expect(tabBarCapsuleWidth(IPHONE_16_PRO.width, 4)).toBe(288); // helper
-  expect(tabBarCapsuleWidth(IPHONE_16_PRO.width, 3)).toBe(216); // family
-});
-
-test('a small phone still keeps the capsule at least the minimum inset off each side', () => {
-  const w = tabBarCapsuleWidth(IPHONE_SE_3.width, 5);
-  expect(w).toBe(IPHONE_SE_3.width - 2 * TAB_BAR_MARGIN);
-  expect(TAB_BAR_MARGIN).toBe(20);
+test('every slot still fits "Posted Help" at 11pt/600 (~62pt) on the smallest phone', () => {
+  expect(tabBarCapsuleWidth(IPHONE_SE_3.width) / 5).toBeGreaterThanOrEqual(62);
 });
 
 test('the capsule sits inside the home-indicator zone: 23pt off the bottom on a 16 Pro', () => {
