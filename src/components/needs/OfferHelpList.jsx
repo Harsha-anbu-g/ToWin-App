@@ -190,6 +190,16 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
           </Text>
         ) : null}
       </View>
+      {need.actedByName ? (
+        // Written by a family member on the elder's behalf. The helper is
+        // about to answer it, so they should know whose words these are
+        // before they reply — the job is still the elder's (website
+        // HelperDashboard parity; owner call 2026-08-28). Gold, the trust
+        // colour, the same line the elder and the family see.
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold, lineHeight: 20, marginTop: 4 }}>
+          {`Asked by ${need.actedByName}${need.elderName ? `, for ${need.elderName}` : ''}`}
+        </Text>
+      ) : null}
 
       {completed ? null : mine === 'PENDING' ? (
         <View style={{ marginTop: 12 }}>

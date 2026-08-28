@@ -8,7 +8,9 @@ import { useTheme } from '../../src/theme/ThemeContext';
 export default function PostedHelp() {
   const { t, spacing, type, fontFamily } = useTheme();
   return (
-    <Screen scroll={false} contentStyle={{ padding: 0 }}>
+    // keyboard: the search box above the list (2026-08-28) opens one, and the
+    // rows it narrows must stay above it, not under it (UX-702).
+    <Screen scroll={false} keyboard contentStyle={{ padding: 0 }}>
       <View style={{ flex: 1, paddingHorizontal: spacing[4], paddingTop: spacing[3] }}>
         <Text
           accessibilityRole="header"

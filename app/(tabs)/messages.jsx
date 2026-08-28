@@ -19,11 +19,14 @@ import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
+import SearchField, { SearchMiss } from '../../src/components/ui/SearchField';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
+import { centerActionFor } from '../../src/lib/roles';
+import { filterByQuery } from '../../src/lib/searchFilter';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // Which tab a one-to-one chat belongs under (web groupOf, MessagesInbox.jsx).
@@ -238,9 +241,14 @@ const keyId = (item) => item.id;
 export default function MessagesInbox() {
   const { t, spacing, text, type, fontFamily, radius } = useTheme();
   const { user } = useAuth();
+  // Null for family accounts (roles.js), so the empty inbox offers them nothing to post.
+  const emptyAction = centerActionFor(user?.role);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
+  // The search box above the list (owner call 2026-08-28, WhatsApp): narrows the
+  // open tab by the other person's name, or a group's title.
+  const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState(null);
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -334,9 +342,12 @@ export default function MessagesInbox() {
   // A settled screen with something to show; loading, failure and the two
   // empty shapes all render through ListEmptyComponent instead.
   const settled = !isLoading && !isError;
-  const displayed = settled && hasAnyConversation
+  const inTab = settled && hasAnyConversation
     ? (currentTab === 'groups' ? groupThreads : rows)
     : [];
+  const displayed = filterByQuery(inTab, query, (item) =>
+    currentTab === 'groups' ? [item.title] : [item.otherUserName]
+  );
 
   const renderRow = useCallback(
     ({ item }) =>
@@ -349,7 +360,9 @@ export default function MessagesInbox() {
   );
 
   return (
-    <Screen scroll={false} contentStyle={{ padding: 0 }}>
+    // keyboard: the search box above the list (2026-08-28) opens one, and the
+    // rows it narrows must stay above it, not under it (UX-702).
+    <Screen scroll={false} keyboard contentStyle={{ padding: 0 }}>
       {/* Swiping the inbox left/right steps the tabs, iOS-style. */}
       <SwipeSegments
         keys={sections.map((s) => s.key)}
@@ -376,6 +389,9 @@ export default function MessagesInbox() {
             >
               Messages
             </Text>
+            {settled && hasAnyConversation ? (
+              <SearchField value={query} onChangeText={setQuery} style={{ marginBottom: spacing[3] }} />
+            ) : null}
             {settled && hasAnyConversation ? (
               // The tabs stay on screen for every account (web f6e5e84) —
               // an empty one explains itself below instead of vanishing.
@@ -404,17 +420,35 @@ export default function MessagesInbox() {
                 No conversations yet
               </Text>
               <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
-                Chats open up once you're friends with someone. Find people near you in Friends.
+                Chats open up once you're friends with someone, or when help is offered on a request.
               </Text>
-              {user?.role !== 'FAMILY' ? (
+              {/* Both doors, not one (owner call 2026-08-28: "post a new help
+                  or find friends, both button"). The role's own verb leads,
+                  the same words as the centre button; Find friends follows.
+                  Family accounts have no discovery surface, so they get
+                  neither. */}
+              {emptyAction ? (
                 <Button
-                  title="Find friends"
+                  title={emptyAction.label}
                   variant="primary"
-                  onPress={() => router.push('/friends')}
+                  onPress={() => router.push('/(tabs)/action')}
                   style={{ marginTop: spacing[5] }}
                 />
               ) : null}
+              {user?.role !== 'FAMILY' ? (
+                <Button
+                  title="Find friends"
+                  variant="secondary"
+                  onPress={() => router.push('/friends')}
+                  style={{ marginTop: spacing[3] }}
+                />
+              ) : null}
             </View>
+          ) : query.trim() && inTab.length > 0 ? (
+            // A search that finds nobody says so; it never borrows the tab's
+            // own "no chats yet" note, which would send the person off to
+            // find friends they already have.
+            <SearchMiss query={query} />
           ) : currentTab === 'groups' && journeyError ? (
             // Same rule as the main list one branch up: a dropped request is
             // never dressed up as "no group chats yet".

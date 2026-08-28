@@ -17,7 +17,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
-const SCREENS = ['app/(auth)/login.jsx', 'app/(auth)/register.jsx'];
+// Register split in two on 2026-08-28: the role question, then the form.
+const SCREENS = ['app/(auth)/login.jsx', 'app/(auth)/register.jsx', 'app/(auth)/create-account.jsx'];
 
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
@@ -43,20 +44,21 @@ describe.each(SCREENS)('%s', (screen) => {
   });
 });
 
-test('register spends its border widths on one language: 1 idle, 2 chosen', () => {
-  // The role cards, the inputs and the consent checkbox are all choice
-  // controls. The checkbox was the last 1.5pt line on the page.
-  const widths = [...read('app/(auth)/register.jsx').matchAll(/borderWidth:\s*([^,\n]+)/g)].map(
+test('the account form spends its border widths on one language: 1 idle, 2 chosen', () => {
+  // The inputs and the consent checkbox are choice controls. The checkbox
+  // was the last 1.5pt line on the page. (The role cards moved to their own
+  // page as hairline rows on 2026-08-28; rows draw borderTopWidth, not a box.)
+  const widths = [...read('app/(auth)/create-account.jsx').matchAll(/borderWidth:\s*([^,\n]+)/g)].map(
     (m) => m[1].trim()
   );
   expect(widths.length).toBeGreaterThan(0);
   for (const width of widths) {
-    expect(width).toMatch(/^(1|agreed \? 2 : 1|active \? 2 : 1)$/);
+    expect(width).toMatch(/^(1|agreed \? 2 : 1)$/);
   }
 });
 
 test('the checkbox size and the legal-link indent come from one constant', () => {
-  const src = read('app/(auth)/register.jsx');
+  const src = read('app/(auth)/create-account.jsx');
   expect(src).toMatch(/const CHECKBOX_SIZE = 22;/);
   // Two bare 22s here meant the links stopped lining up the moment the box moved.
   expect(src).toMatch(/width: CHECKBOX_SIZE/);

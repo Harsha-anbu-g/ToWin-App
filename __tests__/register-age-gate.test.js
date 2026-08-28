@@ -13,6 +13,8 @@ import { AuthProvider } from '../src/context/AuthContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  // The role is answered on the page before this one (2026-08-28 split).
+  useLocalSearchParams: () => ({ role: 'FAMILY' }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -28,7 +30,7 @@ jest.mock('../src/api/client', () => ({
 }));
 
 import api from '../src/api/client';
-import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 
 const wrap = (ui) =>
   render(
@@ -45,7 +47,6 @@ const wrap = (ui) =>
 
 // Fill every field except the date of birth, which each test supplies.
 const fillAndSubmit = async (r, dob) => {
-  await fireEvent.press(r.getByRole('radio', { name: /I'm here for a family member/ }));
   await fireEvent.changeText(r.getByLabelText('Username'), 'sarah_lee');
   await fireEvent.changeText(r.getByLabelText('Email'), 'sarah@example.com');
   if (dob !== undefined) await fireEvent.changeText(r.getByLabelText('Date of birth'), dob);
@@ -55,10 +56,9 @@ const fillAndSubmit = async (r, dob) => {
   await fireEvent.press(r.getByRole('button', { name: 'Create Account' }));
 };
 
-// Any of the rejection messages the date field can show. Deliberately NOT loose
-// enough to match the field's own helper ("...You have to be 18 or over to join."),
-// which is always on screen and would make the assertion vacuous. The under-18
-// error is distinguished by its trailing "Towinly".
+// Any of the rejection messages the date field can show. The under-18 error is
+// distinguished by its trailing "Towinly" (the field used to carry a helper
+// line with the same words, gone since the owner call of 2026-08-28).
 const findError = (r) =>
   r.queryByText(
     /Enter your date of birth|does not exist|is in the future|check the year you typed|18 or over to join Towinly/i,
@@ -73,13 +73,14 @@ const yearsAgo = (n) => {
 describe('signup age gate', () => {
   beforeEach(() => jest.clearAllMocks());
 
-  test('the field exists and says the rule out loud', async () => {
+  test('the field exists, and states the rule only when it is broken', async () => {
     // Arrange / Act
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
-    // Assert
+    // Assert — no helper line up front (owner call 2026-08-28); the rule
+    // arrives as the field's own error, covered by the refusals below.
     expect(r.getByLabelText('Date of birth')).toBeTruthy();
-    expect(r.getByText(/18 or over to join/i)).toBeTruthy();
+    expect(r.queryByText(/18 or over to join/i)).toBeNull();
   });
 
   test.each([
@@ -89,7 +90,7 @@ describe('signup age gate', () => {
     ['someone under 18', yearsAgo(17)],
   ])('refuses to register with %s', async (_label, dob) => {
     // Arrange
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
     // Act
     await fillAndSubmit(r, dob);
@@ -105,7 +106,7 @@ describe('signup age gate', () => {
 
   test('an under-18 is told why, in plain words', async () => {
     // Arrange
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
     // Act
     await fillAndSubmit(r, yearsAgo(17));
@@ -116,7 +117,7 @@ describe('signup age gate', () => {
 
   test('an adult gets through, with the date normalised to ISO', async () => {
     // Arrange
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
     // Act — free-typed, not ISO.
     await fillAndSubmit(r, '12 March 1980');
@@ -132,7 +133,7 @@ describe('signup age gate', () => {
 
   test('accepts an elder typing their birthday the long way round', async () => {
     // Arrange
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
     // Act
     await fillAndSubmit(r, 'May 14, 1953');

@@ -284,8 +284,28 @@ export function useUpdatesFeed(user) {
   return { items, unseen, isLoading, isError };
 }
 
-/** The Updates screen calls this once its list is on screen. */
+/**
+ * Mark every update in `items` as seen at once. No screen calls this since
+ * 2026-08-28 (rows clear one at a time, on tap — see markUpdateSeen); it
+ * stays as the named "clear all" action for an agent or a future control.
+ * @param {string} userId
+ * @param {{ token: string }[]} items
+ * @returns {Promise<void>}
+ */
 export function markUpdatesSeen(userId, items) {
   if (!items.length) return Promise.resolve();
   return markSeen(seenKey(userId, UPDATES_CATEGORY), items.map((i) => i.token));
+}
+
+/**
+ * Mark ONE update as seen: its row drops the "new" wash and the bell's count
+ * falls by one. Called when the person taps that row (owner call 2026-08-28:
+ * "it should only disappear if they click that update, not just by opening
+ * the updates"). Persists like every other seen mark.
+ * @param {string} userId
+ * @param {{ token: string }} item  the update row that was tapped
+ * @returns {Promise<void>}
+ */
+export function markUpdateSeen(userId, item) {
+  return markSeen(seenKey(userId, UPDATES_CATEGORY), [item.token]);
 }

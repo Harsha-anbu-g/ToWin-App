@@ -9,6 +9,12 @@
 // Android keeps its platform's own edge-to-edge bar: copying an iOS shape onto
 // Android would be hand-drawing another platform's control (CLAUDE.md, native
 // controls first).
+//
+// The phone-web build floats too (owner call 2026-08-28: "the bottom bar
+// should not touch the left and right edge of the phone, reduce the size like
+// WhatsApp"). Phones on towinly.com get this build in place of the iOS app,
+// and a browser has no bottom-bar convention of its own to keep, so the web
+// bar wears the iOS capsule rather than the only edge-to-edge bar left.
 import { Platform } from 'react-native';
 
 export const TAB_BAR_HEIGHT = 76; // room for the raised center circle (2026-07-27)
@@ -20,7 +26,7 @@ export const TAB_BAR_GAP = 6; // air between the capsule and the home indicator
 export const TAB_BAR_MARGIN = 20; // the capsule's inset from the screen sides
 export const TAB_BAR_RADIUS = TAB_BAR_HEIGHT / 2; // fully round ends = capsule
 
-export const isFloatingTabBar = Platform.OS === 'ios';
+export const isFloatingTabBar = Platform.OS !== 'android';
 
 // The vertical band the bar occupies, measured from the bottom screen edge.
 // Anything pinned above the bar (Ask AI pill, toasts) starts its own offset

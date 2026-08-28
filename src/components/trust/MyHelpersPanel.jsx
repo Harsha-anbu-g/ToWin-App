@@ -14,6 +14,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
+import { centerActionFor } from '../../lib/roles';
+import { filterByQuery } from '../../lib/searchFilter';
 import { trustOriginLine } from '../../lib/trustOrigin';
 import { SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
@@ -23,6 +25,7 @@ import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
@@ -226,6 +229,9 @@ export default function MyHelpersPanel() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState('building');
+  // The search box above the list (owner call 2026-08-28, WhatsApp): narrows
+  // the open segment by name.
+  const [query, setQuery] = useState('');
 
   const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
@@ -311,7 +317,7 @@ export default function MyHelpersPanel() {
   );
   const trusted = customers.filter((c) => c.stageIndex >= 6);
   const building = customers.filter((c) => c.stageIndex < 6);
-  const shown = seg === 'trusted' ? trusted : building;
+  const shown = filterByQuery(seg === 'trusted' ? trusted : building, query, (c) => [c.customerName]);
   // A paused friendship vanishes from the score breakdown (backend counts
   // ACTIVE only) — surface it from the connections list so Resume stays
   // visible, in the SAME segment the person was in when paused: the pause
@@ -324,7 +330,8 @@ export default function MyHelpersPanel() {
   );
   const pausedTrusted = pausedAll.filter((c) => c.currentTrustLevel === 'TRUSTED');
   const pausedBuilding = pausedAll.filter((c) => c.currentTrustLevel !== 'TRUSTED');
-  const paused = seg === 'trusted' ? pausedTrusted : pausedBuilding;
+  const paused = filterByQuery(seg === 'trusted' ? pausedTrusted : pausedBuilding, query, (c) => [c.otherUserName]);
+  const anyone = building.length + trusted.length + pausedAll.length > 0;
 
   return (
     <View>
@@ -338,6 +345,7 @@ export default function MyHelpersPanel() {
         <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> grows step by step, like roots.
       </Text>
 
+      {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}
       <SegmentedControl
         segments={[
           // Building Trust leads (owner call 2026-08-17): it is the working
@@ -359,6 +367,10 @@ export default function MyHelpersPanel() {
         <SkeletonCard lines={4} />
       ) : isError ? (
         <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 16 }} />
+      ) : query.trim() && shown.length === 0 && paused.length === 0 ? (
+        // A search that finds nobody says so, and never borrows the empty
+        // state below, whose doors are for someone with no one yet.
+        <SearchMiss query={query} />
       ) : shown.length === 0 && paused.length === 0 ? (
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14, marginTop: 12 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
@@ -366,7 +378,10 @@ export default function MyHelpersPanel() {
               ? 'No fully trusted friends yet. Every ladder ends here.'
               : 'No ladders in progress. Add a friend and trust starts growing.'}
           </Text>
-          <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 16 }} />
+          {/* Both doors (owner call 2026-08-28, "same for my helper"): the
+              elder's own verb, worded as the centre button, then Find friends. */}
+          <Button title={centerActionFor('ELDER').label} variant="secondary" onPress={() => router.push('/(tabs)/action')} style={{ marginTop: 16 }} />
+          <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 10 }} />
         </View>
       ) : (
         shown.map((card, i) => {

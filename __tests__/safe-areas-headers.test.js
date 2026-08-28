@@ -202,7 +202,9 @@ test('pinned footers clear the home-indicator zone (profile-edit joins the feedb
 // chat included, because chat drafts survive leaving the thread.
 const GESTURE_OFF_LEDGER = {
   'app/_layout.jsx': ['profile-edit', 'feedback', 'change-password', 'emergency-contacts', 'pass-on/index'],
-  'app/(auth)/_layout.jsx': ['register', 'finish-setup', 'reset-password'],
+  // register is the role question since 2026-08-28: three rows, nothing typed,
+  // so it keeps the gesture; the form moved to create-account.
+  'app/(auth)/_layout.jsx': ['create-account', 'finish-setup', 'reset-password'],
 };
 
 test('mid-form screens disable iOS swipe-back in their stack layout', () => {

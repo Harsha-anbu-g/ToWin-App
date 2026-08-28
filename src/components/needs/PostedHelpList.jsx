@@ -11,23 +11,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { ChevronRight } from '../icons';
-import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
 import api, { friendlyWriteError } from '../../api/client';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
 import { trustStandingFor } from '../../lib/trustStanding';
+import { centerActionFor } from '../../lib/roles';
+import { filterByQuery } from '../../lib/searchFilter';
 import LocationPrimer from '../location/LocationPrimer';
 import useDevicePosition from '../../lib/useDevicePosition';
-import { markSeen } from '../../lib/seenIds';
-import { seenKey } from '../../lib/storageKeys';
-import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
+import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
@@ -71,6 +71,13 @@ const NeedCard = memo(function NeedCard({
     need.status === 'ASSIGNED' && acceptedHelper
       ? [acceptedHelper.helperName, helperTrust?.word].filter(Boolean).join(' · ')
       : null;
+  // A request a family member wrote on the elder's behalf says so on the
+  // elder's own screen, folded or open, so a request they do not remember
+  // writing never looks like it appeared out of nowhere (website
+  // ElderDashboard parity; owner call 2026-08-28: "if the help is posted by
+  // family it should show it to the elder"). The backend files the request
+  // under the elder and only names the writer (NeedResponse.actedByName).
+  const askedBy = need.actedByName ? `Asked by ${need.actedByName}, for you` : null;
 
   return (
     // A plain row, hairline-separated, the same line the My Helpers rows draw
@@ -83,7 +90,7 @@ const NeedCard = memo(function NeedCard({
           label so folding never hides status from a screen reader (HCI 1). */}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${need.title}. ${helperLine ? `${helperLine}. ` : ''}${offers > 0 ? `${applicantsLabel(offers)}. ` : ''}${meta}`}
+        accessibilityLabel={`${need.title}. ${askedBy ? `${askedBy}. ` : ''}${helperLine ? `${helperLine}. ` : ''}${offers > 0 ? `${applicantsLabel(offers)}. ` : ''}${meta}`}
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((v) => !v)}
         style={({ pressed }) => ({
@@ -102,6 +109,13 @@ const NeedCard = memo(function NeedCard({
           <Text style={{ fontSize: type.body, fontWeight: '600', lineHeight: 22, color: t.ink }}>
             {need.title}
           </Text>
+          {askedBy ? (
+            // Gold, the trust colour, as the website and the family's own
+            // view (FamilyNeedsForParent) set this same line.
+            <Text style={{ fontSize: type.caption, fontWeight: '600', color: t.trustGold, marginTop: 2 }}>
+              {askedBy}
+            </Text>
+          ) : null}
           {helperLine ? (
             <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>{helperLine}</Text>
           ) : null}
@@ -271,6 +285,9 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [seg, setSeg] = useState(initialSegment);
+  // The search box above the list (owner call 2026-08-28, WhatsApp): narrows the
+  // open segment by a request's title or the name of anyone who offered.
+  const [query, setQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
 
   // The ask lives HERE and not on the form (owner decision 2026-08-22).
@@ -307,21 +324,9 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     queryFn: async () => (await api.get('/connections')).data,
   });
 
-  // Reading this list clears the red "new applicants" tab badge (web
-  // b37420d: the dashboard marks its tab's tokens seen on open).
-  const { user } = useAuth();
-  const applicantTokens = useMemo(
-    () =>
-      (data?.content ?? []).flatMap((n) =>
-        (n.applications ?? []).map((a) => `${n.id}:${a.helperId}`)
-      ),
-    [data]
-  );
-  useFocusEffect(
-    useCallback(() => {
-      if (applicantTokens.length) markSeen(seenKey(user?.userId, 'applicants'), applicantTokens);
-    }, [user?.userId, applicantTokens])
-  );
+  // Opening this list no longer clears the tab's badge: the badge counts
+  // helpers still waiting for an answer (src/lib/offersWaiting.js), and only
+  // accepting or removing the request changes that (owner call 2026-08-28).
 
   // Coming back to this screen re-checks for new applicants (UX-710, closing
   // the react-review finding: tab screens stay mounted, so without this only
@@ -437,7 +442,11 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   // People, not requests, the unit every badge in the app counts; it stays
   // until the elder accepts, because an unanswered offer is still news.
   const offersWaiting = looking.reduce((n, need) => n + offersOn(need), 0);
-  const shown = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
+  const inSegment = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
+  const shown = filterByQuery(inSegment, query, (n) => [
+    n.title,
+    ...(n.applications ?? []).map((a) => a.helperName),
+  ]);
   const settled = !isLoading && !isError;
 
   const renderNeed = useCallback(
@@ -483,6 +492,9 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
     // Swiping the list left/right steps the segments, iOS-style.
     <SwipeSegments keys={['open', 'progress', 'done']} value={seg} onChange={setSeg} style={{ flex: 1 }}>
     <FlatList
+      // No scroll indicator riding the right edge while the list moves (owner
+      // call 2026-08-28: "remove the bar in right when it comes while scrolling").
+      showsVerticalScrollIndicator={false}
       data={settled ? shown : []}
       keyExtractor={keyId}
       renderItem={renderNeed}
@@ -509,6 +521,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
               />
             </View>
           ) : null}
+        {needs.length > 0 ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 14 }} /> : null}
         <SegmentedControl
           segments={[
             // 'Waiting', not 'Looking for Help': three segments share one
@@ -527,7 +540,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
           // Rows carry no top margin of their own (they are lines, not cards),
           // so the control keeps 8pt of air below itself when there is a list.
           style={{
-            marginTop: shouldAskForLocation ? 0 : 14,
+            marginTop: needs.length > 0 ? 10 : shouldAskForLocation ? 0 : 14,
             marginBottom: settled && shown.length > 0 ? 8 : 0,
           }}
         />
@@ -538,6 +551,10 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
           <SkeletonCard />
         ) : isError ? (
           <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
+        ) : query.trim() && inSegment.length > 0 ? (
+          // A search that finds nothing says so, and never borrows the
+          // segment's own "nothing here yet" starter.
+          <SearchMiss query={query} />
         ) : (
           <View style={{ paddingVertical: 24 }}>
             <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
@@ -552,7 +569,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
                 their own action). */}
             {seg === 'open' ? (
               <Button
-                title="Post a help request"
+                title={centerActionFor('ELDER').label}
                 variant="secondary"
                 onPress={() => router.push('/(tabs)/action')}
                 style={{ marginTop: 16 }}

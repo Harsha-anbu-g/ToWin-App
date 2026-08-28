@@ -23,6 +23,8 @@ import { AuthProvider } from '../src/context/AuthContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  // The form page reads the role the question page answered (2026-08-28 split).
+  useLocalSearchParams: () => ({ role: 'ELDER' }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -40,7 +42,7 @@ jest.mock('../src/api/client', () => ({
 import { createRef } from 'react';
 import api from '../src/api/client';
 import Login from '../app/(auth)/login';
-import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 import Input from '../src/components/ui/Input';
 import PasswordInput from '../src/components/ui/PasswordInput';
 
@@ -134,7 +136,7 @@ describe('register form input semantics', () => {
 
   test('every field knows what it holds and where the return key goes', async () => {
     // Arrange / Act
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
 
     const username = r.getByLabelText('Username');
     const email = r.getByLabelText('Email');
@@ -163,10 +165,9 @@ describe('register form input semantics', () => {
     expect(typeof confirm.props.onSubmitEditing).toBe('function');
   });
 
-  test('Done on the last field submits once the role and terms gates are met', async () => {
+  test('Done on the last field submits once the terms gate is met', async () => {
     // Arrange
-    const r = await wrap(<Register />);
-    await fireEvent.press(r.getByRole('radio', { name: /Elder/ }));
+    const r = await wrap(<CreateAccount />);
     await fireEvent.changeText(r.getByLabelText('Username'), 'sarah_lee');
     await fireEvent.changeText(r.getByLabelText('Email'), 'sarah@example.com');
     await fireEvent.changeText(r.getByLabelText('Date of birth'), 'May 14, 1953');
@@ -187,8 +188,7 @@ describe('register form input semantics', () => {
     // Arrange — everything filled, checkbox never ticked. The visible Create
     // Account button is disabled in this state; the keyboard path must not
     // become a hole in that gate (HCI rule 5, error prevention).
-    const r = await wrap(<Register />);
-    await fireEvent.press(r.getByRole('radio', { name: /Elder/ }));
+    const r = await wrap(<CreateAccount />);
     await fireEvent.changeText(r.getByLabelText('Username'), 'sarah_lee');
     await fireEvent.changeText(r.getByLabelText('Email'), 'sarah@example.com');
     await fireEvent.changeText(r.getByLabelText('Date of birth'), 'May 14, 1953');

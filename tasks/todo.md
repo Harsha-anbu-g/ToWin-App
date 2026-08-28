@@ -34,5 +34,47 @@
 15. [x] Family: LinkRow is a hairline row everywhere; linked parents / members
         fold to the name (one touch opens relationship, status, actions);
         requests never fold. Helper landing = My Elders, done in 13.
+16. [x] Shipped 2026-08-27 ("push all to live"): 93a015c + 92202eb on
+        origin/main and ralph/store-hardening; Vercel prod towinly-e7l3tqvem
+        (bundle-verified); TestFlight build 17 delivered (submission finished
+        04:19 UTC). August iOS quota now 15/15 — no cloud iOS build until Sept 1.
+17. [x] Sign-up split in two pages (owner call 2026-08-28): register.jsx asks
+        "Who are you joining as?" (three hairline rows, one touch opens the
+        form); create-account.jsx is the form, reads the role from the route,
+        names it back ("You're joining as an elder." + Change). registerAccount
+        lives in src/api/auth.js (Rule 6).
+18. [x] Create account form: no helper line under Username, Email, Date of
+        birth, Password ("remove those descriptions"). May be what item 11
+        was cut off from.
+19. [x] Bottom bar must float clear of the phone's left/right edges, smaller,
+        like WhatsApp (owner 2026-08-28). Cause: the capsule was iOS-only, and
+        with the iOS quota gone the owner reviews on phone-web, which had the
+        edge-to-edge bar; isFloatingTabBar is now every platform but Android.
+20. [x] Posted Help: no scrollbar on the right while scrolling (owner 2026-08-28).
+21. [x] Updates: the unseen wash must touch both edges of the phone (it read as
+        "half of the tab"), and it clears only when THAT update is tapped, not
+        when the Updates screen opens (owner 2026-08-28).
+22. [x] Profile: "Log out" is the last row, below "Account and data"
+        (owner 2026-08-28).
+23. [x] Messages: when there is no one to message, say so and offer BOTH
+        buttons, post a new help and find friends (owner 2026-08-28).
+24. [x] My Helpers (and My Elders): the same empty state with both buttons
+        when no one is there (owner 2026-08-28, "same for my helper").
+25. [x] Centre button: "Need Help" → "Ask Help" (owner 2026-08-28: "need help
+        is in general"; "Post Help" rejected as confusing next to Posted Help;
+        "Add Help" lasted an hour, final call "Ask Help").
+26. [x] Bottom bar: Posted Help shows a notification badge (owner 2026-08-28).
+27. [x] Search field at the top of Messages, Posted Help and My Helpers (and My
+        Elders for parity), like WhatsApp (owner 2026-08-28).
+28. [x] Posted Help: a request posted BY a family member shows for the elder,
+        for helpers, and for the family (owner 2026-08-28). The backend already
+        files it under the elder (so it was on all three lists); what the app
+        lacked was the website's "Asked by Sarah, for you / for Margaret" line
+        on the elder's and helper's cards. Added; the family view had it.
 
-All demo-pending (local only, nothing committed or pushed).
+Items 17-28: built, tests green, local-only, demo pending. The two red suites
+in the full run (offline-gate, location-freshness) belong to the sibling
+session's uncommitted useIsOffline.js, not to this queue.
+
+Item 11 ("and remove it f") still needs the owner to say what "it" is
+(item 18 may be it).

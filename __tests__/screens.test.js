@@ -7,9 +7,11 @@ import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { AuthProvider } from '../src/context/AuthContext';
 
+let mockParams = { connectionId: 'c1' };
+
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
-  useLocalSearchParams: () => ({ connectionId: 'c1' }),
+  useLocalSearchParams: () => mockParams,
   // Screens under test behave as the focused screen (runs the effect on mount).
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
@@ -30,7 +32,7 @@ jest.mock('../src/components/DemoAccountsCard', () => () => null);
 
 import api from '../src/api/client';
 import Login from '../app/(auth)/login';
-import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 import ChatThread from '../app/chat/[connectionId]';
 
 const wrap = (ui) =>
@@ -50,7 +52,10 @@ const wrap = (ui) =>
     </ThemeProvider>
   );
 
-afterEach(() => jest.clearAllMocks());
+afterEach(() => {
+  jest.clearAllMocks();
+  mockParams = { connectionId: 'c1' };
+});
 
 test('login: empty fields show the exact web messages and fire NO api call', async () => {
   const { getByRole, getByText } = await wrap(<Login />);
@@ -62,19 +67,29 @@ test('login: empty fields show the exact web messages and fire NO api call', asy
   expect(api.post).not.toHaveBeenCalled();
 });
 
-test('register: submit stays disabled until a role is chosen AND terms agreed', async () => {
-  const { getByRole } = await wrap(<Register />);
-  // No preselected identity (rulebook): agreeing alone is not enough.
+test('create-account: submit stays disabled until the terms are agreed', async () => {
+  // The role was answered on the page before (2026-08-28 split), so the
+  // terms box is the one gate left on this page.
+  mockParams = { role: 'ELDER' };
+  const { getByRole, getByText } = await wrap(<CreateAccount />);
   expect(getByRole('button', { name: 'Create Account' })).toBeDisabled();
+  getByText("You're joining as an elder.");
   await fireEvent.press(getByRole('checkbox'));
-  expect(getByRole('button', { name: 'Create Account' })).toBeDisabled();
-  await fireEvent.press(getByRole('radio', { name: /Elder\./ }));
   expect(getByRole('button', { name: 'Create Account' })).not.toBeDisabled();
 });
 
-test('register: invalid fields show the exact web messages, no api call', async () => {
-  const { getByRole, getByText } = await wrap(<Register />);
-  await fireEvent.press(getByRole('radio', { name: /Elder\./ })); // choose a role
+test('create-account: no role in the link means no form, only the way back to the question', async () => {
+  // A stale or hand-typed link cannot reach a form the backend would refuse:
+  // the page renders the Redirect (mocked to nothing here) and nothing else.
+  mockParams = {};
+  const { queryByLabelText, queryByRole } = await wrap(<CreateAccount />);
+  expect(queryByLabelText('Username')).toBeNull();
+  expect(queryByRole('button', { name: 'Create Account' })).toBeNull();
+});
+
+test('create-account: invalid fields show the exact web messages, no api call', async () => {
+  mockParams = { role: 'ELDER' };
+  const { getByRole, getByText } = await wrap(<CreateAccount />);
   await fireEvent.press(getByRole('checkbox')); // agree
   await fireEvent.press(getByRole('button', { name: 'Create Account' }));
   getByText('Username must be 3-20 characters: lowercase letters, numbers, underscores only');

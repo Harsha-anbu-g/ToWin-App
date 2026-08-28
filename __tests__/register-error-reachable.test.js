@@ -19,7 +19,8 @@ import { AuthProvider } from '../src/context/AuthContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
-  useLocalSearchParams: () => ({}),
+  // The form page reads the role the question page answered (2026-08-28 split).
+  useLocalSearchParams: () => ({ role: 'ELDER' }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -38,7 +39,7 @@ jest.mock('../src/lib/announce', () => ({ announce: jest.fn(), setAnnouncer: jes
 
 import api from '../src/api/client';
 import { announce } from '../src/lib/announce';
-import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 
 const wrap = (ui) =>
   render(
@@ -65,7 +66,6 @@ async function fillValidForm(view) {
   // Awaited one at a time: the repo's convention on this screen (see
   // input-semantics.test.js). Firing them unawaited overlaps React's act()
   // scopes and the form never reaches a submittable state.
-  await fireEvent.press(view.getByRole('radio', { name: /Elder/ }));
   await fireEvent.changeText(view.getByLabelText('Username'), 'eleanor_r');
   await fireEvent.changeText(view.getByLabelText('Email'), 'eleanor@example.com');
   await fireEvent.changeText(view.getByLabelText('Date of birth'), 'May 14, 1953');
@@ -86,7 +86,7 @@ beforeEach(() => {
 
 test('a rejected signup is said out loud, not just coloured red', async () => {
   api.post.mockRejectedValue(TAKEN);
-  const view = await wrap(<Register />);
+  const view = await wrap(<CreateAccount />);
   await fillValidForm(view);
 
   await submit(view);
@@ -101,7 +101,7 @@ test('the banner scrolls itself back under the person pressing the button', asyn
   // is the method it calls on it.
   const scrollTo = jest.spyOn(ScrollView.prototype, 'scrollTo').mockImplementation(() => {});
 
-  const view = await wrap(<Register />);
+  const view = await wrap(<CreateAccount />);
   await fillValidForm(view);
   await submit(view);
 
@@ -118,7 +118,7 @@ test('the banner scrolls itself back under the person pressing the button', asyn
 
 test('the banner is an alert a screen reader can land on', async () => {
   api.post.mockRejectedValue(TAKEN);
-  const view = await wrap(<Register />);
+  const view = await wrap(<CreateAccount />);
   await fillValidForm(view);
   await submit(view);
 

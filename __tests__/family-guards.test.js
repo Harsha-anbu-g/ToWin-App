@@ -77,10 +77,10 @@ test('ActionScreen: FAMILY redirects to Home — never crashes on the null cente
   mockRole = 'FAMILY';
   const r = await wrap(<ActionScreen />);
   expect(mockRedirectHref).toBe('/(tabs)/home');
-  expect(r.queryByText('Need Help')).toBeNull();
+  expect(r.queryByText('Ask Help')).toBeNull();
 });
 
-test('ActionScreen: elders still get the Need Help form (no redirect)', async () => {
+test('ActionScreen: elders still get the Ask Help form (no redirect)', async () => {
   mockRole = 'ELDER';
   const r = await wrap(<ActionScreen />);
   expect(mockRedirectHref).toBeNull();
