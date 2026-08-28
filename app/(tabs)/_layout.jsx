@@ -14,11 +14,12 @@ import { Redirect, Tabs, usePathname, useRouter } from 'expo-router';
 import { BlurView } from 'expo-blur';
 import { FILL, GlassView, hasLiquidGlass } from '../../src/components/ui/glass';
 import {
-  TAB_BAR_GAP,
+  TAB_BAR_FAB_SIZE,
   TAB_BAR_HEIGHT,
-  TAB_BAR_MARGIN,
   TAB_BAR_RADIUS,
   isFloatingTabBar,
+  tabBarBottom,
+  tabBarCapsuleWidth,
   tabBarSpace,
 } from '../../src/lib/tabBarMetrics';
 import { useEffect, useRef, useState } from 'react';
@@ -240,9 +241,9 @@ function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type,
     >
       <View
         style={{
-          width: 54,
-          height: 54,
-          borderRadius: 27,
+          width: TAB_BAR_FAB_SIZE,
+          height: TAB_BAR_FAB_SIZE,
+          borderRadius: TAB_BAR_FAB_SIZE / 2,
           marginTop: -8, // slight lift, still fully inside the Pressable's box
           backgroundColor: active ? t.blueDeep : t.actionFill,
           alignItems: 'center',
@@ -337,16 +338,17 @@ export default function TabsLayout() {
   // ---- The gliding glass lens (back per owner call 2026-08-22) ----
   // The lens springs to the active tab on navigation and rides directly under
   // the finger during a horizontal drag on the bar. Geometry needs no
-  // onLayout: the bar is the window minus its capsule margins, so slot width
-  // is barW / slots. All lens coordinates are BAR-relative — the lens renders
-  // inside tabBarBackground, so the capsule's left margin never enters them;
-  // only the drag responder (which reads window pageX) subtracts it.
+  // onLayout: the capsule is sized to its slots (tabBarCapsuleWidth) and
+  // centred, so slot width is barW / slots. All lens coordinates are
+  // BAR-relative — the lens renders inside tabBarBackground, so the capsule's
+  // left edge never enters them; only the drag responder (which reads window
+  // pageX) subtracts it.
   const { width: winW, height: winH } = useWindowDimensions();
   const pathname = usePathname();
   const router = useRouter();
   const reducedMotion = useReducedMotion();
-  const barLeft = isFloatingTabBar ? TAB_BAR_MARGIN : 0;
-  const barW = winW - 2 * barLeft;
+  const barW = isFloatingTabBar ? tabBarCapsuleWidth(winW, slots.length) : winW;
+  const barLeft = isFloatingTabBar ? (winW - barW) / 2 : 0;
   const slotW = slots.length > 0 ? barW / slots.length : 0;
   const activeIndex = slots.indexOf(pathname.replace(/^\//, ''));
   const lensable = activeIndex >= 0 && slots[activeIndex] !== 'action';
@@ -426,7 +428,7 @@ export default function TabsLayout() {
     },
     track: (pageX) => {
       const { barW: w, barLeft: bl, slots: s, slotW: sw, labelWidths: widths } = live.current;
-      // Window → bar coordinates: the floating capsule starts 12pt in.
+      // Window → bar coordinates: the floating capsule starts barLeft in.
       const x = pageX - bl;
       // Hug whichever tab the finger is over: the width morphs mid-glide.
       const over = Math.min(s.length - 1, Math.max(0, Math.floor(x / sw)));
@@ -551,9 +553,13 @@ export default function TabsLayout() {
         tabBarStyle: isFloatingTabBar
           ? {
               position: 'absolute',
-              left: TAB_BAR_MARGIN,
-              right: TAB_BAR_MARGIN,
-              bottom: insets.bottom + TAB_BAR_GAP,
+              // Sized to its tabs and centred, the iOS 26 way (owner call
+              // 2026-08-28: "reduce the size like WhatsApp"); barW/barLeft are
+              // the same numbers the lens glides by.
+              left: barLeft,
+              width: barW,
+              // Inside the home-indicator zone, as WhatsApp's sits (tabBarMetrics).
+              bottom: tabBarBottom(insets),
               height: TAB_BAR_HEIGHT,
               borderRadius: TAB_BAR_RADIUS,
               // Clips the blur fallback to the capsule; the GlassView carries
