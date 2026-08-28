@@ -51,3 +51,15 @@ test('the capsule is 72pt tall and everything pinned above it starts where it en
   expect(TAB_BAR_HEIGHT).toBe(72);
   expect(tabBarSpace({ bottom: 34 })).toBe(23 + 72);
 });
+
+test('the capsule is placed by two equal insets, never left + width', () => {
+  // The library's tab bar style carries right: 0. With left + width on top,
+  // the owner's iPhone drew the capsule against the left edge (2026-08-28)
+  // while desktop Chrome centred it. Equal insets centre on every engine.
+  const fs = require('fs');
+  const path = require('path');
+  const layout = fs.readFileSync(path.join(__dirname, '..', 'app', '(tabs)', '_layout.jsx'), 'utf8');
+  expect(layout).toMatch(/left: barLeft,\s*right: barLeft,/);
+  expect(layout).not.toMatch(/left: barLeft,\s*width: barW/);
+});
+

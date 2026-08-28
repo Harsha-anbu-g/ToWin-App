@@ -577,9 +577,14 @@ export default function TabsLayout() {
               position: 'absolute',
               // Sized to its tabs and centred, the iOS 26 way (owner call
               // 2026-08-28: "reduce the size like WhatsApp"); barW/barLeft are
-              // the same numbers the lens glides by.
+              // the same numbers the lens glides by. Symmetric insets, never
+              // `left` + `width`: the library's own style already carries
+              // `right: 0`, and on the owner's iPhone that trio resolved with
+              // the capsule shoved to the left edge (2026-08-28 screenshot)
+              // while desktop Chrome centred it. Two equal insets cannot be
+              // read two ways.
               left: barLeft,
-              width: barW,
+              right: barLeft,
               // Inside the home-indicator zone, as WhatsApp's sits (tabBarMetrics).
               bottom: tabBarBottom(insets),
               height: TAB_BAR_HEIGHT,
