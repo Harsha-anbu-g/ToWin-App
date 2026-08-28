@@ -216,7 +216,7 @@ export default function MenuSheet({ visible, onClose }) {
         </View>
 
         {/* The menu never repeats what the tabs already show (user call
-            2026-08-02): Need Help, Posted Help, My Helpers, Offer Help,
+            2026-08-02): Ask Help, Posted Help, My Helpers, Offer Help,
             My Elders, My Parents and Add Friends all live on screen, so
             only the extra surfaces get rows here. */}
         {/* + insets.bottom: the drawer now runs under the translucent nav bar,

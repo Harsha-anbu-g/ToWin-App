@@ -16,6 +16,8 @@ import { AuthProvider } from '../src/context/AuthContext';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  // The form page reads the role the question page answered (2026-08-28 split).
+  useLocalSearchParams: () => ({ role: 'ELDER' }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -28,6 +30,7 @@ jest.mock('../src/api/client', () => ({
 }));
 
 import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 
 const wrap = (ui) =>
   render(
@@ -45,14 +48,14 @@ const wrap = (ui) =>
 describe('create account page uniformity', () => {
   test('both password fields carry the kit eye toggle', async () => {
     // Arrange / Act
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     // Assert — one per field, from PasswordInput rather than a local copy
     expect(r.getAllByRole('button', { name: 'Show password' })).toHaveLength(2);
   });
 
   test('the eye toggles are independent, so revealing one keeps the other hidden', async () => {
     // Arrange
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     const eyes = r.getAllByRole('button', { name: 'Show password' });
 
     // Act — reveal only the first field
@@ -65,17 +68,26 @@ describe('create account page uniformity', () => {
 
   test('typing still reaches both password fields through the kit control', async () => {
     // The state moved into PasswordInput; the value must still be the page's.
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     await fireEvent.changeText(r.getByLabelText('Password'), 'longenough1');
     await fireEvent.changeText(r.getByLabelText('Re-enter password'), 'longenough1');
     expect(r.getByText('Passwords match')).toBeOnTheScreen();
   });
 
-  test('the password rule is stated before it can be broken', async () => {
-    // Username, Email and Date of birth all state their rule up front; the
-    // password field used to reveal its 8-character rule only after a failure.
-    const r = await wrap(<Register />);
-    expect(r.getByText('At least 8 characters.')).toBeOnTheScreen();
+  test('no field carries a helper line; each rule is stated when it is broken', async () => {
+    // Owner call 2026-08-28: "remove those descriptions" under Username,
+    // Email, Date of birth and Password. The rules did not go anywhere: the
+    // field's own error names each one the moment it is broken.
+    const r = await wrap(<CreateAccount />);
+    expect(r.queryByText(/Letters, numbers, underscores/)).toBeNull();
+    expect(r.queryByText(/send a link to confirm/)).toBeNull();
+    expect(r.queryByText(/For example 14 May 1953/)).toBeNull();
+    expect(r.queryByText('At least 8 characters.')).toBeNull();
+
+    await fireEvent.press(r.getByRole('checkbox'));
+    await fireEvent.press(r.getByRole('button', { name: 'Create Account' }));
+    expect(r.getByText('Password must be at least 8 characters')).toBeOnTheScreen();
+    expect(r.getByText('Enter your date of birth')).toBeOnTheScreen();
   });
 
   test('the legal link is styled exactly like "Log in" on the same page', async () => {
@@ -85,7 +97,7 @@ describe('create account page uniformity', () => {
     // Compare the rendered TEXT nodes, not the pressables — a pressable
     // carries no fontSize, so reading style off it would compare undefined to
     // undefined and pass while proving nothing.
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     const styleOf = (label) => {
       const flat = [r.getByText(label).props.style].flat(Infinity).filter(Boolean);
       return Object.assign({}, ...flat);
@@ -104,9 +116,9 @@ describe('create account page uniformity', () => {
     expect(login.fontSize).toBe(16);
   });
 
-  test('every role card names itself at least as large as its own description', async () => {
+  test('every role row names itself at least as large as its own description', async () => {
     // The card label was 14 while the sentence under it was 16, so each card
-    // read upside-down.
+    // read upside-down. The roles are rows on their own page now (2026-08-28).
     const r = await wrap(<Register />);
     const label = r.getByText('Elder');
     const desc = r.getByText('Looking for friends or help');

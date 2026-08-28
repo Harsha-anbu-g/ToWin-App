@@ -41,6 +41,7 @@ jest.mock('../src/components/DemoAccountsCard', () => () => null);
 import api from '../src/api/client';
 import Login from '../app/(auth)/login';
 import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 import VerifyEmail from '../app/(auth)/verify-email';
 
 const wrap = (ui) =>
@@ -126,8 +127,14 @@ describe('DEEP-12: verify-email tells a dropped connection from a dead link', ()
 });
 
 describe('DEEP-15: the "Passwords match" confirmation is readable', () => {
+  // The password fields live on the form page of the two-step signup
+  // (2026-08-28); it reads the role the question page answered.
+  beforeEach(() => {
+    mockParams = { role: 'ELDER' };
+  });
+
   test('it clears the 16px body floor and 4.5:1 on the page it sits on', async () => {
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     await fireEvent.changeText(r.getByLabelText('Password'), 'longenough1');
     await fireEvent.changeText(r.getByLabelText('Re-enter password'), 'longenough1');
 
@@ -137,7 +144,7 @@ describe('DEEP-15: the "Passwords match" confirmation is readable', () => {
   });
 
   test('it paints a theme token, so night mode clears the floor too', async () => {
-    const r = await wrap(<Register />);
+    const r = await wrap(<CreateAccount />);
     await fireEvent.changeText(r.getByLabelText('Password'), 'longenough1');
     await fireEvent.changeText(r.getByLabelText('Re-enter password'), 'longenough1');
 
@@ -147,7 +154,7 @@ describe('DEEP-15: the "Passwords match" confirmation is readable', () => {
   });
 });
 
-describe('DEEP-16: the role cards carry their decision at the body floor', () => {
+describe('DEEP-16: the role rows carry their decision at the body floor', () => {
   const DESCRIPTIONS = [
     'Looking for friends or help',
     'Want to help others',
@@ -164,9 +171,9 @@ describe('DEEP-16: the role cards carry their decision at the body floor', () =>
     expect(tooSmall).toEqual([]);
   });
 
-  test('the question above the cards stays at body size', async () => {
+  test('the question above the rows stays at body size', async () => {
     const r = await wrap(<Register />);
-    const prompt = StyleSheet.flatten(r.getByText('First, who are you joining as?').props.style);
+    const prompt = StyleSheet.flatten(r.getByText('Who are you joining as?').props.style);
     expect(prompt.fontSize).toBeGreaterThanOrEqual(16);
   });
 });

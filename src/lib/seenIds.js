@@ -125,6 +125,21 @@ export function useUnseenBadge(userId, category, tokens) {
   return unseenCount(storageKey, tokens);
 }
 
+/**
+ * Which of these tokens are new to this user, live: hydrates the store and
+ * re-renders on any seen-state change, so a row loses its "new" wash the
+ * moment it is marked seen (Updates, owner call 2026-08-28: the wash clears
+ * per row, on tap, never on opening the screen).
+ */
+export function useUnseenTokens(userId, category, tokens) {
+  const storageKey = seenKey(userId, category);
+  useEffect(() => {
+    loadSeen(storageKey);
+  }, [storageKey]);
+  useSyncExternalStore(subscribe, getVersion, getVersion);
+  return unseenTokens(storageKey, tokens);
+}
+
 /** Tests only: forget everything, including hydration state. */
 export function _resetSeenForTests() {
   sets.clear();

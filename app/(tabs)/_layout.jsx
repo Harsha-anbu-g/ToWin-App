@@ -57,6 +57,7 @@ import { haptic } from '../../src/lib/haptics';
 import { setAppBadgeCountAsync } from '../../src/lib/pushNotifications';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
 import { useUnseenBadge } from '../../src/lib/seenIds';
+import { offersWaitingCount } from '../../src/lib/offersWaiting';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 // `count` renders the badge ourselves instead of via tabBarBadge: the library's
@@ -281,9 +282,15 @@ export default function TabsLayout() {
   const { user, booted } = useAuth();
   const insets = useSafeAreaInsets();
 
-  // Red "new activity" badges (web b37420d): new people on the hub tab, new
-  // applicants on Posted Help. Seen-state lives in src/lib/seenIds; the
-  // screens mark their tokens seen on focus.
+  // Badges. The hub tab counts new people (web b37420d; seen-state lives in
+  // src/lib/seenIds and the hub marks its tokens seen on focus). Posted Help
+  // counts helpers WAITING for an answer — every offer on a still-OPEN
+  // request — and it stays until the elder accepts or removes the request,
+  // never clearing just because the tab was opened (owner call 2026-08-28:
+  // "in bottom bar posted help should show a notification"; same grammar as
+  // the Messages badge, which counts people waiting, and as Updates, which
+  // clears per row). An OPEN request's offers are all pending: accepting one
+  // makes the request ASSIGNED, so the count is exactly who is still waiting.
   const { data: connectionsData } = useQuery({
     queryKey: ['connections'],
     queryFn: async () => (await api.get('/connections')).data,
@@ -298,11 +305,8 @@ export default function TabsLayout() {
   const connTokens = (Array.isArray(connectionsData) ? connectionsData : [])
     .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
     .map((c) => `${c.id}:${c.status}`);
-  const applicantTokens = (needsData?.content ?? []).flatMap((n) =>
-    (n.applications ?? []).map((a) => `${n.id}:${a.helperId}`)
-  );
   const connBadge = useUnseenBadge(user?.userId, 'connections', connTokens);
-  const applicantsBadge = useUnseenBadge(user?.userId, 'applicants', applicantTokens);
+  const applicantsBadge = offersWaitingCount(needsData?.content);
 
   // Unread conversations badge — backend returns a plain integer (NavBar.jsx parity)
   const { data: unread } = useQuery({
@@ -612,7 +616,7 @@ export default function TabsLayout() {
           title: 'Posted Help',
           tabBarIcon: tabIcon(FileText, applicantsBadge),
           href: second?.name === 'posted-help' ? undefined : null,
-          tabBarAccessibilityLabel: tabA11yLabel('Posted Help', applicantsBadge, 'new'),
+          tabBarAccessibilityLabel: tabA11yLabel('Posted Help', applicantsBadge, 'waiting'),
         }}
       />
       {/* Old helper second tab — the hub moved to slot one; route redirects */}

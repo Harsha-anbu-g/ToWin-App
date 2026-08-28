@@ -35,7 +35,7 @@ function FieldLabel({ children }) {
   );
 }
 
-// Need Help (3e): title input, kind-of-help chips, Normal/Urgent, optional
+// Ask Help (3e): title input, kind-of-help chips, Normal/Urgent, optional
 // details, bottom-pinned primary. Validation is inline on the fields.
 // The heading is the centre button's own label (roles.js), so the screen and
 // the button a member tapped to reach it always read the same (HARD-110).

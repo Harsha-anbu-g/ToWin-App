@@ -1,22 +1,15 @@
 // HARD-100, defect 3: the Updates focus effect ran once per RENDER, not once
 // per focus, and past 300 tokens that became a spin.
 //
-// src/lib/updatesFeed.js built the feed with an unmemoized buildFeed, so
-// `items` was a brand new array on every render. app/updates.jsx puts `items`
-// in the deps of the useCallback it hands to useFocusEffect, and a focus
-// effect re-runs whenever its callback identity changes. So every render
-// re-ran the effect, the effect called markSeen, markSeen notified, the badge
-// hook re-rendered its subscribers, and round it went.
-//
-// It converged only because markSeen returns early once every token is seen.
-// Past MAX_TOKENS the old blind `.slice(-300)` dropped tokens out of the very
-// batch just marked, so that early return was never reachable again and the
-// spin had nothing to stop it. Both halves are fixed: the feed is memoized on
-// its six query results here, and the cap is identity-aware, pinned in
-// seen-ids.test.js.
-//
-// The probe below is the real sequence rather than a synthetic one: mount, let
-// the effect mark the rows seen, and count how many times the effect body ran.
+// The loop was: the focus effect marked every row seen, markSeen notified,
+// the badge hook re-rendered its subscribers, an unmemoized feed handed the
+// screen a new `items` array, the focus effect's callback changed identity,
+// and it ran again. Two fixes closed it (a memoized feed, an identity-aware
+// cap in seen-ids.test.js). Since 2026-08-28 the screen marks NOTHING on
+// focus — a row is seen only when tapped (owner call) — so the effect that
+// fed the loop is gone. These probes pin the shape that keeps it gone: no
+// write on arrival, no focus effect to re-run, and a seen-store notification
+// that re-renders the screen without touching the feed.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
@@ -111,20 +104,21 @@ beforeEach(() => {
   });
 });
 
-test('a seen-state notification re-renders the screen without re-running the focus effect', async () => {
+test('a seen-state notification re-renders the screen without re-running any focus effect', async () => {
   const r = await render(tree(<UpdatesScreen />));
 
-  // Wait for the rows, which means the queries settled and the effect has had
-  // its chance to mark them seen and write.
+  // Wait for the rows, which means the queries settled and the seen store
+  // has hydrated for this screen.
   await waitFor(() => expect(r.getByText('Priya wants to be your friend')).toBeTruthy());
-  await waitFor(() => expect(Store.setItemAsync).toHaveBeenCalled());
+  await waitFor(() => expect(Store.getItemAsync).toHaveBeenCalled());
   const settled = mockFocusRuns.count;
 
-  // The screen subscribes to the seen store through useUnseenBadge, so ANY
-  // markSeen anywhere notifies it and re-renders it. This is the exact link
-  // that used to close the loop: notify, re-render, new `items` identity, the
-  // focus effect again, markSeen again. A different category is used on
-  // purpose, so no feed data changes. Only the render happens.
+  // The screen subscribes to the seen store (useUnseenTokens, plus the badge
+  // hook inside the feed), so ANY markSeen anywhere notifies it and
+  // re-renders it. This is the exact link that used to close the loop:
+  // notify, re-render, new `items` identity, the focus effect again, markSeen
+  // again. A different category is used on purpose, so no feed data changes.
+  // Only the render happens.
   await act(async () => {
     await markSeen(seenKey('u1', 'applicants'), ['n9:h9']);
   });
@@ -134,15 +128,16 @@ test('a seen-state notification re-renders the screen without re-running the foc
   expect(r.getByText('Priya wants to be your friend')).toBeTruthy();
 });
 
-test('the effect runs only when the feed itself changes', async () => {
+test('arriving on the screen writes nothing to the seen store', async () => {
+  // The write on focus was the first link of the loop, and since the owner
+  // call of 2026-08-28 it would also be wrong: nothing is read until tapped.
   const r = await render(tree(<UpdatesScreen />));
   await waitFor(() => expect(r.getByText('Priya wants to be your friend')).toBeTruthy());
-  await waitFor(() => expect(Store.setItemAsync).toHaveBeenCalled());
+  await new Promise((resolve) => setTimeout(resolve, 50));
 
-  // Two feeds exist across this mount and no more: the empty one before the
-  // queries answer, and the two-row one after. Anything above 2 is a render
-  // that re-ran the effect for no new content.
-  expect(mockFocusRuns.count).toBeLessThanOrEqual(2);
+  expect(Store.setItemAsync).not.toHaveBeenCalled();
+  // And no focus effect is left on this screen to run at all.
+  expect(mockFocusRuns.count).toBe(0);
 });
 
 test('a re-render with unchanged data does not re-run the focus effect', async () => {

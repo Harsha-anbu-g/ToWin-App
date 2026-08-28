@@ -66,8 +66,9 @@ const withLegal = (configured, fn) => {
 const surfaceCopy = ({ legal, deletion }) => ({
   'app/terms.jsx': legal.TERMS_CONTENT.map((s) => `${s.h}\n${s.p}`).join('\n'),
   'app/privacy.jsx': legal.PRIVACY_CONTENT.map((s) => `${s.h}\n${s.p}`).join('\n'),
-  // The signup sheet renders both documents over the consent checkbox.
-  'app/(auth)/register.jsx': [...legal.TERMS_CONTENT, ...legal.PRIVACY_CONTENT]
+  // The signup sheet renders both documents over the consent checkbox (the
+  // form page of the two-step signup since 2026-08-28).
+  'app/(auth)/create-account.jsx': [...legal.TERMS_CONTENT, ...legal.PRIVACY_CONTENT]
     .map((s) => s.p)
     .join('\n'),
   'app/delete-account.jsx': [

@@ -18,7 +18,7 @@ import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import api from '../src/api/client';
 import Login from '../app/(auth)/login';
-import Register from '../app/(auth)/register';
+import CreateAccount from '../app/(auth)/create-account';
 import ForgotPassword from '../app/(auth)/forgot-password';
 import ResetPassword from '../app/(auth)/reset-password';
 import FinishSetup from '../app/(auth)/finish-setup';
@@ -39,6 +39,8 @@ jest.mock('expo-router', () => ({
     connectionId: 'c1',
     token: 'tok',
     onboardingToken: 'ob',
+    // create-account reads the role the question page answered.
+    role: 'ELDER',
   }),
   Redirect: () => null,
 }));
@@ -92,7 +94,8 @@ beforeEach(() => {
 
 test.each([
   ['login', Login],
-  ['register', Register],
+  // register is the role question (three rows, no field); the form is here.
+  ['create-account', CreateAccount],
   ['forgot-password', ForgotPassword],
   ['reset-password', ResetPassword],
   ['finish-setup', FinishSetup],

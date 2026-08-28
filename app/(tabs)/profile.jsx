@@ -457,19 +457,6 @@ export default function ProfileScreen() {
         </Card>
       ) : null}
 
-      {/* HCI heuristic 3, user control and freedom. One tap used to end the
-          session outright. For this audience, finding a username and password
-          again is the single most likely way to lose an account for good, so
-          the tap that costs that much asks first. Account deletion keeps its
-          own two confirmations further down; this is one, because logging out
-          is recoverable for anyone who has their password. */}
-      <Button
-        title="Log out"
-        variant="secondary"
-        onPress={confirmLogout}
-        style={{ marginTop: spacing[5] }}
-      />
-
       {/* Account — folded away behind one row so "Delete my account" is never
           sitting in the open where a mis-tap can reach it (user call
           2026-07-26). Opening it is a deliberate act. */}
@@ -507,6 +494,21 @@ export default function ProfileScreen() {
           </View>
         ) : null}
       </Card>
+
+      {/* Last on the page (owner call 2026-08-28: "log out should be last in
+          profile, not the account and data"). HCI heuristic 3, user control
+          and freedom: one tap used to end the session outright. For this
+          audience, finding a username and password again is the single most
+          likely way to lose an account for good, so the tap that costs that
+          much asks first. Account deletion keeps its own two confirmations in
+          the fold above; this is one, because logging out is recoverable for
+          anyone who has their password. */}
+      <Button
+        title="Log out"
+        variant="secondary"
+        onPress={confirmLogout}
+        style={{ marginTop: spacing[6] }}
+      />
     </Screen>
   );
 }

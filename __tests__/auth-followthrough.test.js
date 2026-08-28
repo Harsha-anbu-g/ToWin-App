@@ -115,7 +115,7 @@ describe('DEEP-16: finish-setup asks the role question the way register does', (
     // The audit caught these twins drifting: same words, two different sizes.
     expect(styleOf(finish.getByText(shared)).fontSize).toBe(styleOf(register.getByText(shared)).fontSize);
     expect(styleOf(finish.getByText('I am joining as')).fontWeight).toBe(
-      styleOf(register.getByText('First, who are you joining as?')).fontWeight
+      styleOf(register.getByText('Who are you joining as?')).fontWeight
     );
   });
 

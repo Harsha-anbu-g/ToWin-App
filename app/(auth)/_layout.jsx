@@ -12,8 +12,10 @@ export default function AuthLayout() {
     >
       {/* Mid-form screens: a half swipe would eat typed text without warning,
           so iOS swipe-back is off and leaving is an explicit tap (UX-707).
-          Login and forgot-password keep the gesture — one short field each. */}
-      <Stack.Screen name="register" options={{ gestureEnabled: false }} />
+          Login and forgot-password keep the gesture — one short field each.
+          The role page (register) keeps it too: three rows, nothing typed,
+          nothing to lose (2026-08-28 split). */}
+      <Stack.Screen name="create-account" options={{ gestureEnabled: false }} />
       <Stack.Screen name="finish-setup" options={{ gestureEnabled: false }} />
       <Stack.Screen name="reset-password" options={{ gestureEnabled: false }} />
     </Stack>

@@ -8,15 +8,21 @@
 // nothing, and came back found an empty screen and no way to see what the
 // badge had counted.
 //
-// What clears is the badge, never the list, the way WhatsApp and Instagram
-// do it. Rows unseen when this visit started are marked seen the moment the
-// list is on screen, and they keep their "new" wash for the whole visit so
-// what was new stays visibly new while the person reads it (HCI 1). A row
-// leaves only when the thing it announced is over: a chat read, a request
-// answered.
+// Nothing clears on opening the screen. A row keeps its "new" wash, and the
+// bell keeps counting it, until the person taps THAT row (owner call
+// 2026-08-28: "it should only disappear if they click that update, not just
+// by opening the updates") — WhatsApp's grammar, where a chat stays unread
+// until it is opened. A row leaves the list only when the thing it announced
+// is over: a chat read, a request answered.
+//
+// The wash runs from one edge of the phone to the other. The page's gutter
+// is on the rows, not on the list: a negative margin inside a scroll view is
+// clipped at the scroll view's own edge, which is why the 2026-08-22 bleed
+// fix left the wash short of the screen on every visit since (owner report
+// 2026-08-28: "it is like half of the tab").
 import { useQueryClient } from '@tanstack/react-query';
-import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import {
   AlertCircle,
@@ -34,9 +40,8 @@ import RefreshControl from '../src/components/ui/RefreshControl';
 import Screen from '../src/components/ui/Screen';
 import SkeletonCard from '../src/components/ui/Skeleton';
 import { useAuth } from '../src/context/AuthContext';
-import { loadSeen, unseenTokens } from '../src/lib/seenIds';
-import { seenKey } from '../src/lib/storageKeys';
-import { UPDATES_CATEGORY, markUpdatesSeen, timeAgo, useUpdatesFeed } from '../src/lib/updatesFeed';
+import { useUnseenTokens } from '../src/lib/seenIds';
+import { UPDATES_CATEGORY, markUpdateSeen, timeAgo, useUpdatesFeed } from '../src/lib/updatesFeed';
 import { useTheme } from '../src/theme/ThemeContext';
 
 // One glyph per kind of news, so a row is recognisable before it is read.
@@ -53,25 +58,22 @@ const KIND_ICONS = {
   review: Star,
 };
 
-function UpdateRow({ item, isNew }) {
+function UpdateRow({ item, isNew, onOpen }) {
   const { t, spacing, type } = useTheme();
-  const router = useRouter();
   const Icon = KIND_ICONS[item.kind] ?? Bell;
   const urgent = item.kind === 'family-sos';
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${isNew ? 'New. ' : ''}${item.title}`}
-      onPress={() => router.push(item.href)}
+      onPress={() => onOpen(item)}
       style={({ pressed }) => ({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 14,
         paddingVertical: 12,
-        // Bleed across the WHOLE gutter: Screen pads spacing[5], and the old
-        // -spacing[4] left a 4pt white edge beside the wash (owner report
-        // 2026-08-22: "the blue is not full").
-        marginHorizontal: -spacing[5],
+        // The list is edge to edge (Screen padding 0); each row carries the
+        // page gutter itself, so the wash behind it reaches both screen edges.
         paddingHorizontal: spacing[5],
         backgroundColor: pressed ? t.surfaceFill : isNew ? t.blueWash : 'transparent',
       })}
@@ -121,29 +123,31 @@ const FEED_KEYS = [
 export default function UpdatesScreen() {
   const { t, spacing, text } = useTheme();
   const { user } = useAuth();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { items, isLoading, isError } = useUpdatesFeed(user);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Tokens that were unseen when this visit started — they stay in "New"
-  // until the person leaves, even though the badge clears immediately.
-  const newThisVisit = useRef(new Set());
-  const storageKey = seenKey(user?.userId, UPDATES_CATEGORY);
-  useFocusEffect(
-    useCallback(() => {
-      let alive = true;
-      (async () => {
-        await loadSeen(storageKey);
-        if (!alive) return;
-        for (const token of unseenTokens(storageKey, items.map((i) => i.token))) {
-          newThisVisit.current.add(token);
-        }
-        markUpdatesSeen(user?.userId, items);
-      })();
-      return () => {
-        alive = false;
-      };
-    }, [storageKey, user?.userId, items])
+  // Live: a row is "new" until its own token is marked seen, and the set
+  // updates the moment that happens. No focus effect marks anything — that
+  // is what used to clear the whole screen's news on arrival.
+  const unseen = new Set(
+    useUnseenTokens(
+      user?.userId,
+      UPDATES_CATEGORY,
+      items.map((i) => i.token)
+    )
+  );
+
+  // Tapping a row is the one thing that marks it seen (Rule 6: the named
+  // action lives in updatesFeed). The mark is not awaited: the row's wash
+  // drops on the store's notify, and the page moves on at once.
+  const openUpdate = useCallback(
+    (item) => {
+      markUpdateSeen(user?.userId, item);
+      router.push(item.href);
+    },
+    [router, user?.userId]
   );
 
   // One list, two callers: the pull gesture and the retry on the error card.
@@ -159,22 +163,28 @@ export default function UpdatesScreen() {
     setRefreshing(false);
   }, [reload]);
 
-  const isNew = (item) => newThisVisit.current.has(item.token);
+  // The page gutter belongs to the rows (see the header comment), so the
+  // three no-list states put it back themselves.
+  const gutter = { padding: spacing[5] };
 
   return (
-    <Screen back title="Updates" scroll={false}>
+    <Screen back title="Updates" scroll={false} contentStyle={{ padding: 0 }}>
       {items.length === 0 && isLoading ? (
         // Nothing to show YET. Six sources feed this list and the first paint
         // happens before any of them answer.
-        <SkeletonCard lines={3} />
+        <View style={gutter}>
+          <SkeletonCard lines={3} />
+        </View>
       ) : items.length === 0 && isError ? (
         // The rule this screen used to break: a dropped request is never
         // dressed up as quiet. Six sources fed one `items.length === 0`, so a
         // total fetch failure and a genuinely empty week looked identical, and
         // the person was told there was nothing new when nothing had loaded.
-        <LoadError what="your updates" onRetry={reload} />
+        <View style={gutter}>
+          <LoadError what="your updates" onRetry={reload} />
+        </View>
       ) : items.length === 0 ? (
-        <View style={{ alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }}>
+        <View style={[gutter, { alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }]}>
           <Bell size={40} color={t.inkFaint2} strokeWidth={1.5} />
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center' }}>
             Nothing new right now.{'\n'}Friend requests, offers, and messages will show up here.
@@ -185,11 +195,17 @@ export default function UpdatesScreen() {
           ListHeaderComponent={
             // Some sources answered and some did not. The rows that arrived
             // still show; the gap is named above them rather than hidden.
-            isError ? <LoadError what="all of your updates" onRetry={reload} bare /> : null
+            isError ? (
+              <View style={{ paddingHorizontal: spacing[5] }}>
+                <LoadError what="all of your updates" onRetry={reload} bare />
+              </View>
+            ) : null
           }
           data={items}
           keyExtractor={(row) => row.token}
-          renderItem={({ item: row }) => <UpdateRow item={row} isNew={isNew(row)} />}
+          renderItem={({ item: row }) => (
+            <UpdateRow item={row} isNew={unseen.has(row.token)} onOpen={openUpdate} />
+          )}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 40 }}
