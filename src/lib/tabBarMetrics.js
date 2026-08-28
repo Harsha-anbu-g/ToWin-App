@@ -35,12 +35,14 @@ export const TAB_BAR_INDICATOR_OVERLAP = 11;
 export const TAB_BAR_LIFT = 8;
 // The capsule spans the screen with a small, fixed gap either side, the way
 // WhatsApp's does (owner, 2026-08-28: "it will not touch both the edge of the
-// phone, it will have a very very small gap"). A capsule sized to its tabs
-// was tried the same afternoon and left 36pt of screen either side on a Pro
-// Max, which read as too much. 16, not 12: 12 was called "touching" on
-// 2026-08-26; WhatsApp's own gap measures ~21pt, and the owner reads that as
-// very small.
-export const TAB_BAR_MARGIN = 16; // the capsule's inset from each screen side
+// phone, it will have a very very small gap"). 21 is WhatsApp's own gap,
+// measured off the owner's screenshots (62px at 2.95px/pt on an iPhone 16
+// Pro). Everything else was tried the same day: a capsule sized to its tabs
+// left 36pt either side on a Pro Max (too much); 16 read as touching next to
+// the phone's rounded corner (owner, side by side with WhatsApp: "you can
+// see a gap in WhatsApp, I need the same"); 12 was called touching on
+// 2026-08-26.
+export const TAB_BAR_MARGIN = 21; // WhatsApp's gap, the capsule's inset from each screen side
 export const TAB_BAR_RADIUS = TAB_BAR_HEIGHT / 2; // fully round ends = capsule
 
 /**

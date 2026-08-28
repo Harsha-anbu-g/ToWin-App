@@ -1,7 +1,8 @@
 // The floating tab bar wears the geometry taken from the owner's WhatsApp
 // screenshot (2026-08-28, iPhone 16 Pro, "see this, I need like this"): the
-// screen's width minus a small fixed gap each side ("it will have a very
-// very small gap"), 72pt tall, its bottom edge ~23pt above the screen's
+// screen's width minus WhatsApp's own 21pt gap each side ("it will have a
+// very very small gap"; "you can see a gap in WhatsApp, I need the same"),
+// 72pt tall, its bottom edge ~23pt above the screen's
 // bottom edge. Build 17 floated the capsule 40pt up, on a shelf above the
 // home indicator; WhatsApp's sits inside that zone. A capsule sized to its
 // tabs was tried and left 36pt either side on a Pro Max: too much. These
@@ -24,12 +25,14 @@ test('on iOS the bar floats', () => {
   expect(isFloatingTabBar).toBe(true);
 });
 
-test('the capsule is the screen minus a very small gap each side, on every phone', () => {
-  expect(TAB_BAR_MARGIN).toBe(16);
+test("the capsule is the screen minus WhatsApp's 21pt gap each side, on every phone", () => {
+  // 21 is measured, not chosen: 62px each side at 2.95px/pt in the owner's
+  // WhatsApp screenshot. 16 read as touching beside the rounded corner.
+  expect(TAB_BAR_MARGIN).toBe(21);
   for (const phone of [IPHONE_16_PRO, IPHONE_16_PRO_MAX, IPHONE_SE_3]) {
     const w = tabBarCapsuleWidth(phone.width);
-    expect(w).toBe(phone.width - 32);
-    expect((phone.width - w) / 2).toBe(16);
+    expect(w).toBe(phone.width - 42);
+    expect((phone.width - w) / 2).toBe(21);
   }
 });
 
