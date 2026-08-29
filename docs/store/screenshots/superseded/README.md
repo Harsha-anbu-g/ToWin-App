@@ -85,3 +85,18 @@ nothing was superseded. See the 2026-08-29 section of
 `screenshot-inventory.md`.
 
 Nothing here is deleted.
+
+
+## The helper shot, superseded on 2026-08-29 (APS-03)
+
+`2026-08-29-pre-appstore-recapture/raw-10-helper-offer-help.png`, 275,978
+bytes. Its tab bar is the flat one with a hairline above it, a red Messages
+badge and no count on My Elders. The shipped build draws the floating capsule
+with blue badges and a My Elders count of 3.
+
+`raw-14-helper-trust-score.png` and `raw-16-family-parent-checked-in.png` were
+re-shot in the same pass and came back byte-identical, so they are not here.
+Both are pushed screens with a back arrow and no tab bar, which is why the
+tab-bar work never reached them.
+
+Nothing here is deleted.

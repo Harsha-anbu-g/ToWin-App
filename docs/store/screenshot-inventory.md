@@ -377,3 +377,47 @@ Proof the band is gone: the re-shot `raw-02-checkin.png` and the 2026-08-22
 frame both put their first ink on device row 91, and the pixel difference
 between them is bounded to `(287, 91, 1038, 241)`, the greeting line and the
 date. The rest of the two frames is identical.
+
+
+### The helper and family shots, re-captured 2026-08-29 (APS-03)
+
+Same script, same pinned frame. Two of the three came back byte-identical to
+what was already on disk, which is a result and not churn: those frames were
+already the shipped UI.
+
+| File | Seat | Frame | Alpha | Bytes | Result |
+|---|---|---|---|---|---|
+| `raw-10-helper-offer-help.png` | helper | 1320 x 2868 | no | 281,338 | Replaced. The old frame carried the flat tab bar with a red Messages badge and no My Elders count. |
+| `raw-14-helper-trust-score.png` | helper | 1320 x 2868 | no | 319,857 | Byte-identical, md5 `76b42efc73b7f1288bfe5f972c32c69d`. Nothing superseded. |
+| `raw-16-family-parent-checked-in.png` | family | 1320 x 2868 | no | 266,767 | Byte-identical, md5 `852b7496a86acb936ffc80f1395a2f75`. Nothing superseded. |
+
+`raw-10` changed from device row 983 down: every request line moved from
+"Posted 4 hours ago by" to "Posted just now by" as the seeder reran, and the
+tab bar became the floating capsule with blue count badges. The screens behind
+`raw-14` and `raw-16` are pushed screens with a back arrow and no tab bar, so
+the tab-bar work never touched them.
+
+**The helper split is in frame.** `raw-14` reads "Each person you help can earn
+you up to 15 points: 7 for growing trust together, 5 from their review, and 3
+for your profile", then a per-person breakdown for each of the three people the
+helper helps: Grace Liu 15/15 with 7/7 trust stages, 5/5 review, 3/3 profile;
+David Chen 7/15 with 4/7, 0/5, 3/3; Rose Martin 4/15 with 1/7, 0/5, 3/3.
+
+**The family frame says "Checked in today", and it was already true.** The
+elder's own check-in screen read "Checked in for today, 7 days in a row" before
+any capture ran, so nothing was staged to make the caption honest.
+
+**Reaching the family parent card.** The route is
+`/family/parent/<elderId>`, and the elder id moves with the seed, so it is
+reached by walking there:
+`--route /home --wait "Margaret" --tap "Margaret" --tap "See Margaret"`. The
+parent row is a collapsible LinkRow, so the first tap opens it and the second
+takes the "See Margaret" chip inside
+(`src/components/family/FamilyHomePanel.jsx`). Tapping the name alone only
+expands the row, and a capture taken there is the family home, not the parent
+card.
+
+**Left for the owner.** `raw-14` carries the line "Reviews are written on the
+Towinly website. You cannot leave one from the app yet." APS-07 is the story
+that settles that wording. Whichever pass closes APS-07 has to re-shoot
+`raw-14` and re-bake slot 4, or the listing ships the old sentence.
