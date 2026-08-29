@@ -21,13 +21,23 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+// Fake timers here too: holdSplash arms the 4 s ceiling, and with real timers
+// that timer outlives this file. It then fires into a torn-down environment
+// (Platform is gone), a TypeError inside a Node timer, and under load it
+// takes the whole jest worker down with no summary line. A test that starts a
+// timer owns it.
 test('holds the splash and asks for a short fade', () => {
-  const { holdSplash, SPLASH_FADE_MS } = loadSplash();
-  holdSplash();
-  expect(mockSplash.preventAutoHideAsync).toHaveBeenCalledTimes(1);
-  expect(mockSplash.setOptions).toHaveBeenCalledWith({ fade: true, duration: SPLASH_FADE_MS });
-  // UI motion stays under 300ms (Emil rules).
-  expect(SPLASH_FADE_MS).toBeLessThan(300);
+  jest.useFakeTimers();
+  try {
+    const { holdSplash, SPLASH_FADE_MS } = loadSplash();
+    holdSplash();
+    expect(mockSplash.preventAutoHideAsync).toHaveBeenCalledTimes(1);
+    expect(mockSplash.setOptions).toHaveBeenCalledWith({ fade: true, duration: SPLASH_FADE_MS });
+    // UI motion stays under 300ms (Emil rules).
+    expect(SPLASH_FADE_MS).toBeLessThan(300);
+  } finally {
+    jest.useRealTimers();
+  }
 });
 
 test('releases once, however many times it is asked', () => {
