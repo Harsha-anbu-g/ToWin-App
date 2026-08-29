@@ -2,7 +2,7 @@
 // request payload, the family-side (!iAmElder) filter, and that the FAMILY
 // role's home never touches streaks or friend discovery.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 
@@ -113,13 +113,16 @@ const stubGet = (links, alerts) =>
 
 afterEach(() => jest.clearAllMocks());
 
-test('FAMILY home: My Parents panel renders; no streak fetch, no add-friends button', async () => {
+test('FAMILY home: My Parents panel renders; no streak fetch; Add parent sits where the elder\'s Friends button does, never Add friends', async () => {
   stubGet(emptyLinks, []);
-  const { findByText, getByRole, queryByLabelText } = await wrap(<HomeScreen />);
+  const { findByText, getByLabelText, getByRole, queryByLabelText } = await wrap(<HomeScreen />);
   await findByText('My Parents');
-  getByRole('button', { name: '+ Add your parent' });
-  expect(api.get).not.toHaveBeenCalledWith('/streaks/me');
+  // The elder hub's skeleton (owner call 2026-08-28): the add-a-person action
+  // lives in the nav row's left slot, and it opens the form in the page.
   expect(queryByLabelText('Add friends')).toBeNull();
+  expect(api.get).not.toHaveBeenCalledWith('/streaks/me');
+  await fireEvent.press(getByLabelText('Add parent'));
+  getByRole('button', { name: 'Send request' });
 });
 
 test('load: parents, requests, and alerts render web-exact — elder-side links never show', async () => {
@@ -132,6 +135,9 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   r.getByText("You're their daughter");
   r.getByText('Linked');
 
+  // Requests live under their own segment (the elder hub's pair, 2026-08-28);
+  // the chip wears how many are waiting on my yes.
+  await fireEvent.press(r.getByRole('tab', { name: 'Requests, 1 waiting' }));
   r.getByText('They added you as family');
   r.getByText("wants you as their family here (as their niece). It's your choice.");
   r.getByText('Requests you sent');
@@ -178,6 +184,8 @@ test('family-alerts polls every 30s while the feed is mounted', async () => {
 test('accept and decline post the respond payloads and toast the web copy', async () => {
   stubGet(fullLinks, []);
   const r = await wrap(<FamilyHomePanel />);
+  await r.findByText('margaret');
+  await fireEvent.press(r.getByRole('tab', { name: 'Requests, 1 waiting' }));
   await r.findByText('They added you as family');
 
   await fireEvent.press(r.getByRole('button', { name: 'Accept' }));
@@ -192,6 +200,8 @@ test('accept and decline post the respond payloads and toast the web copy', asyn
 test('cancel request DELETEs the link and toasts', async () => {
   stubGet(fullLinks, []);
   const r = await wrap(<FamilyHomePanel />);
+  await r.findByText('margaret');
+  await fireEvent.press(r.getByRole('tab', { name: 'Requests, 1 waiting' }));
   await r.findByText('Requests you sent');
 
   await fireEvent.press(r.getByRole('button', { name: 'Cancel request' }));
@@ -219,7 +229,7 @@ test('add form: no API call on a blank identifier; trimmed payload posts side el
   const r = await wrap(<FamilyHomePanel />);
   await r.findByText('No parent linked yet');
 
-  await fireEvent.press(r.getByRole('button', { name: '+ Add your parent' }));
+  await fireEvent.press(r.getByRole('button', { name: 'Add your parent' }));
   r.getByText(
     'Type their exact Towinly username, email or phone. They must say yes before you see anything.'
   );
@@ -253,12 +263,52 @@ test('a linked parent shows the name alone until touched; requests stay open', a
   expect(r.queryByLabelText('See margaret')).toBeNull();
   // The sentence still reaches a screen reader through the row's label.
   r.getByRole('button', { name: "margaret. You're their daughter", expanded: false });
-  // The incoming request keeps its choice in view without any touch.
+  // The incoming request keeps its choice in view without any touch, under
+  // the Requests segment.
+  await fireEvent.press(r.getByRole('tab', { name: 'Requests, 1 waiting' }));
   r.getByText("wants you as their family here (as their niece). It's your choice.");
   r.getByRole('button', { name: 'Accept' });
+  await fireEvent.press(r.getByRole('tab', { name: 'Parents' }));
 
-  await fireEvent.press(r.getByText('margaret'));
+  await fireEvent.press(await r.findByText('margaret'));
   r.getByText("You're their daughter");
   r.getByText('Linked');
   r.getByLabelText('See margaret');
+});
+
+// The elder hub's skeleton on the family seat (owner call 2026-08-28, "keep
+// elder as base"): the search field above the list narrows by name, a miss
+// says so, and the Requests chip wears the people waiting on my yes.
+test('the search narrows parents by name and a miss says so', async () => {
+  stubGet(
+    {
+      activeLinks: [parentLink, { ...parentLink, id: 'a2', otherUserId: 'e5', otherUserName: 'arthur' }],
+      incomingRequests: [],
+      outgoingRequests: [],
+    },
+    []
+  );
+  const r = await wrap(<FamilyHomePanel />);
+  await r.findByText('margaret');
+  r.getByText('arthur');
+
+  await fireEvent.changeText(r.getByLabelText('Search'), 'art');
+  await waitFor(() => expect(r.queryByText('margaret')).toBeNull());
+  r.getByText('arthur');
+
+  await fireEvent.changeText(r.getByLabelText('Search'), 'zzz');
+  await waitFor(() => expect(r.getByText('No matches for “zzz”.')).toBeTruthy());
+  expect(r.queryByText('No parent linked yet')).toBeNull();
+});
+
+test('no search field with nobody yet; Requests wears no number when nothing waits on me', async () => {
+  stubGet(emptyLinks, []);
+  const r = await wrap(<FamilyHomePanel />);
+  await r.findByText('No parent linked yet');
+  expect(r.queryByLabelText('Search')).toBeNull();
+  r.getByRole('tab', { name: 'Parents' });
+  r.getByRole('tab', { name: 'Requests' });
+
+  await fireEvent.press(r.getByRole('tab', { name: 'Requests' }));
+  r.getByText(/No requests right now/);
 });

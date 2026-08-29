@@ -138,3 +138,10 @@ website/backend (50757b3..3dc6f79 on main; push = live deploy, do it BEFORE the 
 build so the block dialog's "every phone" sentence is true), marketing (own repo, no remote).
 Sibling session had uncommitted edits in the App tree at the end (family-home.test.js,
 home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
+35. [x] Elder's badge stays "until I accept" (owner 2026-08-28, 23:xx): it now
+        holds through opening the row and clears only when the elder presses
+        "Start the next step" with that helper (at step 7, where nothing is
+        left to start, it clears on open). Same session: a demo reset recreated
+        every connection and badged every row, so the seen store now treats a
+        ladder new to this phone as already seen (seedNewIds / knownOnly);
+        only a level change on a known ladder is news. 1384 tests green.

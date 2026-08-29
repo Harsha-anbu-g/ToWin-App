@@ -36,6 +36,11 @@ export default function HomeScreen() {
   // streaks, no check-in walk, no friend discovery. Elder/helper flow is
   // untouched below; the family branch returns early after the shared hooks.
   const isFamily = user?.role === 'FAMILY';
+  // The family seat's add-parent form opens from the nav row's left slot
+  // (NavRow onAddParent), where the elder's Friends button lives, so the
+  // switch sits here and the panel renders the form (owner call 2026-08-28,
+  // elder as the base for every hub).
+  const [addingParent, setAddingParent] = useState(false);
 
   // Live trust score for the gold pill (rounded, like the web navbar)
   const { data: trust } = useQuery({
@@ -128,6 +133,7 @@ export default function HomeScreen() {
       <Screen scroll={false} keyboard contentStyle={{ padding: 0 }}>
         <NavRow
           trustScore={trust ? Math.round(trust.totalScore) : undefined}
+          onAddParent={() => setAddingParent(true)}
           onAlerts={() => router.push('/updates')}
           alertCount={updatesCount}
         />
@@ -136,7 +142,7 @@ export default function HomeScreen() {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
         >
-          <FamilyHomePanel />
+          <FamilyHomePanel addingParent={addingParent} onAddingParentChange={setAddingParent} />
         </ScrollView>
       </Screen>
     );

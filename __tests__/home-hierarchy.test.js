@@ -128,7 +128,7 @@ test('PausedCard: the paused person keeps the same serif name treatment', async 
   expect(style.fontWeight).toBeUndefined();
 });
 
-test('Family home: opening the add form swaps the one filled primary, never doubles it', async () => {
+test('Family home: the add form brings the one filled primary; the starter button steps aside', async () => {
   api.get.mockImplementation(async (url) => {
     if (url === '/family/links')
       return { data: { activeLinks: [], incomingRequests: [], outgoingRequests: [] } };
@@ -136,10 +136,12 @@ test('Family home: opening the add form swaps the one filled primary, never doub
     return { data: {} };
   });
   const r = await wrap(<FamilyHomePanel />);
-  await r.findByRole('button', { name: '+ Add your parent' });
-  await fireEvent.press(r.getByRole('button', { name: '+ Add your parent' }));
-  // The header pill hides so "Send request" is the screen's ONE filled primary.
-  expect(r.queryByRole('button', { name: '+ Add your parent' })).toBeNull();
+  // The header pill is gone (owner call 2026-08-28, the elder hub's skeleton:
+  // the add-parent action lives in Home's nav row). The empty state's quiet
+  // starter opens the form, whose "Send request" is the one filled primary.
+  await r.findByRole('button', { name: 'Add your parent' });
+  await fireEvent.press(r.getByRole('button', { name: 'Add your parent' }));
+  expect(r.queryByRole('button', { name: 'Add your parent' })).toBeNull();
   r.getByRole('button', { name: 'Send request' });
 });
 
@@ -164,8 +166,9 @@ const ELDER_HELPER_HOME_CLOSURE = [
 ];
 
 // The FAMILY home surface has no center FAB, so its one filled primary lives
-// in the content — "+ Add your parent", swapped for "Send request" while the
-// form is open (mutual exclusion pinned by render above).
+// in the content: the add-parent form's "Send request", and nothing while the
+// form is closed (the header pill went 2026-08-28 when the hub took the elder
+// hub's skeleton; the nav row's Add parent is an icon target, not a fill).
 const FAMILY_HOME_SURFACE = [
   'src/components/family/FamilyHomePanel.jsx',
   'src/components/family/AddParentForm.jsx',
@@ -193,9 +196,22 @@ test('elder/helper home content contributes zero filled primaries: the shell FAB
   expect(offenders).toEqual([]);
 });
 
+// The one deliberate exception, named: the trust-step buttons are filled blue
+// (owner calls 2026-08-28: "accept the next step should be in blue
+// background"; "start the next step also in blue in elders log in"). They
+// live inside an opened row, one per friendship, and nowhere else on the hub
+// may a Button say variant="primary".
+test('the trust-step buttons are the hubs\' only explicit primaries', () => {
+  const explicitPrimaries = (src) => (src.match(/variant="primary"/g) ?? []).length;
+  expect(explicitPrimaries(read('src/components/trust/MyHelpersPanel.jsx'))).toBe(1);
+  expect(explicitPrimaries(read('src/components/trust/MyEldersPanel.jsx'))).toBe(1);
+  const rest = ELDER_HELPER_HOME_CLOSURE.filter((f) => !f.includes('MyHelpersPanel') && !f.includes('MyEldersPanel'));
+  expect(rest.filter((f) => explicitPrimaries(read(f)) > 0)).toEqual([]);
+});
+
 test('family home surface holds exactly one filled primary per state', () => {
-  // Header pill while browsing; the form swaps it for its submit.
-  expect(defaultVariantButtons(read('src/components/family/FamilyHomePanel.jsx'))).toHaveLength(1);
+  // Nothing while browsing; the form brings its submit.
+  expect(defaultVariantButtons(read('src/components/family/FamilyHomePanel.jsx'))).toHaveLength(0);
   expect(defaultVariantButtons(read('src/components/family/AddParentForm.jsx'))).toHaveLength(1);
   // Everything else on the family surface stays quiet.
   const rest = FAMILY_HOME_SURFACE.slice(2);

@@ -57,7 +57,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { haptic } from '../../src/lib/haptics';
 import { setAppBadgeCountAsync } from '../../src/lib/pushNotifications';
 import { centerActionFor, homeTabFor, secondTabFor } from '../../src/lib/roles';
-import { useUnseenBadge } from '../../src/lib/seenIds';
+import { useUnseenTokens } from '../../src/lib/seenIds';
+import { TRUST_STEPS_CATEGORY, isStepNewsPending, peopleWithNews, stepNewsTokens, stepsAwaitingMe } from '../../src/lib/trustStepBadges';
 import { offersWaitingCount } from '../../src/lib/offersWaiting';
 import { useTheme } from '../../src/theme/ThemeContext';
 
@@ -303,10 +304,27 @@ export default function TabsLayout() {
     queryFn: async () => (await api.get('/needs/mine')).data,
     enabled: !!user && isElderSeat,
   });
-  const connTokens = (Array.isArray(connectionsData) ? connectionsData : [])
+  const isHelperSeat = user?.role === 'HELPER' || user?.role === 'BOTH';
+  const conns = Array.isArray(connectionsData) ? connectionsData : [];
+  const connTokens = conns
     .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
     .map((c) => `${c.id}:${c.status}`);
-  const connBadge = useUnseenBadge(user?.userId, 'connections', connTokens);
+  const newPeople = useUnseenTokens(user?.userId, 'connections', connTokens);
+  // Trust steps, both seats (owner calls 2026-08-28, src/lib/trustStepBadges):
+  // the elder's hub counts helpers who accepted a step the elder has not
+  // followed with the next Start (news, seeded so an old ladder is never
+  // new, kept "until I accept"); the helper's hub counts elders whose step
+  // is waiting for their accept, until they accept it. One number, people
+  // (owner call 2026-08-26), a person with both counted once.
+  const stepNews = useUnseenTokens(
+    user?.userId,
+    TRUST_STEPS_CATEGORY,
+    isElderSeat ? stepNewsTokens(conns) : [],
+    { seed: true }
+  );
+  const newsPending = isElderSeat ? conns.filter((c) => isStepNewsPending(c, stepNews)).map((c) => c.id) : [];
+  const awaitingMe = isHelperSeat ? stepsAwaitingMe(conns).map((c) => c.id) : [];
+  const connBadge = peopleWithNews(newPeople, [...newsPending, ...awaitingMe]);
   const applicantsBadge = offersWaitingCount(needsData?.content);
 
   // Unread conversations badge — backend returns a plain integer (NavBar.jsx parity)
