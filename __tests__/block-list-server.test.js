@@ -28,6 +28,7 @@ jest.mock('../src/api/client', () => ({
 const ME = 'user-7';
 const KEY = 'towin-blocked-user-7';
 const offline = () => Object.assign(new Error('Network Error'), { response: undefined });
+const flush = () => new Promise((r) => setTimeout(r, 0));
 
 beforeEach(() => {
   Object.keys(mockStore).forEach((key) => delete mockStore[key]);
@@ -35,6 +36,44 @@ beforeEach(() => {
   api.get.mockResolvedValue({ data: [] });
   api.post.mockResolvedValue({ data: [] });
   api.delete.mockResolvedValue({ data: {} });
+});
+
+// Review finding 2026-08-29: the phone's cached list must never wait on the
+// network. A blocked person flashing into Messages for up to the 15 s timeout
+// is the exact harm the block exists to prevent.
+test('a cached list comes back at once, without waiting for the server', async () => {
+  await SecureStore.setItemAsync(KEY, JSON.stringify([{ id: 'u-1', name: 'Pat' }]));
+  api.get.mockReturnValue(new Promise(() => {})); // the server never answers
+
+  const list = await Promise.race([
+    getBlocked(ME),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('waited on the network')), 300)),
+  ]);
+
+  expect(list).toEqual([{ id: 'u-1', name: 'Pat' }]);
+});
+
+test('a phone with nothing cached waits only briefly for the server', async () => {
+  jest.useFakeTimers();
+  try {
+    api.get.mockReturnValue(new Promise(() => {}));
+    const pending = getBlocked(ME);
+    await jest.advanceTimersByTimeAsync(1000);
+    expect(await pending).toEqual([]);
+  } finally {
+    jest.useRealTimers();
+  }
+});
+
+test('the server list arrives in the cache even when the phone answered first', async () => {
+  await SecureStore.setItemAsync(KEY, JSON.stringify([{ id: 'u-1', name: 'Pat' }]));
+  api.get.mockResolvedValue({ data: [{ userId: 'u-1', name: 'Pat' }, { userId: 'u-9', name: 'Ivy' }] });
+
+  const first = await getBlocked(ME);
+  expect(first).toEqual([{ id: 'u-1', name: 'Pat' }]);
+
+  await flush();
+  expect(JSON.parse(mockStore[KEY])).toEqual([{ id: 'u-1', name: 'Pat' }, { id: 'u-9', name: 'Ivy' }]);
 });
 
 test('the server list wins and is cached on the phone', async () => {
@@ -53,13 +92,16 @@ test('ids the phone held but the server lacks are uploaded once', async () => {
   api.post.mockResolvedValueOnce({ data: [{ userId: 'u-1', name: 'Pat' }] });
 
   const first = await getBlocked(ME);
-
-  expect(api.post).toHaveBeenCalledWith('/blocks/sync', { blockedUserIds: ['u-1'] });
   expect(first).toEqual([{ id: 'u-1', name: 'Pat' }]);
+
+  // The upload rides behind the answer, never in front of it.
+  await flush();
+  expect(api.post).toHaveBeenCalledWith('/blocks/sync', { blockedUserIds: ['u-1'] });
 
   // The server holds it now, so the next read has nothing to upload.
   api.get.mockResolvedValueOnce({ data: [{ userId: 'u-1', name: 'Pat' }] });
   await getBlocked(ME);
+  await flush();
   expect(api.post).toHaveBeenCalledTimes(1);
 });
 

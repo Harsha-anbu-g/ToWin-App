@@ -68,28 +68,54 @@ async function readDeviceList(userId) {
 
 const fromServer = (rows) => rows.map((row) => ({ id: row.userId, name: row.name ?? '' }));
 
+// How long a phone with NOTHING cached waits for the server before answering
+// with its empty list. A fresh install gets its blocks on the first read when
+// the network is quick; a slow one is not held hostage.
+const FRESH_PHONE_WAIT_MS = 800;
+
 /**
- * The account's block list: the server's copy when it answers, this phone's
- * cache when it does not. Ids the phone holds that the server lacks are sent
- * up once, so a block set before the list moved to the server is never lost.
+ * Asks the server for the list, sends up any ids this phone holds that the
+ * server lacks, and writes the merged result into the cache. Resolves with the
+ * merged list, or null when the server gave no usable answer. Never throws.
+ */
+async function refreshFromServer(userId, device) {
+  try {
+    const rows = await listBlockedPeople();
+    if (!Array.isArray(rows)) return null; // not an answer, keep what we hold
+    const serverIds = new Set(rows.map((row) => row.userId));
+    const missing = device.filter((person) => !serverIds.has(person.id)).map((person) => person.id);
+    const all = missing.length ? await syncBlockedPeople(missing) : rows;
+    const merged = fromServer(Array.isArray(all) ? all : rows);
+    await persist(userId, merged);
+    return merged;
+  } catch {
+    // offline, timed out, or refused: the phone's copy still protects
+    return null;
+  }
+}
+
+/**
+ * The account's block list. The phone's cached copy is the answer whenever it
+ * holds anything: a blocked person must never flash into a list while the
+ * network is slow. The server is asked in the background and the cache updated
+ * for the next read (react-query refetches on mount and focus). A phone with
+ * nothing cached waits briefly for the server, so a reinstall gets its list on
+ * the first read when the network is quick. Ids the phone holds that the
+ * server lacks are sent up once, so a block set before the list moved to the
+ * server is never lost.
  * @param {string|undefined|null} userId the signed-in account
  * @returns {Promise<Array<{id: string, name: string}>>}
  */
 export async function getBlocked(userId) {
   const device = await readDeviceList(userId);
   if (!userId) return device; // nobody signed in: nothing to ask the server for
-  try {
-    const rows = await listBlockedPeople();
-    if (!Array.isArray(rows)) return device; // not an answer, keep what we hold
-    const serverIds = new Set(rows.map((row) => row.userId));
-    const missing = device.filter((person) => !serverIds.has(person.id)).map((person) => person.id);
-    const all = missing.length ? await syncBlockedPeople(missing) : rows;
-    const merged = fromServer(Array.isArray(all) ? all : rows);
-    return persist(userId, merged);
-  } catch {
-    // offline, timed out, or refused: the phone's copy still protects
-    return device;
-  }
+  const refresh = refreshFromServer(userId, device);
+  if (device.length) return device; // protection now; the refresh lands in the cache
+  const quick = await Promise.race([
+    refresh,
+    new Promise((resolve) => setTimeout(() => resolve(null), FRESH_PHONE_WAIT_MS)),
+  ]);
+  return quick ?? device;
 }
 
 /**
