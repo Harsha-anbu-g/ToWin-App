@@ -74,6 +74,15 @@ export const DELETION_PAGE_URL = 'https://www.towinly.com/app/delete-account';
 export const DELETION_PAGE_URL_APEX = 'https://towinly.com/app/delete-account';
 
 /**
+ * Spoken when a legal document's link cannot open. Native rejects openURL when
+ * no browser handler exists; react-native-web resolves either way, so this is
+ * a native-only ending (same split as delete-account.jsx). It names the
+ * address so the person can type it themselves (DEEP-30).
+ */
+export const LEGAL_LINK_FALLBACK = (url) =>
+  `Could not open the page. You can type ${url} into your browser.`;
+
+/**
  * The address every legal surface writes to. A deploy that configures one wins;
  * otherwise the real mailbox above. Blank and whitespace both count as unset.
  */

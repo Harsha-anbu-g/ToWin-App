@@ -472,7 +472,7 @@ A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close)
 
 **Suggested fix.** In the catch, toast the fallback (for example "Write to agharsha.anbu@gmail.com from your mail app"), mirroring delete-account.jsx's noMailApp handling; do the same for LegalSections' link.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: the founder-card half was already closed at `src/components/feedback/CreatorCard.jsx:36` (catch toasts the mail address or a type-it-yourself line). The LegalSections half closed in this run: `src/components/legal/LegalSections.jsx:42-43` catches the rejected openURL and toasts `LEGAL_LINK_FALLBACK(url)` from `src/data/legalContent.js:82-83`, "Could not open the page. You can type <the address> into your browser." Pinned by `__tests__/legal-link-fallback.test.js` (3 tests: sentence names the address, appears on a rejected open, absent on a quiet open).
 
 ### DEEP-31: "Vibration feedback" switch is shown on web where haptics are hard-disabled
 

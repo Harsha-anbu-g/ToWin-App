@@ -10,6 +10,8 @@
 // public account-deletion page. A person who has already removed the app cannot
 // tap a sentence, so it is a real 44pt control, not a URL printed as text.
 import { Linking, Pressable, Text, View } from 'react-native';
+import { useToast } from '../../context/ToastContext';
+import { LEGAL_LINK_FALLBACK } from '../../data/legalContent';
 import { useTheme } from '../../theme/ThemeContext';
 
 /**
@@ -17,6 +19,13 @@ import { useTheme } from '../../theme/ThemeContext';
  */
 export default function LegalSections({ sections }) {
   const { t, spacing, text } = useTheme();
+  // DEEP-30: a phone with no browser handler rejects openURL, and this tap
+  // used to say nothing. The failure speaks and hands over the address, the
+  // same ending as CreatorCard.jsx and delete-account.jsx. On react-native-web
+  // openURL resolves either way, so the catch runs on native only. The call
+  // stays inline on the element: link-role.test.js reads the JSX around every
+  // role="link" for proof of a real hand-off.
+  const { showToast } = useToast();
 
   return sections.map((s) => (
     <View key={s.h} style={{ marginBottom: spacing[5] }}>
@@ -29,7 +38,11 @@ export default function LegalSections({ sections }) {
           accessibilityRole="link"
           accessibilityLabel={s.link.label}
           accessibilityHint="Opens the account deletion page in your browser"
-          onPress={() => Linking.openURL(s.link.url).catch(() => {})}
+          onPress={() =>
+            Linking.openURL(s.link.url).catch(() =>
+              showToast(LEGAL_LINK_FALLBACK(s.link.url), 'error')
+            )
+          }
           style={({ pressed }) => ({
             minHeight: 44,
             justifyContent: 'center',

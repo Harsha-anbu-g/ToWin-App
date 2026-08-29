@@ -18,6 +18,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import { Linking, StyleSheet } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
+import { ToastProvider } from '../src/context/ToastContext';
 import { DELETION_PAGE_URL, PRIVACY_CONTENT } from '../src/data/legalContent';
 import Privacy from '../app/privacy';
 
@@ -194,7 +195,11 @@ describe('the privacy policy points at the deletion page', () => {
     const { label } = PRIVACY_CONTENT.find((s) => s.link).link;
     const { getByRole } = await render(
       <ThemeProvider>
-        <Privacy />
+        {/* The root layout always provides the toast; DEEP-30 made the link
+            speak through it on a failed open, so the harness matches. */}
+        <ToastProvider>
+          <Privacy />
+        </ToastProvider>
       </ThemeProvider>
     );
 
