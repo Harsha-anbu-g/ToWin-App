@@ -14,6 +14,7 @@ import {
   ChevronRight,
   FileText,
   KeyRound,
+  Lock,
   Mail,
   MessageSquareHeart,
   Moon,
@@ -65,14 +66,12 @@ function Stat({ value, label, gold }) {
 // chevron or a passed control. `icon` may be a component or a render fn.
 function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole, a11yState }) {
   const { t, spacing } = useTheme();
-  // Plain arrow fns render the custom leading slot; lucide icons (forwardRef
-  // objects, $$typeof set) get the standard 18px treatment.
-  const leading =
-    typeof Icon === 'function' && !Icon.$$typeof ? (
-      <Icon />
-    ) : (
-      <Icon size={18} color={destructive ? t.red : t.inkSlate} strokeWidth={1.8} />
-    );
+  // Every icon in src/components/icons is a plain function (no forwardRef, no
+  // $$typeof) since the lucide barrel was dropped, so the old "$$typeof means
+  // a real icon" test sent every row down the bare <Icon /> branch: 24px,
+  // currentColor (black), stroke 2, in a 22pt slot. One call for all of them
+  // now; custom slots (the tortoise, the gold trust shield) ignore the props.
+  const leading = <Icon size={18} color={destructive ? t.red : t.inkSlate} strokeWidth={1.8} />;
   return (
     <Pressable
       // No onPress → a plain container row: the control it hosts (e.g. a
@@ -339,11 +338,11 @@ export default function ProfileScreen() {
       {/* The 3h list: Trust Score · Peekaboo · Guide · Night mode · SOS */}
       <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
         <Row
-          icon={() => (
-            <Text style={{ fontSize: 14, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-              {trust ? Math.round(trust.totalScore) : '-'}
-            </Text>
-          )}
+          // The shield-check is trust's own glyph (owner call 2026-08-22, the
+          // nav bar's trust button) in the gold reserved for trust; the score
+          // itself already sits in the Trust stat above, so the row no longer
+          // repeats the number as its icon (owner call 2026-08-28).
+          icon={() => <ShieldCheck size={18} color={t.trustGold} strokeWidth={1.8} />}
           label={
             <Text>
               <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> Score
@@ -408,7 +407,8 @@ export default function ProfileScreen() {
         <Row icon={KeyRound} label="Change password" onPress={() => router.push('/change-password')} divider />
         <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} divider />
         <Row icon={UserX} label="Blocked people" onPress={() => router.push('/blocked')} divider />
-        <Row icon={ShieldCheck} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
+        {/* Lock, not the shield-check: that glyph means trust on this screen. */}
+        <Row icon={Lock} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
         <Row
           icon={FileText}
           label="Terms of service"

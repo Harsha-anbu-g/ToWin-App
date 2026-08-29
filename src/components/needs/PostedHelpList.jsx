@@ -436,12 +436,12 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const looking = needs.filter((n) => n.status === 'OPEN');
   const inProgress = needs.filter((n) => n.status === 'ASSIGNED');
   const finished = needs.filter((n) => n.status === 'COMPLETED' || n.status === 'CANCELLED');
-  // Helpers waiting on the elder's answer, across every Waiting request — the
-  // Waiting segment wears it as a notification (owner call 2026-08-26: "if
-  // someone offers help it should show like a notification in the Waiting").
-  // People, not requests, the unit every badge in the app counts; it stays
-  // until the elder accepts, because an unanswered offer is still news.
-  const offersWaiting = looking.reduce((n, need) => n + offersOn(need), 0);
+  // Offers waiting for an answer are no longer counted on the Waiting chip
+  // (owner report 2026-08-28: "3 and 1, two numbers in the Waiting"). One
+  // number per chip is the app-wide grammar — Messages chips wear a badge
+  // only, My Jobs a count only — and this was the sole chip wearing both.
+  // Offers still show twice on this screen: the Posted Help tab badge
+  // (src/lib/offersWaiting.js) and the badge on each request's folded title.
   const inSegment = seg === 'open' ? looking : seg === 'progress' ? inProgress : finished;
   const shown = filterByQuery(inSegment, query, (n) => [
     n.title,
@@ -529,9 +529,10 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
             // (owner report 2026-08-17). The row pills keep the full phrase.
             // Counts are back (owner call 2026-08-26: "show the number at the
             // top in the heading, how many it has"), reversing 2026-08-22's
-            // "remove the numbers in the top". Waiting also wears the offers
-            // badge, the same voice as the Messages tabs.
-            { key: 'open', label: 'Waiting', count: looking.length, badge: offersWaiting, badgeNoun: 'offers' },
+            // "remove the numbers in the top". The offers badge that rode
+            // Waiting beside its count (2026-08-26) is gone: two numbers on one
+            // chip read as an error (owner report 2026-08-28).
+            { key: 'open', label: 'Waiting', count: looking.length },
             { key: 'progress', label: 'In Progress', count: inProgress.length },
             { key: 'done', label: 'Completed', count: finished.length },
           ]}

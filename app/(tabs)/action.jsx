@@ -125,12 +125,12 @@ function PostNeedForm({ title }) {
       >
         <Text
           accessibilityRole="header"
-          style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
+          // 12 below, the same air Home puts between its heading and the
+          // search field; the subtitle that used to carry this gap is gone
+          // (owner call 2026-08-28: no lines under the tab headings).
+          style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5, marginBottom: 12 }}
         >
           {title}
-        </Text>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 3, marginBottom: 18 }}>
-          Tell your neighbors what you need.
         </Text>
 
         <Input
