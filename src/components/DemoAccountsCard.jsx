@@ -8,7 +8,7 @@ import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import TextLink from './ui/TextLink';
-import { yearsOld } from '../lib/copy';
+import { SIGN_IN_DEVICE_ERROR, yearsOld } from '../lib/copy';
 
 // Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as
 // web. Sarah (FAM-406, 2026-07-19) is the seeded FAMILY seat: fixed sub line,
@@ -42,7 +42,7 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
       // already expired against a clock set far ahead). Navigating anyway put
       // the person back on Login with nothing said. Same handling as login.jsx.
       if (!(await login(data.token))) {
-        onError?.("Could not sign you in on this device. Please check your phone's date and time.");
+        onError?.(SIGN_IN_DEVICE_ERROR);
         return;
       }
       router.replace('/'); // index routes by role/verification state

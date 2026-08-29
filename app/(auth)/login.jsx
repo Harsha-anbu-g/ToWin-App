@@ -15,6 +15,7 @@ import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
+import { SIGN_IN_DEVICE_ERROR } from '../../src/lib/copy';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
 
@@ -80,7 +81,7 @@ export default function Login() {
     // already expired against a clock set far ahead). Navigating anyway sent
     // the person back to this same screen with nothing said at all.
     if (!(await login(token))) {
-      setError("Could not sign you in on this device. Please check your phone's date and time.");
+      setError(SIGN_IN_DEVICE_ERROR);
       return;
     }
     router.replace('/'); // index routes by role/verification state
