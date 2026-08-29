@@ -287,6 +287,10 @@ export default function PassOn() {
   const peopleUnknown = (linksFailed || connectionsFailed) && people.length === 0;
   const familyUnknown = linksFailed && family.length === 0;
   const keysUnknown = keysFailed && keys.length === 0;
+  // Gated on empty like every sibling above: a failed background refetch must
+  // never hide a list an earlier fetch already delivered (a stale-but-good
+  // list is still true), only a failure with nothing to show says so (D2-01).
+  const sealedUnknown = sealedFailed && (sealedItems ?? []).length === 0;
   const retryPeople = () => Promise.all([refetchLinks(), refetchConnections()]);
 
   const reload = () =>
@@ -594,10 +598,9 @@ export default function PassOn() {
           {/* What is inside comes before who can open it one day — she reads
               down from her own things to the arrangement around them. */}
           {!settingUp && setup?.armed ? (
-            sealedFailed ? (
-              // The items query failing must never read as an empty box on the
-              // one page she opens to check her things are still there (D2-01
-              // sibling): say the load failed, never "nothing inside".
+            sealedUnknown ? (
+              // A first-load failure (nothing cached) says so honestly; a
+              // failed refetch with a good list still on hand keeps the list.
               <LoadError what="your sealed items" onRetry={refetchSealed} />
             ) : (
               <SealedItems
