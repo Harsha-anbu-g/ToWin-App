@@ -25,6 +25,7 @@ import Button from '../../src/components/ui/Button';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
 import SegmentedControl from '../../src/components/ui/SegmentedControl';
+import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
@@ -256,6 +257,9 @@ export default function MyFamilyScreen() {
         <LoadError what="your family" onRetry={refetch} style={{ marginTop: spacing[5] }} />
       ) : null}
 
+      {/* Swiping the pane steps the segments, iOS-style (owner call
+          2026-08-17); the last segmented screen without it. */}
+      <SwipeSegments keys={['controls', 'members', 'how']} value={tab} onChange={setTab}>
       {/* ── How it works: the promises card, verbatim. ─────────────────── */}
       {tab === 'how' ? (
         <View style={{ ...card, marginTop: spacing[5] }}>
@@ -535,6 +539,7 @@ export default function MyFamilyScreen() {
               value={controlsTab}
               onChange={setControlsTab}
             />
+            <SwipeSegments keys={['watching', 'acting']} value={controlsTab} onChange={setControlsTab}>
 
             {controlsTab === 'watching' ? (
               friendshipsUnknown ? (
@@ -643,9 +648,11 @@ export default function MyFamilyScreen() {
                 ))
               )
             ) : null}
+            </SwipeSegments>
           </View>
         )
       ) : null}
+      </SwipeSegments>
     </Screen>
   );
 }
