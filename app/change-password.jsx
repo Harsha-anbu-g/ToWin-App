@@ -4,7 +4,7 @@
 // length message sits under the field it names, autofill hints, and a
 // scrollable body so large OS text can't clip the button.
 import { useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import api from '../src/api/client';
 import Button from '../src/components/ui/Button';
@@ -27,6 +27,23 @@ export default function ChangePassword() {
   // Return-key path (UX-708): Next walks the three fields, Done submits.
   const nextRef = useRef(null);
   const confirmRef = useRef(null);
+
+  // DEEP-38: Input is memo'd so sibling Paper fields can skip re-renders while
+  // someone types; that only holds if each field keeps one handler identity.
+  // Setters are stable, so [] deps. Clearing the field's own error on every
+  // keystroke is the behaviour the old inline closures already had.
+  const onCurrent = useCallback((v) => {
+    setCurrent(v);
+    setFieldErrors((f) => ({ ...f, current: '' }));
+  }, []);
+  const onNext = useCallback((v) => {
+    setNext(v);
+    setFieldErrors((f) => ({ ...f, next: '' }));
+  }, []);
+  const onConfirm = useCallback((v) => {
+    setConfirm(v);
+    setFieldErrors((f) => ({ ...f, confirm: '' }));
+  }, []);
 
   const submit = async () => {
     const errs = {};
@@ -58,10 +75,7 @@ export default function ChangePassword() {
         <PasswordInput
           label="Current password"
           value={current}
-          onChangeText={(v) => {
-            setCurrent(v);
-            setFieldErrors((f) => ({ ...f, current: '' }));
-          }}
+          onChangeText={onCurrent}
           error={fieldErrors.current}
           textContentType="password"
           autoComplete="current-password"
@@ -74,10 +88,7 @@ export default function ChangePassword() {
           ref={nextRef}
           label="New password (at least 8 characters)"
           value={next}
-          onChangeText={(v) => {
-            setNext(v);
-            setFieldErrors((f) => ({ ...f, next: '' }));
-          }}
+          onChangeText={onNext}
           error={fieldErrors.next}
           textContentType="newPassword"
           autoComplete="new-password"
@@ -90,10 +101,7 @@ export default function ChangePassword() {
           ref={confirmRef}
           label="Re-enter new password"
           value={confirm}
-          onChangeText={(v) => {
-            setConfirm(v);
-            setFieldErrors((f) => ({ ...f, confirm: '' }));
-          }}
+          onChangeText={onConfirm}
           error={fieldErrors.confirm}
           textContentType="newPassword"
           autoComplete="new-password"

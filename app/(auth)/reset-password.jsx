@@ -2,7 +2,7 @@
 // Reached from the emailed link (/reset-password?token=…) — the token comes off
 // the query string, so the URL scheme is irrelevant here.
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import api, { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
@@ -25,6 +25,19 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   // Return-key path (UX-708): Next lands in the re-enter field, Done submits.
   const confirmRef = useRef(null);
+
+  // DEEP-38: Input is memo'd so sibling Paper fields can skip re-renders while
+  // someone types; that only holds if each field keeps one handler identity.
+  // Setters are stable, so [] deps. Clearing the field's own error on every
+  // keystroke is the behaviour the old inline closures already had.
+  const onPw = useCallback((v) => {
+    setPw(v);
+    setFieldErrors((f) => ({ ...f, pw: '' }));
+  }, []);
+  const onConfirm = useCallback((v) => {
+    setConfirm(v);
+    setFieldErrors((f) => ({ ...f, confirm: '' }));
+  }, []);
 
   const heading = { fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink };
   const centerBody = { fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[3], lineHeight: 26 };
@@ -103,10 +116,7 @@ export default function ResetPassword() {
         <PasswordInput
           label="New password (at least 8 characters)"
           value={pw}
-          onChangeText={(v) => {
-            setPw(v);
-            setFieldErrors((f) => ({ ...f, pw: '' }));
-          }}
+          onChangeText={onPw}
           error={fieldErrors.pw}
           textContentType="newPassword"
           autoComplete="new-password"
@@ -119,10 +129,7 @@ export default function ResetPassword() {
           ref={confirmRef}
           label="Re-enter new password"
           value={confirm}
-          onChangeText={(v) => {
-            setConfirm(v);
-            setFieldErrors((f) => ({ ...f, confirm: '' }));
-          }}
+          onChangeText={onConfirm}
           error={fieldErrors.confirm}
           textContentType="newPassword"
           autoComplete="new-password"
