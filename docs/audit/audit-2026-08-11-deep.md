@@ -576,7 +576,7 @@ A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close)
 
 **Suggested fix.** Route these through stable useCallback handlers that also clear their error state (for example `setDob = useCallback((v) => { fieldHandlers.dateOfBirth(v); setDobError(''); }, [])`; clearing unconditionally is safe), and apply the same to change-password and reset-password.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: profile-edit.jsx was fixed earlier (fieldHandlers useMemo at `app/profile-edit.jsx:373`, stable setDateOfBirth at :386, setBio at :393; no inline onChangeText left). This story closed the remainder: `app/change-password.jsx:35-46` (onCurrent/onNext/onConfirm, useCallback [] deps) and `app/(auth)/reset-password.jsx:33-40` (onPw/onConfirm), each clearing only its own field error via functional setFieldErrors, byte-identical behaviour to the old inline closures. `grep 'onChangeText={('` over both files returns nothing. Probe: `__tests__/password-forms-stable-handlers.test.js` records every props object Input receives and asserts one handler identity per field across a keystroke (RED against the inline handlers: 2 identities; GREEN after: 1).
 
 ### DEEP-39: Family alerts feed renders full unbounded history inside the Home tab ScrollView
 
