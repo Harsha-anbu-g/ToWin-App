@@ -88,9 +88,11 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             key={seg.key}
             accessibilityRole="tab"
             accessibilityLabel={
-              // The badge's noun belongs to the caller: unread for chats,
-              // offers for Posted Help. A count and a badge can ride together
-              // ("Waiting, 3, 2 offers").
+              // The badge's noun belongs to the caller (unread for chats). A
+              // count and a badge can still ride one chip, but no screen does
+              // today: two numbers on one chip read as an error (owner report
+              // 2026-08-28, Posted Help's "Waiting 3 1"). Keep the props —
+              // owner calls on counts have flipped twice.
               seg.badge > 0
                 ? `${seg.label}, ${seg.count != null ? `${seg.count}, ` : ''}${seg.badge} ${seg.badgeNoun ?? 'unread'}`
                 : seg.count != null

@@ -16,7 +16,10 @@ import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { centerActionFor } from '../../lib/roles';
 import { filterByQuery } from '../../lib/searchFilter';
+import { markSeen, useUnseenTokens } from '../../lib/seenIds';
+import { seenKey } from '../../lib/storageKeys';
 import { trustOriginLine } from '../../lib/trustOrigin';
+import { TRUST_STEPS_CATEGORY, stepNewsToken, stepNewsTokens } from '../../lib/trustStepBadges';
 import { SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import FamilyShareToggle from '../family/FamilyShareToggle';
@@ -24,6 +27,7 @@ import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
+import RowBadge from '../ui/RowBadge';
 import SkeletonCard from '../ui/Skeleton';
 import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
@@ -32,7 +36,7 @@ import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
 
-function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause, divider, originLine }) {
+function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause, divider, originLine, news, onSeen }) {
   const { t, type, fontFamily } = useTheme();
   const router = useRouter();
   // The row is the person alone, like a WhatsApp chat row (owner call
@@ -69,9 +73,14 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
             from a screen reader (HCI rule 1); the eye gets it on open. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}`}
+          accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}${news ? '. New: one step up' : ''}`}
           accessibilityState={{ expanded: open }}
-          onPress={() => setOpen((o) => !o)}
+          onPress={() => {
+            // Opening the row is reading the news: the badge clears here, per
+            // row, never on arrival (owner call 2026-08-28, the Updates rule).
+            if (!open && news) onSeen?.();
+            setOpen((o) => !o);
+          }}
           style={({ pressed }) => ({
             flex: 1,
             flexDirection: 'row',
@@ -89,6 +98,9 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           >
             {card.customerName}
           </Text>
+          {/* The helper accepted a step since the elder last looked (owner
+              call 2026-08-28: "a badge near the name of the helper"). */}
+          <RowBadge count={news ? 1 : 0} />
           <ChevronRight
             size={18}
             color={t.inkFaint2}
@@ -178,9 +190,11 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
             // premature "Start the next step" would 400 as already-confirmed.
             null
           ) : (
+            // Filled blue, not the tonal chip (owner call 2026-08-28: "start
+            // the next step also in blue"): the step is the row's one action.
             <Button
               title={ctaLabel}
-              variant="secondary"
+              variant="primary"
               size="small"
               onPress={onConfirm}
               style={{ marginTop: 12 }}
@@ -252,6 +266,11 @@ export default function MyHelpersPanel() {
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
+  // Ladders that moved since the elder last opened that row: a helper
+  // accepted a step (owner call 2026-08-28). Seeded on first run, so the
+  // friendships already here never arrive as news (trustStepBadges.js).
+  const stepNews = useUnseenTokens(user?.userId, TRUST_STEPS_CATEGORY, stepNewsTokens(connections), { seed: true });
+  const stepSeenKey = seenKey(user?.userId, TRUST_STEPS_CATEGORY);
 
   const confirm = useMutation({
     mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),
@@ -341,9 +360,6 @@ export default function MyHelpersPanel() {
       >
         My Helpers
       </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-        <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> grows step by step, like roots.
-      </Text>
 
       {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}
       <SegmentedControl
@@ -396,6 +412,8 @@ export default function MyHelpersPanel() {
               connReady={!!connections}
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
+              news={!!c && stepNews.includes(stepNewsToken(c))}
+              onSeen={() => c && markSeen(stepSeenKey, [stepNewsToken(c)])}
               onConfirm={() => confirmStep(card)}
               onPause={async () => {
                 // Asks first (owner call 2026-08-17): a mis-tap here

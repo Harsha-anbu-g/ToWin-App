@@ -17,12 +17,14 @@ import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { centerActionFor } from '../../lib/roles';
 import { filterByQuery } from '../../lib/searchFilter';
 import { trustOriginLine } from '../../lib/trustOrigin';
+import { isStepAwaitingMe } from '../../lib/trustStepBadges';
 import { LEVEL_INDEX, SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
+import RowBadge from '../ui/RowBadge';
 import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
 import SkeletonCard from '../ui/Skeleton';
@@ -43,6 +45,10 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
   const stageNo = Math.min(stageIndex + 1, 7);
   const stageName = SHORT_STAGES[Math.min(stageIndex, 6)];
   const waiting = conn.confirmedByMe && !conn.confirmedByOther;
+  // The elder started the next step and it is waiting on me (owner call
+  // 2026-08-28: "so they can accept"). Worn on the folded name and counted
+  // on the My Elders tab until I accept; looking never clears it.
+  const waitingOnMe = isStepAwaitingMe(conn);
   const next = SHORT_STAGES[Math.min(stageIndex + 1, 6)];
   const hasFamily = familyBehind.length > 0 || conn.sharedWithFamily;
 
@@ -62,7 +68,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
             from a screen reader (HCI rule 1); the eye gets it on open. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${conn.otherUserName}. Stage ${stageNo} of 7, ${stageName}`}
+          accessibilityLabel={`${conn.otherUserName}. Stage ${stageNo} of 7, ${stageName}${waitingOnMe ? '. 1 step waiting for you to accept' : ''}`}
           accessibilityState={{ expanded: open }}
           onPress={() => setOpen((o) => !o)}
           style={({ pressed }) => ({
@@ -80,6 +86,7 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
           >
             {conn.otherUserName}
           </Text>
+          <RowBadge count={waitingOnMe ? 1 : 0} />
           <ChevronRight
             size={18}
             color={t.inkFaint2}
@@ -159,10 +166,12 @@ function ElderCard({ conn, scoreCard, familyBehind = [], famConnFor, onEnd, onCo
                 Seven steps, climbed together. The whole ladder is complete.
               </Text>
             </View>
-          ) : conn.confirmedByOther && !conn.confirmedByMe ? (
+          ) : waitingOnMe ? (
+            // Filled blue, not the tonal chip (owner call 2026-08-28: "accept
+            // the next step should be in blue background").
             <Button
               title="Accept the next step"
-              variant="secondary"
+              variant="primary"
               size="small"
               onPress={() => onConfirm(conn)}
               style={{ marginTop: 12 }}
@@ -416,9 +425,6 @@ export default function MyEldersPanel() {
         style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
         My Elders
-      </Text>
-      <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-        <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> grows step by step, like roots.
       </Text>
 
       {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}

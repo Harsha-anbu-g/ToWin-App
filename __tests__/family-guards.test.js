@@ -84,7 +84,9 @@ test('ActionScreen: elders still get the Ask Help form (no redirect)', async () 
   mockRole = 'ELDER';
   const r = await wrap(<ActionScreen />);
   expect(mockRedirectHref).toBeNull();
-  r.getByText('Tell your neighbors what you need.');
+  // The header subtitle was removed (owner call 2026-08-28); the title alone
+  // proves the form rendered.
+  expect(r.getAllByText('Ask Help').length).toBeGreaterThan(0);
 });
 
 test('/family: HELPER redirects to Home (web ElderOnly parity)', async () => {

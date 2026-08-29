@@ -193,10 +193,11 @@ test('a refresh that fails still stops the spinner', async () => {
 });
 
 
-// Owner calls 2026-08-26: "if someone offers help it should show like a
-// notification in the Waiting", and "show the number at the top in the
-// heading, how many it has".
-test('the segments say how many requests they hold, and Waiting wears the offers badge', async () => {
+// Owner call 2026-08-26: "show the number at the top in the heading, how many
+// it has". Owner report 2026-08-28: the Waiting chip read "3 1" — its request
+// count next to the offers badge added on 08-26 — "two numbers". One number
+// per chip now; offers stay on the tab badge and on each request's title.
+test('the segments say how many requests they hold, one number each', async () => {
   api.get.mockResolvedValue({
     data: {
       content: [
@@ -211,10 +212,12 @@ test('the segments say how many requests they hold, and Waiting wears the offers
   });
   const r = await wrap(<PostedHelpList />);
 
-  // Two waiting, one in progress, one done; two helpers waiting on an answer.
-  await r.findByRole('tab', { name: 'Waiting, 2, 2 offers' });
+  // Two waiting, one in progress, one done. The two helpers waiting on an
+  // answer are NOT a second number on the Waiting chip.
+  await r.findByRole('tab', { name: 'Waiting, 2' });
   r.getByRole('tab', { name: 'In Progress, 1' });
   r.getByRole('tab', { name: 'Completed, 1' });
+  expect(r.queryByRole('tab', { name: /offers/ })).toBeNull();
 });
 
 test('a folded request with offers wears their count on its title', async () => {
@@ -227,7 +230,7 @@ test('a folded request with offers wears their count on its title', async () => 
   expect(title).toBeTruthy();
   expect(r.queryByText('Daniel')).toBeNull();
   // The pill is hidden from assistive tech (the label above speaks it). The
-  // Waiting segment wears the same 2, so look inside the title only.
+  // Waiting chip says "2" too (two requests), so look inside the title only.
   within(title).getByText('2', { includeHiddenElements: true });
 });
 

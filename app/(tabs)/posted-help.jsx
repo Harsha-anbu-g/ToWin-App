@@ -6,7 +6,7 @@ import Screen from '../../src/components/ui/Screen';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 export default function PostedHelp() {
-  const { t, spacing, type, fontFamily } = useTheme();
+  const { t, spacing, fontFamily } = useTheme();
   return (
     // keyboard: the search box above the list (2026-08-28) opens one, and the
     // rows it narrows must stay above it, not under it (UX-702).
@@ -17,9 +17,6 @@ export default function PostedHelp() {
           style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
         >
           Posted Help
-        </Text>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 3 }}>
-          Your requests, from posted to completed.
         </Text>
         <PostedHelpList />
       </View>
