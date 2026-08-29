@@ -1,9 +1,25 @@
-// STORE-204 (Apple UGC 1.2): device-side block list contract. Every call
+// STORE-204 (Apple UGC 1.2): the block list contract on the phone. Every call
 // carries the account the list belongs to — see block-list-scoping.test.js.
+// The server never answers here (offline), so these lock the cache behaviour;
+// the server half is block-list-server.test.js (HARD-106).
 import * as SecureStore from 'expo-secure-store';
+import api from '../src/api/client';
 import { blockUser, filterBlocked, getBlocked, isBlocked, unblockUser } from '../src/lib/blockList';
 
 const mockStore = {};
+
+const offline = () => Object.assign(new Error('Network Error'), { response: undefined });
+jest.mock('../src/api/client', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(async () => { throw offline(); }),
+    post: jest.fn(async () => { throw offline(); }),
+    delete: jest.fn(async () => { throw offline(); }),
+  },
+  setTokenGetter: jest.fn(),
+  setOnSessionExpired: jest.fn(),
+  friendlyWriteError: (_e, fallback) => fallback,
+}));
 
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(async (key) => mockStore[key] ?? null),
@@ -50,6 +66,8 @@ test('blockUser ignores duplicates and missing ids', async () => {
 });
 
 test('unblockUser removes only that person', async () => {
+  // Unblocking needs the server to agree first (block-list-server.test.js).
+  api.delete.mockResolvedValueOnce({ data: {} });
   await blockUser(ME, { id: 'u-1', name: 'Pat' });
   await blockUser(ME, { id: 'u-2', name: 'Sam' });
 

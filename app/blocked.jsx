@@ -1,4 +1,4 @@
-// Blocked people — view and undo device-side blocks (UGC 1.2). Reached from
+// Blocked people — view and undo blocks (UGC 1.2; on the server since HARD-106). Reached from
 // Profile → Blocked people. Unblocking only removes the hiding; it never
 // re-creates a friendship that was ended when the block was made.
 //
@@ -34,9 +34,14 @@ export default function BlockedPeople() {
   const list = blocked ?? [];
 
   const doUnblock = async (person) => {
-    await unblockUser(user?.userId, person.id);
-    queryClient.invalidateQueries({ queryKey: ['block-list'] });
-    showToast(`${person.name || 'They'} can appear again.`, 'info');
+    try {
+      await unblockUser(user?.userId, person.id);
+      queryClient.invalidateQueries({ queryKey: ['block-list'] });
+      showToast(`${person.name || 'They'} can appear again.`, 'info');
+    } catch {
+      // The server did not agree, so the block stands: say so, never pretend.
+      showToast('Could not unblock right now. Please try again.', 'error');
+    }
   };
 
   // Unblocking someone blocked for a reason is consequential — confirm with

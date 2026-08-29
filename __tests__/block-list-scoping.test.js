@@ -11,6 +11,18 @@ import { KEYS, blockedKey } from '../src/lib/storageKeys';
 
 const mockStore = {};
 
+const offline = () => Object.assign(new Error('Network Error'), { response: undefined });
+jest.mock('../src/api/client', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(async () => { throw offline(); }),
+    post: jest.fn(async () => { throw offline(); }),
+    delete: jest.fn(async () => ({ data: {} })),
+  },
+  setTokenGetter: jest.fn(),
+  setOnSessionExpired: jest.fn(),
+  friendlyWriteError: (_e, fallback) => fallback,
+}));
 jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(async (key) => mockStore[key] ?? null),
   setItemAsync: jest.fn(async (key, value) => {

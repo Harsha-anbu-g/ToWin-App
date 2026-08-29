@@ -26,7 +26,7 @@ import { useTheme } from '../../src/theme/ThemeContext';
 // shown unless the server-side half really ran.
 const BLOCK_DONE = "Blocked. You won't see this person anymore.";
 const BLOCK_HALF_DONE =
-  'Blocked on this phone. We could not end the friendship, so messages may still reach you.';
+  'Blocked. We could not end the friendship yet, so it may still show in Messages until you try again.';
 
 function ChipRow({ items }) {
   const { t, radius, type, spacing } = useTheme();
@@ -161,12 +161,12 @@ export default function UserProfile() {
     if (ok) endFriendship.mutate();
   };
 
-  // Ending the connection is the ONLY server-side half of a block:
-  // MessageService rejects a send unless the connection is active. The device
-  // list in src/lib/blockList.js hides them from THIS phone and nothing more.
-  // So the delete is awaited and its failure is said out loud with a retry,
-  // rather than covered by a success sentence the person would act on. It used
-  // to fire and forget, and then toast success either way.
+  // The block itself lives on the server now (HARD-106): messages, requests
+  // and offers across it are refused there, on every device. Ending the
+  // connection is the visible half, so the row leaves Messages. The delete is
+  // awaited and its failure is said out loud with a retry, rather than covered
+  // by a success sentence the person would act on. It used to fire and forget,
+  // and then toast success either way.
   async function endConnectionForBlock() {
     try {
       await endFriendship.mutateAsync({ quiet: true });
@@ -179,8 +179,8 @@ export default function UserProfile() {
     }
   }
 
-  // Device-side block (UGC 1.2): their content disappears everywhere for you,
-  // and an active friendship ends so messages stop server-side too.
+  // Block (UGC 1.2, server-side since HARD-106): their content disappears
+  // everywhere for you, on every device, and an active friendship ends.
   // `blocking` keeps the button honest while the writes run (rulebook: every
   // mutation shows a pending state on the control that fired it).
   const doBlock = async () => {
@@ -203,7 +203,7 @@ export default function UserProfile() {
       title: `Block ${profile?.name ?? 'this person'}?`,
       message:
         "You won't see their help requests or messages anymore, and any friendship ends. " +
-        'The block is saved on this phone, so it does not follow you to another device. ' +
+        'It follows you to every phone you sign in on. ' +
         'You can change your mind later in Profile → Blocked people.',
       confirmLabel: 'Block',
       destructive: true,
@@ -212,9 +212,14 @@ export default function UserProfile() {
   };
 
   const doUnblock = async () => {
-    await unblockUser(user?.userId, id);
-    queryClient.invalidateQueries({ queryKey: ['block-list'] });
-    showToast('Unblocked.', 'info');
+    try {
+      await unblockUser(user?.userId, id);
+      queryClient.invalidateQueries({ queryKey: ['block-list'] });
+      showToast('Unblocked.', 'info');
+    } catch {
+      // The server did not agree, so nothing changed: say so, never pretend.
+      showToast('Could not unblock right now. Please try again.', 'error');
+    }
   };
 
   return (
