@@ -26,8 +26,18 @@ const SHOTS = path.join(ROOT, 'docs', 'store', 'screenshots');
 
 const EM_DASH = '—';
 
-/** A real phone-scale capture: 1320 x 2868, 157,173 bytes. */
-const PHONE_SCALE = path.join(SHOTS, 'raw-02-checkin.png');
+/**
+ * A real phone-scale capture: 1320 x 2868, 157,173 bytes.
+ *
+ * Deliberately the frozen copy in superseded/, not the live raw. The live file
+ * is re-shot whenever the UI moves, so a byte count pinned to it fails for the
+ * one reason that says nothing about the script. Everything under superseded/
+ * is the historical record and never changes, so the number can be typed in
+ * and mean something.
+ */
+const PHONE_SCALE = path.join(
+  SHOTS, 'superseded', '2026-08-29-pre-appstore-recapture', 'raw-02-checkin.png'
+);
 /** The smallest desktop-scale mistake on disk: same dimensions, 58,589 bytes. */
 const DESKTOP_SCALE_SMALLEST = path.join(SHOTS, 'superseded', 'raw-15-chat-thread-desktop-scale.png');
 /** The largest desktop-scale mistake on disk: same dimensions, 107,542 bytes. */
@@ -74,6 +84,15 @@ describe('capture-store-shots capture mode', () => {
     const { status, stderr } = run(['--route', '/', '--out', '/tmp/whatever.png', '--viewport', '1320x2868']);
     expect(status).toBe(2);
     expect(stderr).toContain('440');
+  });
+
+  test('accepts --dump-text and still names the flag it is actually missing', () => {
+    // The sweep for a phone number in a frame is evidence, so the flag that
+    // writes it must not be the thing that fails the run.
+    const { status, stderr } = run(['--out', '/tmp/whatever.png', '--dump-text', '/tmp/whatever.txt']);
+    expect(status).toBe(2);
+    expect(stderr).toContain('--route');
+    expect(stderr).not.toContain('--dump-text');
   });
 
   test('refuses a seat it does not know', () => {
