@@ -39,7 +39,14 @@ const toList = (s) =>
     .map((x) => x.trim())
     .filter(Boolean);
 
-const GENDERS = ['Male', 'Female', 'Other'];
+// Sex is the backend Gender enum (MALE | FEMALE | OTHER), sent by value, not
+// by the word on the chip. The label is what an elder reads; the value is
+// what the enum accepts. Sending the label 400s the whole save (D2-01).
+const GENDERS = [
+  { value: 'MALE', label: 'Male' },
+  { value: 'FEMALE', label: 'Female' },
+  { value: 'OTHER', label: 'Other' },
+];
 
 // Elders answer this with ONE choice, never a typed list: the backend field is
 // the LookingForType enum (FRIENDSHIP | HELP | BOTH) and /profile/me returns it
@@ -411,7 +418,10 @@ export default function ProfileEdit() {
   const genderHandlers = useMemo(
     () =>
       Object.fromEntries(
-        GENDERS.map((g) => [g, () => setForm((f) => ({ ...f, gender: f.gender === g ? '' : g }))])
+        GENDERS.map(({ value }) => [
+          value,
+          () => setForm((f) => ({ ...f, gender: f.gender === value ? '' : value })),
+        ])
       ),
     []
   );
@@ -538,13 +548,13 @@ export default function ProfileEdit() {
           accessibilityLabel="Sex (optional)"
           style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}
         >
-          {GENDERS.map((g) => (
+          {GENDERS.map(({ value, label }) => (
             <Chip
-              key={g}
-              label={g}
+              key={value}
+              label={label}
               accessibilityRole="radio"
-              aria-checked={form.gender === g}
-              onPress={genderHandlers[g]}
+              aria-checked={form.gender === value}
+              onPress={genderHandlers[value]}
             />
           ))}
         </View>

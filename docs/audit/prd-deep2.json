@@ -1,0 +1,50 @@
+{
+  "project": "Towinly app deep-audit-2 fixes (2026-08-29, verified HIGH items)",
+  "branchName": "ralph/deep-audit-2",
+  "description": "The three verified findings from App/docs/audit/deep-audit-2-2026-08-29.md. Start only after ralph/deep-audit-close has finished and merged, since it edits profile-edit.jsx. Tests first, no browser, nothing pushed. The reported leads in the record are not stories yet; the owner promotes them after confirming.",
+  "userStories": [
+    {
+      "id": "D2-01",
+      "priority": 1,
+      "title": "Sex saves: send the enum value the backend accepts, not the display label",
+      "description": "D2 profile-edit.jsx:311 sends form.gender='Male' but backend Gender enum is MALE/FEMALE/OTHER (case-sensitive, no converter), so every Save with Sex chosen 400s. The website sends 'MALE' via <option value=MALE>. Fix mobile to send the uppercase enum value: either GENDERS becomes [{label:'Male',value:'MALE'},...] (chips display label, submit value), or map form.gender to gender.toUpperCase() at submit (profile-edit.jsx:311). Mirror the website's option values exactly. TEST FIRST: a test that the save payload's gender is 'MALE' when the user picks Male, and that a round-trip prefill (me.gender='MALE') re-selects the Male chip. This file is edited by the deep-audit-close loop (US-006); do this run only after that loop has finished and merged.",
+      "acceptanceCriteria": [
+        "A test proves the saved gender is the uppercase enum value",
+        "Prefill from an uppercase stored value re-selects the right chip",
+        "jest suite 0 failures, eslint clean",
+        "D2-01 box ticked",
+        "Commit: fix: profile Sex saves send the MALE/FEMALE/OTHER enum the backend accepts"
+      ],
+      "passes": true,
+      "notes": "DONE. profile-edit.jsx GENDERS -> {value,label}; genderHandlers + chip render key off value; save sends form.gender ('MALE'). Test profile-edit-gender.test.js 2 tests, RED then GREEN (12 tests across 3 profile suites). eslint clean."
+    },
+    {
+      "id": "D2-02",
+      "priority": 2,
+      "title": "Updates feed filters blocked people as defense in depth",
+      "description": "D2 updatesFeed.js has no block filter; buildFeed relies on each backend source. Reviews, keyholder-asks and family-alerts are not proven to filter blocks. Add a client-side filter: read the device block list (src/lib/blockList.js) in useUpdatesFeed and drop any feed item whose person id is blocked, before buildFeed returns. TEST FIRST: a blocked person's review does not appear in the built feed. Keep it pure so the builder tests stay simple.",
+      "acceptanceCriteria": [
+        "A test proves a blocked person's item is absent from the feed",
+        "jest suite 0 failures, eslint clean",
+        "D2-02 box ticked",
+        "Commit: fix: the Updates feed hides people you blocked"
+      ],
+      "passes": false,
+      "notes": "Deferred: fixing this on the client needs a person id on every feed item and overlaps the backend block-evasion findings (SEC-03/04/05). Better closed server-side. Kept as a lead, not a client patch."
+    },
+    {
+      "id": "D2-03",
+      "priority": 3,
+      "title": "Sealed box says 'load failed', never a false 'nothing inside'",
+      "description": "D2 pass-on/index.jsx:256 fetches ['passon-sealed'] without isError; the Sealed LoadError at :569 is gated on setupFailed, a different query. Give the sealed-items query its own isError+refetch and render LoadError (what='your sealed items') when it fails, so a failed items fetch never shows SealedItems' empty 'nothing inside' line. TEST FIRST: when the sealed-items query errors but setup succeeds, LoadError shows and 'nothing inside' does not.",
+      "acceptanceCriteria": [
+        "A test proves a failed sealed-items fetch shows LoadError, not the empty line",
+        "jest suite 0 failures, eslint clean",
+        "D2-03 box ticked",
+        "Commit: fix: Sealed box shows a load error instead of a false empty"
+      ],
+      "passes": true,
+      "notes": "DONE. pass-on/index.jsx sealed query gains isError+refetch; LoadError 'your sealed items' when armed and items fetch fails. Test in three-states.test.js, RED against HEAD then GREEN (10/10). eslint clean."
+    }
+  ]
+}

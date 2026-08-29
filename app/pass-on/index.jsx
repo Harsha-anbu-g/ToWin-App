@@ -253,7 +253,11 @@ export default function PassOn() {
     },
     enabled,
   });
-  const { data: sealedItems } = useQuery({
+  const {
+    data: sealedItems,
+    isError: sealedFailed,
+    refetch: refetchSealed,
+  } = useQuery({
     queryKey: ['passon-sealed'],
     // Array.isArray, not `|| []`: a 200 carrying anything but a list must not
     // take her whole page down — this is the page she opens to check her
@@ -590,14 +594,21 @@ export default function PassOn() {
           {/* What is inside comes before who can open it one day — she reads
               down from her own things to the arrangement around them. */}
           {!settingUp && setup?.armed ? (
-            <SealedItems
-              items={sealedItems}
-              saving={saving}
-              releaseContactEmail={setup?.releaseContactEmail}
-              onAdd={addSealed}
-              onRemove={removeSealed}
-              onReveal={openSealed}
-            />
+            sealedFailed ? (
+              // The items query failing must never read as an empty box on the
+              // one page she opens to check her things are still there (D2-01
+              // sibling): say the load failed, never "nothing inside".
+              <LoadError what="your sealed items" onRetry={refetchSealed} />
+            ) : (
+              <SealedItems
+                items={sealedItems}
+                saving={saving}
+                releaseContactEmail={setup?.releaseContactEmail}
+                onAdd={addSealed}
+                onRemove={removeSealed}
+                onReveal={openSealed}
+              />
+            )
           ) : null}
 
           {!settingUp && setup?.armed ? (
