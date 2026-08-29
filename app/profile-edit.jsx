@@ -72,11 +72,11 @@ const FIELD_GAP = { marginBottom: spacing[4] };
 const BIO_INPUT_STYLE = { minHeight: 100, textAlignVertical: 'top' };
 
 function SectionTitle({ children }) {
-  const { t, fontFamily } = useTheme();
+  const { t, text, fontFamily } = useTheme();
   return (
     <Text
       accessibilityRole="header"
-      style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, marginBottom: 12, marginTop: 8 }}
+      style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: 12, marginTop: 8 }}
     >
       {children}
     </Text>
@@ -84,7 +84,7 @@ function SectionTitle({ children }) {
 }
 
 export default function ProfileEdit() {
-  const { t, type, fontScaleCaps } = useTheme();
+  const { t, text, type, fontScaleCaps } = useTheme();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -478,7 +478,7 @@ export default function ProfileEdit() {
           >
             <Text
               maxFontSizeMultiplier={fontScaleCaps.body}
-              style={{ fontSize: 14, fontWeight: '600', color: t.blueDeep }}
+              style={{ fontSize: text.sm, fontWeight: '600', color: t.blueDeep }}
             >
               {uploadingPhoto ? 'Uploading…' : 'Change photo'}
             </Text>

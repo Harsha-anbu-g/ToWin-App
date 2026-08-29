@@ -118,7 +118,7 @@ export default function FinishSetup() {
         >
           One last step
         </Text>
-        <Text style={{ fontSize: 16, color: t.ink3, textAlign: 'center', marginTop: spacing[2], marginBottom: spacing[5], lineHeight: 24 }}>
+        <Text style={{ fontSize: type.body, color: t.ink3, textAlign: 'center', marginTop: spacing[2], marginBottom: spacing[5], lineHeight: 24 }}>
           {googleName ? `Welcome, ${String(googleName).split(' ')[0]}! ` : ''}
           Tell us a little more to finish creating your account.
         </Text>
@@ -135,7 +135,7 @@ export default function FinishSetup() {
             }}
           >
             {/* blueDeep, not teal — teal on the wash measured 3.47:1 (rulebook) */}
-            <Text style={{ fontSize: 14, color: t.blueDeep, textAlign: 'center' }}>
+            <Text style={{ fontSize: type.body, color: t.blueDeep, textAlign: 'center' }}>
               Signing in as <Text style={{ fontWeight: '700' }}>{googleEmail}</Text>
             </Text>
           </View>
