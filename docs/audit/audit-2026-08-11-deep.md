@@ -602,7 +602,7 @@ A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close)
 
 **Suggested fix.** Change fontSize to type.body and lineHeight to about 22, matching the landing NoteBox.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/feedback.jsx:117 renders the callout at type.body (16) with lineHeight 22. It was type.meta, which is 13 in the current ramp (src/theme/tokens.js:326); the finding above assumed 14. The landing NoteBox it now matches sits at app/(auth)/landing.jsx:79 (type.body, lineHeight 21); the :83 above is the August 11 line number. The caption at :129 and the rating label at :174 stay type.meta by design. Pinned by __tests__/feedback-callout-size.test.js (2 tests: the paragraph flattens to fontSize === type.body and lineHeight 22; the two meta lines stay at type.meta).
 
 ### DEEP-41: Ask AI sheet title breaks the Newsreader heading rule
 

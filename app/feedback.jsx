@@ -114,7 +114,7 @@ export default function Feedback() {
             padding: 16,
           }}
         >
-          <Text style={{ fontSize: type.meta, color: t.ink2, lineHeight: 20 }}>
+          <Text style={{ fontSize: type.body, color: t.ink2, lineHeight: 22 }}>
             <Text style={{ fontWeight: '700' }}>We read every message.</Text> What you write here
             shapes what gets built next, so tell us what helped and what got in your way.
           </Text>
