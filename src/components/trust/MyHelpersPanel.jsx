@@ -19,7 +19,7 @@ import { filterByQuery } from '../../lib/searchFilter';
 import { markSeen, useUnseenTokens } from '../../lib/seenIds';
 import { seenKey } from '../../lib/storageKeys';
 import { trustOriginLine } from '../../lib/trustOrigin';
-import { TRUST_STEPS_CATEGORY, stepNewsToken, stepNewsTokens } from '../../lib/trustStepBadges';
+import { TRUST_STEPS_CATEGORY, isStepNewsPending, stepNewsToken, stepNewsTokens } from '../../lib/trustStepBadges';
 import { SHORT_STAGES } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import FamilyShareToggle from '../family/FamilyShareToggle';
@@ -73,12 +73,16 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
             from a screen reader (HCI rule 1); the eye gets it on open. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}${news ? '. New: one step up' : ''}`}
+          accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}${
+            news ? (atTop ? '. New: fully trusted' : '. New: one step up, your move') : ''
+          }`}
           accessibilityState={{ expanded: open }}
           onPress={() => {
-            // Opening the row is reading the news: the badge clears here, per
-            // row, never on arrival (owner call 2026-08-28, the Updates rule).
-            if (!open && news) onSeen?.();
+            // The badge stays until the elder starts the next step (owner
+            // call 2026-08-28: "until I accept, the badge should be there");
+            // only at the top of the ladder, where nothing is left to start,
+            // does opening the row read the news.
+            if (!open && news && atTop) onSeen?.();
             setOpen((o) => !o);
           }}
           style={({ pressed }) => ({
@@ -98,8 +102,9 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           >
             {card.customerName}
           </Text>
-          {/* The helper accepted a step since the elder last looked (owner
-              call 2026-08-28: "a badge near the name of the helper"). */}
+          {/* The helper accepted a step and the elder has not started the
+              next one yet (owner call 2026-08-28: "a badge near the name of
+              the helper", "until I accept, the badge should be there"). */}
           <RowBadge count={news ? 1 : 0} />
           <ChevronRight
             size={18}
@@ -266,9 +271,10 @@ export default function MyHelpersPanel() {
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
-  // Ladders that moved since the elder last opened that row: a helper
-  // accepted a step (owner call 2026-08-28). Seeded on first run, so the
-  // friendships already here never arrive as news (trustStepBadges.js).
+  // Ladders that moved and are waiting on the elder's move: a helper accepted
+  // a step and the elder has not started the next one (owner call
+  // 2026-08-28). Seeded on first run, so the friendships already here never
+  // arrive as news (trustStepBadges.js).
   const stepNews = useUnseenTokens(user?.userId, TRUST_STEPS_CATEGORY, stepNewsTokens(connections), { seed: true });
   const stepSeenKey = seenKey(user?.userId, TRUST_STEPS_CATEGORY);
 
@@ -282,6 +288,9 @@ export default function MyHelpersPanel() {
           : 'You both agreed. One step up the ladder!',
         'success'
       );
+      // Starting the next step is the elder's move: the news badge for this
+      // ladder is done with (trustStepBadges.js, isStepNewsPending).
+      if (c) markSeen(stepSeenKey, [stepNewsToken(c)]);
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
@@ -412,7 +421,7 @@ export default function MyHelpersPanel() {
               connReady={!!connections}
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
-              news={!!c && stepNews.includes(stepNewsToken(c))}
+              news={isStepNewsPending(c, stepNews)}
               onSeen={() => c && markSeen(stepSeenKey, [stepNewsToken(c)])}
               onConfirm={() => confirmStep(card)}
               onPause={async () => {

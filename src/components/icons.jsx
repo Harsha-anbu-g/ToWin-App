@@ -93,6 +93,7 @@ export const Star = icon([['path', { d: 'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4
 export const Trash2 = icon([['path', { d: 'M10 11v6' }], ['path', { d: 'M14 11v6' }], ['path', { d: 'M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6' }], ['path', { d: 'M3 6h18' }], ['path', { d: 'M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2' }]]);
 export const TrendingUp = icon([['path', { d: 'M16 7h6v6' }], ['path', { d: 'm22 7-8.5 8.5-5-5L2 17' }]]);
 export const UserRound = icon([['circle', { cx: '12', cy: '8', r: '5' }], ['path', { d: 'M20 21a8 8 0 0 0-16 0' }]]);
+export const UserRoundPlus = icon([['path', { d: 'M2 21a8 8 0 0 1 13.292-6' }], ['circle', { cx: '10', cy: '8', r: '5' }], ['path', { d: 'M19 16v6' }], ['path', { d: 'M22 19h-6' }]]);
 export const UserRoundSearch = icon([['circle', { cx: '10', cy: '8', r: '5' }], ['path', { d: 'M2 21a8 8 0 0 1 10.434-7.62' }], ['circle', { cx: '18', cy: '18', r: '3' }], ['path', { d: 'm22 22-1.9-1.9' }]]);
 export const UserX = icon([['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }], ['circle', { cx: '9', cy: '7', r: '4' }], ['line', { x1: '17', x2: '22', y1: '8', y2: '13' }], ['line', { x1: '22', x2: '17', y1: '8', y2: '13' }]]);
 export const Users = icon([['path', { d: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2' }], ['path', { d: 'M16 3.128a4 4 0 0 1 0 7.744' }], ['path', { d: 'M22 21v-2a4 4 0 0 0-3-3.87' }], ['circle', { cx: '9', cy: '7', r: '4' }]]);

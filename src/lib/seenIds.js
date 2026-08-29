@@ -33,14 +33,34 @@ const getVersion = () => version;
 
 // Hydrate once per key. Counts stay 0 until the stored set arrives — a badge
 // that flashes and then vanishes is worse than one that appears a beat late.
-export function loadSeen(storageKey) {
+//
+// `seed` (optional): what to treat as already seen when NOTHING is stored for
+// this key yet, i.e. the first run of a category on this phone. Without it,
+// every token that exists on day one is "new" — fine for Updates, where the
+// screen marks the whole feed seen on open, but a badge that clears per row
+// (trust steps, owner call 2026-08-28) would greet an existing account with a
+// number on every friend. Only the first hydration seeds; a stored set, even
+// an empty one, is the truth from then on.
+export function loadSeen(storageKey, seed) {
   if (!loads.has(storageKey)) {
     loads.set(
       storageKey,
       (async () => {
         try {
           const raw = await Store.getItemAsync(storageKey);
-          sets.set(storageKey, new Set(raw ? JSON.parse(raw) : []));
+          if (raw != null) {
+            sets.set(storageKey, new Set(JSON.parse(raw)));
+          } else {
+            const initial = Array.isArray(seed) && seed.length ? capTokens([], seed) : [];
+            sets.set(storageKey, new Set(initial));
+            if (initial.length) {
+              try {
+                await Store.setItemAsync(storageKey, JSON.stringify(initial));
+              } catch {
+                // Storage full/blocked — the seed lives in-session only.
+              }
+            }
+          }
         } catch {
           // Storage unavailable — seen-state is in-session only (storage.js contract).
           sets.set(storageKey, new Set());
@@ -59,11 +79,35 @@ export function unseenCount(storageKey, tokens) {
   return tokens.reduce((n, token) => (seen.has(token) ? n : n + 1), 0);
 }
 
-/** Which of these tokens the user has NOT seen yet (order kept). */
-export function unseenTokens(storageKey, tokens) {
+// The item an `${id}:…` token belongs to.
+const idOf = (token) => String(token).split(':')[0];
+
+/**
+ * Which of these tokens the user has NOT seen yet (order kept).
+ * `knownOnly`: only tokens whose item already has SOME seen token count — an
+ * item new to this phone is not "changed since you last looked", it is new,
+ * and the new-item badge is somebody else's job (seed mode, below).
+ */
+export function unseenTokens(storageKey, tokens, { knownOnly = false } = {}) {
   const seen = sets.get(storageKey);
   if (!seen) return [];
-  return tokens.filter((token) => !seen.has(token));
+  const known = knownOnly ? new Set([...seen].map(idOf)) : null;
+  return tokens.filter((token) => !seen.has(token) && (!known || known.has(idOf(token))));
+}
+
+/**
+ * Seed mode, kept up: hydrate (seeding everything on a first run), then mark
+ * seen every token whose item has no seen token at all, so an item that is
+ * new to this phone starts quiet and only its NEXT change is news. A demo
+ * reset that recreates every connection, or a brand-new friendship, must not
+ * arrive as a badge on every row (seen 2026-08-28).
+ */
+export async function seedNewIds(storageKey, tokens) {
+  await loadSeen(storageKey, tokens);
+  const seen = sets.get(storageKey);
+  const known = new Set([...seen].map(idOf));
+  const fresh = tokens.filter((token) => !known.has(idOf(token)));
+  if (fresh.length) await markSeen(storageKey, fresh);
 }
 
 /**
@@ -116,11 +160,9 @@ export async function markSeen(storageKey, tokens) {
  * The red badge count for a tab: hydrates the store, re-renders on any
  * seen-state change, and returns how many tokens are new to this user.
  */
-export function useUnseenBadge(userId, category, tokens) {
+export function useUnseenBadge(userId, category, tokens, options) {
   const storageKey = seenKey(userId, category);
-  useEffect(() => {
-    loadSeen(storageKey);
-  }, [storageKey]);
+  useHydrate(storageKey, tokens, options);
   useSyncExternalStore(subscribe, getVersion, getVersion);
   return unseenCount(storageKey, tokens);
 }
@@ -131,13 +173,28 @@ export function useUnseenBadge(userId, category, tokens) {
  * moment it is marked seen (Updates, owner call 2026-08-28: the wash clears
  * per row, on tap, never on opening the screen).
  */
-export function useUnseenTokens(userId, category, tokens) {
+export function useUnseenTokens(userId, category, tokens, options) {
   const storageKey = seenKey(userId, category);
-  useEffect(() => {
-    loadSeen(storageKey);
-  }, [storageKey]);
+  useHydrate(storageKey, tokens, options);
   useSyncExternalStore(subscribe, getVersion, getVersion);
-  return unseenTokens(storageKey, tokens);
+  return unseenTokens(storageKey, tokens, { knownOnly: !!options?.seed });
+}
+
+// Hydration for the two hooks. `{ seed: true }` waits for the first non-empty
+// token list, hands it to loadSeen as the seed (so a category whose badge
+// clears per row starts quiet on a fresh phone), and keeps seeding items new
+// to this phone as they appear (seedNewIds); the read side then reports only
+// changes on known items (unseenTokens knownOnly), so nothing flashes in the
+// frame before the seed lands. Until hydration the counts read 0, the same
+// "a beat late beats a flash" rule as always.
+function useHydrate(storageKey, tokens, { seed = false } = {}) {
+  const seedTokens = seed ? tokens.join('|') : '';
+  useEffect(() => {
+    if (!seed) loadSeen(storageKey);
+    else if (tokens.length) seedNewIds(storageKey, tokens);
+    // `tokens` is a fresh array every render; seedTokens carries its content.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [storageKey, seed, seedTokens]);
 }
 
 /** Tests only: forget everything, including hydration state. */

@@ -14,7 +14,7 @@
 // the same button shape as Friends and Updates (owner: it "look[ed] like a
 // batch", a label rather than a doorway).
 import { useRouter } from 'expo-router';
-import { Bell, ShieldCheck, UserRoundSearch } from '../icons';
+import { Bell, ShieldCheck, UserRoundPlus, UserRoundSearch } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -87,7 +87,7 @@ function IconTarget({ label, caption, captionColor, onPress, badgeCount, childre
   );
 }
 
-export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount = 0, style }) {
+export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts, alertCount = 0, style }) {
   const { t, type, fontScaleCaps } = useTheme();
   const router = useRouter();
 
@@ -130,6 +130,14 @@ export default function NavRow({ trustScore, onAddFriends, onAlerts, alertCount 
         {onAddFriends ? (
           <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
             <UserRoundSearch size={26} color={t.blueDeep} strokeWidth={1.8} />
+          </IconTarget>
+        ) : onAddParent ? (
+          // The family seat's way of adding a person, in the slot the elder's
+          // Friends button holds, so all three hubs open the same way (owner
+          // call 2026-08-28, elder as the base). The plus, not the magnifier:
+          // a parent is named, never searched for.
+          <IconTarget label="Add parent" caption="Add parent" captionColor={t.blueDeep} onPress={onAddParent}>
+            <UserRoundPlus size={26} color={t.blueDeep} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
       </View>
