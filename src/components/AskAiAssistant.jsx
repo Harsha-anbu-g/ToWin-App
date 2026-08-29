@@ -477,6 +477,15 @@ export default function AskAiAssistant() {
           style={{
             flex: 1,
             backgroundColor: t.surface,
+            // A small hairline edge so the sheet reads as its own card, not a
+            // borderless bleed into the screen (owner 2026-08-29). Rounded top
+            // + overflow clip keeps the wash header inside the corners; the
+            // app's warm hairline, never a shadow.
+            borderWidth: 1,
+            borderColor: t.border,
+            borderTopLeftRadius: 16,
+            borderTopRightRadius: 16,
+            overflow: 'hidden',
             paddingTop: Platform.OS === 'ios' ? 0 : insets.top,
             paddingBottom: insets.bottom,
           }}
