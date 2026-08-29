@@ -18,6 +18,10 @@ Context that matters for ranking: this app ships both to the app stores and as a
 
 The headline: the elder Edit Profile flow is broken twice over (crash on open, guaranteed 400 on save), the block list leaks across accounts on shared devices, and the phone-web build silently loses pull-to-refresh, hit targets, and several other affordances the native app has.
 
+## Status on 2026-08-29
+
+A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close) found that 30 of the 37 unticked findings had already been fixed by the store-hardening and later runs without the record being updated (several fixes cite the DEEP id in a code comment), and DEEP-37 was closed by an owner decision. Each ticked box below names the file and line that proves it. Six findings stayed open and went to the ralph backlog `ralph/prd.json` (DEEP-08 remainder, DEEP-24, DEEP-29 remainder, DEEP-30 remainder, DEEP-38 remainder, DEEP-40); those boxes get ticked by the story that closes them.
+
 ## Findings index
 
 | ID | Sev | Finding | Location |
@@ -79,7 +83,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Treat lookingFor as the enum string it is. Keep the website's select semantics (for example a 3-option chip row bound to `form.lookingFor`), or at minimum guard with `Array.isArray(me.lookingFor)` before `.join` and repurpose extraTags for elders.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/profile-edit.jsx:59 keeps lookingFor as the enum string (DEFAULT_LOOKING_FOR, "enum not list"); :127 and :142 prefill `me.lookingFor ?? DEFAULT_LOOKING_FOR` with no .join; :587 radio chips bind form.lookingFor.
 
 ---
 
@@ -96,7 +100,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Send the enum string the website sends (`lookingFor: form.lookingFor || 'BOTH'`) and stop mapping the elder's free-text tags into this field. The web client sends elder tags only via `interests`.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/profile-edit.jsx:326 sends `lookingFor: form.lookingFor`, the enum string; the elder's tags travel only in interests.
 
 ### DEEP-03: Block list is device-global: leaks across accounts and survives logout
 
@@ -109,7 +113,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Scope the storage key per account like the seen and consent stores (for example `towin-blocked-<userId>` via a `blockedKey(userId)` helper, migrating any existing device-wide list to the current user), or at minimum clear `KEYS.blockedUsers` during `AuthContext.logout()`.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/lib/storageKeys.js:42 blockedPrefix 'towin-blocked-' with blockedKey(userId); blocks also live on the server since HARD-106 (a5efb94).
 
 ### DEEP-04: Inline elder-name link is a 17px tap target and uses link role for in-app navigation
 
@@ -135,7 +139,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Read `channel` from `useLocalSearchParams` and forward it: `href={channel ? `/chat/${connectionId}?channel=${channel}` : `/chat/${connectionId}`}`.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/messages/[connectionId].jsx forwards every query parameter to /chat, so ?channel=family opens the family thread.
 
 ### DEEP-06: Barrel imports of lucide-react-native bundle all 3,490 icons for the 56 actually used
 
@@ -148,7 +152,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Either enable Expo SDK 54's experimental Metro tree shaking for the export, or vendor the 56 used icons: one `src/components/icons.js` exporting local createLucideIcon-based components (the repo already hand-rolls SVG in TortoiseMark), then change the 37 import sites to import from it and add an eslint no-restricted-imports rule for `lucide-react-native`.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: `grep -rl "from 'lucide-react-native'" app src` returns 0 files; src/components/icons.jsx hand-rolls every icon in use.
 
 ---
 
@@ -165,7 +169,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** In the shared RefreshControl wrapper (or Screen.jsx), on `Platform.OS === 'web'` render an explicit refresh affordance instead, for example a small themed "Refresh" row or header button wired to the same onRefresh, since the pull gesture cannot be implemented in react-native-web.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/ui/RefreshControl.jsx renders a Refresh TextLink wired to onRefresh on web, native path untouched.
 
 ### DEEP-08: Web drops hitSlop: controls whose 44pt target depends on it are 20-38pt on web
 
@@ -191,7 +195,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** After the seen POST commits, also invalidate `['connections']` (or setQueryData to zero that connection's unreadCount), or add the UX-710 focus-refetch pattern to messages.jsx.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/chat/[connectionId].jsx:193 invalidates ['connections'] after the seen POST commits, with the comment naming this finding.
 
 ### DEEP-10: Home "My boxes" counts go stale forever: ['passon-boxes-summary'] is never invalidated
 
@@ -204,7 +208,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Add `['passon-boxes-summary']` to pass-on/index.jsx reload() and to home.jsx's elder refresh keys, or derive the card from the same `['passon-mine']` and `['passon-setup']` queries instead of a private key.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/passon/MyBoxesCard.jsx:37 and :42 read ['passon-mine'] and ['passon-setup']; 'passon-boxes-summary' has 0 references.
 
 ### DEEP-11: Photo and ID pickers: rejection from pickImage is unhandled, tap dies silently
 
@@ -217,7 +221,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Wrap the whole body of changePhoto and uploadId in try/catch (or catch inside pickImage) and toast "Could not open your photos. Please try again." Also guard re-entry with a picking flag so a double-tap is ignored.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/profile-edit.jsx:216-240 pickImage owns try/catch/finally, a pickingRef re-entry guard and the toast "Could not open your photos. Please try again.".
 
 ### DEEP-12: verify-email reports a network failure as "link invalid, sign up again"
 
@@ -230,7 +234,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** In the catch, check err.response: absent means show "Check your connection" with a Try again button that re-posts the token; present (4xx) keeps the invalid-link copy.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/(auth)/verify-email.jsx:30 `err?.response ? 'error' : 'offline'`; :82 Try again button re-posts the token.
 
 ### DEEP-13: Pass-on page: links, connections, and keyholders fetch failures masquerade as empty data
 
@@ -243,7 +247,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Take isError and refetch from the three queries and render LoadError (bare) in the letter form's person slot, the setup step-1 area, and the keyholders card instead of the empty-state copy.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/pass-on/index.jsx:225-245 take isError and refetch on family-links, connections and passon-keyholders.
 
 ### DEEP-14: My Family Controls tab claims "no friendships yet" when /connections failed
 
@@ -256,7 +260,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Destructure isError and refetch from the connections query and show LoadError in the Sharing tab (and suppress sharedCount) instead of the no-friendships empty state.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/family/index.jsx:69 connectionsFailed; :78 comment records the false-empty rule for the Sharing tab.
 
 ### DEEP-15: "Passwords match" confirmation text fails contrast at 2.93:1 and 13px
 
@@ -269,7 +273,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Use t.greenDeep (#1a5c2e, 8.9:1 on white) at text.sm 16, or darken MATCH_GREEN until it clears 4.5:1, and add it to the contrast test suite.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/(auth)/create-account.jsx:377 renders the line in greenDeep at body size; the comment records the 2.93:1 measurement.
 
 ### DEEP-16: Role-choice cards render decision copy at 13px on both signup screens (merged finding)
 
@@ -282,7 +286,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Raise the description lines to type.meta (14) at minimum, ideally type.body (16) since the copy is read, not scanned. Make the ROLE_PROMPT text.sm (16) with matching weight on both screens so the twins cannot drift. Fix both files together; they share the ROLE_PROMPT pattern.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/(auth)/register.jsx:72-76 role label and description at type.body; finish-setup.jsx:168 ROLE_PROMPT at type.body weight 700 and :203 role labels at type.body.
 
 ### DEEP-17: Post Help category and urgency chips lack single-select (radio) semantics
 
@@ -334,7 +338,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Raise both labels (and the greeting chip) to type.meta 14 with the fontScaleCaps.body multiplier; the 44px boxes already have room.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/AskAiAssistant.jsx:111, :201 and :228 set Read aloud and Report this answer at type.meta.
 
 ### DEEP-21: Founder card text on the feedback screen is hardcoded at 14px (merged finding)
 
@@ -347,7 +351,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Move the two paragraphs (lines 49, 52) to type.body (16). The credential line (42) and contact labels (73) should use the tokens rather than literals, at type.meta 14 minimum, ideally 16 for the tappable contact labels since they carry addresses that must be read exactly.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/feedback/CreatorCard.jsx:69 and :72 paragraphs at type.body, :95 contact labels at type.body, :57-63 credential lines on type.meta tokens.
 
 ### DEEP-22: Ask AI sheet re-renders every chat bubble on each composer keystroke
 
@@ -360,7 +364,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Wrap renderItem in useCallback with stable deps (the theme object is stable; route speak and reportAnswer through refs or useCallback), extract a memoized MessageBubble row, and hoist the static ListEmptyComponent, mirroring the chat thread's UX-708 latest-ref pattern.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/AskAiAssistant.jsx:389-392 renderItem in useCallback over a memoized MessageBubble; intro and footer hoisted with useMemo.
 
 ### DEEP-23: Friends "Find" list defeats its own PersonRow memo
 
@@ -373,7 +377,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Move status and pending computation into props: useCallback renderItem (deps: statusOf inputs, request.isPending and variables, confirm), pass primitives (status, sendingId) to PersonRow and build the trailing chip inside the memoized component, as renderPendingRow already does.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/friends/index.jsx:440 renderFindRow in useCallback, :611 renderItem={renderFindRow}; statusOf memoized at :346.
 
 ### DEEP-24: react-native-paper ships whole-library (no production babel plugin in repo)
 
@@ -403,7 +407,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Treat the connections query's isError as unknown too (`connUnknown = !conn && (connsLoading || connsError)`) and keep the footer hidden, or show a small retry row for the connection state.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/chat/[connectionId].jsx:133 `connUnknown = !conn && (connsLoading || connsError)`; :539 retry row for a failed connections fetch.
 
 ### DEEP-26: Check-in card invites re-adding family when the family-links fetch failed
 
@@ -416,7 +420,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** On isError render the neutral checked-in line without the "Add your family" link (absence is honest; an invitation is a claim), for example skip FamilyNote entirely when the query errored.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/home/CheckinCard.jsx:146 familyFailed guards the Add your family line.
 
 ### DEEP-27: Friend profile shows "Add as friend" for an existing friend when /connections failed
 
@@ -429,7 +433,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Take isError from the connections query and, while connection state is unknown or failed, render a neutral placeholder (or LoadError bare with retry) in the action slot instead of defaulting to "Add as friend".
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/user/[id].jsx:87-96 connsFailed with the comment on the missing-answer rule; no Add as friend while unknown.
 
 ### DEEP-28: Messages Groups tab shows "No group chats yet" when /family/journey failed
 
@@ -442,7 +446,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Let the query error normally (drop the inner catch) and, when it fails, show LoadError (bare) inside the Groups tab only, keeping the person tabs functional.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/(tabs)/messages.jsx:455 LoadError for your group chats with refetchJourney; the inner catch is gone.
 
 ### DEEP-29: login() return value ignored: a bad token bounces to Login with no message
 
@@ -481,7 +485,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Hide the row on web: wrap it in `Platform.OS !== 'web'` (or a capability check exported from haptics.js, such as `hapticsSupported`), mirroring how GoogleLoginButton renders null off-web.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/(tabs)/profile.jsx:380 hides the Vibration feedback row on web.
 
 ### DEEP-32: Chat failed-send recovery instruction rendered at 13px
 
@@ -494,7 +498,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Render the failed-state caption at type.meta (14) or type.body (16) while leaving the normal timestamp at 13.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/chat/[connectionId].jsx:376-379 failed caption at type.meta, the timestamp stays 13.
 
 ### DEEP-33: FirstTimeCard: 14px body text and a sans-serif bold title (merged finding)
 
@@ -507,7 +511,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Body Text to type.body (16) with lineHeight around 22. Title to fontFamily.display at type.cardTitle (19) with no fontWeight.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/ui/FirstTimeCard.jsx:50 title in fontFamily.display at type.cardTitle, :58 body at type.body lineHeight 22.
 
 ### DEEP-34: "Change photo" pill uses fixed height, clipping its label at large OS text
 
@@ -520,7 +524,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Change `height: 34` to `minHeight: 34` (hitSlop already tops the target to 46px effective on native) and cap the label with fontScaleCaps.body.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: app/profile-edit.jsx:461-466 minHeight 44 with the comment; label capped with fontScaleCaps.body.
 
 ### DEEP-35: Peekaboo shell cells are not focusable or role-labelled on the web build
 
@@ -533,7 +537,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** On web, overlay invisible focusable Pressables (position absolute over each hex), or add role button plus tabIndex plus onKeyDown via react-native-web's dataSet and aria props on the Polygon instead of swapping the tag.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/lib/svgA11y.js web branch adds tabIndex 0 and Enter/Space activation, comment cites this finding.
 
 ### DEEP-36: Paused trusted elder silently moves tabs in MyEldersPanel
 
@@ -546,7 +550,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Mirror MyHelpersPanel: split paused connections by `currentTrustLevel === 'TRUSTED'`, render them in their own segment, and include them in both segment counts.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/trust/MyEldersPanel.jsx:334-342 splits paused by currentTrustLevel and counts them in both segments.
 
 ### DEEP-37: Demo account credentials compiled into production bundles despite "never ship" gate
 
@@ -559,7 +563,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Move the credential literals behind the same env gate that controls rendering (for example read them from EXPO_PUBLIC_* vars set only on dev and preview profiles, or lazy-require a module excluded from production builds), and delete the unused DemoCard.jsx duplicate (with owner permission, per the no-delete rule).
 
-- [ ] Fixed
+- [x] Closed by owner decision 2026-08-16 (src/lib/appEnv.js header): the demo seats are public by design and eas.json's production profile sets EXPO_PUBLIC_SHOW_DEMO=1, so the credentials ship on purpose. Still owner-only: the dead duplicate src/components/auth/DemoCard.jsx (0 importers) needs a yes before it can be deleted (verified 2026-08-29).
 
 ### DEEP-38: profile-edit DOB and Bio inputs get inline onChangeText, re-rendering two Paper fields on every keystroke
 
@@ -585,7 +589,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Slice display to the latest 20 or so with a "Show older alerts" expander (or move the feed to its own FlatList screen); precompute first-of-kind indices once with a Set instead of findIndex per row.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/family/FamilyAlertsFeed.jsx:129 slice(0, NEWEST_SHOWN) with a show-all switch; :133 first-of-kind computed in one pass.
 
 ### DEEP-40: Feedback intro callout paragraph at 14px where siblings use 16px
 
@@ -611,7 +615,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Either style it as a real heading (fontFamily.display, size around 19, no fontWeight) or keep the sans label styling and drop the header role in favor of the sheet's content headings.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: src/components/AskAiAssistant.jsx:504-508 header in fontFamily.display at type.cardTitle with no fontWeight.
 
 ---
 
