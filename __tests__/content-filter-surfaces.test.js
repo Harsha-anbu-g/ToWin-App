@@ -8,9 +8,16 @@
 // Private one-to-one chat between an elder and a helper is what a reviewer
 // probes and where an elder is most exposed, so it gets the same check and the
 // same sentence as the help form. HARD-113.
+//
+// A third surface was still open: the help request a guardian composes for
+// their parent (FamilyNeedsForParent). It posts free text to the same /needs
+// endpoint the parent's own composer posts to, and the backend carries no
+// wordlist of its own, so a request typed there went out unchecked. It is also
+// the path a reviewer reaches by accepting a family invitation. APS-05.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import ChatThread from '../app/chat/[connectionId]';
+import FamilyNeedsForParent from '../src/components/family/FamilyNeedsForParent';
 import FamilyReviewForParent from '../src/components/family/FamilyReviewForParent';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ToastProvider } from '../src/context/ToastContext';
@@ -188,5 +195,96 @@ describe("the review a family member writes on their parent's behalf", () => {
         onBehalfOfElderId: 'e1',
       })
     );
+  });
+});
+
+
+describe("the help request a family member writes for their parent", () => {
+  const openForm = async () => {
+    const r = await wrap(
+      <FamilyNeedsForParent elderId="e1" elderName="Margaret" openNeeds={[]} canManage />
+    );
+    await fireEvent.press(r.getByRole('button', { name: 'Ask for help for Margaret' }));
+    return r;
+  };
+
+  const posts = () => api.post.mock.calls.filter(([url]) => url === '/needs');
+
+  test('a title with a blocked word never reaches the server', async () => {
+    // Arrange
+    const r = await openForm();
+
+    // Act
+    await fireEvent.changeText(
+      r.getByLabelText('What does Margaret need help with?'),
+      'someone to sort out that retard next door'
+    );
+    await fireEvent.press(r.getByText('Send for Margaret'));
+
+    // Assert - the same sentence the parent's own composer uses, word for word.
+    await waitFor(() => expect(r.getByText(objectionableMessage('retard'))).toBeTruthy());
+    expect(posts()).toHaveLength(0);
+  });
+
+  test('a description with a blocked word never reaches the server', async () => {
+    // Arrange - the title is clean, so only the second field can refuse this.
+    const r = await openForm();
+
+    // Act
+    await fireEvent.changeText(
+      r.getByLabelText('What does Margaret need help with?'),
+      'A ride to the doctor on Tuesday'
+    );
+    await fireEvent.changeText(
+      r.getByLabelText('Anything else a helper should know? (optional)'),
+      'tell the driver to kill yourself if he is late'
+    );
+    await fireEvent.press(r.getByText('Send for Margaret'));
+
+    // Assert
+    await waitFor(() => expect(r.getByText(objectionableMessage('kill yourself'))).toBeTruthy());
+    expect(posts()).toHaveLength(0);
+  });
+
+  test('the words stay in the field so they can be fixed', async () => {
+    // Arrange - HCI rule 9, the same promise the chat composer makes.
+    const r = await openForm();
+
+    // Act
+    await fireEvent.changeText(
+      r.getByLabelText('What does Margaret need help with?'),
+      'someone to sort out that retard next door'
+    );
+    await fireEvent.press(r.getByText('Send for Margaret'));
+
+    // Assert
+    await waitFor(() => expect(r.getByText(objectionableMessage('retard'))).toBeTruthy());
+    expect(r.getByLabelText('What does Margaret need help with?').props.value).toBe(
+      'someone to sort out that retard next door'
+    );
+  });
+
+  test('an ordinary request still goes out, on the parent behalf', async () => {
+    // Arrange
+    const r = await openForm();
+
+    // Act
+    await fireEvent.changeText(
+      r.getByLabelText('What does Margaret need help with?'),
+      'A ride to the doctor on Tuesday'
+    );
+    await fireEvent.press(r.getByText('Send for Margaret'));
+
+    // Assert
+    await waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith('/needs', {
+        title: 'A ride to the doctor on Tuesday',
+        description: null,
+        category: 'COMPANIONSHIP',
+        urgency: 'NORMAL',
+        onBehalfOfElderId: 'e1',
+      })
+    );
+    expect(r.queryByText(/Please take out/)).toBeNull();
   });
 });

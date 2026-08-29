@@ -411,11 +411,21 @@ The filter now runs on the private message composer
 member writes about a helper for their parent
 (`src/components/family/FamilyReviewForParent.jsx`, `submit`). Both refuse
 before the POST, keep the typed words on screen, and show the same sentence the
-help form shows. `objectionableError` now has call sites in five files; grep for
-it to count them. Nothing else changed: it is still a client-side wordlist, it
-is still not moderation, and the Spring Boot backend still has no filter of its
-own, so report and block remain the answer to whatever it misses. The block
-below says exactly that.
+help form shows. ~~`objectionableError` now has call sites in five files; grep
+for it to count them.~~ Nothing else changed: it is still a client-side
+wordlist, it is still not moderation, and the Spring Boot backend still has no
+filter of its own, so report and block remain the answer to whatever it misses.
+The block below says exactly that.
+
+**Corrected again on 2026-08-29 (APS-05).** One write path was still open: the
+help request a family member composes for their parent
+(`src/components/family/FamilyNeedsForParent.jsx`, `postNeed`). It posts free
+text to the same `/needs` endpoint the parent's own composer posts to, and the
+backend has no wordlist, so a request typed there went out unchecked. It runs
+the same call on both the title and the description now, with the same sentence
+in the same place under the field. `objectionableError` has call sites in
+**six** files; grep for it to count them. The list of surfaces above did not
+change, because a request a guardian writes was always a help request.
 
 <!-- review-notes-v1:start -->
 WHAT TOWINLY IS
@@ -730,9 +740,15 @@ Wording replaced: "Private messages rely on report and block rather than on the
 word filter."
 Why it changed: the filter now runs in the chat composer and on the family
 review comment, so the sentence it replaced had become the untrue one. The
-notes now name five surfaces and say report and block cover what the filter
-misses. `App/__tests__/content-filter-surfaces.test.js` holds both halves: a
+notes name the surfaces the filter covers and say report and block cover what
+it misses. `App/__tests__/content-filter-surfaces.test.js` holds both halves: a
 refused message never reaches the server, an ordinary one still sends.
+
+**1c. Extended on 2026-08-29 (APS-05).** The guardian's help-request composer
+was the last write path with no check on it. It has the same one now, and the
+same test file covers it: a title or a description carrying a blocked word
+never reaches the server, the typed words stay on screen, and an ordinary
+request still goes out on the parent's behalf. ~~Five surfaces~~ six.
 
 **2. The Support URL was recorded as blocking with nothing built.**
 Old wording, in `app-store-connect-fields.md` section 6.2: "Nothing exists

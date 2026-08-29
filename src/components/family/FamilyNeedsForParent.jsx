@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api from '../../api/client';
 import { useToast } from '../../context/ToastContext';
+import { objectionableError } from '../../lib/contentFilter';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
@@ -77,6 +78,7 @@ export default function FamilyNeedsForParent({
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formMsg, setFormMsg] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [confirmId, setConfirmId] = useState(null);
 
   const parent = elderName || 'your parent';
@@ -95,6 +97,7 @@ export default function FamilyNeedsForParent({
       }),
     onSuccess: () => {
       setForm(EMPTY_FORM);
+      setFieldErrors({});
       setFormOpen(false);
       showToast(`Asked for help for ${parent}. Helpers will see you asked for them.`, 'success');
       onChanged?.();
@@ -119,11 +122,19 @@ export default function FamilyNeedsForParent({
   // Nothing to say: no open requests, and no permission to add one.
   if (!canManage && needs.length === 0) return null;
 
+  // The parent's own composer refuses objectionable words before anything is
+  // posted (app/(tabs)/action.jsx). This form writes free text to the same
+  // /needs endpoint, and the server keeps no wordlist, so without the same
+  // check a guardian's request went out unread. Same call, same sentence, same
+  // place under the field.
   const postNeed = () => {
-    if (!form.title.trim()) {
-      setFormMsg(`Please write what ${parent} needs help with.`);
-      return;
-    }
+    const errs = {};
+    if (!form.title.trim()) errs.title = `Please write what ${parent} needs help with.`;
+    errs.title = errs.title || objectionableError(form.title);
+    errs.description = objectionableError(form.description);
+    Object.keys(errs).forEach((k) => { if (!errs[k]) delete errs[k]; });
+    setFieldErrors(errs);
+    if (Object.keys(errs).length) return;
     setFormMsg('');
     post.mutate();
   };
@@ -252,14 +263,22 @@ export default function FamilyNeedsForParent({
           <Input
             label={`What does ${parent} need help with?`}
             value={form.title}
-            onChangeText={(v) => setForm((f) => ({ ...f, title: v }))}
+            onChangeText={(v) => {
+              setForm((f) => ({ ...f, title: v }));
+              setFieldErrors((f) => ({ ...f, title: '' }));
+            }}
+            error={fieldErrors.title}
             placeholder="A ride to the doctor on Tuesday"
           />
 
           <Input
             label="Anything else a helper should know? (optional)"
             value={form.description}
-            onChangeText={(v) => setForm((f) => ({ ...f, description: v }))}
+            onChangeText={(v) => {
+              setForm((f) => ({ ...f, description: v }));
+              setFieldErrors((f) => ({ ...f, description: '' }));
+            }}
+            error={fieldErrors.description}
             multiline
           />
 
