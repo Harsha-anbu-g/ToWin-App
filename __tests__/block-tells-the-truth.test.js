@@ -23,7 +23,7 @@ import api from '../src/api/client';
 import UserProfile from '../app/user/[id]';
 
 const DONE = "Blocked. You won't see this person anymore.";
-const HALF = 'Blocked on this phone. We could not end the friendship, so messages may still reach you.';
+const HALF = 'Blocked. We could not end the friendship yet, so it may still show in Messages until you try again.';
 
 const mockStore = {};
 jest.mock('expo-secure-store', () => ({
@@ -101,14 +101,14 @@ const blockDale = async (r) => {
   await fireEvent.press(r.getByRole('button', { name: 'Block', includeHiddenElements: true }));
 };
 
-test('the dialog says the block lives on this phone', async () => {
+test('the dialog says the block follows the account, not the phone', async () => {
   const r = await wrap(<UserProfile />);
   await waitFor(() => expect(r.getByRole('button', { name: 'Block this person' })).toBeTruthy());
   await fireEvent.press(r.getByRole('button', { name: 'Block this person' }));
 
   await waitFor(() =>
     expect(
-      r.getByText(/The block is saved on this phone, so it does not follow you to another device\./)
+      r.getByText(/It follows you to every phone you sign in on\./)
     ).toBeTruthy()
   );
 });
