@@ -122,7 +122,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Replace the nested-Text link with a separate 44px-minimum Pressable row under the meta line (reuse the "View profile" pattern from `PostedHelpList.jsx:127`) with `accessibilityRole="button"`.
 
-- [ ] Fixed
+- [x] Fixed. Fixed: OfferHelpList.jsx renders the elder name as a 44pt Pressable with accessibilityRole="button" and an accessibilityHint (verified 2026-08-28).
 
 ### DEEP-05: Website /messages/:id?channel=family links open the wrong chat
 
@@ -295,7 +295,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Wrap each chip row in `accessibilityRole="radiogroup"` with an accessibilityLabel matching the visible FieldLabel, and render the chips with radio role and aria-checked (same fix as DEEP-18).
 
-- [ ] Fixed
+- [x] Fixed. Fixed: action.jsx wraps "Kind of help" and "How soon?" in labelled radiogroups with radio chips and aria-checked (verified 2026-08-28).
 
 ### DEEP-18: Sealed-box kind picker: radiogroup contains button-role Chips, not radios
 
@@ -308,7 +308,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Either render RadioCards here, or give Chip an optional role prop and pass `accessibilityRole="radio"` plus aria-checked from this call site.
 
-- [ ] Fixed
+- [x] Fixed. Fixed: SealedItemForm.jsx chips carry accessibilityRole="radio" and aria-checked inside the radiogroup (verified 2026-08-28).
 
 ### DEEP-19: "Skip to Home" uses accessibilityRole="link" for in-app navigation
 
@@ -321,7 +321,7 @@ The headline: the elder Edit Profile flow is broken twice over (crash on open, g
 
 **Suggested fix.** Use `accessibilityRole="button"`, or replace with the shared TextLink component, which also fixes the 14px underlined label this screen's own checkin.jsx comment warns against.
 
-- [ ] Fixed
+- [x] Fixed. Fixed: game.jsx "Skip to Home" is a Pressable with accessibilityRole="button" (verified 2026-08-28).
 
 ### DEEP-20: Ask AI answer actions "Read aloud" and "Report this answer" labelled at 12px
 
