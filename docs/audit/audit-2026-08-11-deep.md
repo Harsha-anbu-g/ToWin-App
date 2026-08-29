@@ -182,7 +182,7 @@ A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close)
 
 **Suggested fix.** Give each of these controls a real 44pt-minimum box (minHeight 44 with negative margins, or padding inside the Pressable) the way Chip.jsx, ChipsField.jsx, PasswordInput.jsx, and TextLink.jsx already do ("real box, not hitSlop"), and reserve hitSlop as a native-only bonus.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: every site now carries a real box and keeps hitSlop as a native bonus. `ActionChip.jsx` (comment cites DEEP-08), `SegmentedControl.jsx:120` minHeight 40, `Button.jsx:42-61` minHeight 40/46, `chat/[connectionId].jsx:454` minHeight 44, `(tabs)/profile.jsx:276-278` Edit profile, `profile-edit.jsx:461-466` Change photo, `(auth)/landing.jsx:393`, `game.jsx:313`. The last site, the toast action, closed in this run: `src/context/ToastContext.jsx:113-124` gives the Undo Pressable minHeight 40 (the sanctioned compact target), paddingHorizontal spacing[2], centred content; guarded by `__tests__/toast-action-target.test.js` (asserts minHeight >= 40, centred, hitSlop retained).
 
 ### DEEP-09: Inbox rows stay marked unread after reading: mark-seen never invalidates ['connections']
 
