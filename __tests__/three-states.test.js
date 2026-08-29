@@ -14,7 +14,7 @@ import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import api from '../src/api/client';
-import { SETUP, SHEET, STORY_BOX } from '../src/lib/passOnLocks';
+import { SEALED_ITEMS, SETUP, SHEET, STORY_BOX } from '../src/lib/passOnLocks';
 import ChatThread from '../app/chat/[connectionId]';
 import PassOn from '../app/pass-on/index';
 import PassOnSheet from '../app/pass-on/sheet';
@@ -115,6 +115,23 @@ test('pass-on sealed tab: failed setup load shows LoadError, not the set-up teac
   await waitFor(() => expect(r.getByText('Try again')).toBeTruthy());
   expect(r.getByText(/your Sealed box/)).toBeTruthy();
   expect(r.queryByText(SETUP.start)).toBeNull();
+});
+
+test('pass-on sealed tab: an armed box whose items load fails shows LoadError, never a false empty (D2-01)', async () => {
+  mockParams = { tab: 'sealed' };
+  api.get.mockImplementation(
+    routeGet({
+      '/passon/setup': { armed: true, releaseContactEmail: 'help@towinly.com' },
+      '/passon/sealed': FAIL,
+      '/family/links': { activeLinks: [] },
+      '/connections': [],
+    })
+  );
+  const r = await wrap(<PassOn />);
+  await waitFor(() => expect(r.getByText(/your sealed items/)).toBeTruthy());
+  // The one page she opens to check her things are still there must never say
+  // the box is empty when the fetch simply failed.
+  expect(r.queryByText(SEALED_ITEMS.nothingInside)).toBeNull();
 });
 
 // ---------- one-page copy sheet: the error card must carry its retry ----------
