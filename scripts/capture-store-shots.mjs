@@ -35,6 +35,8 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
+import hideRefresh from './lib/hide-refresh.js';
+
 const OK = 0;
 const DOES_NOT_HOLD = 1;
 const COULD_NOT_OBSERVE = 2;
@@ -147,8 +149,10 @@ function verify(file) {
 /* ------------------------------------------------------------------ */
 
 function parseArgs(argv) {
-  const opts = { route: null, out: null, seat: null, verify: null, steps: [], headed: false };
-  const needsValue = new Set(['--route', '--out', '--seat', '--verify', '--wait', '--tap', '--page', '--pause']);
+  const opts = { route: null, out: null, seat: null, verify: null, 'dump-text': null, steps: [], headed: false };
+  const needsValue = new Set([
+    '--route', '--out', '--seat', '--verify', '--dump-text', '--wait', '--tap', '--page', '--pause',
+  ]);
   const stepFlags = new Set(['--wait', '--tap', '--page', '--pause']);
 
   for (let i = 0; i < argv.length; i += 1) {
@@ -252,21 +256,11 @@ async function loadChromium() {
 }
 
 /**
- * Hides the web-only "Refresh" link before a shot. Narrow on purpose: the
- * element whose whole text is Refresh, then only ancestors whose whole text is
- * also Refresh. An earlier version walked three levels up regardless and hid
- * the scroll container, which produced three blank captures.
+ * The rule for taking the web-only Refresh control off the page lives in
+ * scripts/lib/hide-refresh.js, where a jsdom test can reach it. It runs in the
+ * browser, so it is handed over as source and called against that document.
  */
-const HIDE_REFRESH = () => {
-  const isJustRefresh = (el) => (el.textContent || '').trim() === 'Refresh';
-  for (const el of Array.from(document.querySelectorAll('*'))) {
-    if (!isJustRefresh(el)) continue;
-    if (Array.from(el.children).some(isJustRefresh)) continue;
-    let node = el;
-    while (node.parentElement && isJustRefresh(node.parentElement)) node = node.parentElement;
-    node.style.visibility = 'hidden';
-  }
-};
+const hideRefreshInPage = `(${hideRefresh.toString()})(document)`;
 
 async function signIn(page, seatName) {
   const seat = SEATS[seatName];
@@ -334,12 +328,46 @@ async function capture(opts) {
 
     for (const step of opts.steps) await runStep(page, step);
 
-    await page.evaluate(HIDE_REFRESH);
+    await page.evaluate(hideRefreshInPage);
     await page.waitForTimeout(300);
 
     fs.mkdirSync(path.dirname(opts.out), { recursive: true });
     await page.screenshot({ path: opts.out });
-    console.log(`captured ${target} -> ${opts.out}`);
+
+    // The address AFTER the steps ran, not the one asked for. A shot meant to
+    // be a chat thread and taken on the conversation list is the kind of thing
+    // that survives every check but the one that matters, so the proof of
+    // which screen was photographed is printed next to the file.
+    console.log(`captured ${page.url()} -> ${opts.out}`);
+
+    if (opts['dump-text']) {
+      // Every string a person can read IN THE FRAME. Three filters, each
+      // earning its place: head content (title, style, font faces) is text a
+      // querySelectorAll finds and nobody sees; an element with children would
+      // repeat its descendants' words; anything outside the viewport box is
+      // off the photograph. A sweep that reports words nobody can see cannot
+      // answer the question it is asked, which is whether a phone number is
+      // visible in a store screenshot.
+      const strings = await page.evaluate(() => {
+        const skip = new Set(['STYLE', 'SCRIPT', 'TITLE', 'NOSCRIPT', 'HEAD', 'META', 'LINK']);
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        return Array.from(document.body.querySelectorAll('*'))
+          .filter((el) => !skip.has(el.tagName))
+          .filter((el) => el.children.length === 0)
+          .filter((el) => (el.textContent || '').trim())
+          .filter((el) => {
+            const r = el.getBoundingClientRect();
+            if (r.width === 0 || r.height === 0) return false;
+            if (r.bottom <= 0 || r.top >= h || r.right <= 0 || r.left >= w) return false;
+            const style = window.getComputedStyle(el);
+            return style.visibility !== 'hidden' && style.display !== 'none' && style.opacity !== '0';
+          })
+          .map((el) => el.textContent.trim());
+      });
+      fs.writeFileSync(opts['dump-text'], `${strings.join('\n')}\n`);
+      console.log(`  ${strings.length} strings visible in the frame -> ${opts['dump-text']}`);
+    }
   } finally {
     await browser.close();
   }

@@ -45,3 +45,43 @@ three real demo seats.
 
 Nothing here is deleted. These files are the record of what the listing would
 have shown.
+
+
+---
+
+## 2026-08-22 elder-seat set, superseded on 2026-08-29 (APS-02)
+
+`2026-08-29-pre-appstore-recapture/` holds the three elder-seat raws the store
+manifest bakes from, as they stood before this date.
+
+| File | Bytes | Why it was replaced |
+|---|---|---|
+| `raw-07-posted-help.png` | 208,436 | Each request was a bordered card carrying a "Looking for Help" pill, a category and urgency line, and a Remove link. Requests are plain rows now. |
+| `raw-02-checkin.png` | 157,173 | Re-shot against the shipped build. Same screen, one week later on the greeting and the date. |
+| `raw-15-chat-thread.png` | 131,624 | Same thread, re-shot against the shipped build. |
+
+What moved under the Posted Help shot, all of it visible in the two frames side
+by side: cards became rows, a search field appeared above the chips, the
+subtitle line under the heading came out, the tab bar became the floating
+capsule, its count badges went from red to blue, and the centre button now
+reads "Ask Help" rather than "Need Help". A store screenshot that does not
+match the app is a Guideline 2.3.3 problem and it is the first thing a reviewer
+sees.
+
+The chips are the one thing that did **not** move. Both frames read Waiting 3,
+In Progress 1, Completed 2, one number each. The APS-02 brief expected a
+two-number Waiting chip in the old shot and there is none: that change had
+already shipped by 2026-08-22.
+
+The replacements came from `ralph/appstore-readiness` through
+`scripts/capture-store-shots.mjs`, which now owns the pinned recipe: viewport
+440 x 956 CSS, deviceScaleFactor 3, colourScheme light, the web Refresh control
+taken out of the layout, against the production backend and the real demo
+seats.
+
+The two landing raws, `raw-12` and `raw-13`, were re-shot in the same pass and
+came back byte-identical, so they are not here. Nothing was replaced, so
+nothing was superseded. See the 2026-08-29 section of
+`screenshot-inventory.md`.
+
+Nothing here is deleted.

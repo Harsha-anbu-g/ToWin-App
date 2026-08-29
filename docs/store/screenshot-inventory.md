@@ -306,3 +306,74 @@ PUBLISHED.
 
 `Add parent` entered the codebase in `fd84826` on 2026-08-29, the commit before
 the tip, so the bundle serving these captures is the shipped UI.
+
+
+### The three elder-seat shots, re-captured 2026-08-29 (APS-02)
+
+Taken through `scripts/capture-store-shots.mjs` against
+`https://www.towinly.com/app`, elder seat, live backend. The old files are in
+`superseded/2026-08-29-pre-appstore-recapture/`. Nothing was deleted.
+
+| File | Frame | Alpha | Bytes | What the frame proves |
+|---|---|---|---|---|
+| `raw-07-posted-help.png` | 1320 x 2868 | no | 145,946 | Three real seeded requests as plain rows, one of them "Asked by Sarah, for you", the search field above them, the chips reading Waiting 3, In Progress 1, Completed 2. The floating tab-bar capsule is in frame with its blue count badges, and the heading carries no subtitle line. |
+| `raw-02-checkin.png` | 1320 x 2868 | no | 159,743 | The check-in screen with the day already done: "Checked in for today", "Sarah, David and one other can see you checked in", 7 days in a row and the week row. The first-time explainer is dismissed with a tap on "Got it" before the shot, which is what slot 1 (`raw-01`) exists to show instead. |
+| `raw-15-chat-thread.png` | 1320 x 2868 | no | 131,439 | A thread at `/chat/7cb397c3-1517-4d12-a637-8187bc158c9b`, printed by the script from the address bar after the steps ran, so it cannot be the conversation list by mistake. Three seeded messages with Ethan Cole, the composer at the foot. |
+
+**Reach the thread by tapping the row, never by its id.** The capture ran
+`--route /messages --wait "Ethan Cole" --tap "Ethan Cole"`. The demo data is
+reseeded, so the thread id moves: the same conversation was
+`4089dde0-6bdc-4d81-ad39-41bfdaea19c0` earlier the same afternoon and
+`7cb397c3-...` an hour later. A recipe that pins the id captures a 404 the
+first time the seeder runs.
+
+**The phone number sweep, run rather than asserted.** The script's
+`--dump-text` writes every string visible inside the frame, filtered to leaf
+elements inside `<body>` with a non-zero box intersecting the viewport, so it
+reports what a person can read and nothing else. Nine strings came back:
+
+```
+EC / Ethan Cole / Saturday it is. I'll bring my board, you bring your best opening. /
+3:33 PM / How lovely! Saturday at the community centre? It's nice and busy in the
+afternoons. / 3:24 PM . Sent / Today / Hello Margaret! Shall we plan that first game
+of chess? / 3:15 PM
+
+$ grep -nE '[0-9][0-9 ().+-]{6,}[0-9]|[0-9]{4,}' chat-frame.txt
+(no matches, exit 1)
+```
+
+The only digits in the frame are clock times of the form `3:15 PM`, which the
+pattern does not reach and no reader mistakes for a telephone number.
+
+### Hiding the Refresh control has to take its box with it
+
+The web build draws a "Refresh" button where the phone has the pull gesture:
+`src/components/ui/RefreshControl.jsx` renders it on `Platform.OS === 'web'`
+only. The capture script hides it before every shot. Until 2026-08-29 it hid it
+with `visibility: hidden`, which takes the control out of sight and leaves its
+44 CSS px box sitting in the layout.
+
+Measured on the live page, elder seat, 440 x 956 CSS, first ink from the top:
+
+| Route | Refresh box | `visibility: hidden` | `display: none` |
+|---|---|---|---|
+| `/checkin` | top 0, height 44 | 72 | 28 |
+| `/messages` | top 0, height 44 | 56 | 12 |
+| `/profile` | top 0, height 44 | 64 | 20 |
+| `/posted-help` | top 40, height 44 | 12 | 12 |
+
+So three of the routes the store set draws from carried 44 CSS px of empty
+white at the top that the shipped app never shows, and `/posted-help` carried
+the same 44 px as a gap between its heading and its search field. Every
+mechanical check passed on those frames: right size, no alpha, right weight.
+
+The rule now lives in `scripts/lib/hide-refresh.js` and sets `display: none`,
+which collapses the box. `__tests__/hide-refresh.test.js` pins it under jsdom,
+including the guard that stops the climb at `<body>`: a screen still loading
+can have "Refresh" as its only text, and without that guard the whole page is
+what matches and the capture comes back blank.
+
+Proof the band is gone: the re-shot `raw-02-checkin.png` and the 2026-08-22
+frame both put their first ink on device row 91, and the pixel difference
+between them is bounded to `(287, 91, 1038, 241)`, the greeting line and the
+date. The rest of the two frames is identical.
