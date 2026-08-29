@@ -166,6 +166,11 @@ own README. Nothing was deleted.
 `colorScheme: 'light'`.** Never a 1320-wide viewport, whatever the output file
 measures.
 
+**Since 2026-08-29 the rule is code, not prose.** It lives in
+`scripts/capture-store-shots.mjs`, where the three numbers are constants and
+there is no flag that changes them. Read the section "The capture script" at
+the end of this file before shooting anything.
+
 **The family shot needed a real state change first.** The seeded data said "No
 check-in yet today", which argued against the caption. So the elder seat did an
 actual check-in on the live backend before the family shot was taken: sign in as
@@ -223,3 +228,81 @@ files moved to `screenshots/superseded/2026-08-11-pre-normal-density/`.
 so all 13 remain accurate." It was written when there were thirteen, and it
 stayed after the count reached sixteen and after the UI changed under all of
 them.)
+
+
+## The capture script, added 2026-08-29 (APS-01)
+
+Every capture pass until now wrote its own throwaway driver from the prose
+above. That is how the desktop-scale mistake happened: the recipe was a
+sentence, and a sentence cannot be run. It is now
+`scripts/capture-store-shots.mjs`.
+
+```
+node scripts/capture-store-shots.mjs --route <path> --out <file.png> \
+     [--seat elder|helper|family] [--wait "text"] [--tap "text"] \
+     [--page <testid>@<n>] [--pause <ms>]
+
+node scripts/capture-store-shots.mjs --verify <file.png>
+```
+
+What it owns, so no pass can forget it:
+
+- The frame. `440 x 956` CSS at scale 3, light. Constants, no flag. Passing
+  `--viewport` exits 2 and says why.
+- The seat. It signs in through the real login form. Passwords come from the
+  environment when set and fall back to the documented demo seats.
+- The Refresh hide, in the narrow form this file describes: the element whose
+  whole text is "Refresh", then only ancestors whose whole text is also
+  "Refresh".
+- The tape measure. After writing a file it runs `sips` on it and refuses to
+  report success unless the frame is 1320 x 2868, alpha is no, and the file
+  weighs at least 120,000 bytes.
+
+The weight floor is measured, not guessed. Every desktop-scale file kept in
+`screenshots/superseded/` weighs 58,589 to 107,542 bytes. Every phone-scale raw
+on disk weighs 131,624 to 460,063. The floor sits in the gap. That single
+number is what separates a picture of a phone from a picture of a desktop page
+when both files measure 1320 x 2868.
+
+`--verify` runs the same tape measure with no browser, which is how the bake
+step checks a set it did not shoot. `__tests__/capture-store-shots.test.js`
+holds it to that, using the real 58,589-byte desktop-scale file as the case
+that must fail.
+
+Exit codes are three, not two: 0 holds, 1 does not hold, 2 could not observe.
+A caller that reads 2 as success is doing the thing the script exists to stop.
+
+### What the 2026-08-29 re-capture of the two landing shots found
+
+The two signed-out shots, `raw-12-landing-welcome.png` and
+`raw-13-landing-trust-ladder.png`, were re-shot from
+`https://www.towinly.com/app` through the script above. **Both came back
+byte-identical to the files committed on 2026-08-22.**
+
+```
+raw-12-landing-welcome.png       md5 bca29bfeb85fe0f645fefb67b51fcdf4   139,437 bytes
+raw-13-landing-trust-ladder.png  md5 b602bf45f173e1c6d4cff09b6c993a35   260,309 bytes
+```
+
+Both md5s match `git show HEAD:<path>`, and `git status` reports the two paths
+clean after the fresh files were written over them.
+
+That is a result, not a skipped step. The four UI changes since 2026-08-22
+were the floating tab-bar capsule, the deleted subtitle lines under the tab
+headings, the regrammared Posted Help chips and the shield on the Profile
+trust row. All four live behind the sign-in. These two frames are the landing
+story, which has no tab bar and no tab heading, so none of the four could
+reach them. Nothing was moved to `superseded/`, because nothing was replaced.
+
+The deployment was checked before drawing that conclusion, so that "identical"
+could not mean "stale deploy":
+
+```
+$ node scripts/verify-published-page.mjs https://www.towinly.com/app --expect "Add parent"
+  bundle    : entry-1ff4769d21ed117712ea4159c1e2e7e0.js (3303KB)
+  present: "Add parent"
+PUBLISHED.
+```
+
+`Add parent` entered the codebase in `fd84826` on 2026-08-29, the commit before
+the tip, so the bundle serving these captures is the shipped UI.
