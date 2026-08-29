@@ -78,3 +78,63 @@ session's uncommitted useIsOffline.js, not to this queue.
 
 Item 11 ("and remove it f") still needs the owner to say what "it" is
 (item 18 may be it).
+
+## Evening 2026-08-28 (owner, 22:21 onward) — helper + family follow the elder
+29. [x] Parity sweep, elder as the base, for the family and helper seats
+        (owner: "do the same edit keep elder as base and do the same for all
+        other log in like family and helper"; asked which surface: "all").
+        Verified on the live phone-web build first: the bottom bar is already
+        identical on all three seats; sign-up/login has no per-role branch;
+        Profile differs only by each seat's own places. The real gap is the
+        family hub: My Parents gets the elder hub's skeleton (22pt heading,
+        search field, two segments, add-parent in the nav row's left slot).
+30. [x] Helper: when the elder starts a trust step, the My Elders tab badge
+        counts elders waiting for the helper's accept, and the elder's name
+        row wears the same badge (owner: "the helper should get notification
+        in my elders tab bottom badge so they can accept and also the badge
+        in the elder's name").
+31. [x] Helper: "Accept the next step" is a filled blue button (owner:
+        "accept the next step should be in blue background").
+32. [x] Elder: when the helper accepts a trust step, the My Helpers tab badge
+        and a badge by that helper's name tell the elder (owner: "same in
+        elders when helper accept the help, it should show a badge in my
+        helper and the badge near the name of the helper in elder login").
+33. [x] Elder: "Start the next step" is a filled blue button too (owner:
+        "start the next step also in blue in elders log in").
+34. [x] Subtitles: "Trust grows step by step, like roots" (My Helpers, My
+        Elders), "Your requests, from posted to completed" (Posted Help), "The
+        people you're watching over" (My Parents): already removed in this tree
+        this afternoon for every seat; the owner still sees them because that
+        edit has not shipped (owner 2026-08-28 evening, twice).
+
+Items 29-34: built, 1369 tests green with --forceExit, eslint clean on touched
+files, family hub verified on the local web build; local-only, demo pending.
+
+# Queue — 2026-08-28 evening ("do all, use superpowers")
+Plan: docs/superpowers/plans/2026-08-28-left-behind.md. Owner-only items stay with the owner.
+
+29. [x] Commit the afternoon change set (shield trust row, one number per chip, no heading lines). 1369 tests green.
+30. [x] Website repo: ignore the offline API docs, commit family.md.
+31. [x] Backend: inactivity cron enum-literal fix (DB test RED → GREEN).
+32. [x] Backend: server-side blocks (HARD-106): table, /api/blocks, filters in connections / discovery / needs / messaging.
+33. [x] App: blocks hydrate from the server; device list uploaded once; copy stops saying "this phone only".
+34. [x] Marketing: commit the founder-story reel (plain + voiced).
+35. [x] MKT-707 README rewrite, counts derived from the folders.
+36. [x] MKT-706 alt text: reel cover frames + any still gaps.
+37. [x] MKT-705 FOUNDER-NOTE-OPTIONS.md (waits on the owner; artwork untouched).
+38. [x] MKT-703 machine contrast check on every rendered PNG; fix, re-render, sync.
+39. [x] MKT-708 frame audit of every scheduled reel; POST-IN-ORDER byte-compared.
+40. [x] MKT-704 designer's-eye pass over the whole set.
+41. [x] App: swipe between segments on My Family.
+42. [x] App: close the react-review record (DEEP-04/17/18/19, focus refresh).
+43. [x] App: SHIP-608 third sweep on the current tip.
+44. [x] Observation-log review (188 open, never reviewed).
+45. [x] Memory + recap; push list for the owner.
+
+Items 29-45 done 2026-08-28 evening. Owner-only leftovers (unchanged): item 11 ("and remove it f"),
+store paperwork in docs/store/owner-actions.md, Google Play account, MCP tokens, phone testing
+of build 21. Pushes wait for the owner: App (7fcd0e0..ee5e8ba on ralph/store-hardening),
+website/backend (50757b3..3dc6f79 on main; push = live deploy, do it BEFORE the next app
+build so the block dialog's "every phone" sentence is true), marketing (own repo, no remote).
+Sibling session had uncommitted edits in the App tree at the end (family-home.test.js,
+home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
