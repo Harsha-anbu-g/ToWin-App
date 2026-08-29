@@ -1,0 +1,80 @@
+{
+  "project": "Towinly backend security fixes (from the 2026-08-29 audit)",
+  "branchName": "ralph/security-fixes",
+  "targetRepo": "/Users/aghar/Documents/Projects/ToWin (the live backend + website, its own repo, main). NOT App/. The App project's ToWin/ folder is a read-only mirror; edit the real repo at ~/Documents/Projects/ToWin.",
+  "description": "Eight findings from App/docs/audit/security-audit-2026-08-29-backend.md, each verified by two adversarial passes. Fix in the Spring Boot backend. Every story: write a failing @SpringBootTest (or slice test) first, then fix, then tick the box in the report. No fix may weaken the on-device location rounding (coarseLocation.js) or the public demo seats. DB-backed tests follow the repo's TOWINLY_DB_TESTS gate. Nothing pushes to a remote without the owner.",
+  "userStories": [
+    {
+      "id": "SEC-01",
+      "priority": 1,
+      "title": "Coarsen location on the server and band the returned distance",
+      "description": "discovery/service/DiscoveryService.java:116 and need/service/NeedService.java:131/141/318/476 return a distance snapped to 100 m (Math.round(distanceKm*10)/10) from a caller-chosen origin (DiscoveryFilter.lat/lng bound verbatim). Three queries trilaterate an elder's stored home. Round every stored coordinate to the 0.02 degree cell in ProfileService.updateLocation and NeedService.postNeed before persisting, return distance in bands (<2km, 2-5km, 5-10km, 10km+) not a float, and ignore a caller lat/lng that differs materially from the caller's own stored coarsened position. Test: a request from three origins yields banded distances that cannot solve to better than a cell.",
+      "acceptanceCriteria": ["A test proves the returned distance is banded, not a 100 m float", "Stored coordinates are rounded to the 0.02 degree cell on write", "A caller-supplied origin far from the caller's own position is rejected or ignored", "Spring Boot suite green", "SEC-01 box ticked in the report"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-02",
+      "priority": 2,
+      "title": "Phone disclosure requires an ACTIVE connection, not just a trust level",
+      "description": "connection/service/ConnectionService.java:358 gates otherUserPhone on currentTrustLevel >= PHONE_CALL only; the score head-start at :128 starts a PENDING connection at PHONE_CALL, so a sender with trustScore>=51 reads the target's phone with no acceptance, and ended/declined connections keep leaking. Change to phoneUnlocked = status==ACTIVE && currentTrustLevel>=PHONE_CALL. Test: a PENDING request response and an ENDED connection both return null phone; an ACTIVE PHONE_CALL connection returns it.",
+      "acceptanceCriteria": ["A test proves phone is null on PENDING, DECLINED and ENDED, present on ACTIVE at PHONE_CALL+", "Spring Boot suite green", "SEC-02 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-03",
+      "priority": 3,
+      "title": "Block closes the message read and seen paths",
+      "description": "messaging/service/MessageService.java:147 getAuthorizedConnection has no block check, so a blocked party with the connectionId still reads history and marks seen. Add if (blockService.isHidden(userA,userB)) throw new IllegalStateException(BlockService.CHAT_CLOSED), including the FAMILY_UPDATES branch. Test: after a block, getHistory and markSeen are refused for the blocked party.",
+      "acceptanceCriteria": ["A test proves a blocked party is refused read and seen", "Spring Boot suite green", "SEC-03 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-04",
+      "priority": 4,
+      "title": "GET /needs/{id} enforces the block filter and participant check",
+      "description": "need/service/NeedService.java:318 getOne returns need content and status to any caller with the id, with no blockService.isHidden call (unlike getAllOpen:117, browseNearby:137, applicants:438). Add the isHidden check against need.getElder().getId() and refuse a non-participant non-owner consistently with the feed. Test: a blocked helper gets NOT_AVAILABLE.",
+      "acceptanceCriteria": ["A test proves a blocked caller is refused GET /needs/{id}", "Spring Boot suite green", "SEC-04 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-05",
+      "priority": 5,
+      "title": "Blocked helpers drop out of family standings",
+      "description": "family/service/FamilyStandingService.java:120 (also 62, 75, 160) has no block check, so a blocked helper stays visible in /api/family/standings and materializeChat still creates an ACTIVE connection to them. Inject BlockService and drop any (familyUser, helper) pair where isHidden, in toStanding, standingsFor, familyBehind and materializeChat. Test: a blocked helper is absent from standings and chat materialization is refused.",
+      "acceptanceCriteria": ["A test proves a blocked helper is absent from standings and cannot be chat-materialized", "Spring Boot suite green", "SEC-05 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-06",
+      "priority": 6,
+      "title": "Social handles gated behind self or a VERIFIED connection",
+      "description": "profile/service/ProfileService.java:180/181 (elder) and 198/199 (helper) set facebookUrl and instagramUrl unconditionally in buildProfileResponse, so any account reads a stranger's socials via GET /api/profile/{id}. Gate them like phone: return only when isSelf or an ACTIVE connection has reached VERIFIED; reconsider occupation and gender. Test: a stranger gets null socials; self and a VERIFIED connection get them.",
+      "acceptanceCriteria": ["A test proves socials are null to a stranger, present to self and a VERIFIED connection", "Spring Boot suite green", "SEC-06 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-07",
+      "priority": 7,
+      "title": "Clamp discovery page size and radius, page from the repository",
+      "description": "discovery/dto/DiscoveryFilter.java:11 size is uncapped, applied as .limit(size) over an in-memory list (DiscoveryService.java:63/97). size=100000 returns the whole directory. Clamp size to a max (for example 50) and radiusKm to a max server-side, and page from the repository instead of loading and sorting all active profiles in memory. Test: size=100000 returns at most the cap.",
+      "acceptanceCriteria": ["A test proves an oversized size is clamped", "Ranking pages from the repository, not an unbounded in-memory list", "Spring Boot suite green", "SEC-07 box ticked"],
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "SEC-08",
+      "priority": 8,
+      "title": "Registration stops confirming whether an email is a member",
+      "description": "auth/service/AuthService.java:67/70 returns 'Username already taken' and 'Email already registered', letting an attacker enumerate members. Login and forgot-password are already anti-enumeration. Return a generic success from register regardless of existence; the account is only created on the email-link click, so resolve a duplicate silently and, if wanted, notify the real owner's inbox. Check the FamilyService.createRequest tell too. Test: register with an existing email returns the same generic response as a new one.",
+      "acceptanceCriteria": ["A test proves register does not reveal whether the email exists", "Spring Boot suite green", "SEC-08 box ticked"],
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
