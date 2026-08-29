@@ -1,9 +1,14 @@
 # Store screenshots: what exists, what each one is for, what is still missing
 
-Captured 2026-08-11 from the live phone web build at `https://www.towinly.com/app`,
-signed in through the three demo seats on the login screen. No Xcode, no Android
-SDK and no physical phone were needed, which matters because this machine has
-Command Line Tools only.
+**Captured 2026-08-29** from the live phone web build at
+`https://www.towinly.com/app`, signed in through the three demo seats on the
+login screen. No Xcode, no Android SDK and no physical phone were needed, which
+matters because this machine has Command Line Tools only.
+
+Earlier capture dates, kept so a reader can see the order things happened in:
+~~Captured 2026-08-11~~ (raws 01 to 13), ~~2026-08-15~~ (raws 14 to 16, and the
+phone-scale re-shoot under APL-805), ~~2026-08-22~~ (the eight the manifest
+bakes from, HARD-117).
 
 Every raw capture is **1320 x 2868**, the iPhone 6.9 inch size Apple asks for.
 Play rejects anything taller than 9:16 and these are 1:2.17, so the baked Play
@@ -209,7 +214,10 @@ Raws 01 to 13 came from the build that was live on 2026-08-11, commit
 total, and none of them contains Edit Profile. The eight the manifest bakes from
 were replaced on 2026-08-22 from `ralph/store-hardening`.
 
-**The eight the manifest uses were RE-CAPTURED on 2026-08-22 (HARD-117.)**
+**~~The eight the manifest uses were RE-CAPTURED on 2026-08-22 (HARD-117.)~~**
+**Superseded 2026-08-29: the eight were re-captured again under APS-01 to APS-03,
+and the sixteen baked files re-made from them under APS-04. See the 2026-08-29
+sections below. The 2026-08-22 account is kept for the record.**
 They had gone stale twice over: the owner's normal-density redesign of
 2026-08-17 (`e1e56bf`) removed the elder oversizing, changed the type ramp and
 moved the cards to white, and the location run changed four more screens after
@@ -421,3 +429,75 @@ card.
 Towinly website. You cannot leave one from the app yet." APS-07 is the story
 that settles that wording. Whichever pass closes APS-07 has to re-shoot
 `raw-14` and re-bake slot 4, or the listing ships the old sentence.
+
+
+## The 2026-08-29 re-capture and bake (APS-01 to APS-04)
+
+The listing's eight shots were re-taken from the build live at commit `56bc83e`,
+the same tip TestFlight build 25 carries, and the sixteen store files were
+re-made from them with `python3 scripts/bake_screenshots.py`.
+
+**What had moved in the app since 2026-08-22**
+
+| Change | Shipped in | Which slots it reached |
+|---|---|---|
+| Posted Help requests became plain rows and gained a search field | around `7fcd0e0` | 2 |
+| Subtitle lines under tab headings removed | `7fcd0e0` | 2 |
+| Tab bar became the floating capsule, count badges red to blue | the tab-bar work after 2026-08-22 | 2, 3 |
+| Centre button relabelled "Need Help" to "Ask Help" | same | 2 |
+| The seeder reran, so request lines read "Posted just now" | data, not code | 3 |
+
+**Which of the eight raws were actually replaced**
+
+| Slot | Raw | Replaced | Note |
+|---|---|---|---|
+| 1 | `raw-13-landing-trust-ladder` | no | byte-identical (APS-01) |
+| 2 | `raw-07-posted-help` | yes | cards to rows, search field, no subtitle, new tab bar |
+| 3 | `raw-10-helper-offer-help` | yes | new tab bar, "Posted just now" |
+| 4 | `raw-14-helper-trust-score` | no | byte-identical (APS-03) |
+| 5 | `raw-15-chat-thread` | yes | re-shot; same thread, later clock times |
+| 6 | `raw-16-family-parent-checked-in` | no | byte-identical (APS-03) |
+| 7 | `raw-02-checkin` | yes | re-shot with the Refresh box collapsed |
+| 8 | `raw-12-landing-welcome` | no | byte-identical (APS-01) |
+
+Four of the eight were genuinely stale. Four were already the shipped UI and
+came back byte for byte, which is a result and not a skipped step.
+
+**Machine verification of the sixteen baked files, 2026-08-29**
+
+`sips -g pixelWidth -g pixelHeight -g hasAlpha` on every output, byte size from
+`stat -f%z`. Every ios file is 1320 x 2868, every play file 1080 x 1920, and no
+file carries an alpha channel.
+
+| File | Frame | Alpha | Bytes |
+|---|---|---|---|
+| `ios/01-landing-trust-ladder-ios.png` | 1320 x 2868 | no | 438,237 |
+| `ios/02-posted-help-ios.png` | 1320 x 2868 | no | 244,819 |
+| `ios/03-helper-offer-help-ios.png` | 1320 x 2868 | no | 470,651 |
+| `ios/04-helper-trust-score-ios.png` | 1320 x 2868 | no | 476,996 |
+| `ios/05-chat-thread-ios.png` | 1320 x 2868 | no | 244,557 |
+| `ios/06-family-parent-checked-in-ios.png` | 1320 x 2868 | no | 508,418 |
+| `ios/07-checkin-ios.png` | 1320 x 2868 | no | 288,177 |
+| `ios/08-landing-welcome-ios.png` | 1320 x 2868 | no | 245,277 |
+| `play/01-landing-trust-ladder-play.png` | 1080 x 1920 | no | 267,488 |
+| `play/02-posted-help-play.png` | 1080 x 1920 | no | 150,565 |
+| `play/03-helper-offer-help-play.png` | 1080 x 1920 | no | 281,883 |
+| `play/04-helper-trust-score-play.png` | 1080 x 1920 | no | 282,234 |
+| `play/05-chat-thread-play.png` | 1080 x 1920 | no | 154,229 |
+| `play/06-family-parent-checked-in-play.png` | 1080 x 1920 | no | 306,587 |
+| `play/07-checkin-play.png` | 1080 x 1920 | no | 177,374 |
+| `play/08-landing-welcome-play.png` | 1080 x 1920 | no | 150,813 |
+
+`npx jest store-screenshots` passes, 23 tests.
+
+**One slot is knowingly not final.** Slot 4 bakes `raw-14`, and that frame
+carries the sentence "Reviews are written on the Towinly website. You cannot
+leave one from the app yet." APS-07 is the story that settles that wording.
+When it lands, `raw-14` has to be re-shot and the bake re-run, or the listing
+ships a sentence the app no longer says.
+
+**One caption to look at before upload.** Slot 3 reads "See who needs a hand
+near you" while the frame reads "Showing every open request" with a 25 km chip,
+because a headless browser hands over no location and the list falls back to
+everything. On a phone that has granted location the same screen names the
+distance. The caption describes the feature and the frame shows its fallback.
