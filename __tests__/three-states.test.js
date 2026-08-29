@@ -134,6 +134,35 @@ test('pass-on sealed tab: an armed box whose items load fails shows LoadError, n
   expect(r.queryByText(SEALED_ITEMS.nothingInside)).toBeNull();
 });
 
+test('pass-on sealed tab: a failed refetch keeps a good list on screen, never a false error (D2-01)', async () => {
+  mockParams = { tab: 'sealed' };
+  api.get.mockImplementation(
+    routeGet({
+      '/passon/setup': { armed: true, releaseContactEmail: 'help@towinly.com' },
+      '/passon/sealed': FAIL,
+      '/family/links': { activeLinks: [] },
+      '/connections': [],
+    })
+  );
+  // A previous success left a real item in the cache; the mount refetch fails.
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+  qc.setQueryData(['passon-sealed'], [{ id: 's1', label: 'Bank details', kindHint: 'MONEY' }]);
+  const r = await render(
+    <ThemeProvider>
+      <QueryClientProvider client={qc}>
+        <ToastProvider>
+          <ConfirmProvider>
+            <PassOn />
+          </ConfirmProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+  await waitFor(() => expect(r.getByText('Bank details')).toBeTruthy());
+  // The stale-but-good list stays; a transient refetch failure must not hide it.
+  expect(r.queryByText(/your sealed items/)).toBeNull();
+});
+
 // ---------- one-page copy sheet: the error card must carry its retry ----------
 
 test('pass-on sheet: failed load shows LoadError with retry', async () => {
