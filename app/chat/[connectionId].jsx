@@ -5,9 +5,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { ActionSheetIOS, FlatList, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { AlertCircle, ArrowLeft, ChevronRight, Send } from '../../src/components/icons';
+import { AlertCircle, ArrowLeft, ChevronRight, Flag, Send } from '../../src/components/icons';
 import api, { friendlyWriteError } from '../../src/api/client';
 import Avatar from '../../src/components/ui/Avatar';
 import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
@@ -18,9 +18,18 @@ import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { announce } from '../../src/lib/announce';
 import { getDraft, setDraft } from '../../src/lib/chatDrafts';
+import ActionChip from '../../src/components/ui/ActionChip';
+import Card from '../../src/components/ui/Card';
 import { objectionableError } from '../../src/lib/contentFilter';
 import { haptic } from '../../src/lib/haptics';
 import { MESSAGING_STAGE, stageIndexOf } from '../../src/lib/trustStages';
+import useSafetyActions, {
+  BLOCK_ACTION,
+  NEVER_MIND,
+  REPORT_ACTION,
+  REPORT_REASONS,
+  REPORT_TITLE,
+} from '../../src/lib/useSafetyActions';
 import { useTheme } from '../../src/theme/ThemeContext';
 
 const dayLabel = (iso) => {
@@ -59,7 +68,7 @@ function ChatSkeleton() {
 }
 
 export default function ChatThread() {
-  const { mode, t, spacing, radius, text, type } = useTheme();
+  const { mode, t, spacing, radius, text, type, fontFamily } = useTheme();
   const { connectionId, channel: channelParam } = useLocalSearchParams();
   const { user } = useAuth();
   const { showToast } = useToast();
@@ -131,6 +140,49 @@ export default function ChatThread() {
   // (a deep link lands here with a cold cache). A FAILED fetch is just as
   // unknown: an open composer there only produces a send the server refuses.
   const connUnknown = !conn && (connsLoading || connsError);
+
+  // Apple 1.2 wants the abuse path with the content, so Report and Block are
+  // reachable from inside the thread. The handlers and every sentence come
+  // from the same hook the profile screen uses; a second copy here is how one
+  // rule ends up explained two ways. Blocking ends the friendship, so the row
+  // leaves Messages and this thread has nothing left to show: go back to the
+  // list rather than sit on a dead conversation.
+  const endConnection = useMutation({ mutationFn: () => api.delete(`/connections/${connectionId}`) });
+  const {
+    reportOpen,
+    pickReportReason,
+    closeReport,
+    sendReport,
+    reportingReason,
+    reporting,
+    confirmBlock,
+    blocking,
+  } = useSafetyActions({
+    personId: conn?.otherUserId,
+    personName: conn?.otherUserName,
+    signedInUserId: user?.userId,
+    connectionActive: conn?.status === 'ACTIVE',
+    endConnection: () => endConnection.mutateAsync(),
+    onBlocked: () => router.replace('/(tabs)/messages'),
+  });
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // iOS gets the system sheet (owner call 2026-08-17: Apple design wherever
+  // possible). Android and web have no native sheet, so the same two choices
+  // open in place under the header, which is what the profile screen does.
+  const openSafetyMenu = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options: [REPORT_ACTION, BLOCK_ACTION, NEVER_MIND], cancelButtonIndex: 2, destructiveButtonIndex: 1 },
+        (i) => {
+          if (i === 0) pickReportReason();
+          if (i === 1) confirmBlock();
+        }
+      );
+      return;
+    }
+    setMenuOpen((v) => !v);
+  };
 
   // The backend send() gate, mirrored: a MAIN-channel, non-family connection
   // below Messaging is refused server-side — so say it in place instead of
@@ -476,7 +528,9 @@ export default function ChatThread() {
         >
           <Avatar name={conn?.otherUserName} uri={conn?.otherUserPhotoUrl} size={38} />
           <View style={{ flex: 1 }}>
-            <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
+            {/* The safety control takes width off this row, so a long name
+                truncates rather than wrapping the header onto two lines. */}
+            <Text numberOfLines={1} style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
               {conn?.otherUserName ?? 'Chat'}
             </Text>
             {isFamilyChannel ? (
@@ -488,7 +542,75 @@ export default function ChatThread() {
           {/* The header opens the profile — say so (rulebook: no hidden taps). */}
           {conn ? <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} /> : null}
         </Pressable>
+        {/* Not on the family group channel: that thread is read by the elder,
+            the helper and the family together, so one person's name in a
+            report control would be ambiguous about who is being reported.
+            Every person there is still one tap from their own profile, where
+            both actions live. */}
+        {conn && !isFamilyChannel ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Report or block ${conn.otherUserName ?? 'this person'}`}
+            onPress={openSafetyMenu}
+            style={({ pressed }) => ({
+              minWidth: 44,
+              minHeight: 44,
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: pressed ? 0.7 : 1,
+            })}
+          >
+            <Flag size={20} color={t.inkSlate} strokeWidth={1.8} />
+          </Pressable>
+        ) : null}
       </View>
+
+      {/* Android and web have no system sheet, so the two choices open here,
+          under the header, the way the profile screen opens its own lists. */}
+      {menuOpen ? (
+        <Card style={{ marginHorizontal: spacing[4], marginTop: spacing[3] }}>
+          <View style={{ gap: spacing[3] }}>
+            <ActionChip
+              label={REPORT_ACTION}
+              onPress={() => {
+                setMenuOpen(false);
+                pickReportReason();
+              }}
+            />
+            <ActionChip
+              label={blocking ? 'Blocking…' : BLOCK_ACTION}
+              disabled={blocking}
+              onPress={() => {
+                setMenuOpen(false);
+                confirmBlock();
+              }}
+            />
+            <ActionChip label={NEVER_MIND} onPress={() => setMenuOpen(false)} />
+          </View>
+        </Card>
+      ) : null}
+
+      {reportOpen ? (
+        <Card style={{ marginHorizontal: spacing[4], marginTop: spacing[3] }}>
+          <Text
+            accessibilityRole="header"
+            style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
+          >
+            {REPORT_TITLE}
+          </Text>
+          <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
+            {REPORT_REASONS.map((reason) => (
+              <ActionChip
+                key={reason}
+                label={reportingReason === reason ? 'Sending…' : reason}
+                disabled={reporting}
+                onPress={() => sendReport(reason)}
+              />
+            ))}
+            <ActionChip label={NEVER_MIND} onPress={closeReport} />
+          </View>
+        </Card>
+      ) : null}
 
       <KeyboardAvoider>
         <FlatList

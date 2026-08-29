@@ -4,8 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BookOpen } from '../../src/components/icons';
-import { useState } from 'react';
-import { ActionSheetIOS, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../src/api/client';
 import { FROM_PAGE } from '../../src/lib/passOnLocks';
 import ActionChip from '../../src/components/ui/ActionChip';
@@ -19,14 +18,15 @@ import TrustBadge from '../../src/components/ui/TrustBadge';
 import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
-import { blockUser, getBlocked, isBlocked, unblockUser } from '../../src/lib/blockList';
+import { getBlocked, isBlocked } from '../../src/lib/blockList';
+import useSafetyActions, {
+  BLOCK_ACTION,
+  REPORT_ACTION,
+  REPORT_REASONS,
+  REPORT_TITLE,
+  NEVER_MIND,
+} from '../../src/lib/useSafetyActions';
 import { useTheme } from '../../src/theme/ThemeContext';
-
-// The two outcomes of a block, named once. The success sentence must never be
-// shown unless the server-side half really ran.
-const BLOCK_DONE = "Blocked. You won't see this person anymore.";
-const BLOCK_HALF_DONE =
-  'Blocked. We could not end the friendship yet, so it may still show in Messages until you try again.';
 
 function ChipRow({ items }) {
   const { t, radius, type, spacing } = useTheme();
@@ -54,8 +54,6 @@ function ChipRow({ items }) {
   );
 }
 
-const REPORT_REASONS = ['Unsafe behavior', 'Harassment', 'Scam or fraud', 'Something else'];
-
 export default function UserProfile() {
   const { t, spacing, text, type, fontFamily } = useTheme();
   // Blocks belong to the signed-in account, not the phone (blockList.js).
@@ -73,9 +71,6 @@ export default function UserProfile() {
     queryFn: async () => (await api.get(`/profile/${id}`)).data,
     enabled: !!id,
   });
-  // In-screen report options (the 5-button Alert-as-picker is banned).
-  const [reportOpen, setReportOpen] = useState(false);
-  const [blocking, setBlocking] = useState(false);
 
   const { data: reviews } = useQuery({
     queryKey: ['reviews', id],
@@ -140,16 +135,6 @@ export default function UserProfile() {
     },
   });
 
-  const report = useMutation({
-    mutationFn: (reason) => api.post('/reports', { reportedUserId: id, reason, description: reason }),
-    onSuccess: () => {
-      setReportOpen(false);
-      showToast('Report sent. Thank you for keeping Towinly safe.', 'success');
-    },
-    onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not send the report. Please try again.'), 'error'),
-  });
-
   const confirmEnd = async () => {
     const ok = await confirm({
       title: 'End this friendship?',
@@ -161,66 +146,25 @@ export default function UserProfile() {
     if (ok) endFriendship.mutate();
   };
 
-  // The block itself lives on the server now (HARD-106): messages, requests
-  // and offers across it are refused there, on every device. Ending the
-  // connection is the visible half, so the row leaves Messages. The delete is
-  // awaited and its failure is said out loud with a retry, rather than covered
-  // by a success sentence the person would act on. It used to fire and forget,
-  // and then toast success either way.
-  async function endConnectionForBlock() {
-    try {
-      await endFriendship.mutateAsync({ quiet: true });
-      showToast(BLOCK_DONE, 'info');
-    } catch {
-      showToast(BLOCK_HALF_DONE, 'error', {
-        actionLabel: 'Try again',
-        onAction: endConnectionForBlock,
-      });
-    }
-  }
-
-  // Block (UGC 1.2, server-side since HARD-106): their content disappears
-  // everywhere for you, on every device, and an active friendship ends.
-  // `blocking` keeps the button honest while the writes run (rulebook: every
-  // mutation shows a pending state on the control that fired it).
-  const doBlock = async () => {
-    setBlocking(true);
-    try {
-      await blockUser(user?.userId, { id, name: profile?.name ?? '' });
-      queryClient.invalidateQueries({ queryKey: ['block-list'] });
-      if (conn?.status === 'ACTIVE') await endConnectionForBlock();
-      else showToast(BLOCK_DONE, 'info');
-    } catch {
-      // The device list itself would not save, so nothing was blocked at all.
-      showToast('Could not block right now. Please try again.', 'error');
-    } finally {
-      setBlocking(false);
-    }
-  };
-
-  const confirmBlock = async () => {
-    const ok = await confirm({
-      title: `Block ${profile?.name ?? 'this person'}?`,
-      message:
-        "You won't see their help requests or messages anymore, and any friendship ends. " +
-        'It follows you to every phone you sign in on. ' +
-        'You can change your mind later in Profile → Blocked people.',
-      confirmLabel: 'Block',
-      destructive: true,
-    });
-    if (ok) doBlock();
-  };
-
-  const doUnblock = async () => {
-    try {
-      await unblockUser(user?.userId, id);
-      queryClient.invalidateQueries({ queryKey: ['block-list'] });
-      showToast('Unblocked.', 'info');
-    } catch {
-      // The server did not agree, so nothing changed: say so, never pretend.
-      showToast('Could not unblock right now. Please try again.', 'error');
-    }
-  };
+  // Report and block live in one hook so this screen and the chat thread run
+  // the same writes and say the same sentences (APS-06).
+  const {
+    reportOpen,
+    pickReportReason,
+    closeReport,
+    sendReport,
+    reportingReason,
+    reporting,
+    confirmBlock,
+    blocking,
+    unblock,
+  } = useSafetyActions({
+    personId: id,
+    personName: profile?.name,
+    signedInUserId: user?.userId,
+    connectionActive: conn?.status === 'ACTIVE',
+    endConnection: () => endFriendship.mutateAsync({ quiet: true }),
+  });
 
   return (
     <Screen back title={profile?.name ?? 'Profile'} onRefresh={reload}>
@@ -246,7 +190,7 @@ export default function UserProfile() {
           <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate, marginTop: spacing[2] }}>
             You won't see their help requests or messages. If this was a mistake, you can undo it.
           </Text>
-          <Button title="Unblock" variant="secondary" onPress={doUnblock} style={{ marginTop: spacing[5] }} />
+          <Button title="Unblock" variant="secondary" onPress={unblock} style={{ marginTop: spacing[5] }} />
         </Card>
       ) : (
         <>
@@ -391,18 +335,18 @@ export default function UserProfile() {
                 accessibilityRole="header"
                 style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
               >
-                What went wrong?
+                {REPORT_TITLE}
               </Text>
               <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
                 {REPORT_REASONS.map((reason) => (
                   <ActionChip
                     key={reason}
-                    label={report.isPending && report.variables === reason ? 'Sending…' : reason}
-                    disabled={report.isPending}
-                    onPress={() => report.mutate(reason)}
+                    label={reportingReason === reason ? 'Sending…' : reason}
+                    disabled={reporting}
+                    onPress={() => sendReport(reason)}
                   />
                 ))}
-                <ActionChip label="Never mind" onPress={() => setReportOpen(false)} />
+                <ActionChip label={NEVER_MIND} onPress={closeReport} />
               </View>
             </Card>
           ) : null}
@@ -411,33 +355,9 @@ export default function UserProfile() {
             {conn?.status === 'ACTIVE' ? (
               <Button title="End friendship" variant="destructive" onPress={confirmEnd} />
             ) : null}
+            <Button title={REPORT_ACTION} variant="text" onPress={pickReportReason} />
             <Button
-              title="Report this person"
-              variant="text"
-              onPress={() => {
-                // iOS gets the system action sheet for this pick-one list
-                // (owner call 2026-08-17: Apple design wherever possible);
-                // Android/web keep the in-screen list below — they have no
-                // native sheet, and the rulebook prefers in-place over a
-                // stacked Alert there.
-                if (Platform.OS === 'ios') {
-                  ActionSheetIOS.showActionSheetWithOptions(
-                    {
-                      title: 'What went wrong?',
-                      options: [...REPORT_REASONS, 'Never mind'],
-                      cancelButtonIndex: REPORT_REASONS.length,
-                    },
-                    (i) => {
-                      if (i < REPORT_REASONS.length) report.mutate(REPORT_REASONS[i]);
-                    }
-                  );
-                  return;
-                }
-                setReportOpen((v) => !v);
-              }}
-            />
-            <Button
-              title={blocking ? 'Blocking…' : 'Block this person'}
+              title={blocking ? 'Blocking…' : BLOCK_ACTION}
               variant="destructive"
               onPress={confirmBlock}
               loading={blocking}
