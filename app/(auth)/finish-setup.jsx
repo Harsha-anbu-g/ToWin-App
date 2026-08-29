@@ -13,6 +13,7 @@ import Input from '../../src/components/ui/Input';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
+import { SIGN_IN_DEVICE_ERROR } from '../../src/lib/copy';
 import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { clearPendingOnboarding, getPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { FULL_STAGES, PHONE_STAGE } from '../../src/lib/trustStages';
@@ -93,7 +94,7 @@ export default function FinishSetup() {
       // the person back at Login with the whole form done and nothing said.
       // Same handling as login.jsx.
       if (!(await login(data.token))) {
-        setError("Could not sign you in on this device. Please check your phone's date and time.");
+        setError(SIGN_IN_DEVICE_ERROR);
         return;
       }
       // Spent. A failure above deliberately leaves it, so the person can fix

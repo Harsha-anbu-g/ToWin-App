@@ -459,7 +459,7 @@ A verification sweep against the tree at fd84826 (branch ralph/deep-audit-close)
 
 **Suggested fix.** Check the result before navigating in all three call sites: `if (!(await login(data.token))) { setError('Could not sign you in on this device. Please check your phone\'s date and time.'); return; }`.
 
-- [ ] Fixed
+- [x] Fixed. Verified 2026-08-29: all four call sites check the login() result before navigating, and the sentence lives in one exported constant `SIGN_IN_DEVICE_ERROR` (`src/lib/copy.js:67-68`) so the four cannot drift. Sites: `app/(auth)/login.jsx:83-86`, `app/(auth)/finish-setup.jsx:96-99`, `src/components/DemoAccountsCard.jsx:44-47`, and the last holdout `app/(auth)/oauth-callback.jsx:52-60` (the Google exchange now stops and explains instead of bouncing to Login). Proven by `__tests__/oauth-callback-login-result.test.js` (3 tests: exact shared sentence, rejected token explains without navigating, good token still lands on `/`) plus the existing DEEP-29 suites `auth.test.js` and `auth-followthrough.test.js`.
 
 ### DEEP-30: Founder contact links swallow open failures: mailto tap can do nothing
 

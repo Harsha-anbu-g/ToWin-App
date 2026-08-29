@@ -16,6 +16,7 @@ import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useAuth } from '../../src/context/AuthContext';
+import { SIGN_IN_DEVICE_ERROR } from '../../src/lib/copy';
 import { consumeOAuthFlow } from '../../src/lib/oauthFlow';
 import { setPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -49,7 +50,14 @@ export default function OAuthCallback() {
         .post('/auth/oauth/exchange', { code, state, codeVerifier })
         .then(async ({ data }) => {
         if (data.status === 'READY') {
-          await login(data.token);
+          // login() returns false when this device rejects the token
+          // (malformed, or already expired against a clock set far ahead).
+          // Navigating anyway bounced the person from Google straight back to
+          // Login with nothing said. Same handling as login.jsx.
+          if (!(await login(data.token))) {
+            setError(SIGN_IN_DEVICE_ERROR);
+            return;
+          }
           router.replace('/'); // index routes by role/verification state
         } else if (data.status === 'NEEDS_ONBOARDING') {
           // Handed over in memory, never through the URL. The token logs a

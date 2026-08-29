@@ -59,3 +59,10 @@ export function yearsOld(dob, now = new Date()) {
   if (beforeBirthday) years -= 1;
   return years;
 }
+
+// AuthContext.login() returns false when this device rejects a token
+// (malformed, or already expired against a clock set far ahead). Four screens
+// explain that the same way — login, finish-setup, the demo seats and the
+// Google callback — so the sentence lives here once and cannot drift (DEEP-29).
+export const SIGN_IN_DEVICE_ERROR =
+  "Could not sign you in on this device. Please check your phone's date and time.";
