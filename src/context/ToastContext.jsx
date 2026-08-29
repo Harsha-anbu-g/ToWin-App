@@ -109,8 +109,17 @@ export function ToastProvider({ children }) {
                 accessibilityRole="button"
                 accessibilityLabel={toast.actionLabel}
                 onPress={runAction}
+                // DEEP-08: a real box, not a bare word — react-native-web drops
+                // hitSlop, so the Pressable itself must carry the target. 40 is
+                // the sanctioned compact height (Button.jsx quiet variants).
                 hitSlop={{ top: 12, bottom: 12, left: 4, right: 8 }}
-                style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+                style={({ pressed }) => ({
+                  minHeight: 40,
+                  paddingHorizontal: spacing[2],
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  opacity: pressed ? 0.7 : 1,
+                })}
               >
                 <Text style={{ color: t.actionOnInk, fontSize: text.sm, fontWeight: '600' }}>
                   {toast.actionLabel}
