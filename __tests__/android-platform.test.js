@@ -24,6 +24,7 @@
 // defaults, pinned repo-wide below.
 import { fireEvent, render } from '@testing-library/react-native';
 import LegalModal from '../src/components/LegalModal';
+import { ToastProvider } from '../src/context/ToastContext';
 import { ThemeProvider, useTheme } from '../src/theme/ThemeContext';
 import { light, dark } from '../src/theme/tokens';
 
@@ -67,7 +68,13 @@ test('the theme hands every touchable one themed ripple config', async () => {
 
 test('hardware back reaches LegalModal as onRequestClose and closes it', async () => {
   const onClose = jest.fn();
-  const r = await wrap(<LegalModal title="Terms" sections={[]} visible onClose={onClose} />);
+  // LegalSections speaks through the toast on a failed open (DEEP-30), so the
+  // modal needs the provider the root layout always supplies.
+  const r = await wrap(
+    <ToastProvider>
+      <LegalModal title="Terms" sections={[]} visible onClose={onClose} />
+    </ToastProvider>
+  );
   const modal = r.getByTestId('legal-modal');
   // The same event Android's back button raises (confirm.test.js precedent).
   fireEvent(modal, 'requestClose');
