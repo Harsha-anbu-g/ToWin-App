@@ -171,7 +171,7 @@ Functionality** for all types unless a second purpose is listed.
 | Usage Data | Product Interaction / Advertising / Other | **No** | | No client analytics SDK, and the server PostHog path is dead: the owner cleared `POSTHOG_API_KEY` from production on 2026-08-15 and the backend redeployed without it (section 5 item 1). |
 | Diagnostics | Crash / Performance / Other | No | | No crash or performance SDK. |
 | Environment Scanning / Body / Surroundings | all | No | | |
-| Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/register.jsx`), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`), block list (`/blocks`, server-side since 2026-08-29: blocked person's user id plus timestamp, per section 0). Trust score goes to Groq with AI questions, after consent. |
+| Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/create-account.jsx` since the 2026-08-28 sign-up split), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`), block list (`/blocks`, server-side since 2026-08-29: blocked person's user id plus timestamp, per section 0). Trust score goes to Groq with AI questions, after consent. |
 
 ### 1.3 Data Not Linked to You
 
@@ -260,7 +260,7 @@ network call must re-check the row (and section 6).
 
 | Data | Where in code (collection point -> endpoint) | Apple label | Play label | Shared with a third party? |
 |---|---|---|---|---|
-| Username, email, password, DOB, role | `app/(auth)/register.jsx` -> `POST /auth/register` | Identifiers > User ID; Contact Info > Email; Other Data (DOB) | Personal info: User IDs, Email, Other info | No |
+| Username, email, password, DOB, role | `app/(auth)/create-account.jsx` (since the 2026-08-28 sign-up split) -> `src/api/auth.js` -> `POST /auth/register` | Identifiers > User ID; Contact Info > Email; Other Data (DOB) | Personal info: User IDs, Email, Other info | No |
 | Profile name, bio, interests/skills, hobbies/looking-for, languages, occupation, gender, Facebook/Instagram URLs | `app/profile-edit.jsx` -> `PUT /profile/elder` or `/profile/helper` | Contact Info > Name; User Content > Other; Other Data | Personal info: Name, Other info; App activity: Other UGC | No |
 | Profile photo | `pickImage` + `changePhoto` in `app/profile-edit.jsx` (expo-image-picker) -> `PUT /profile/photo` multipart | User Content > Photos or Videos | Photos and videos: Photos | No (AWS S3 stores it) |
 | Government ID photo | `pickImage` + `uploadId` in `app/profile-edit.jsx` -> `POST /auth/verify-id` multipart | User Content > Photos or Videos | Photos: Photos (+ Fraud prevention purpose) | No (S3 + staff review) |
@@ -311,7 +311,9 @@ No ads. No data brokers. No sale of personal data.
    "user_signup_started", Map.of("role", ...))`. **The distinct id is the
    plaintext email address**, so the address itself reaches PostHog, a US
    third-party analytics processor. The mobile app triggers it:
-   the `/auth/register` post in `App/app/(auth)/register.jsx` reaches it through
+   the `/auth/register` post (`src/api/auth.js`, reached from
+   `App/app/(auth)/create-account.jsx` since the 2026-08-28 sign-up split;
+   corrected 2026-08-30, APS-11) reaches it through
    `AuthController`. The second event, `user_signed_up`, keys on the user UUID,
    so only the first carries an address.
 

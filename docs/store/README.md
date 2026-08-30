@@ -109,10 +109,10 @@ Everything below is free and none of it needs Apple or Google.
 1. **Decide the app name.** Pick one and use it everywhere. The store record
    takes this name once, and changing it later needs a version review. Have a
    second and third choice ready, because names can already be taken.
-2. **Decide the Support URL.** The fast answer is
-   `https://www.towinly.com/app/delete-account`, which is live today and names
-   a contact address. The better answer is a real `/app/support` page in this
-   repo, about an hour of work.
+2. ~~**Decide the Support URL.**~~ DONE (struck 2026-08-30, APS-11: the page
+   shipped and this item read as an open decision). The Support URL to paste is
+   `https://www.towinly.com/app/support`, live, rendering `app/support.jsx`
+   with a contact address and no sign-in wall. See section 5 item 5 and A1.
 3. **Send a test message to help@towinly.com and confirm it arrives.** DONE
    2026-08-15, owner confirmed. Apple writes to this address.
 4. **Run `railway variables` on the production backend and read
@@ -242,7 +242,12 @@ look fine. It is not a page. The response is byte for byte the same shell a
 nonsense address returns, and rendering it sends the browser to `/login`. A
 reviewer who opened it would land on a sign in wall. There is no `/support`,
 `/help` or `/contact` route in the website source.
-**Settled: still blocking.** Tracked as A1.
+~~**Settled: still blocking.** Tracked as A1.~~ Re-settled 2026-08-30 (APS-11):
+A1 closed on 2026-08-28 when `app/support.jsx` shipped and deployed. The
+paragraph above stays true of the OLD `https://www.towinly.com/support`
+address; the address that works is `https://www.towinly.com/app/support`,
+which the truth pass in section 6 verified renders real help with no auth
+guard. Nothing here blocks.
 
 **6. How many screenshots are captured?**
 `ACTION-CHECKLIST.md` says six raw captures. There are 13, `raw-01` to

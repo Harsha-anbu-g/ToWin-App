@@ -7,16 +7,40 @@ be done by an agent, and nothing here was done for you.
 Written 2026-08-22 at the end of the store-hardening run (HARD-099 to
 HARD-118), on branch `ralph/store-hardening`.
 
-## Read this first
+## Correction, 2026-08-30 (APS-11): what has happened since this was written
 
-- **No `eas build` was run in this loop. No `eas submit` was run either.** No
+The "Read this first" bullets below describe 2026-08-22 and two of them have
+since gone stale. The 2026-08-29 state:
+
+- **Version 1.1.0 build 25 is in TestFlight**, delivered 2026-08-29 via a
+  LOCAL `eas build` (no EAS server record; see the build ledger this backlog
+  adds under APS-14).
+- **The store-hardening commits were pushed.** `56bc83e`, the tip build 25
+  carries, landed on `origin/main`, and the phone-web deploy serves it.
+  Probed fresh on 2026-08-30: `origin/main` has since moved to `da5e8f2`
+  (eight deep-audit commits on top of `56bc83e`, all on the same line).
+- **The backend is live with server-side blocking** (`/api/blocks`, deployed
+  2026-08-29), which closes section 8 below.
+
+What still stands: sections 1 to 4 (console questionnaires, location answer,
+age rating, review notes), section 6 (screenshots need your eye before
+upload), section 7 (counsel items), and section 9 where not struck. Section 5
+was withdrawn 2026-08-30 (APS-07). Section 8 is done. Section 10's list of
+commands never run now excludes the local build above.
+
+## Read this first (as of 2026-08-22; see the correction banner above)
+
+- ~~**No `eas build` was run in this loop. No `eas submit` was run either.** No
   build quota was consumed and no binary was produced. Version 1.1.0 build 10,
-  already in App Store Connect, is still the most recent upload.
-- **Nothing was pushed to any remote.** `git log origin/main..HEAD` lists 29
+  already in App Store Connect, is still the most recent upload.~~ Superseded:
+  build 25 in TestFlight since 2026-08-29.
+- ~~**Nothing was pushed to any remote.** `git log origin/main..HEAD` lists 29
   local commits: 8 from the location run (`89b3d5e..36fded9`), 1 pinning the
   jest config (`921017d`), and 20 from this run. They are yours to review and
   push. Counted again after the last commit landed; an earlier draft of this
-  file said 28 because it counted before its own final commit.
+  file said 28 because it counted before its own final commit.~~ Superseded:
+  pushed; `origin/main` carries `56bc83e` and sits at `da5e8f2` as of
+  2026-08-30.
 - **Nothing was spent.** No enrolment, no purchase, no interactive login.
 - **`ToWin/` was not written to.** It is the read-only reference and it stayed
   that way.
@@ -63,9 +87,11 @@ It stopped being true on 2026-08-19 when `expo-location` was installed.
 ## 3. Age rating
 
 A self-declared date of birth with an 18 minimum. **Do not claim age
-verification.** `app/(auth)/register.jsx` sets `MIN_AGE = 18` and its submit
-handler refuses a younger date of birth with "You have to be 18 or over to join
-Towinly." No document check happens anywhere.
+verification.** `app/(auth)/create-account.jsx` sets `MIN_AGE = 18` and its
+submit handler refuses a younger date of birth with "You have to be 18 or over
+to join Towinly." No document check happens anywhere. (The file was
+register.jsx until the 2026-08-28 sign-up split moved the form; corrected
+2026-08-30, APS-11.)
 
 Expect a Teen tier rather than Everyone, because of open member-to-member
 messaging. That is the correct outcome. Do not inflate a content answer to raise
