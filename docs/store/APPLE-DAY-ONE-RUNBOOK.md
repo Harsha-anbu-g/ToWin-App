@@ -129,8 +129,8 @@ Have these in front of you before you sign in to anything:
 | Subtitle | from `listings.md` |
 | SKU | suggested: `towinly-ios-001` |
 | Primary language | English (U.S.) |
-| Primary category | Lifestyle |
-| Secondary category | Social Networking |
+| Primary category | ~~Lifestyle~~ Social Networking (corrected 2026-08-30, APS-13, to match the justified answer in `console-answers.md` and `app-store-connect-fields.md`) |
+| Secondary category | ~~Social Networking~~ Lifestyle (same correction) |
 | Privacy policy URL | `https://www.towinly.com/app/privacy` |
 | Support URL | decided in step 0.4.1 |
 | Marketing URL | `https://www.towinly.com` |
@@ -762,7 +762,9 @@ submission, where a bad push overwrites console fields you cannot easily see.
 
 - Name and Subtitle from `listings.md`.
 - Privacy Policy URL: `https://www.towinly.com/app/privacy`.
-- Category: Lifestyle primary, Social Networking secondary.
+- Category: ~~Lifestyle primary, Social Networking secondary~~ Social
+  Networking primary, Lifestyle secondary (corrected 2026-08-30, APS-13; the
+  reasoning lives in `app-store-connect-fields.md` section 2.4).
 - Content Rights: declare that the app does not contain third party content.
 - Age Rating: work through the questionnaire using the answers already worked out
   in `ios-content-readiness.md` section 3. Every content category is None. The

@@ -126,9 +126,17 @@ wastes days.
 
 **Phase B, the app record (day of verification)**
 
-4. **All apps > Create app.** App name `Towinly`, default language English
-   (United States), type App, free. Tick the declarations. This creates the
-   record but does not yet fix the package name.
+4. **All apps > Create app.** App name: **OWNER DECIDES**, one of the two
+   candidates below (this field is the store listing title, 30 characters,
+   and this step is the one place the choice is recorded; corrected
+   2026-08-30, APS-13, from a bare `Towinly` that contradicted `listings.md`):
+   - `Towinly` (7 of 30 characters; plain brand, wastes the index slot)
+   - `Towinly: Elder Care Companion` (29 of 30; the name `listings.md`
+     section 2 and the root `docs/store-listing.md` pin, carrying the search
+     phrase)
+   Default language English (United States), type App, free. Tick the
+   declarations. This creates the record but does not yet fix the package
+   name.
 5. **Monetization > check nothing.** The app is free, has no in-app purchases,
    and no Play Billing library is present, verified in `package.json`.
 
