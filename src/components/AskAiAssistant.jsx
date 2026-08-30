@@ -20,11 +20,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Flag, Mic, Send, Volume2, X } from './icons';
+import { Flag, Send, Volume2, X } from './icons';
 import api from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmHost, useConfirm, useConfirmShield } from '../context/ConfirmContext';
-import { useToast } from '../context/ToastContext';
 import { announce } from '../lib/announce';
 import focusForScreenReader from '../lib/focusForScreenReader';
 import KeyboardAvoider from './ui/KeyboardAvoider';
@@ -238,7 +237,6 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
 
 export default function AskAiAssistant() {
   const { mode, t, spacing, type, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
-  const { showToast } = useToast();
   const reducedMotion = useReducedMotion();
   const pathname = usePathname();
   const router = useRouter();
@@ -331,11 +329,6 @@ export default function AskAiAssistant() {
 
   // No speech-to-text lives inside Expo Go — but the iPhone keyboard's own
   // dictation mic does the job today, so the mic hands the user over to it.
-  const startVoice = () => {
-    inputRef.current?.focus();
-    showToast('Tap the microphone on your keyboard to speak your question.', 'info');
-  };
-
   const send = async (question) => {
     const q = question.trim();
     if (!q || thinking) return;
@@ -537,7 +530,12 @@ export default function AskAiAssistant() {
                 ListFooterComponent={listFooter}
               />
 
-              {/* Composer: mic circle · pill input · send circle */}
+              {/* Composer: pill input · send circle. No mic control here on
+                  purpose (APS-08): the old one recorded nothing, it focused
+                  the input and pointed at the keyboard's dictation key. A
+                  control that looks like a recorder and records nothing is a
+                  Guideline 2.1 finding, and the keyboard's own dictation key
+                  does the real job without a button. */}
               <View
                 style={{
                   flexDirection: 'row',
@@ -549,25 +547,6 @@ export default function AskAiAssistant() {
                   backgroundColor: t.canvas,
                 }}
               >
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Speak your question"
-                  onPress={startVoice}
-                  android_ripple={pressRipple}
-                  style={({ pressed }) => ({
-                    width: 44,
-                    height: 44,
-                    borderRadius: 22,
-                    backgroundColor: t.blueWash,
-                    borderWidth: 1,
-                    borderColor: t.blueSoft,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    opacity: pressed ? 0.7 : 1,
-                  })}
-                >
-                  <Mic size={19} color={t.blueDeep} strokeWidth={1.8} />
-                </Pressable>
                 <TextInput
                   ref={inputRef}
                   accessibilityLabel="Your question"
