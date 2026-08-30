@@ -187,16 +187,16 @@ adding to it. The copy below reads correctly in both countries.
 ```store-fields
 title: Towinly: Senior Citizen Care
 subtitle: Trusted company for parents
-promo: Your parents ask with one tap. A helper nearby answers. You watch every new friendship earn trust, step by step, from wherever you live. Slow is the point.
+promo: Your parents post a request. A helper nearby answers. You watch every new friendship earn trust, step by step, from wherever you live. Slow is the point.
 keywords: caretaker,attendant,elderly,elder,carer,helper,companionship,jobs,safety,family,errands,ageing
 ```
 
 ```store-field-counts
 title: 28/30
 subtitle: 27/30
-promo: 155/170
+promo: 153/170
 keywords: 94/100
-full_description: 1675/4000
+full_description: 1724/4000
 ```
 
 **Adopted in part.** The title, subtitle and keyword line above are pinned in
@@ -218,6 +218,19 @@ Why these fields:
 - The promo speaks to the son or daughter living in another city, the person
   most likely to install an app for their parents.
 
+Corrected 2026-08-30 (APS-12): three claims the 2026-08-15 US pass cut as
+untrue were still in this draft. Now aligned with the US copy: ~~"Your parents
+ask with one tap"~~ became "post a request" (the promo) and "posts a request
+on one screen" (the bullet), true of the form at `App/app/(tabs)/action.jsx`
+(title field, kind-of-help chips, Normal or Urgent, then Post Help);
+~~"One switch turns family sharing on or off"~~ became the per-friendship
+wording, true of `src/components/family/FamilyShareToggle.jsx` (one native
+Switch per friendship, listed by `app/family/index.jsx`; there is no master
+switch); ~~"visible before a senior ever says yes"~~ became "Open their
+profile and read it before you say yes", true of `app/user/[id].jsx` (its
+TrustBadge renders the score on the profile; the applicant row itself shows
+name, photo and message only).
+
 Full description, written for Indian families and helpers:
 
 <!-- apple-in-description:start -->
@@ -228,12 +241,12 @@ You live in one city. Your parents live in another. Small things, like shopping,
 Towinly brings senior citizens and trusted helpers together, at a pace your whole family can watch.
 
 FOR FAMILIES
-• Your mother or father asks for help with one tap: a ride, shopping, cleaning, or company.
+• Your mother or father posts a request on one screen: a ride, shopping, cleaning, or company.
 • Helpers nearby see the request and offer a hand. Your parent chooses.
 • Join from your own family account. An elder can invite up to five family members.
 • Watch each friendship climb its seven steps. Get an alert when something needs attention.
 • Your parent checks in once a day. If they go quiet, you get an alert in the app.
-• Your parent is always in charge. One switch turns family sharing on or off.
+• Your parent is always in charge. They choose which friendships you see, and one switch turns any of them off.
 
 FOR HELPERS
 • See which senior citizens near you need a hand: errands, a lift, or company.
@@ -242,7 +255,7 @@ FOR HELPERS
 • Your Trust Score goes with you to every new family you meet.
 
 HOW TRUST WORKS
-Every member has a Trust Score, visible before a senior ever says yes. Every connection climbs the same seven steps: Just Connected, Messaging, Phone Ready, Video Ready, Social Media, Ready to Meet, Fully Trusted. Both people must agree to every step. A phone number is shared only when both sides say yes. Slow is the point.
+Every member has a Trust Score. Open their profile and read it before you say yes. Every connection climbs the same seven steps: Just Connected, Messaging, Phone Ready, Video Ready, Social Media, Ready to Meet, Fully Trusted. Both people must agree to every step. A phone number is shared only when both sides say yes. Slow is the point.
 
 MADE FOR PARENTS AND GRANDPARENTS
 Large text, clear buttons, simple English. Chat stays inside the app. No ads. Data is never sold.
@@ -267,7 +280,7 @@ short_description: Care and company for your parents. Trust grows in 7 steps, at
 ```store-field-counts
 title: 28/30
 short_description: 73/80
-full_description: 1675/4000
+full_description: 1724/4000
 ```
 
 Full description: use the same block as section 3
