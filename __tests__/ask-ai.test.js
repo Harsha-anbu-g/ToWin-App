@@ -176,3 +176,22 @@ describe('DEEP-41: the Ask AI sheet title is a real heading', () => {
     expect(style.fontSize).toBeGreaterThanOrEqual(type.cardTitle);
   }, 30_000);
 });
+
+// APS-08, App Store readiness audit 2026-08-29 (Guideline 2.1): the composer
+// carried a Mic button that recorded nothing. It focused the input and showed
+// a toast pointing at the keyboard's dictation key: a control that exists to
+// explain a different control, and the first thing a reviewer taps. The
+// keyboard's own dictation key is the native way to speak a question and it
+// needs no button here. The read-aloud controls (Speech.speak) are the other
+// direction and stay.
+describe('APS-08: no control implies recording it does not do', () => {
+  test('the composer has no mic control; typing and sending still work', async () => {
+    const view = await openSheet();
+
+    expect(view.queryByLabelText('Speak your question')).toBeNull();
+
+    // What remains is the whole composer: the question pill and Send.
+    expect(view.getByLabelText('Your question')).toBeTruthy();
+    expect(view.getByLabelText('Send question')).toBeTruthy();
+  }, 30_000);
+});
