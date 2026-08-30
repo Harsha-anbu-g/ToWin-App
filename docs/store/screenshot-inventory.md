@@ -490,11 +490,26 @@ file carries an alpha channel.
 
 `npx jest store-screenshots` passes, 23 tests.
 
-**One slot is knowingly not final.** Slot 4 bakes `raw-14`, and that frame
-carries the sentence "Reviews are written on the Towinly website. You cannot
-leave one from the app yet." APS-07 is the story that settles that wording.
-When it lands, `raw-14` has to be re-shot and the bake re-run, or the listing
-ships a sentence the app no longer says.
+**One slot is knowingly not final, and it is BLOCKED on a deploy.** Slot 4
+bakes `raw-14`, and that frame carries the sentence "Reviews are written on the
+Towinly website. You cannot leave one from the app yet." APS-07 replaced that
+sentence in `app/trust/index.jsx` with "The 5 review points come from a review
+the other person writes."
+
+Proved on 2026-08-30 rather than assumed: a fresh probe capture of `/trust` on
+the helper seat came back **byte-identical** to the committed `raw-14` (md5
+`76b42efc73b7f1288bfe5f972c32c69d`, 319,857 bytes), and its `--dump-text` sweep
+still lists the old sentence among the visible strings. Every capture is taken
+from `https://www.towinly.com/app`, and production still serves the old copy.
+The screenshot pipeline photographs the deployed site, not the working tree, so
+a copy change that has not been deployed cannot appear in a capture.
+
+Owner action, in this order:
+1. Deploy the branch (the copy change is in `app/trust/index.jsx`).
+2. `node scripts/capture-store-shots.mjs --route /trust --out docs/store/screenshots/raw-14-helper-trust-score.png --seat helper --pause 3500`
+3. Confirm the byte size CHANGED. If it is still 319,857 the deploy has not
+   landed and the shot is the old one.
+4. `python3 scripts/bake_screenshots.py`, then check slot 4 in both sets.
 
 **One caption to look at before upload.** Slot 3 reads "See who needs a hand
 near you" while the frame reads "Showing every open request" with a 25 km chip,

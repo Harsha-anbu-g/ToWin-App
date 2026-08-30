@@ -101,28 +101,31 @@ Demo credentials, re-checked against `DemoCard.jsx` today:
 | Helper | `helper` | `123456789` |
 | Family | `demo.sarah@towin.app` | `DemoSarah!2026` |
 
-## 5. The store description (HARD-114)
+## 5. The store description (HARD-114, withdrawn 2026-08-30 by APS-07)
 
-App Store Connect Description and Play Console Full description, United States
-listing, FOR HELPERS section, third bullet.
+**No console action. This section used to ask you to paste a sentence; do not
+paste it.**
 
-**Remove:**
+~~HARD-114 asked you to append "Reviews are written on the Towinly website." to
+the FOR HELPERS bullet in both consoles.~~ Withdrawn 2026-08-30: the App Store
+readiness audit (2026-08-29, APS-07) flagged that sentence as a Guideline 2.1
+risk. Store copy that tells a user a scored feature only works somewhere else
+reads as an unfinished app.
+
+The bullet the consoles should carry is the one this section always listed
+first, unchanged:
 
 > • Each person you help can earn you up to 15 points: 7 for the trust steps, 5 for their review, 3 for your profile.
 
-**Paste:**
+If the console already matches that line, there is nothing to do here. The full
+description is 1,629 of 4,000 characters, recounted by
+`__tests__/store-listing.test.js` against `docs/store-listing.md`.
 
-> • Each person you help can earn you up to 15 points: 7 for the trust steps, 5 for their review, 3 for your profile. Reviews are written on the Towinly website.
-
-The description is 1,673 of 4,000 characters after the change. The corrected
-text is already in `docs/store-listing.md` on disk; only the console needs
-typing.
-
-Why the sentence rather than a cut: an elder and a helper cannot write a review
-in the app, and the listing read as though they could. The five points are real
-and the backend awards them, so deleting them would describe a 10-point score
-while the app describes 15. If you would rather cut them, the alternative
-wording is in `ralph-hardening/progress.txt` under HARD-114.
+The five points stay, for the reason HARD-114 gave: they are real, the backend
+awards them, and cutting them would describe a 10-point score while the app
+describes 15. The app's trust screen now says who writes the review in its own
+words ("The 5 review points come from a review the other person writes."), so
+the listing does not have to.
 
 ## 6. Screenshots (HARD-117)
 
