@@ -70,10 +70,12 @@ Facts these labels rest on, each verified in code:
 - **Camera and microphone are blocked**, with both permissions stripped
   from the build:
   `app.json android.blockedPermissions` and `tools:node="remove"` in
-  `android/app/src/main/AndroidManifest.xml`. The Ask AI mic button only
-  focuses the text field so the OS keyboard's own dictation can be used;
-  audio never reaches the app (`src/components/AskAiAssistant.jsx`, which mounts
-  no recorder at all).
+  `android/app/src/main/AndroidManifest.xml`. ~~The Ask AI mic button only
+  focuses the text field so the OS keyboard's own dictation can be used~~
+  Corrected 2026-08-30 (APS-08 removed that button): the Ask AI composer has
+  no mic control at all; speaking a question happens through the OS keyboard's
+  own dictation key. Audio never reaches the app
+  (`src/components/AskAiAssistant.jsx`, which mounts no recorder at all).
 - **No address book access.** Emergency contacts and family-link identifiers
   are typed by hand. No contacts permission exists in the manifest.
 - **expo-updates is ENABLED since 2026-08-16** (`eas update:configure` wrote
@@ -105,10 +107,23 @@ Facts these labels rest on, each verified in code:
   plaintext LAN override (`EXPO_PUBLIC_API_BASE_URL`) is a dev-shell
   variable, deliberately absent from `app.json`, so it cannot ship.
 - **On-device only, never uploaded:** auth JWT in the OS keychain
-  (`src/lib/storage.js`, ThisDeviceOnly), block list
-  (`src/lib/blockList.js`), seen-badge state (`src/lib/seenIds.js`), theme,
+  (`src/lib/storage.js`, ThisDeviceOnly), ~~block list
+  (`src/lib/blockList.js`),~~ seen-badge state (`src/lib/seenIds.js`), theme,
   haptics, onboarding and AI-consent flags (`src/lib/storageKeys.js`). The
   memory game (`app/game.jsx`) makes no network calls.
+- **The block list is server-side since 2026-08-29** (HARD-106, backend
+  `/api/blocks` live). Struck from the bullet above and corrected 2026-08-30
+  (APS-10). What the server stores per block: the blocker's account id (from
+  the session), the blocked person's user id, and a timestamp
+  (`src/api/blocks.js`: `POST /blocks {blockedUserId}`, `GET /blocks` returns
+  `{userId, name, createdAt}`, `DELETE /blocks/{userId}`, `POST /blocks/sync`
+  for lists held from the device-only days). The list follows the account: a
+  block survives a reinstall, reaches a second device, and applies on the web.
+  The phone keeps a per-account cache (`src/lib/blockList.js`) so protection
+  holds offline. Label impact: covered by categories already declared Yes
+  (Apple `Other Data > Other Data Types`, Play `App activity: Other actions`,
+  both App Functionality, linked to the account like every trust action); no
+  new console row is needed, and the row descriptions below name blocks.
 
 ---
 
@@ -156,7 +171,7 @@ Functionality** for all types unless a second purpose is listed.
 | Usage Data | Product Interaction / Advertising / Other | **No** | | No client analytics SDK, and the server PostHog path is dead: the owner cleared `POSTHOG_API_KEY` from production on 2026-08-15 and the backend redeployed without it (section 5 item 1). |
 | Diagnostics | Crash / Performance / Other | No | | No crash or performance SDK. |
 | Environment Scanning / Body / Surroundings | all | No | | |
-| Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/register.jsx`), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`). Trust score goes to Groq with AI questions, after consent. |
+| Other Data | Other Data Types | **Yes** | App Functionality | Date of birth (18+ age gate at signup, `app/(auth)/register.jsx`), gender, occupation, languages, Facebook and Instagram profile URLs (`app/profile-edit.jsx`), trust ladder actions (`/trust/*`), streak check-ins (`/streaks/checkin`), block list (`/blocks`, server-side since 2026-08-29: blocked person's user id plus timestamp, per section 0). Trust score goes to Groq with AI questions, after consent. |
 
 ### 1.3 Data Not Linked to You
 
@@ -221,7 +236,7 @@ in-app consent dialog says "shared with Groq" in so many words.
 | App activity | In-app search history | No | | | |
 | App activity | Installed apps | No | | | |
 | App activity | Other user-generated content | **Yes** | No | Optional | App functionality. Bio, help requests, reviews, feedback, reports, Pass On stories, letters and Sealed items. |
-| App activity | Other actions | **Yes** | No | Optional | App functionality. Trust ladder confirmations and pauses, streak check-ins. |
+| App activity | Other actions | **Yes** | No | Optional | App functionality. Trust ladder confirmations and pauses, streak check-ins, blocks (server-side since 2026-08-29: the blocked person's user id plus timestamp). |
 | Web browsing | all | No | | | |
 | App info and performance | Crash logs / Diagnostics / Other | No | | | |
 | Device or other IDs | Device or other IDs | **Yes** | No | Optional | App functionality: the Expo push token, only after the person allows notifications. Expo delivers as a processor; that is not "sharing" in Play's sense. Added 2026-08-16 with the push feature. |
@@ -264,7 +279,8 @@ network call must re-check the row (and section 6).
 | Trust ladder actions | trust screens -> `POST /trust/{id}/confirm|pause|resume` | Other Data > Other Data Types | App activity: Other actions | No |
 | Streak check-ins | `app/checkin.jsx`, `app/streaks.jsx` -> `POST /streaks/checkin` | Other Data > Other Data Types | App activity: Other actions | No |
 | Session JWT | `src/lib/storage.js` (keychain, ThisDeviceOnly) | Not a collected type; the credential for everything above | Not a collected type | Never leaves the device except as the auth header |
-| Block list, seen-state, theme, haptics, consent flags | `src/lib/blockList.js`, `src/lib/seenIds.js`, `src/lib/storageKeys.js` | Not collected (on-device only) | Not collected | No |
+| Block list (moved out of the row below 2026-08-30, APS-10; server-side since 2026-08-29) | `src/lib/blockList.js` -> `src/api/blocks.js` -> `POST /blocks`, `GET /blocks`, `DELETE /blocks/{userId}`, `POST /blocks/sync` | Other Data > Other Data Types | App activity: Other actions | No |
+| Seen-state, theme, haptics, consent flags ~~and the block list~~ | `src/lib/seenIds.js`, `src/lib/storageKeys.js` | Not collected (on-device only) | Not collected | No |
 
 ---
 
