@@ -114,14 +114,17 @@ test('helper: copy unchanged, no family card, no Family meter row', async () => 
   expect(r.queryByText('Family')).toBeNull();
 });
 
-// HARD-114: the five review points are real, and there is no way for an elder
-// or a helper to leave a review from this app. The only POST /reviews in the
-// tree is the family member writing on a parent's behalf. Both other seats
-// write theirs on the website. The screen says so rather than leaving somebody
-// hunting for a form that was never ported. The score split itself is untouched
-// and still reads as the real 7 + 5 + 3 and 7 + 5 + 2 + 1.
+// HARD-114, reworded under APS-07: the five review points are real, and there
+// is no way for an elder or a helper to leave a review from this app. The only
+// POST /reviews in the tree is the family member writing on a parent's behalf.
+// The screen still says where the points come from, so nobody hunts for a form
+// that was never ported, but it no longer sends anyone to a browser and no
+// longer says "yet". Both read to an App Store reviewer as an unfinished app
+// (guideline 2.1), and a store screenshot bakes the sentence in. The score
+// split itself is untouched and still reads as the real 7 + 5 + 3 and
+// 7 + 5 + 2 + 1.
 describe('the review points say where a review comes from', () => {
-  const WHERE = 'Reviews are written on the Towinly website. You cannot leave one from the app yet.';
+  const WHERE = 'The 5 review points come from a review the other person writes.';
 
   test('a helper is told, and still reads the real 15 point split', async () => {
     mockRole = 'HELPER';
@@ -150,6 +153,17 @@ describe('the review points say where a review comes from', () => {
     const r = await wrap(<TrustScreen />);
 
     expect(r.queryByText(WHERE)).toBeNull();
+  });
+
+  test('the screen sends nobody to a browser and never says "yet"', async () => {
+    // Guideline 2.1. "You cannot do this here yet" reads as an unfinished app,
+    // and a store screenshot of this screen carries whatever it says.
+    mockRole = 'HELPER';
+    stubScore({ totalScore: 8, tier: 'Getting Started', family: null, customers: [helperCustomer] });
+    const r = await wrap(<TrustScreen />);
+
+    expect(r.queryByText(/website/i)).toBeNull();
+    expect(r.queryByText(/\byet\b/i)).toBeNull();
   });
 
   test('the app still has no review form for an elder or a helper', () => {
