@@ -132,7 +132,7 @@ guideline 1.2's filtering requirement.
 | Users can create or share content other users see | Yes | Bios, help requests, reviews, Pass On entries, messages. |
 | App shares the user's location with other users | Approximate only | Two sources, both rounded. The member types a town and the server geocodes it, or the phone is read on one of four screens and the fix is snapped to a ~2 km cell before it leaves the device (`src/lib/coarseLocation.js`). Other members see a town name and a rounded distance, never a point on a map. |
 | In-app controls for objectionable content | Yes | Report from a profile, block from a profile, a managed block list, a write-time word filter on posts and on private messages, and zero tolerance terms agreed at signup. Section 6 states exactly what the filter does and does not cover. |
-| Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/register.jsx` sets `MIN_AGE = 18` and its submit handler refuses a younger date of birth. No document check happens. |
+| Parental controls or age assurance | A self-declared date of birth with an 18 minimum. **Do not claim age verification.** | `app/(auth)/create-account.jsx` (register.jsx until the 2026-08-28 sign-up split; corrected 2026-08-30, APS-11) sets `MIN_AGE = 18` and its submit handler refuses a younger date of birth. No document check happens. |
 
 ### 2.4 Expect a teen tier, and do not argue with it
 
@@ -282,8 +282,9 @@ labels below stand exactly as written and no legal page changes.
 > `backend` service of the `towin` project, production environment. The key is
 > 48 characters. Values were not printed. `AuthService.capture` in the reference
 > backend sends `user_signup_started` with the plaintext email address as the
-> distinct id, and the `/auth/register` post in `App/app/(auth)/register.jsx` is
-> what triggers it.
+> distinct id, and the `/auth/register` post (`src/api/auth.js`, reached from
+> `App/app/(auth)/create-account.jsx` since the 2026-08-28 sign-up split;
+> corrected 2026-08-30, APS-11) is what triggers it.
 >
 > So the analytics rows are not the None they were written as. Two honest paths,
 > and the owner picks one before either form is submitted:
@@ -562,7 +563,9 @@ answer below is free and can be filled the hour the account verifies.
 | Advertising ID | **No.** The permission is absent from the merged manifest and no ad SDK exists in 970 installed packages. | READY, section 4.3 |
 
 The 18-and-over answer is backed by a real gate, which is what Google looks
-for: `app/(auth)/register.jsx` sets `MIN_AGE = 18` and its submit handler refuses the
+for: `app/(auth)/create-account.jsx` (register.jsx until the 2026-08-28
+sign-up split; corrected 2026-08-30, APS-11) sets `MIN_AGE = 18` and its
+submit handler refuses the
 signup with `You have to be 18 or over to join Towinly.`, and `MAX_AGE = 120`
 means a four-digit typo lands on an error instead of passing.
 `__tests__/register-age-gate.test.js` guards it.

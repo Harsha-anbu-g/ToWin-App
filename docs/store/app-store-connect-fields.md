@@ -219,7 +219,9 @@ Recommendation: **use Apple's Standard License Agreement.**
 Guideline 1.2 requires apps with user generated content to make users agree to
 terms with no tolerance for objectionable content or abusive users. Towinly
 satisfies that inside the app, not through the store EULA:
-`app/(auth)/register.jsx` gates signup behind agreeing to the terms, and the
+`app/(auth)/create-account.jsx` (register.jsx until the 2026-08-28 sign-up
+split; corrected 2026-08-30, APS-11) gates signup behind agreeing to the
+terms, and the
 "How you treat people" section of those terms says harassment, threats, lies,
 discrimination, impersonation and anything that puts another person at risk will
 get an account closed. A reviewer can see that gate on the way in.
@@ -278,8 +280,9 @@ compute it and record whatever it returns in this file. Do not inflate a content
 answer to force a higher number, and do not overstate the moderation controls to
 lower one. Both are misrepresentation and both are checkable in the build.
 
-The app's own terms are 18 and over, and `app/(auth)/register.jsx` enforces
-`MIN_AGE = 18`. If Apple computes a teen tier, that is not a contradiction. The
+The app's own terms are 18 and over, and `app/(auth)/create-account.jsx`
+(register.jsx until the 2026-08-28 sign-up split; corrected 2026-08-30,
+APS-11) enforces `MIN_AGE = 18`. If Apple computes a teen tier, that is not a contradiction. The
 store rating describes content suitability, the signup gate is a product rule.
 Google Play does have an explicit target audience question, and the answer there
 is 18 and over, per `ios-content-readiness.md`.

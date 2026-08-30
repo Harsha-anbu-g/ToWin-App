@@ -326,7 +326,8 @@ Target audience and content**.
 
 The evidence that backs this answer, in case Google asks:
 
-- `app/(auth)/register.jsx` sets `const MIN_AGE = 18`.
+- `app/(auth)/create-account.jsx` sets `const MIN_AGE = 18` (register.jsx
+  until the 2026-08-28 sign-up split; corrected 2026-08-30, APS-11).
 - Its submit handler refuses the signup with the exact words
   `You have to be ${MIN_AGE} or over to join Towinly.`
 - The same file sets `MAX_AGE = 120` so a four digit year typo lands on an
@@ -831,8 +832,10 @@ grep -n "projectId\|owner" app.json ; ls app.config.* 2>/dev/null
 # No payment or billing library
 node -e "console.log(Object.keys(require('./package.json').dependencies).join('\n'))"
 
-# The age gate
-grep -n "MIN_AGE\|MAX_AGE\|18 or over" "app/(auth)/register.jsx"
+# The age gate (create-account.jsx since the 2026-08-28 sign-up split;
+# command corrected 2026-08-30, APS-11: the old register.jsx target now
+# returns nothing because the form moved)
+grep -n "MIN_AGE\|MAX_AGE\|18 or over" "app/(auth)/create-account.jsx"
 
 # EAS CLI presence
 which eas

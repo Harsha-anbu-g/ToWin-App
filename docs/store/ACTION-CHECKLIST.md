@@ -148,7 +148,9 @@ hour spent here is an hour not spent on the meter.
   `postHogService.capture("pending:" + request.getEmail(),
   "user_signup_started", Map.of("role", ...))`. The distinct id is the
   **plaintext email address**. The mobile app reaches that endpoint:
-  the `/auth/register` post in `App/app/(auth)/register.jsx` reaches
+  the `/auth/register` post (`src/api/auth.js`, reached from
+  `App/app/(auth)/create-account.jsx` since the 2026-08-28 sign-up split;
+  corrected 2026-08-30, APS-11) reaches
   `AuthService.register` through `AuthController`. The second event,
   `user_signed_up` at `AuthService.java:173`, keys on the user UUID instead, so
   only the first one carries the address.

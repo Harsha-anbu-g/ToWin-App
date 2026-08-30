@@ -18,15 +18,17 @@ and descriptions), `privacy-labels.md` (nutrition labels and Play Data safety),
 | --- | ----------------------- | ----------------------------------------------------- |
 | 1   | Privacy policy URL      | Ready. Use `https://www.towinly.com/app/privacy`.     |
 | 1b  | Terms URL               | Ready. `https://www.towinly.com/app/terms`.           |
-| 1c  | Support URL             | **BLOCKING.** No support page exists anywhere.        |
+| 1c  | Support URL             | ~~**BLOCKING.** No support page exists anywhere.~~ CLOSED 2026-08-30 (APS-11): use `https://www.towinly.com/app/support`, live since 2026-08-28. |
 | 1d  | Marketing URL           | Ready. `https://www.towinly.com` (optional field).    |
 | 2   | Demo accounts           | Ready. All three log in. Two review-notes gaps below. |
 | 3   | Age rating              | Answers worked out below. No blockers.                |
 | 4   | Export compliance       | Correct as configured. One post-build check.          |
 | 5   | In-app account deletion | Real. Apple 5.1.1(v) is satisfied.                    |
 
-Blocking items: **1** (support URL). Two more are one-line fixes that should be
-done before the account exists, listed under "Fix before submission".
+~~Blocking items: **1** (support URL).~~ Blocking items: **0** as of
+2026-08-30 (APS-11): the support page shipped 2026-08-28 at
+`https://www.towinly.com/app/support`. Two one-line fixes remain listed under
+"Fix before submission".
 
 ---
 
@@ -36,7 +38,9 @@ done before the account exists, listed under "Fix before submission".
 
 The app does not link out to a hosted policy. `app/privacy.jsx` and
 `app/terms.jsx` render `src/data/legalContent.js` in the app itself, and
-`app/(auth)/register.jsx` shows the same text in a modal before the agree box.
+`app/(auth)/create-account.jsx` (the form page since the 2026-08-28 sign-up
+split; corrected 2026-08-30, APS-11) shows the same text in a modal before the
+agree box.
 The only outbound legal link in the whole codebase is in
 `src/components/legal/LegalSections.jsx`, which opens
 `DELETION_PAGE_URL` from `src/data/legalContent.js`:
@@ -92,10 +96,13 @@ The apex host answers 308 to `www` for every path. One hop is harmless, but the
 store console should hold the `www` address so nothing depends on a redirect
 rule staying put. `src/data/legalContent.js` already records this decision.
 
-### Support URL: BLOCKING
+### Support URL: ~~BLOCKING~~ CLOSED (2026-08-30, APS-11)
 
 App Store Connect requires a Support URL, and guideline 1.5 requires that the
-address actually provide support. There is nothing to point it at today.
+address actually provide support. ~~There is nothing to point it at today.~~
+`app/support.jsx` shipped and deployed on 2026-08-28: paste
+`https://www.towinly.com/app/support`. The analysis below is kept as the
+record of why the page was built.
 
 - The website route table (`ToWin/frontend/src/App.jsx`) has no `/support`,
   `/help` or `/contact` route.
@@ -273,7 +280,9 @@ Established by reading the code, not by assumption:
 - Moderation is present and real: `src/lib/contentFilter.js` blocks a slur and
   explicit-language wordlist at write time, `app/user/[id].jsx` posts to
   `/reports`, `app/blocked.jsx` and `src/lib/blockList.js` manage blocking, and
-  `app/(auth)/register.jsx` gates signup behind agreeing to the terms.
+  `app/(auth)/create-account.jsx` gates signup behind agreeing to the terms
+  (moved there from register.jsx in the 2026-08-28 sign-up split; corrected
+  2026-08-30, APS-11).
 - **No web browser of any kind.** There is no `react-native-webview`, no
   `expo-web-browser` and no `WebView` anywhere in `app/` or `src/`. The only
   `Linking.openURL` calls are a `mailto:` on the deletion page, the fixed
@@ -302,8 +311,9 @@ Established by reading the code, not by assumption:
   answer" flag.
 - No in-app purchases, no ads, no gambling. `app/game.jsx` is a memory game with
   no wager and no prize.
-- The app is adults-only by its own terms. `app/(auth)/register.jsx` enforces
-  `MIN_AGE = 18` against a typed date of birth.
+- The app is adults-only by its own terms. `app/(auth)/create-account.jsx`
+  enforces `MIN_AGE = 18` against a typed date of birth (moved there from
+  register.jsx in the 2026-08-28 sign-up split; corrected 2026-08-30, APS-11).
 
 ### Apple age rating questionnaire
 
@@ -471,10 +481,9 @@ account state where in-app deletion says no.
 
 Ordered by cost.
 
-1. **BLOCKING. Decide the Support URL.** Either point it at
-   `https://www.towinly.com/app/delete-account` today, or add an `/app/support`
-   route in this repo with a contact address and a response-time sentence. The
-   second is the better answer and is maybe an hour of work.
+1. ~~**BLOCKING. Decide the Support URL.**~~ DONE (struck 2026-08-30, APS-11).
+   The `/app/support` route was built and deployed on 2026-08-28: paste
+   `https://www.towinly.com/app/support`.
 2. **Send a test email to `help@towinly.com` and confirm it arrives.** Five
    published surfaces depend on that mailbox.
 3. **Add the in-app deletion path to the review notes** in
