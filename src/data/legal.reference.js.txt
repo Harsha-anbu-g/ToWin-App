@@ -1,3 +1,8 @@
+// NOT SHIPPED. Superseded by src/data/legalContent.js, which is what the terms
+// and privacy screens import. Kept for reference only, renamed from legal.js on
+// 2026-08-30 (APS-09) so no bundler can import it: the text below says
+// "prototype", carries a .example support domain, and must never render.
+//
 // Terms of Service + Privacy Policy copy — ported verbatim from
 // Towinly/frontend/src/pages/Register.jsx (placeholder documents, prototype only).
 //
