@@ -9,6 +9,7 @@ const mockNotifications = {
   requestPermissionsAsync: jest.fn(),
   getExpoPushTokenAsync: jest.fn(),
   addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
   getLastNotificationResponseAsync: jest.fn(() => Promise.resolve(null)),
 };
 jest.mock('expo-notifications', () => mockNotifications, { virtual: true });
@@ -40,7 +41,9 @@ import {
   registerForPushAsync,
   setupForegroundHandler,
   unregisterPushAsync,
+  queryKeysForNotification,
   routeForNotification,
+  wireNotificationRefresh,
   wireNotificationTaps,
 } from '../src/lib/pushNotifications';
 
@@ -189,6 +192,52 @@ describe('a tapped notification opens the screen it is about', () => {
     await answerColdStartTapAsync(router);
 
     expect(router.push).toHaveBeenCalledWith('/my-jobs');
+  });
+});
+
+describe('a ping refreshes what it is about', () => {
+  // Owner call 2026-08-31: "even in the helper's account, My Elders should
+  // show a blue color when it gets a notification". The banner and the data
+  // behind it must move together: without invalidation the helper's ping
+  // arrived while the list sat on 30s-old cache, so the new elder and the
+  // blue badge only appeared after a pull or an app switch.
+  test.each([
+    [{ type: 'message', connectionId: 'c1' }, [['unread-count']]],
+    [{ type: 'need', needId: 'n1' }, [['needs-mine'], ['needs-open']]],
+    [{ type: 'need_accepted', needId: 'n1' }, [['connections'], ['needs-applications']]],
+  ])('%o refreshes %j', (data, keys) => {
+    expect(queryKeysForNotification(data)).toEqual(keys);
+  });
+
+  test('unknown or malformed data refreshes nothing', () => {
+    expect(queryKeysForNotification(undefined)).toEqual([]);
+    expect(queryKeysForNotification({})).toEqual([]);
+    expect(queryKeysForNotification({ type: 'mystery' })).toEqual([]);
+  });
+
+  test('a live foreground ping invalidates through the wired listener', () => {
+    const queryClient = { invalidateQueries: jest.fn() };
+    let captured;
+    mockNotifications.addNotificationReceivedListener.mockImplementation((fn) => {
+      captured = fn;
+      return { remove: jest.fn() };
+    });
+
+    wireNotificationRefresh(queryClient);
+    captured({
+      request: { content: { data: { type: 'need_accepted', needId: 'n3' } } },
+    });
+
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['connections'] });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({ queryKey: ['needs-applications'] });
+  });
+
+  test('the web build wires nothing: the native module must never be touched', () => {
+    Platform.OS = 'web';
+    const queryClient = { invalidateQueries: jest.fn() };
+    const off = wireNotificationRefresh(queryClient);
+    expect(mockNotifications.addNotificationReceivedListener).not.toHaveBeenCalled();
+    expect(typeof off).toBe('function');
   });
 });
 
