@@ -15,7 +15,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
+import {
+  getFamilyLinks,
+  makePrimaryFamilyContact,
+  openFamilyChat,
+  removeFamilyLink,
+  respondToFamilyRequest,
+  respondToPowerRequest,
+} from '../../src/api/family';
 import AddParentForm from '../../src/components/family/AddParentForm';
 import DelegatedPowerToggle from '../../src/components/family/DelegatedPowerToggle';
 import { LinkRow, SectionHeading } from '../../src/components/family/FamilyRows';
@@ -58,7 +66,7 @@ export default function MyFamilyScreen() {
 
   const { data: family, isLoading, isError, refetch } = useQuery({
     queryKey: ['family-links'],
-    queryFn: async () => (await api.get('/family/links')).data,
+    queryFn: getFamilyLinks,
   });
 
   // My own friendships — each one carries its own Sharing switch. FAMILY-type
@@ -70,7 +78,7 @@ export default function MyFamilyScreen() {
     refetch: refetchConnections,
   } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const connections = (Array.isArray(allConnections) ? allConnections : []).filter(
     (c) => c.status === 'ACTIVE' && c.type !== 'FAMILY'
@@ -104,7 +112,7 @@ export default function MyFamilyScreen() {
   // Accepting turns the link ACTIVE and moves MY trust score (the elder's
   // flat +1 family point), so trust-my-score refetches alongside the links.
   const respond = useMutation({
-    mutationFn: ({ id, accept }) => api.post(`/family/requests/${id}/respond`, { accept }),
+    mutationFn: ({ id, accept }) => respondToFamilyRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
       showToast(accept ? 'They are now part of your family here.' : 'Request declined.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -117,7 +125,7 @@ export default function MyFamilyScreen() {
   // Consent flow: the elder answers an ask. A yes is the same decision as
   // flipping the Controls switch, so the card explains it in the same words.
   const respondToAsk = useMutation({
-    mutationFn: ({ id, accept }) => api.post(`/family/power-requests/${id}/respond`, { accept }),
+    mutationFn: ({ id, accept }) => respondToPowerRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
       showToast(accept ? 'Done. They can do this for you now.' : 'Okay. Nothing changes.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -127,7 +135,7 @@ export default function MyFamilyScreen() {
   });
 
   const cancel = useMutation({
-    mutationFn: (id) => api.delete(`/family/links/${id}`),
+    mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
       showToast('Request cancelled.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -141,7 +149,7 @@ export default function MyFamilyScreen() {
 
   // Revoking an ACTIVE link may drop the family trust point — refetch score.
   const remove = useMutation({
-    mutationFn: (id) => api.delete(`/family/links/${id}`),
+    mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
       showToast('Removed from your family.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -152,7 +160,7 @@ export default function MyFamilyScreen() {
   });
 
   const makePrimary = useMutation({
-    mutationFn: (id) => api.post(`/family/links/${id}/primary`),
+    mutationFn: (id) => makePrimaryFamilyContact(id),
     onSuccess: () => {
       showToast('Main contact updated.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -168,10 +176,10 @@ export default function MyFamilyScreen() {
   // family link is the only permission; the server checks it and returns the
   // conversation to open.
   const openChat = useMutation({
-    mutationFn: (l) => api.post(`/family/chat/${l.otherUserId}`),
-    onSuccess: (r) => {
+    mutationFn: (l) => openFamilyChat(l.otherUserId),
+    onSuccess: (chatConnectionId) => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
-      router.push(`/chat/${r.data}`);
+      router.push(`/chat/${chatConnectionId}`);
     },
     onError: (err) =>
       showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
