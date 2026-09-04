@@ -5,7 +5,7 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { resendVerificationEmail } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
@@ -30,7 +30,7 @@ export default function VerifyPending() {
   const resend = async () => {
     setSending(true);
     try {
-      await api.post('/auth/resend-verification');
+      await resendVerificationEmail();
       showToast('Verification email sent. Check your inbox.', 'success');
     } catch (e) {
       showToast(e?.response?.data?.message || 'Could not send the email. Try again shortly.', 'error');
