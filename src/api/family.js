@@ -27,3 +27,15 @@ export async function getFamilyLinks() {
   const res = await api.get('/family/links');
   return res?.data;
 }
+
+/**
+ * Who stands behind each of the signed-in helper's elder friendships —
+ * the family members those elders have chosen to share with, as
+ * GET /family/behind-me returns them (an `entries` array keyed by
+ * connectionId). Derived server-side from the elder's own sharing.
+ * @returns {Promise<{entries: Array<object>}>} rejects with the axios error
+ */
+export async function getFamilyBehindMe() {
+  const res = await api.get('/family/behind-me');
+  return res?.data;
+}
