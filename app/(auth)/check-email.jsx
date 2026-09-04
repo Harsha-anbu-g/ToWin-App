@@ -4,7 +4,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { resendVerificationEmail } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
@@ -31,7 +31,7 @@ export default function CheckEmail() {
     }
     setSending(true);
     try {
-      await api.post('/auth/resend-verification', { email });
+      await resendVerificationEmail({ email });
       showToast('Verification email sent. Check your inbox.', 'success');
     } catch {
       showToast('Could not resend right now. Try again shortly.', 'error');
