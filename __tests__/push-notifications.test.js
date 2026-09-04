@@ -202,7 +202,7 @@ describe('a ping refreshes what it is about', () => {
   // arrived while the list sat on 30s-old cache, so the new elder and the
   // blue badge only appeared after a pull or an app switch.
   test.each([
-    [{ type: 'message', connectionId: 'c1' }, [['unread-count']]],
+    [{ type: 'message', connectionId: 'c1' }, [['unread-count'], ['connections'], ['messages', 'c1']]],
     [{ type: 'need', needId: 'n1' }, [['needs-mine'], ['needs-open']]],
     [{ type: 'need_accepted', needId: 'n1' }, [['connections'], ['needs-applications']]],
   ])('%o refreshes %j', (data, keys) => {

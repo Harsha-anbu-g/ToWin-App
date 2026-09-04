@@ -345,7 +345,7 @@ export default function TabsLayout() {
   const { data: unread } = useQuery({
     queryKey: ['unread-count'],
     queryFn: getUnreadMessageCount,
-    refetchInterval: 30_000,
+    refetchInterval: 15_000, // one cheap grouped count; the badge lands within 15s
     enabled: !!user,
   });
 

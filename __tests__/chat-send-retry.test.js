@@ -168,3 +168,28 @@ test('the trust-gate 409 keeps its composer path: text restored, no retry bubble
   expect(r.getByLabelText('Message').props.value).toBe('hello there');
   expect(r.queryByText("Didn't send. Tap to try again.")).toBeNull();
 });
+
+test('a sent message shows from the server reply at once, before any list refetch', async () => {
+  // The list answers empty once, then never again: the only way the words can
+  // be on screen as a real bubble, with 'Sending…' gone, is the reply to the
+  // send itself being put in the list instead of waiting on a refetch.
+  let listCalls = 0;
+  api.get.mockImplementation((url) => {
+    if (url === '/connections') return Promise.resolve({ data: [conn] });
+    if (url.startsWith('/messages/c1')) {
+      listCalls += 1;
+      return listCalls === 1 ? Promise.resolve({ data: { content: [] } }) : new Promise(() => {});
+    }
+    return Promise.resolve({ data: {} });
+  });
+  api.post.mockResolvedValue({
+    data: { id: 'm-new', senderId: 'me', content: 'hello there', createdAt: '2026-09-04T10:00:00Z' },
+  });
+  const r = await wrap(<ChatThread />);
+
+  await fireEvent.changeText(await r.findByLabelText('Message'), 'hello there');
+  await fireEvent.press(r.getByLabelText('Send message'));
+
+  await waitFor(() => expect(r.queryByText('Sending…')).toBeNull());
+  expect(r.getByText('hello there')).toBeTruthy();
+});

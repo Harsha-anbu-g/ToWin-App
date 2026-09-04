@@ -35,6 +35,10 @@ import useSafetyActions, {
 } from '../../src/lib/useSafetyActions';
 import { useTheme } from '../../src/theme/ThemeContext';
 
+// How often an open thread asks for new messages. A reply reaches the other
+// screen within this long even when no push arrives (web Messages.jsx polls
+// at 5s; the phone asks more often because a chat should feel live).
+const CHAT_POLL_MS = 3000;
 const dayLabel = (iso) => {
   const d = new Date(iso);
   const today = new Date();
@@ -207,7 +211,7 @@ export default function ChatThread() {
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['messages', connectionId, channel],
     queryFn: () => listMessages({ connectionId, channel, size: 50 }),
-    refetchInterval: isFocused ? 5000 : false, // web Messages.jsx polls every 5s — only while focused
+    refetchInterval: isFocused ? CHAT_POLL_MS : false, // only while focused
     enabled: !!connectionId,
   });
   const messages = useMemo(() => {
@@ -257,10 +261,21 @@ export default function ChatThread() {
 
   const send = useMutation({
     mutationFn: (content) => sendMessage({ connectionId, content, channel }),
-    // Return the promise: the mutation then stays pending until the list
-    // refetch lands, so the 'Sending…' bubble survives until the real message
-    // is on screen (the just-sent message must exist SOMEWHERE at all times).
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['messages', connectionId, channel] }),
+    // The server's reply IS the message: it goes straight into the list, so
+    // the 'Sending…' bubble becomes the real bubble one round trip sooner and
+    // the just-sent message exists SOMEWHERE at all times. The refetch behind
+    // it only reconciles (seen stamps, anything the other side sent meanwhile).
+    onSuccess: (created) => {
+      const key = ['messages', connectionId, channel];
+      if (created?.id) {
+        queryClient.setQueryData(key, (old) => {
+          const content = old?.content ?? [];
+          if (content.some((m) => m.id === created.id)) return old;
+          return { ...old, content: [created, ...content] };
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: key });
+    },
     onError: (err, content) => {
       // The server's trust gate answers 409 "Trust level too low to message" —
       // name that reason instead of the generic retry line, and resync so the

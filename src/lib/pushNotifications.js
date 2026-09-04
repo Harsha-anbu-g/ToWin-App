@@ -151,7 +151,13 @@ const openResponse = (router, response) => {
  */
 export function queryKeysForNotification(data) {
   if (!data || typeof data !== 'object') return [];
-  if (data.type === 'message') return [['unread-count']];
+  if (data.type === 'message') {
+    // The thread and the inbox row refresh the moment the ping lands, not on
+    // their next poll, so a reply is on the other screen within a second. The
+    // key prefix ['messages', id] covers both channels of that thread.
+    const thread = data.connectionId ? ['messages', String(data.connectionId)] : ['messages'];
+    return [['unread-count'], ['connections'], thread];
+  }
   if (data.type === 'need') return [['needs-mine'], ['needs-open']];
   if (data.type === 'need_accepted') return [['connections'], ['needs-applications']];
   return [];

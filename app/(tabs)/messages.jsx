@@ -9,7 +9,7 @@
 // account can ever fill stays on screen even while empty — people first, then
 // Groups, then Family — and an empty tab explains itself.
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
@@ -30,6 +30,9 @@ import { centerActionFor } from '../../src/lib/roles';
 import { filterByQuery } from '../../src/lib/searchFilter';
 import { useTheme } from '../../src/theme/ThemeContext';
 
+// How often the open inbox asks for new rows. Cheap on the server (three
+// grouped queries for the whole page) and only while the tab is on screen.
+const INBOX_POLL_MS = 10_000;
 // Which tab a one-to-one chat belongs under (web groupOf, MessagesInbox.jsx).
 const groupOf = (c) => {
   if (c.otherUserRole === 'FAMILY') return 'family';
@@ -252,9 +255,20 @@ export default function MessagesInbox() {
   const [query, setQuery] = useState('');
   const [activeTab, setActiveTab] = useState(null);
 
+  // Poll only while this tab is on screen: a new message reaches its row
+  // within seconds without a pull, and the asking stops the moment the tab
+  // is left (same shape as the chat thread's own poll).
+  const [isFocused, setIsFocused] = useState(true);
+  useFocusEffect(
+    useCallback(() => {
+      setIsFocused(true);
+      return () => setIsFocused(false);
+    }, [])
+  );
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['connections'],
     queryFn: listMyConnections,
+    refetchInterval: isFocused ? INBOX_POLL_MS : false,
   });
   const { data: blocked } = useQuery({
     queryKey: ['block-list', user?.userId],
