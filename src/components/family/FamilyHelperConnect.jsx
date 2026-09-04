@@ -6,7 +6,12 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import {
+  openFamilyStandingChat,
+  pauseFamilyStanding,
+  resumeFamilyStanding,
+  revokeFamilyStanding,
+} from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { isInheritable } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
@@ -26,8 +31,16 @@ export default function FamilyHelperConnect({
   const firstName = (helper.helperName || '').split(' ')[0];
   const parent = elderName || 'your parent';
 
+  // Which named api function each standing action runs; the mutation's
+  // variables still carry the toast words and the undo, exactly as before.
+  const STANDING_ACTIONS = {
+    pause: pauseFamilyStanding,
+    resume: resumeFamilyStanding,
+    revoke: revokeFamilyStanding,
+  };
+
   const call = useMutation({
-    mutationFn: ({ path }) => api.post(path),
+    mutationFn: ({ act, connectionId }) => STANDING_ACTIONS[act](connectionId),
     onSuccess: (_r, { okMessage, undo }) => {
       if (okMessage) showToast(okMessage, 'success', undo ? { actionLabel: 'Undo', onAction: undo } : {});
       onChanged?.();
@@ -37,8 +50,8 @@ export default function FamilyHelperConnect({
   });
 
   const openChat = useMutation({
-    mutationFn: () => api.post(`/family/standings/${standing.standingConnectionId}/chat`),
-    onSuccess: (r) => router.push(`/chat/${r.data}`),
+    mutationFn: () => openFamilyStandingChat(standing.standingConnectionId),
+    onSuccess: (chatId) => router.push(`/chat/${chatId}`),
     onError: (err) =>
       showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
   });
@@ -80,7 +93,8 @@ export default function FamilyHelperConnect({
           disabled={busy}
           onPress={() =>
             call.mutate({
-              path: `/family/standings/${helper.connectionId}/resume`,
+              act: 'resume',
+              connectionId: helper.connectionId,
               okMessage: 'Connection restored.',
             })
           }
@@ -101,7 +115,8 @@ export default function FamilyHelperConnect({
           disabled={busy}
           onPress={() =>
             call.mutate({
-              path: `/family/standings/${standing.standingConnectionId}/resume`,
+              act: 'resume',
+              connectionId: standing.standingConnectionId,
               okMessage: 'Chat resumed.',
             })
           }
@@ -124,11 +139,13 @@ export default function FamilyHelperConnect({
   // back rides on the toast instead of a dialog in front of every tap.
   const remove = () =>
     call.mutate({
-      path: `/family/standings/${standing.standingConnectionId}/revoke`,
+      act: 'revoke',
+      connectionId: standing.standingConnectionId,
       okMessage: 'Connection removed.',
       undo: () =>
         call.mutate({
-          path: `/family/standings/${helper.connectionId}/resume`,
+          act: 'resume',
+          connectionId: helper.connectionId,
           okMessage: 'Connection restored.',
         }),
     });
@@ -158,7 +175,8 @@ export default function FamilyHelperConnect({
           disabled={busy}
           onPress={() =>
             call.mutate({
-              path: `/family/standings/${standing.standingConnectionId}/pause`,
+              act: 'pause',
+              connectionId: standing.standingConnectionId,
               okMessage: 'Chat paused.',
             })
           }

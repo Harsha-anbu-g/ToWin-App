@@ -11,7 +11,22 @@ import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Lock, ScrollText } from '../../src/components/icons';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
+import { getFamilyLinks } from '../../src/api/family';
+import {
+  addSealedItem,
+  armPassOn,
+  createPassOnItem,
+  deletePassOnItem,
+  getMyPassOnItems,
+  getPassOnSetup,
+  listKeyholders,
+  listSealedItems,
+  removeSealedItem,
+  revealSealedItem,
+  undoPassOnArming,
+  updatePassOnItem,
+} from '../../src/api/passon';
 import PassOnItemCard from '../../src/components/passon/PassOnItemCard';
 import PassOnItemForm from '../../src/components/passon/PassOnItemForm';
 import SealedItems from '../../src/components/passon/SealedItems';
@@ -216,7 +231,7 @@ export default function PassOn() {
   // show LoadError with retry, never "Nothing in your boxes yet".
   const { data: mine, isLoading, isError: mineFailed, refetch: refetchMine } = useQuery({
     queryKey: ['passon-mine'],
-    queryFn: async () => (await api.get('/passon/mine')).data,
+    queryFn: getMyPassOnItems,
     enabled,
   });
   // The two lists this page borrows from other features carry the same rule:
@@ -224,7 +239,7 @@ export default function PassOn() {
   // "there is nobody" (UX-706, same as the content queries above).
   const { data: links, isError: linksFailed, refetch: refetchLinks } = useQuery({
     queryKey: ['family-links'],
-    queryFn: async () => (await api.get('/family/links')).data,
+    queryFn: getFamilyLinks,
     enabled,
   });
   const {
@@ -233,12 +248,12 @@ export default function PassOn() {
     refetch: refetchConnections,
   } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
     enabled,
   });
   const { data: setup, isLoading: setupLoading, isError: setupFailed, refetch: refetchSetup } = useQuery({
     queryKey: ['passon-setup'],
-    queryFn: async () => (await api.get('/passon/setup')).data,
+    queryFn: getPassOnSetup,
     enabled,
   });
   const { data: keyholders, isError: keysFailed, refetch: refetchKeys } = useQuery({
@@ -248,8 +263,8 @@ export default function PassOn() {
     // a string. `|| []` lets that string straight through to .filter and takes
     // the page down mid-render.
     queryFn: async () => {
-      const r = await api.get('/passon/keyholders');
-      return Array.isArray(r.data) ? r.data : [];
+      const rows = await listKeyholders();
+      return Array.isArray(rows) ? rows : [];
     },
     enabled,
   });
@@ -263,8 +278,8 @@ export default function PassOn() {
     // take her whole page down — this is the page she opens to check her
     // sealed box is still there.
     queryFn: async () => {
-      const r = await api.get('/passon/sealed');
-      return Array.isArray(r.data) ? r.data : [];
+      const rows = await listSealedItems();
+      return Array.isArray(rows) ? rows : [];
     },
     enabled,
   });
@@ -335,8 +350,8 @@ export default function PassOn() {
     const editing = writing?.item;
     setSaving(true);
     try {
-      if (editing) await api.put(`/passon/items/${editing.id}`, payload);
-      else await api.post('/passon/items', payload);
+      if (editing) await updatePassOnItem({ itemId: editing.id, changes: payload });
+      else await createPassOnItem(payload);
       setWriting(null);
       showToast(payload.kind === 'LETTER' ? 'Your letter is saved.' : 'Your story is saved.', 'success');
       await reload();
@@ -357,7 +372,7 @@ export default function PassOn() {
     });
     if (!ok) return;
     try {
-      await api.delete(`/passon/items/${item.id}`);
+      await deletePassOnItem(item.id);
       showToast('Taken down.', 'success');
       await reload();
     } catch (err) {
@@ -372,7 +387,7 @@ export default function PassOn() {
   async function arm(payload) {
     setSaving(true);
     try {
-      await api.post('/passon/arm', payload);
+      await armPassOn(payload);
       setSettingUp(false);
       await reload();
     } catch (err) {
@@ -385,7 +400,7 @@ export default function PassOn() {
   async function addSealed(payload) {
     setSaving(true);
     try {
-      await api.post('/passon/sealed', payload);
+      await addSealedItem(payload);
       showToast(SEALED_ITEMS.saved, 'success');
       await reload();
     } catch (err) {
@@ -408,7 +423,7 @@ export default function PassOn() {
     });
     if (!ok) return;
     try {
-      await api.delete(`/passon/sealed/${item.id}`);
+      await removeSealedItem(item.id);
       showToast(SEALED_ITEMS.removed, 'success');
       await reload();
     } catch (err) {
@@ -421,7 +436,7 @@ export default function PassOn() {
    * handed straight back to the card that asked and kept nowhere else.
    */
   function openSealed(item, password) {
-    return api.post(`/passon/sealed/${item.id}/reveal`, { password }).then((r) => r.data);
+    return revealSealedItem({ itemId: item.id, password });
   }
 
   /** "If this was not your idea, undo it." Nothing is said to anybody about it. */
@@ -435,7 +450,7 @@ export default function PassOn() {
     if (!ok) return;
     setSaving(true);
     try {
-      await api.post('/passon/undo');
+      await undoPassOnArming();
       showToast(SETUP.settling.undone, 'success');
       await reload();
     } catch (err) {

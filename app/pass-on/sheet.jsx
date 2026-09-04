@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect } from 'expo-router';
 import { useState } from 'react';
 import { Platform, Share, Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { getPassOnSheet, recordPassOnSheetSaved } from '../../src/api/passon';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
@@ -39,10 +39,7 @@ export default function PassOnSheet() {
 
   const { data, isError, refetch } = useQuery({
     queryKey: ['passon-sheet'],
-    queryFn: async () => {
-      const r = await api.get('/passon/sheet');
-      return r.data;
-    },
+    queryFn: getPassOnSheet,
     enabled: !!user,
   });
 
@@ -87,7 +84,7 @@ export default function PassOnSheet() {
     }
 
     try {
-      await api.post('/passon/sheet/saved');
+      await recordPassOnSheetSaved();
       setSavedAt(new Date().toISOString());
     } catch {
       // She has the copy. Whether we wrote down that she has it is our

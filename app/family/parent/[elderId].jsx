@@ -15,7 +15,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Check, Clock, MessageCircle, UserRound } from '../../../src/components/icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../../src/api/client';
+import {
+  getFamilyJourney,
+  getFamilyLinks,
+  getFamilyStandings,
+  openFamilyChat,
+} from '../../../src/api/family';
 import FamilyHelperConnect from '../../../src/components/family/FamilyHelperConnect';
 import { ParentStatusLine } from '../../../src/components/family/FamilyJourney';
 import FamilyNeedsForParent from '../../../src/components/family/FamilyNeedsForParent';
@@ -74,17 +79,17 @@ export default function FamilyParentScreen() {
 
   const { data: family, isLoading: linksLoading, isError: linksFailed, refetch: refetchLinks } = useQuery({
     queryKey: ['family-links'],
-    queryFn: async () => (await api.get('/family/links')).data,
+    queryFn: getFamilyLinks,
   });
   const { data: journeyData, isError: journeyFailed, refetch: refetchJourney } = useQuery({
     queryKey: ['family-journey'],
-    queryFn: async () => (await api.get('/family/journey')).data,
+    queryFn: getFamilyJourney,
   });
   // Standings kept separate: an outage here must not take down the page —
   // FamilyHelperConnect goes quiet instead of claiming a removal (HCI 9).
   const { data: standingsData, isSuccess: standingsLoaded } = useQuery({
     queryKey: ['family-standings'],
-    queryFn: async () => (await api.get('/family/standings')).data,
+    queryFn: getFamilyStandings,
   });
 
   // Returns the settle so pull-to-refresh (UX-704) can hold its spinner until
@@ -107,10 +112,10 @@ export default function FamilyParentScreen() {
   // Open (or reopen) the private chat with the parent. The link is the only
   // permission; the server checks it and hands back the conversation to open.
   const messageParent = useMutation({
-    mutationFn: () => api.post(`/family/chat/${elderId}`),
-    onSuccess: (r) => {
+    mutationFn: () => openFamilyChat(elderId),
+    onSuccess: (chatId) => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
-      router.push(`/chat/${r.data}`);
+      router.push(`/chat/${chatId}`);
     },
     onError: (err) =>
       showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),

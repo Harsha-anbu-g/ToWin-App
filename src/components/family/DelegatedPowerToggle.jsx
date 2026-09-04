@@ -8,7 +8,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
-import api from '../../api/client';
+import { setDelegatedPowers } from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
 import { useTheme } from '../../theme/ThemeContext';
@@ -52,8 +52,7 @@ export default function DelegatedPowerToggle({ linkId, familyName, powers = [], 
   const previousRef = useRef(null); // the set to restore if the PUT fails
 
   const save = useMutation({
-    mutationFn: async (next) =>
-      (await api.put(`/family/links/${linkId}/powers`, { powers: [...next] })).data,
+    mutationFn: (next) => setDelegatedPowers({ linkId, powers: [...next] }),
     onSuccess: (fresh) => {
       setGranted(new Set(fresh?.delegatedPowers || []));
       onSaved?.(fresh);

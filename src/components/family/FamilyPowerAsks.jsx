@@ -6,7 +6,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { Check } from '../icons';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { askForPower } from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
 import { useTheme } from '../../theme/ThemeContext';
@@ -22,7 +22,7 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
   const pendingAsks = (link?.pendingPowerRequests || []).map((r) => r.power);
 
   const ask = useMutation({
-    mutationFn: (powerKey) => api.post(`/family/links/${link.id}/power-requests`, { power: powerKey }),
+    mutationFn: (powerKey) => askForPower({ linkId: link.id, power: powerKey }),
     onSuccess: () => {
       showToast(`Asked. ${parent} decides on their My Family page.`, 'success');
       onChanged?.();
