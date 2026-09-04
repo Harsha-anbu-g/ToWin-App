@@ -13,3 +13,13 @@ export async function listMyHelpRequests() {
   const res = await api.get('/needs/mine');
   return res?.data;
 }
+
+/**
+ * The offers the signed-in helper has made on others' requests, as
+ * GET /needs/applications returns them.
+ * @returns {Promise<Array<object>>} rejects with the axios error
+ */
+export async function listMyApplications() {
+  const res = await api.get('/needs/applications');
+  return res?.data;
+}
