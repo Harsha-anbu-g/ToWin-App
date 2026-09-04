@@ -5,10 +5,14 @@
 // scrollable body so large OS text can't clip the button.
 // Set-first-password port (website 2026-09): a Google-signup account has no
 // password. The website reads hasPassword from GET /profile/me and, when it
-// is false, shows a "Set a Password" flow posting to /auth/set-password with
+// is false, shows a set-a-password flow posting to /auth/set-password with
 // no current-password field. Same condition, same copy, same endpoint here.
+// The read rides useQuery on ['profile-me'] so the cache AgeCard and Profile
+// already filled answers instantly; a cold load shows a skeleton, never a
+// blank screen, and the header stays quiet until the mode is known (HCI 1).
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Text } from 'react-native';
 import { changePassword, setPassword } from '../src/api/auth';
 import { getMyProfile } from '../src/api/profile';
@@ -16,6 +20,7 @@ import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import PasswordInput from '../src/components/ui/PasswordInput';
 import Screen from '../src/components/ui/Screen';
+import SkeletonCard from '../src/components/ui/Skeleton';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
 
@@ -29,26 +34,17 @@ export default function ChangePassword() {
   const [confirm, setConfirm] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  // null while loading; false = Google-only account setting its first password
-  // (website: hasPassword !== false, and a failed read counts as having one).
-  const [hasPassword, setHasPassword] = useState(null);
   // Return-key path (UX-708): Next walks the fields, Done submits.
   const nextRef = useRef(null);
   const confirmRef = useRef(null);
 
-  useEffect(() => {
-    let alive = true;
-    getMyProfile()
-      .then((profile) => {
-        if (alive) setHasPassword(profile?.hasPassword !== false);
-      })
-      .catch(() => {
-        if (alive) setHasPassword(true);
-      });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const { data: me, isError: profileFailed } = useQuery({
+    queryKey: ['profile-me'],
+    queryFn: getMyProfile,
+  });
+  // null while loading; false = Google-only account setting its first password
+  // (website: hasPassword !== false, and a failed read counts as having one).
+  const hasPassword = profileFailed ? true : me ? me.hasPassword !== false : null;
 
   const settingFirst = hasPassword === false;
 
@@ -71,18 +67,22 @@ export default function ChangePassword() {
 
   const submit = async () => {
     const errs = {};
-    if (next.length < 8) errs.next = 'New password must be at least 8 characters';
-    if (!errs.next && next !== confirm) errs.confirm = 'Passwords do not match';
+    // The website's required attribute blocks an empty current password in
+    // the browser; this guard is that same wall, so an empty currentPassword
+    // never reaches the server.
+    if (!settingFirst && !current) errs.current = 'Enter your current password.';
+    if (next.length < 8) errs.next = 'New password must be at least 8 characters.';
+    if (!errs.next && next !== confirm) errs.confirm = 'New passwords do not match.';
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
       if (settingFirst) {
-        await setPassword(next);
+        await setPassword({ newPassword: next });
         showToast('Password set. Next time you can sign in with your username and password, or with Google.', 'success');
       } else {
         await changePassword({ currentPassword: current, newPassword: next });
-        showToast('Password updated.', 'success');
+        showToast('Password changed. You can use your new password next time you sign in.', 'success');
       }
       router.back();
     } catch (err) {
@@ -100,11 +100,18 @@ export default function ChangePassword() {
   return (
     <Screen
       back
-      title={settingFirst ? 'Set a password' : 'Change password'}
+      title={hasPassword === null ? '' : settingFirst ? 'Set a password' : 'Change password'}
       keyboard
       contentStyle={{ flexGrow: 1, justifyContent: 'center' }}
     >
-      {hasPassword !== null && (
+      {hasPassword === null ? (
+        // The one screen-blocking read gets a skeleton, like every other
+        // loading card in the app — a slow connection must never mean a
+        // header floating over nothing.
+        <Card>
+          <SkeletonCard lines={3} />
+        </Card>
+      ) : (
         <Card>
           <Text
             style={{
@@ -114,7 +121,7 @@ export default function ChangePassword() {
               marginBottom: settingFirst ? spacing[2] : spacing[4],
             }}
           >
-            {settingFirst ? 'Set a Password' : 'Choose a new password'}
+            {settingFirst ? 'Choose your first password' : 'Choose a new password'}
           </Text>
           {settingFirst && (
             <Text

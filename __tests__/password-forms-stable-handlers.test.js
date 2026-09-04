@@ -6,7 +6,9 @@
 // (useCallback per field); change-password.jsx and reset-password.jsx are the
 // last two forms. This probe records every props object the screen hands
 // Input and demands one handler identity per field across a keystroke.
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react-native';
+import api from '../src/api/client';
 import ResetPassword from '../app/(auth)/reset-password';
 import ChangePassword from '../app/change-password';
 import { ToastProvider } from '../src/context/ToastContext';
@@ -40,7 +42,11 @@ jest.mock('../src/components/ui/Input', () => {
 const wrap = (ui) =>
   render(
     <ThemeProvider>
-      <ToastProvider>{ui}</ToastProvider>
+      <QueryClientProvider
+        client={new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })}
+      >
+        <ToastProvider>{ui}</ToastProvider>
+      </QueryClientProvider>
     </ThemeProvider>
   );
 
@@ -49,6 +55,8 @@ const handlerIdentities = (label) => new Set(recordedProps[label].map((p) => p.o
 
 beforeEach(() => {
   for (const key of Object.keys(recordedProps)) delete recordedProps[key];
+  // change-password reads hasPassword through useQuery(['profile-me']).
+  api.get.mockResolvedValue({ data: { hasPassword: true } });
 });
 
 test('change-password: a keystroke leaves every field holding the same handler', async () => {
@@ -61,7 +69,7 @@ test('change-password: a keystroke leaves every field holding the same handler',
   const r = await wrap(<ChangePassword />);
 
   // Act: type into the first field; the state change re-renders the form.
-  await fireEvent.changeText(r.getByLabelText('Current password'), 'old-secret');
+  await fireEvent.changeText(await r.findByLabelText('Current password'), 'old-secret');
 
   // Assert: the probe saw the re-render, and no field got a new handler.
   for (const label of labels) {

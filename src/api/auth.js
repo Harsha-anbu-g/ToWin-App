@@ -24,11 +24,12 @@ export async function registerAccount({ username, email, password, role, dateOfB
  * Set the first password on a Google-signup account that has none yet
  * (profile hasPassword === false). No current password exists, so none is
  * sent. Signing in with Google keeps working afterwards.
- * @param {string} newPassword  at least 8 characters
+ * @param {object} input
+ * @param {string} input.newPassword  at least 8 characters
  * @returns {Promise<void>} resolves once the password is set; rejects with
  *   the axios error (response.data.message carries the reason)
  */
-export async function setPassword(newPassword) {
+export async function setPassword({ newPassword }) {
   await api.post('/auth/set-password', { newPassword });
 }
 
