@@ -3,10 +3,15 @@
 // highest-error-rate screen in the app had none), per-field errors so the
 // length message sits under the field it names, autofill hints, and a
 // scrollable body so large OS text can't clip the button.
+// Set-first-password port (website 2026-09): a Google-signup account has no
+// password. The website reads hasPassword from GET /profile/me and, when it
+// is false, shows a "Set a Password" flow posting to /auth/set-password with
+// no current-password field. Same condition, same copy, same endpoint here.
 import { useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Text } from 'react-native';
-import api from '../src/api/client';
+import { changePassword, setPassword } from '../src/api/auth';
+import { getMyProfile } from '../src/api/profile';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
 import PasswordInput from '../src/components/ui/PasswordInput';
@@ -24,9 +29,28 @@ export default function ChangePassword() {
   const [confirm, setConfirm] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  // Return-key path (UX-708): Next walks the three fields, Done submits.
+  // null while loading; false = Google-only account setting its first password
+  // (website: hasPassword !== false, and a failed read counts as having one).
+  const [hasPassword, setHasPassword] = useState(null);
+  // Return-key path (UX-708): Next walks the fields, Done submits.
   const nextRef = useRef(null);
   const confirmRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    getMyProfile()
+      .then((profile) => {
+        if (alive) setHasPassword(profile?.hasPassword !== false);
+      })
+      .catch(() => {
+        if (alive) setHasPassword(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const settingFirst = hasPassword === false;
 
   // DEEP-38: Input is memo'd so sibling Paper fields can skip re-renders while
   // someone types; that only holds if each field keeps one handler identity.
@@ -53,71 +77,107 @@ export default function ChangePassword() {
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
-      await api.post('/auth/change-password', { currentPassword: current, newPassword: next });
-      showToast('Password updated.', 'success');
+      if (settingFirst) {
+        await setPassword(next);
+        showToast('Password set. Next time you can sign in with your username and password, or with Google.', 'success');
+      } else {
+        await changePassword({ currentPassword: current, newPassword: next });
+        showToast('Password updated.', 'success');
+      }
       router.back();
     } catch (err) {
-      setFieldErrors({
-        current:
-          err?.response?.data?.message || 'Could not change the password. Check your current one.',
-      });
+      const message = err?.response?.data?.message;
+      setFieldErrors(
+        settingFirst
+          ? { next: message || 'Could not set password.' }
+          : { current: message || 'Could not change the password. Check your current one.' }
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Screen back title="Change password" keyboard contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
-      <Card>
-        <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}>
-          Choose a new password
-        </Text>
-        <PasswordInput
-          label="Current password"
-          value={current}
-          onChangeText={onCurrent}
-          error={fieldErrors.current}
-          textContentType="password"
-          autoComplete="current-password"
-          returnKeyType="next"
-          submitBehavior="submit"
-          onSubmitEditing={() => nextRef.current?.focus()}
-          style={{ marginBottom: spacing[4] }}
-        />
-        <PasswordInput
-          ref={nextRef}
-          label="New password (at least 8 characters)"
-          value={next}
-          onChangeText={onNext}
-          error={fieldErrors.next}
-          textContentType="newPassword"
-          autoComplete="new-password"
-          returnKeyType="next"
-          submitBehavior="submit"
-          onSubmitEditing={() => confirmRef.current?.focus()}
-          style={{ marginBottom: spacing[4] }}
-        />
-        <PasswordInput
-          ref={confirmRef}
-          label="Re-enter new password"
-          value={confirm}
-          onChangeText={onConfirm}
-          error={fieldErrors.confirm}
-          textContentType="newPassword"
-          autoComplete="new-password"
-          returnKeyType="done"
-          onSubmitEditing={() => {
-            if (!loading) submit();
-          }}
-          style={{ marginBottom: spacing[5] }}
-        />
-        <Button
-          title={loading ? 'Saving…' : 'Update password'}
-          variant="primary"
-          onPress={submit}
-          loading={loading}
-        />
-      </Card>
+    <Screen
+      back
+      title={settingFirst ? 'Set a password' : 'Change password'}
+      keyboard
+      contentStyle={{ flexGrow: 1, justifyContent: 'center' }}
+    >
+      {hasPassword !== null && (
+        <Card>
+          <Text
+            style={{
+              fontFamily: fontFamily.display,
+              fontSize: text.lg,
+              color: t.ink,
+              marginBottom: settingFirst ? spacing[2] : spacing[4],
+            }}
+          >
+            {settingFirst ? 'Set a Password' : 'Choose a new password'}
+          </Text>
+          {settingFirst && (
+            <Text
+              style={{
+                fontSize: text.sm,
+                lineHeight: text.sm * 1.5,
+                color: t.ink3,
+                marginBottom: spacing[4],
+              }}
+            >
+              Choose a password so you can also sign in with your username. Signing in with
+              Google will keep working.
+            </Text>
+          )}
+          {!settingFirst && (
+            <PasswordInput
+              label="Current password"
+              value={current}
+              onChangeText={onCurrent}
+              error={fieldErrors.current}
+              textContentType="password"
+              autoComplete="current-password"
+              returnKeyType="next"
+              submitBehavior="submit"
+              onSubmitEditing={() => nextRef.current?.focus()}
+              style={{ marginBottom: spacing[4] }}
+            />
+          )}
+          <PasswordInput
+            ref={nextRef}
+            label="New password (at least 8 characters)"
+            value={next}
+            onChangeText={onNext}
+            error={fieldErrors.next}
+            textContentType="newPassword"
+            autoComplete="new-password"
+            returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => confirmRef.current?.focus()}
+            style={{ marginBottom: spacing[4] }}
+          />
+          <PasswordInput
+            ref={confirmRef}
+            label="Re-enter new password"
+            value={confirm}
+            onChangeText={onConfirm}
+            error={fieldErrors.confirm}
+            textContentType="newPassword"
+            autoComplete="new-password"
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (!loading) submit();
+            }}
+            style={{ marginBottom: spacing[5] }}
+          />
+          <Button
+            title={loading ? 'Saving…' : settingFirst ? 'Set password' : 'Update password'}
+            variant="primary"
+            onPress={submit}
+            loading={loading}
+          />
+        </Card>
+      )}
     </Screen>
   );
 }
