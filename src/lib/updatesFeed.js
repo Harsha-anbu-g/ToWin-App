@@ -11,7 +11,11 @@
 // (src/lib/seenIds, web b37420d). Builders are pure so tests can hold them.
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import api from '../api/client';
+import { listMyConnections } from '../api/connections';
+import { listMyHelpRequests, listMyApplications } from '../api/needs';
+import { listFamilyAlerts } from '../api/family';
+import { listKeyholderAsksOfMe } from '../api/passon';
+import { listMyReviews } from '../api/reviews';
 import { useUnseenBadge, markSeen } from './seenIds';
 import { seenKey } from './storageKeys';
 
@@ -200,27 +204,28 @@ export function useUpdatesFeed(user) {
   // dedupes, so the bell rides the same cache instead of doubling traffic.
   const connectionsQuery = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
     refetchInterval: POLL_MS,
     enabled: !!user,
   });
   const needsMineQuery = useQuery({
     queryKey: ['needs-mine'],
-    queryFn: async () => (await api.get('/needs/mine')).data,
+    queryFn: listMyHelpRequests,
     refetchInterval: POLL_MS,
     enabled: !!user && isElderSeat,
   });
   const applicationsQuery = useQuery({
     queryKey: ['needs-applications'],
-    queryFn: async () => (await api.get('/needs/applications')).data,
+    queryFn: listMyApplications,
     refetchInterval: POLL_MS,
     enabled: !!user && isHelperSeat,
   });
   const familyAlertsQuery = useQuery({
     queryKey: ['family-alerts'],
     // Unwrapped, exactly like FamilyAlertsFeed: two observers of one key
-    // must put the same shape in the cache or one of them breaks.
-    queryFn: async () => (await api.get('/family/alerts')).data?.alerts ?? [],
+    // must put the same shape in the cache or one of them breaks. The
+    // module already unwraps to the alerts array.
+    queryFn: listFamilyAlerts,
     refetchInterval: POLL_MS,
     enabled: !!user && isFamily,
   });
@@ -228,15 +233,15 @@ export function useUpdatesFeed(user) {
     queryKey: ['passon-asked-of-me'],
     // Array-guarded, exactly like KeyholderAsk (shared cache key, one shape).
     queryFn: async () => {
-      const r = await api.get('/passon/keyholders/asked-of-me');
-      return Array.isArray(r.data) ? r.data : [];
+      const rows = await listKeyholderAsksOfMe();
+      return Array.isArray(rows) ? rows : [];
     },
     refetchInterval: POLL_MS,
     enabled: !!user,
   });
   const reviewsQuery = useQuery({
     queryKey: ['reviews-mine'],
-    queryFn: async () => (await api.get('/reviews/mine')).data,
+    queryFn: listMyReviews,
     refetchInterval: POLL_MS,
     enabled: !!user && !isFamily,
   });

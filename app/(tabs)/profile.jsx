@@ -25,7 +25,8 @@ import {
   UserX,
   Vibrate,
 } from '../../src/components/icons';
-import api from '../../src/api/client';
+import { deleteMyAccount, exportMyData } from '../../src/api/account';
+import { listMyReviews } from '../../src/api/reviews';
 import { listMyConnections } from '../../src/api/connections';
 import { getMyProfile } from '../../src/api/profile';
 import { getMyTrustScore } from '../../src/api/trust';
@@ -150,7 +151,7 @@ export default function ProfileScreen() {
   });
   const { data: myReviews } = useQuery({
     queryKey: ['reviews-mine'],
-    queryFn: async () => (await api.get('/reviews/mine')).data,
+    queryFn: listMyReviews,
   });
 
   const friendsCount = (connections ?? []).filter((c) => c.status === 'ACTIVE').length;
@@ -166,7 +167,7 @@ export default function ProfileScreen() {
     );
 
   const deleteAccount = useMutation({
-    mutationFn: () => api.delete('/account'),
+    mutationFn: deleteMyAccount,
     onSuccess: async () => {
       showToast('Your account has been deleted.', 'info');
       await logout();
@@ -225,7 +226,7 @@ export default function ProfileScreen() {
     if (exporting) return; // double-taps must not fire double exports (HCI rule 1)
     setExporting(true);
     try {
-      const { data } = await api.get('/account/export');
+      const data = await exportMyData();
       const kept = await saveMyDataCopy(data);
       // She closed the share sheet without keeping it anywhere. Claiming a save
       // there would be the same lie in a smaller font.

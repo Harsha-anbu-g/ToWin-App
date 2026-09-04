@@ -26,3 +26,13 @@ export async function postReview({ revieweeId, rating, comment, onBehalfOfElderI
   if (!rating) throw new Error('rating is required.');
   await api.post('/reviews', { revieweeId, rating, comment, onBehalfOfElderId });
 }
+
+/**
+ * The reviews written about the signed-in person, as GET /reviews/mine
+ * returns them.
+ * @returns {Promise<Array<object>>} rejects with the axios error
+ */
+export async function listMyReviews() {
+  const res = await api.get('/reviews/mine');
+  return res?.data;
+}

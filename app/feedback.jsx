@@ -7,7 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api from '../src/api/client';
+import { sendFeedback } from '../src/api/feedback';
 import CreatorCard from '../src/components/feedback/CreatorCard';
 import RatingRow from '../src/components/feedback/RatingRow';
 import Button from '../src/components/ui/Button';
@@ -80,7 +80,7 @@ export default function Feedback() {
     setFieldError('');
     setLoading(true);
     try {
-      await api.post('/feedback', {
+      await sendFeedback({
         name: form.name.trim() || null,
         email: form.email.trim() || null,
         phone: null,

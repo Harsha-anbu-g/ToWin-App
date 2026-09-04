@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { Flag, Send, Volume2, X } from './icons';
-import api from '../api/client';
+import { askAssistant } from '../api/ai';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmHost, useConfirm, useConfirmShield } from '../context/ConfirmContext';
 import { announce } from '../lib/announce';
@@ -341,10 +341,11 @@ export default function AskAiAssistant() {
     // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
     announce('Thinking…');
     try {
-      // 30s, not the client default 15s: a thoughtful Groq answer can outrun
-      // 15s under load, and a timeout here reads as "the AI is broken"
-      // (owner report from the first TestFlight build, 2026-08-17).
-      const { data } = await api.post('/assistant/chat', { message: q, history }, { timeout: 30_000 });
+      // askAssistant carries the 30s timeout (not the client default 15s):
+      // a thoughtful Groq answer can outrun 15s under load, and a timeout
+      // here reads as "the AI is broken" (owner report, first TestFlight
+      // build, 2026-08-17).
+      const data = await askAssistant({ message: q, history });
       if (!mounted.current) return;
       setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: data.reply }]);
       announce(data.reply);

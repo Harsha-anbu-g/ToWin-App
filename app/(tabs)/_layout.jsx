@@ -51,7 +51,9 @@ import {
 } from '../../src/lib/tabLensGeometry';
 import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { DURATION, EASE } from '../../src/theme/motion';
-import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
+import { listMyHelpRequests } from '../../src/api/needs';
+import { getUnreadMessageCount } from '../../src/api/messages';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
 import BottomEdgeBlur from '../../src/components/ui/BottomEdgeBlur';
 import { useAuth } from '../../src/context/AuthContext';
@@ -307,13 +309,13 @@ export default function TabsLayout() {
   // makes the request ASSIGNED, so the count is exactly who is still waiting.
   const { data: connectionsData } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
     enabled: !!user,
   });
   const isElderSeat = user?.role === 'ELDER' || user?.role === 'BOTH';
   const { data: needsData } = useQuery({
     queryKey: ['needs-mine'],
-    queryFn: async () => (await api.get('/needs/mine')).data,
+    queryFn: listMyHelpRequests,
     enabled: !!user && isElderSeat,
   });
   const isHelperSeat = user?.role === 'HELPER' || user?.role === 'BOTH';
@@ -342,7 +344,7 @@ export default function TabsLayout() {
   // Unread conversations badge — backend returns a plain integer (NavBar.jsx parity)
   const { data: unread } = useQuery({
     queryKey: ['unread-count'],
-    queryFn: async () => (await api.get('/messages/unread-count')).data,
+    queryFn: getUnreadMessageCount,
     refetchInterval: 30_000,
     enabled: !!user,
   });

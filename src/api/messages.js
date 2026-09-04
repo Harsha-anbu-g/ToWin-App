@@ -51,3 +51,13 @@ export async function sendMessage({ connectionId, content, channel }) {
   const res = await api.post(`/messages/${connectionId}/send${channelQuery}`, { content });
   return res?.data;
 }
+
+/**
+ * How many conversations hold messages the signed-in person has not read.
+ * The server answers a plain integer.
+ * @returns {Promise<number>} rejects with the axios error
+ */
+export async function getUnreadMessageCount() {
+  const res = await api.get('/messages/unread-count');
+  return res?.data;
+}
