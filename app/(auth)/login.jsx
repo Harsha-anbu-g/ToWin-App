@@ -5,7 +5,8 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle, Eye, EyeOff, Lock, UserRound } from '../../src/components/icons';
-import api, { friendlyAuthError } from '../../src/api/client';
+import { logIn } from '../../src/api/auth';
+import { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import GoogleLoginButton from '../../src/components/auth/GoogleLoginButton';
 import DemoAccountsCard from '../../src/components/DemoAccountsCard';
@@ -98,7 +99,7 @@ export default function Login() {
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', form);
+      const data = await logIn(form);
       await finishLogin(data.token);
     } catch (err) {
       // Only a real 400 or 401 says the password is wrong. An offline phone,
