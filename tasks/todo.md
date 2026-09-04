@@ -145,3 +145,25 @@ home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
         every connection and badged every row, so the seen store now treats a
         ladder new to this phone as already seen (seedNewIds / knownOnly);
         only a level change on a known ladder is news. 1384 tests green.
+
+## 2026-09-03 — deep-search execution queue ("do all", ultracode)
+46. [x] Backend: done 2026-09-04 on security-r23-merge (16 commits, 990 tests green): rounds 2/3
+        reconciled, 3 verify HIGHs fixed (username 400 restored pre-email, doubled-pair reads,
+        FAMILY-row phone/review gates), SEC-07 box paging + cache key, CI triggers. PUSH PENDING.
+47. [x] App: landed 2026-09-04, merge ec2d541 in the app-land worktree; README kept main's newer
+        rewrite (branch never touched it); 1444 tests green.
+48. [x] App: all four ports landed + verified + repaired 2026-09-04 (14 feature commits, 4 merges,
+        6 repair commits incl. 3-contact cap + blank-state fix; 1495 tests green in worktree).
+        SOS stays hidden (owner call pending). MERGE TO SHARED CHECKOUT + PUSH PENDING.
+49. [x] App: Rule 6 extraction done 2026-09-04 — 120 inline calls to ZERO, 19 modules /
+        108 named JSDoc'd functions, 88 commits, behavior-preservation review found nothing,
+        1624 tests green. Local main = 5e4b328 (115 ahead of origin). PUSH PENDING.
+50. [x] Docs: audit md addendum + prd-security-backend.json status notes committed (5e4b328).
+51. [ ] ASO: intent-phrase store listing rebuild (docs only, claims-verified, humanizer+stop-slop).
+        Recommend a fresh session with App:app-store-launch + the claims ledger; not rushed here.
+52. [ ] Owner-only (listed, not doable by agent): push approvals for website security-r23-merge
+        and App main (115 commits), marketing 127-slot review, Play registration, ASC console
+        items, SOS decision, todo item 11's missing words.
+53. [ ] Backlog from the extraction review (all small): move friendlyWriteError/friendlyAuthError
+        prose helpers from src/api/client.js to src/lib; reportUser takes a named-fields object
+        + validation; move discover* out of connections.js and geocodePlace out of profile.js.
