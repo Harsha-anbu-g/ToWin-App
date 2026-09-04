@@ -9,7 +9,14 @@ import { MapPin } from '../../src/components/icons';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
-import api, { friendlyWriteError } from '../../src/api/client';
+import { friendlyWriteError } from '../../src/api/client';
+import {
+  discoverElders,
+  discoverHelpers,
+  listMyConnections,
+  respondToConnectionRequest,
+  sendConnectionRequest,
+} from '../../src/api/connections';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Screen from '../../src/components/ui/Screen';
@@ -313,7 +320,7 @@ export default function FriendsScreen() {
   // refetches rather than re-slicing a stale list.
   const { data: discovered, isLoading, isError: discoverFailed, refetch: refetchDiscover } = useQuery({
     queryKey: ['discover', path, radiusKm],
-    queryFn: async () => (await api.get(path, { params: { radiusKm } })).data,
+    queryFn: () => (isHelper ? discoverElders(radiusKm) : discoverHelpers(radiusKm)),
     // radiusKm is part of the key, so every chip tap starts a NEW query with no
     // data of its own. Without this the list falls back to isLoading for the
     // length of the round trip, `data` below becomes [], and every mounted
@@ -325,7 +332,7 @@ export default function FriendsScreen() {
   });
   const { data: connections, isLoading: connsLoading, isError: connsFailed, refetch: refetchConns } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
 
   const { data: blocked } = useQuery({
@@ -359,7 +366,7 @@ export default function FriendsScreen() {
   );
 
   const request = useMutation({
-    mutationFn: (targetUserId) => api.post('/connections/request', { targetUserId }),
+    mutationFn: (targetUserId) => sendConnectionRequest(targetUserId),
     onSuccess: () => {
       showToast('Friend request sent!', 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
@@ -372,7 +379,7 @@ export default function FriendsScreen() {
   });
 
   const respond = useMutation({
-    mutationFn: ({ id, accept }) => api.post(`/connections/${id}/respond`, { accept }),
+    mutationFn: ({ id, accept }) => respondToConnectionRequest({ connectionId: id, accept }),
     onSuccess: (_res, { accept }) => {
       showToast(accept ? 'You are now friends!' : 'Request declined.', accept ? 'success' : 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });

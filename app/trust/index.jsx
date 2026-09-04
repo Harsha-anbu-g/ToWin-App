@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Star } from '../../src/components/icons';
 import { Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { getMyTrustScore } from '../../src/api/trust';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
@@ -293,7 +293,7 @@ export default function TrustScreen() {
 
   const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
-    queryFn: async () => (await api.get('/trust/my-score')).data,
+    queryFn: getMyTrustScore,
   });
 
   const score = breakdown ? Math.round(breakdown.totalScore) : 0;
