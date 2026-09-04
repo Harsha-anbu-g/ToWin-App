@@ -12,6 +12,7 @@ import { Check } from '../icons';
 import { useRef, useState } from 'react';
 import { Animated, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { checkInToday, getMyStreak } from '../../api/streaks';
 import { familyNamesLabel } from '../../lib/copy';
 import { buildWeek } from '../../lib/streaks';
 import { useToast } from '../../context/ToastContext';
@@ -121,7 +122,7 @@ function WeekStrip({ week }) {
 }
 
 export default function CheckinCard() {
-  const { t, spacing, radius, type, fontFamily } = useTheme();
+  const { t, spacing, radius, type, text, fontFamily } = useTheme();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
   const reducedMotion = useReducedMotion();
@@ -134,7 +135,7 @@ export default function CheckinCard() {
 
   const { data: streak, isLoading, isError, refetch } = useQuery({
     queryKey: ['streak-me'],
-    queryFn: async () => (await api.get('/streaks/me')).data,
+    queryFn: getMyStreak,
   });
 
   // Who sees this check-in. Only links where she sits in the elder seat — the
@@ -153,7 +154,7 @@ export default function CheckinCard() {
     .filter(Boolean);
 
   const checkin = useMutation({
-    mutationFn: async () => (await api.post('/streaks/checkin')).data,
+    mutationFn: checkInToday,
     onSuccess: (data) => {
       queryClient.setQueryData(['streak-me'], data);
       setJustCheckedIn(true);
@@ -256,6 +257,14 @@ export default function CheckinCard() {
           </View>
 
           <WeekStrip week={week} />
+
+          {/* The longest run ever (web StreakCard parity): quiet pride, only
+              once there is something to be proud of. */}
+          {streak?.longestStreak > 0 && (
+            <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>
+              Best streak: {streak.longestStreak} {streak.longestStreak === 1 ? 'day' : 'days'}
+            </Text>
+          )}
         </>
       )}
     </View>
