@@ -51,8 +51,9 @@ test('the heading counts contacts out of 3, like the website', async () => {
 
   const r = await wrap();
 
-  await waitFor(() => expect(r.getByText(/My contacts/)).toBeTruthy());
-  expect(r.getByText('(2/3)')).toBeTruthy();
+  // Wait for the count itself: the heading is already there while the list
+  // loads, and the count only joins it once the read settles.
+  await waitFor(() => expect(r.getByText('(2/3)')).toBeTruthy());
 });
 
 test('under 3 contacts the add form is there', async () => {

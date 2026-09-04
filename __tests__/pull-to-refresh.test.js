@@ -210,6 +210,8 @@ const EXEMPT = {
   'app/(tabs)/_layout.jsx': 'tab bar chrome, not a screen; badge counts refresh with their tabs',
   'app/chat/[connectionId].jsx': 'inverted thread; a pull there means load older messages, a feature the website does not have',
   'app/profile-edit.jsx': 'prefilled form; a pull would reload the profile underneath text being edited',
+  'app/change-password.jsx':
+    'password form; its one read (hasPassword via profile-me) is cached, and a pull would yank the screen under a half-typed secret',
 };
 
 test('every app screen that queries remote data has a refresh path', () => {
