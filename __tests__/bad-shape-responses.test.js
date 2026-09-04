@@ -74,7 +74,7 @@ test('emergency contacts shows its empty state when the wifi portal answers with
   );
   // The heading is still there, which means the render pass finished rather
   // than throwing partway down the card.
-  expect(r.getByText('My contacts')).toBeTruthy();
+  expect(r.getByText(/My contacts/)).toBeTruthy();
 });
 
 test('a real list still renders after the guard', async () => {

@@ -167,11 +167,18 @@ export default function EmergencyContacts() {
       </Card>
 
       <Card style={{ marginTop: spacing[4] }}>
+        {/* The count is the website's "(N/3)", shown once the list is real —
+            a loading or failed read must not claim "(0/3)". */}
         <Text
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
         >
           My contacts
+          {!isLoading && !isError ? (
+            <Text style={{ fontSize: text.base, color: t.ink3 }}>
+              {'  '}({contactList.length}/3)
+            </Text>
+          ) : null}
         </Text>
         {isLoading ? (
           <SkeletonCard lines={2} />
@@ -224,10 +231,12 @@ export default function EmergencyContacts() {
                     {c.phone}
                   </Text>
                 </View>
-                {/* Website card line, verbatim: "Alerts after N inactive days". */}
+                {/* Website card line, pluralized: the site's own card says
+                    "1 inactive days", and grammar mistakes are not part of
+                    the parity contract. */}
                 {c.inactivityDays != null ? (
                   <Text style={{ fontSize: text.sm, color: t.inkFaint2, marginTop: 2 }}>
-                    {`Alerts after ${c.inactivityDays} inactive days`}
+                    {`Alerts after ${c.inactivityDays} inactive ${c.inactivityDays === 1 ? 'day' : 'days'}`}
                   </Text>
                 ) : null}
               </Pressable>
@@ -251,6 +260,9 @@ export default function EmergencyContacts() {
         )}
       </Card>
 
+      {/* Website cap: at 3 contacts the add affordance disappears — the
+          server's limit, shown instead of discovered through a refusal. */}
+      {!isLoading && contactList.length < 3 ? (
       <Card style={{ marginTop: spacing[4] }}>
         <Text
           accessibilityRole="header"
@@ -308,14 +320,15 @@ export default function EmergencyContacts() {
           style={FIELD_GAP}
         />
         {/* Website field: "Alert after (days)", min 1, max 30, default 5.
-            number-pad is the native numeric control here; the helper is the
-            website page's own sentence explaining what the number does. */}
+            number-pad is the native numeric control here. The helper names
+            the number being typed one line above it — the website's page
+            intro ("for several days") reads wrong as a field helper. */}
         <Input
           ref={daysRef}
           label="Alert after (days)"
           value={form.inactivityDays}
           onChangeText={fieldHandlers.inactivityDays}
-          helper="We'll alert these people if you don't check in for several days."
+          helper="We'll alert this person after this many quiet days."
           keyboardType="number-pad"
           maxLength={2}
           returnKeyType="done"
@@ -329,6 +342,7 @@ export default function EmergencyContacts() {
           loading={add.isPending}
         />
       </Card>
+      ) : null}
     </Screen>
   );
 }

@@ -1,6 +1,8 @@
 // inactivityDays ported from the website's EmergencyContacts.jsx: the add form
 // carries "Alert after (days)" (default 5, 1 to 30), the POST body sends it as
-// a number, and every contact card says "Alerts after N inactive days".
+// a number, and every contact card says "Alerts after N inactive days"
+// (pluralized here: the website's own card says "1 inactive days", and the
+// grammar mistake is not part of the parity contract).
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
@@ -64,7 +66,7 @@ describe('inactivity days on the add form', () => {
     const field = r.getByLabelText('Alert after (days)');
     expect(field.props.value).toBe('5');
     expect(
-      r.getByText("We'll alert these people if you don't check in for several days.")
+      r.getByText("We'll alert this person after this many quiet days.")
     ).toBeTruthy();
   });
 
@@ -110,9 +112,20 @@ describe('inactivity days on the contact list', () => {
     // Arrange / Act
     const r = await wrap();
 
-    // Assert - "Alerts after {n} inactive days", verbatim.
+    // Assert - "Alerts after {n} inactive days".
     await waitFor(() => expect(r.getByText('Alerts after 5 inactive days')).toBeTruthy());
     expect(r.getByText('Alerts after 10 inactive days')).toBeTruthy();
+  });
+
+  test('one day reads as a day, not days', async () => {
+    // Arrange - the reachable minimum of the 1-30 range.
+    api.get.mockResolvedValue({ data: [{ ...CONTACTS[0], inactivityDays: 1 }] });
+
+    // Act
+    const r = await wrap();
+
+    // Assert
+    await waitFor(() => expect(r.getByText('Alerts after 1 inactive day')).toBeTruthy());
   });
 
   test('undo after a remove re-adds the contact with its inactivityDays', async () => {
