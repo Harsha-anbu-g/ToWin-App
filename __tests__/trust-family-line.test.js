@@ -169,22 +169,29 @@ describe('the review points say where a review comes from', () => {
   test('the app still has no review form for an elder or a helper', () => {
     // The claim above is only honest while this stays true. If a review form
     // ships for either seat, delete the line and this test together.
+    // The wire call lives once, in the reviews api module (Rule 6), and the
+    // family form is the module's only caller — both halves are walked so a
+    // new review surface at either layer trips this.
     const fs = require('fs');
     const path = require('path');
     const roots = ['app', 'src'];
-    const hits = [];
+    const wireHits = [];
+    const callerHits = [];
     const walk = (dir) => {
       for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
         const full = path.join(dir, entry.name);
         if (entry.isDirectory()) walk(full);
         else if (/\.jsx?$/.test(entry.name)) {
           const code = fs.readFileSync(full, 'utf8');
-          if (/post\(\s*['`]\/reviews['`]/.test(code)) hits.push(path.relative(path.join(__dirname, '..'), full));
+          const rel = path.relative(path.join(__dirname, '..'), full);
+          if (/post\(\s*['`]\/reviews['`]/.test(code)) wireHits.push(rel);
+          if (/\bpostReview\s*\(/.test(code) && rel !== 'src/api/reviews.js') callerHits.push(rel);
         }
       }
     };
     roots.forEach((r) => walk(path.join(__dirname, '..', r)));
-    expect(hits).toEqual(['src/components/family/FamilyReviewForParent.jsx']);
+    expect(wireHits).toEqual(['src/api/reviews.js']);
+    expect(callerHits).toEqual(['src/components/family/FamilyReviewForParent.jsx']);
   });
 });
 
