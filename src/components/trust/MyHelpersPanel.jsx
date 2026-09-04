@@ -10,6 +10,7 @@ import { ChevronRight } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import api, { friendlyWriteError } from '../../api/client';
+import { getFamilyTransparency } from '../../api/family';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
@@ -36,7 +37,7 @@ import PausedCard from './PausedCard';
 import TrustLadder from './TrustLadder';
 
 
-function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause, divider, originLine, news, onSeen }) {
+function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause, divider, originLine, news, onSeen, transparency = [] }) {
   const { t, type, fontFamily } = useTheme();
   const router = useRouter();
   // The row is the person alone, like a WhatsApp chat row (owner call
@@ -212,6 +213,16 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
           {conn ? (
             <>
               <FamilyShareToggle connectionId={conn.id} shared={conn.sharedWithFamily} />
+              {/* Step 4 transparency: nothing about you happens out of your
+                  sight — you always see which of your family connected with
+                  this helper. Wording is the web ElderDashboard's, verbatim. */}
+              {transparency.map((f, i) => (
+                <Text key={i} style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 10 }}>
+                  {f.inherited
+                    ? `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} can message ${f.helperName} through your shared trust.`
+                    : `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} and ${f.helperName} are talking.`}
+                </Text>
+              ))}
               {conn.sharedWithFamily ? (
                 <ActionChip
                   label="Open the family group"
@@ -271,6 +282,21 @@ export default function MyHelpersPanel() {
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
+  // Step 4 transparency: which of my family are connected with which helpers
+  // (web ElderDashboard). Optional context — errors fold to empty and the
+  // cards render with nothing to tell, never a loud failure.
+  const { data: familyTransparency } = useQuery({
+    queryKey: ['family-transparency'],
+    queryFn: async () => {
+      try {
+        return await getFamilyTransparency();
+      } catch {
+        return [];
+      }
+    },
+  });
+  const transparencyFor = (otherUserId) =>
+    (familyTransparency ?? []).filter((f) => f.helperUserId === otherUserId);
   // Ladders that moved and are waiting on the elder's move: a helper accepted
   // a step and the elder has not started the next one (owner call
   // 2026-08-28). Seeded on first run, so the friendships already here never
@@ -418,6 +444,7 @@ export default function MyHelpersPanel() {
               card={card}
               conn={c}
               originLine={c ? trustOriginLine(c, needsMine?.content) : null}
+              transparency={c ? transparencyFor(c.otherUserId) : []}
               connReady={!!connections}
               confirmedByMe={!!c?.confirmedByMe}
               confirmedByOther={!!c?.confirmedByOther}
