@@ -2,7 +2,8 @@
 // destructive — no confirm, HCI rule 7); withdraw confirms at the call site.
 // Extracted from the retired OpenRequestsCard home-feed card (pre-redesign).
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import api, { friendlyWriteError } from '../api/client';
+import { friendlyWriteError } from '../api/client';
+import { applyToHelpRequest, withdrawApplication } from '../api/needs';
 import { useToast } from '../context/ToastContext';
 
 export function useApplyMutations() {
@@ -14,7 +15,7 @@ export function useApplyMutations() {
   };
 
   const apply = useMutation({
-    mutationFn: (needId) => api.post(`/needs/${needId}/apply`),
+    mutationFn: (needId) => applyToHelpRequest(needId),
     onSuccess: () => {
       showToast('Offer sent. The elder will see it right away.', 'success');
       refresh();
@@ -27,7 +28,7 @@ export function useApplyMutations() {
   });
 
   const withdraw = useMutation({
-    mutationFn: (needId) => api.delete(`/needs/${needId}/apply`),
+    mutationFn: (needId) => withdrawApplication(needId),
     onSuccess: () => {
       showToast('Offer withdrawn.', 'success');
       refresh();
