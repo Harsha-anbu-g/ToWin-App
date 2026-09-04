@@ -13,3 +13,15 @@ export async function getMyProfile() {
   const res = await api.get('/profile/me');
   return res?.data;
 }
+
+/**
+ * Another person's public profile (name, bio, interests, trust level), as
+ * GET /profile/{id} returns it.
+ * @param {string} userId whose profile to read
+ * @returns {Promise<object>} the profile fields; rejects with the axios error
+ */
+export async function getUserProfile(userId) {
+  if (!userId) throw new Error('userId is required.');
+  const res = await api.get(`/profile/${userId}`);
+  return res?.data;
+}
