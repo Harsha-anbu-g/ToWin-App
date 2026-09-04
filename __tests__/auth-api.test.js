@@ -5,7 +5,7 @@ import api from '../src/api/client';
 import {
   completeOAuthSignup,
   exchangeOAuthCode,
-  resendVerificationEmail,
+  resendSignupEmail,
   submitIdPhoto,
   verifyEmail,
 } from '../src/api/auth';
@@ -21,12 +21,12 @@ jest.mock('../src/api/client', () => ({
 beforeEach(() => jest.clearAllMocks());
 
 describe('auth API module (verification + OAuth)', () => {
-  test('resendVerificationEmail posts the email', async () => {
+  test('resendSignupEmail posts the email', async () => {
     // Arrange
     api.post.mockResolvedValue({});
 
     // Act
-    await resendVerificationEmail({ email: 'rose@example.com' });
+    await resendSignupEmail({ email: 'rose@example.com' });
 
     // Assert
     expect(api.post).toHaveBeenCalledWith('/auth/resend-verification', {
@@ -34,9 +34,9 @@ describe('auth API module (verification + OAuth)', () => {
     });
   });
 
-  test('resendVerificationEmail refuses a missing email before the wire', async () => {
+  test('resendSignupEmail refuses a missing email before the wire', async () => {
     // Act / Assert
-    await expect(resendVerificationEmail({})).rejects.toThrow(
+    await expect(resendSignupEmail({})).rejects.toThrow(
       'email is required to resend the verification link.'
     );
     expect(api.post).not.toHaveBeenCalled();

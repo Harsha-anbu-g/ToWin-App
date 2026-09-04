@@ -80,7 +80,7 @@ export async function registerAccount({ username, email, password, role, dateOfB
  * @returns {Promise<void>} resolves once the backend has queued the email;
  *   rejects with the axios error (response.data.message carries the reason)
  */
-export async function resendVerificationEmail({ email }) {
+export async function resendSignupEmail({ email }) {
   if (!email) throw new Error('email is required to resend the verification link.');
   await api.post('/auth/resend-verification', { email });
 }
