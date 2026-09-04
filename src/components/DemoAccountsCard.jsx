@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api from '../api/client';
+import { logIn } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import TextLink from './ui/TextLink';
@@ -37,7 +37,7 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
     onError?.('');
     try {
       const { identifier, password } = DEMO[role];
-      const { data } = await api.post('/auth/login', { identifier, password });
+      const data = await logIn({ identifier, password });
       // login() returns false when this device rejects the token (malformed, or
       // already expired against a clock set far ahead). Navigating anyway put
       // the person back on Login with nothing said. Same handling as login.jsx.
