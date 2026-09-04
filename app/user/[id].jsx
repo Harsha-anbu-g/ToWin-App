@@ -5,7 +5,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BookOpen } from '../../src/components/icons';
 import { Pressable, Text, View } from 'react-native';
-import api, { friendlyWriteError } from '../../src/api/client';
+import { friendlyWriteError } from '../../src/api/client';
+import {
+  endConnection,
+  listMyConnections,
+  sendConnectionRequest,
+} from '../../src/api/connections';
+import { getUserProfile } from '../../src/api/profile';
+import { listUserReviews } from '../../src/api/reviews';
 import { FROM_PAGE } from '../../src/lib/passOnLocks';
 import ActionChip from '../../src/components/ui/ActionChip';
 import Avatar from '../../src/components/ui/Avatar';
@@ -68,13 +75,13 @@ export default function UserProfile() {
   // gone" — the two must never share one message (rulebook).
   const { data: profile, isLoading, isError, refetch } = useQuery({
     queryKey: ['profile', id],
-    queryFn: async () => (await api.get(`/profile/${id}`)).data,
+    queryFn: () => getUserProfile(id),
     enabled: !!id,
   });
 
   const { data: reviews } = useQuery({
     queryKey: ['reviews', id],
-    queryFn: async () => (await api.get(`/reviews/user/${id}`)).data,
+    queryFn: () => listUserReviews(id),
     enabled: !!id,
   });
 
@@ -89,7 +96,7 @@ export default function UserProfile() {
     refetch: refetchConns,
   } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const conn = (connections ?? []).find((c) => c.otherUserId === id);
   const connUnknown = !conn && (connsLoading || connsFailed);
@@ -110,7 +117,7 @@ export default function UserProfile() {
     ]);
 
   const request = useMutation({
-    mutationFn: () => api.post('/connections/request', { targetUserId: id }),
+    mutationFn: () => sendConnectionRequest(id),
     onSuccess: () => {
       showToast('Friend request sent!', 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
@@ -125,7 +132,7 @@ export default function UserProfile() {
   // `quiet` is passed by the block flow, which says its own sentence. Two
   // toasts about one tap talk over each other, and the second one wins.
   const endFriendship = useMutation({
-    mutationFn: () => api.delete(`/connections/${conn.id}`),
+    mutationFn: () => endConnection(conn.id),
     onSuccess: (_data, variables) => {
       if (!variables?.quiet) showToast('Friendship ended.', 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
