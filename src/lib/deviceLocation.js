@@ -23,7 +23,7 @@
 // where the native module is absent. A static import here would take down
 // every screen that reaches this file.
 import { Platform } from 'react-native';
-import api from '../api/client';
+import { updateProfileLocation } from '../api/profile';
 import { coarsen } from './coarseLocation';
 import * as Store from './storage';
 import { locationKey } from './storageKeys';
@@ -147,7 +147,7 @@ export async function savePosition(position, userId) {
   const coarse = coarsen({ latitude: position?.locationLat, longitude: position?.locationLng });
   if (!coarse) return false;
   try {
-    await api.put('/profile/location', coarse);
+    await updateProfileLocation(coarse);
   } catch {
     // A failed save is not worth a banner: the person asked to find friends,
     // not to manage a sync. No record is written, so the next visit tries again.
