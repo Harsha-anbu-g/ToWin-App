@@ -16,7 +16,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import {
+  getFamilyJourney,
+  getFamilyLinks,
+  removeFamilyLink,
+  respondToFamilyRequest,
+} from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { filterByQuery } from '../../lib/searchFilter';
 import { useTheme } from '../../theme/ThemeContext';
@@ -50,7 +55,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
 
   const { data: family, isLoading, isError, refetch } = useQuery({
     queryKey: ['family-links'],
-    queryFn: async () => (await api.get('/family/links')).data,
+    queryFn: getFamilyLinks,
   });
 
   // The parent's journey: check-in, open requests, and the friendships they
@@ -58,7 +63,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
   // links list — and the accept/cancel actions — working (HCI 9).
   const { data: journeyData } = useQuery({
     queryKey: ['family-journey'],
-    queryFn: async () => (await api.get('/family/journey')).data,
+    queryFn: getFamilyJourney,
   });
   const journeyFor = (elderId) =>
     (journeyData?.elders ?? []).find((e) => e.elderId === elderId);
@@ -82,7 +87,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
   // Accepting flips the link ACTIVE and moves the ELDER's trust score, so
   // trust-my-score refetches too; alerts start flowing once a link is ACTIVE.
   const respond = useMutation({
-    mutationFn: ({ id, accept }) => api.post(`/family/requests/${id}/respond`, { accept }),
+    mutationFn: ({ id, accept }) => respondToFamilyRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
       showToast(accept ? "You're now linked as their family." : 'Request declined.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
@@ -94,7 +99,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
   });
 
   const cancel = useMutation({
-    mutationFn: (id) => api.delete(`/family/links/${id}`),
+    mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
       showToast('Request cancelled.', 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });

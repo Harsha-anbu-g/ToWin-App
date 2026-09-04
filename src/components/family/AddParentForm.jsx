@@ -6,7 +6,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { sendFamilyRequest } from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
@@ -45,7 +45,7 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
 
   const send = useMutation({
     mutationFn: () =>
-      api.post('/family/requests', {
+      sendFamilyRequest({
         identifier: identifier.trim(),
         relationship: relationship.trim(),
         side,

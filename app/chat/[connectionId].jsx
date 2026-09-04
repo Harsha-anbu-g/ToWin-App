@@ -8,7 +8,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionSheetIOS, FlatList, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertCircle, ArrowLeft, ChevronRight, Flag, Send } from '../../src/components/icons';
-import api, { friendlyWriteError } from '../../src/api/client';
+import { friendlyWriteError } from '../../src/api/client';
+import { listMyConnections, endConnection as endConnectionApi } from '../../src/api/connections';
+import { listMessages, markMessagesSeen, sendMessage } from '../../src/api/messages';
+import { confirmTrustStep, resumeTrustSteps } from '../../src/api/trust';
 import Avatar from '../../src/components/ui/Avatar';
 import KeyboardAvoider from '../../src/components/ui/KeyboardAvoider';
 import LoadError from '../../src/components/ui/LoadError';
@@ -80,7 +83,6 @@ export default function ChatThread() {
   // read together. Everything else is the private MAIN chat, unchanged.
   const isFamilyChannel = channelParam === 'family' || channelParam === 'FAMILY_UPDATES';
   const channel = isFamilyChannel ? 'FAMILY_UPDATES' : 'MAIN';
-  const channelQuery = isFamilyChannel ? '&channel=FAMILY_UPDATES' : '';
 
   // Drafts are per-thread, not per-connection — the group thread must never
   // swallow a half-written private message (or the other way round).
@@ -132,7 +134,7 @@ export default function ChatThread() {
     refetch: refetchConns,
   } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const conn = (connections ?? []).find((c) => c.id === connectionId);
   // Until the list resolves, the locked/paused state is UNKNOWN — render no
@@ -147,7 +149,7 @@ export default function ChatThread() {
   // rule ends up explained two ways. Blocking ends the friendship, so the row
   // leaves Messages and this thread has nothing left to show: go back to the
   // list rather than sit on a dead conversation.
-  const endConnection = useMutation({ mutationFn: () => api.delete(`/connections/${connectionId}`) });
+  const endConnection = useMutation({ mutationFn: () => endConnectionApi(connectionId) });
   const {
     reportOpen,
     pickReportReason,
@@ -204,8 +206,7 @@ export default function ChatThread() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['messages', connectionId, channel],
-    queryFn: async () =>
-      (await api.get(`/messages/${connectionId}?size=50${channelQuery}`)).data,
+    queryFn: () => listMessages({ connectionId, channel, size: 50 }),
     refetchInterval: isFocused ? 5000 : false, // web Messages.jsx polls every 5s — only while focused
     enabled: !!connectionId,
   });
@@ -232,8 +233,7 @@ export default function ChatThread() {
       seenOnce.current = newestIncoming.id;
       // Best-effort, but not invisible: a consistently failing mark-seen is
       // the only lead when "unread badges never clear" bug reports come in.
-      api
-        .post(`/messages/${connectionId}/seen`)
+      markMessagesSeen(connectionId)
         // Refresh the badge only AFTER the seen-write commits — invalidating
         // first races the server and the refetch returns the stale count.
         .then(() => {
@@ -256,10 +256,7 @@ export default function ChatThread() {
   }, [messages, connectionId, user?.userId, queryClient, isFocused, conn?.otherUserName]);
 
   const send = useMutation({
-    mutationFn: (content) =>
-      api.post(`/messages/${connectionId}/send${isFamilyChannel ? '?channel=FAMILY_UPDATES' : ''}`, {
-        content,
-      }),
+    mutationFn: (content) => sendMessage({ connectionId, content, channel }),
     // Return the promise: the mutation then stays pending until the list
     // refetch lands, so the 'Sending…' bubble survives until the real message
     // is on screen (the just-sent message must exist SOMEWHERE at all times).
@@ -295,7 +292,7 @@ export default function ChatThread() {
   // the trust panels, so the action lives WHERE the lock is announced
   // (rulebook: recognition over recall, like Resume on the paused block).
   const confirmStep = useMutation({
-    mutationFn: () => api.post(`/trust/${connectionId}/confirm`),
+    mutationFn: () => confirmTrustStep(connectionId),
     onSuccess: () => {
       showToast(
         conn && !conn.confirmedByOther
@@ -354,7 +351,7 @@ export default function ChatThread() {
   // Resume a paused friendship from inside the chat — the same endpoint the
   // trust panels use; the banner below offers it in place (rulebook pass).
   const resume = useMutation({
-    mutationFn: () => api.post(`/trust/${connectionId}/resume`),
+    mutationFn: () => resumeTrustSteps(connectionId),
     onSuccess: () => {
       showToast('Welcome back. Trust steps and messages are on again.', 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });

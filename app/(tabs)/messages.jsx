@@ -14,7 +14,8 @@ import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import { ChevronRight, MessageCircle, Users } from '../../src/components/icons';
-import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
+import { getFamilyJourney } from '../../src/api/family';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
 import LoadError from '../../src/components/ui/LoadError';
@@ -253,7 +254,7 @@ export default function MessagesInbox() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const { data: blocked } = useQuery({
     queryKey: ['block-list', user?.userId],
@@ -270,7 +271,7 @@ export default function MessagesInbox() {
     refetch: refetchJourney,
   } = useQuery({
     queryKey: ['family-journey'],
-    queryFn: async () => (await api.get('/family/journey')).data,
+    queryFn: getFamilyJourney,
   });
 
   // Blocked people never resurface in the inbox (UGC 1.2)
