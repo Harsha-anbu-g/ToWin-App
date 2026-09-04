@@ -7,7 +7,8 @@ import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api, { friendlyWriteError } from '../../src/api/client';
+import { friendlyWriteError } from '../../src/api/client';
+import { postHelpRequest } from '../../src/api/needs';
 import OfferHelpList from '../../src/components/needs/OfferHelpList';
 import Button from '../../src/components/ui/Button';
 import Chip from '../../src/components/ui/Chip';
@@ -56,7 +57,7 @@ function PostNeedForm({ title }) {
   const [fieldErrors, setFieldErrors] = useState({});
 
   const post = useMutation({
-    mutationFn: (body) => api.post('/needs', body),
+    mutationFn: (body) => postHelpRequest(body),
     onSuccess: () => {
       setForm({ title: '', description: '', category: 'COMPANIONSHIP', urgency: 'NORMAL', categoryOther: '' });
       setFieldErrors({});
