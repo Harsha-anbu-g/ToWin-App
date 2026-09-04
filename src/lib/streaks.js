@@ -28,6 +28,31 @@ export function buildWeek(streak, now = new Date()) {
   });
 }
 
+// Ported verbatim from Towinly/frontend/src/pages/Streaks.jsx: age from date
+// of birth — total days lived plus a years/months/days breakdown. Returns
+// null without a date of birth. `now` is injectable for tests only.
+export function computeAge(dobStr, now = new Date()) {
+  if (!dobStr) return null;
+  const dob = new Date(dobStr);
+
+  const totalDays = Math.floor((now - dob) / (1000 * 60 * 60 * 24));
+
+  let years = now.getFullYear() - dob.getFullYear();
+  let months = now.getMonth() - dob.getMonth();
+  let days = now.getDate() - dob.getDate();
+
+  if (days < 0) {
+    months -= 1;
+    days += new Date(now.getFullYear(), now.getMonth(), 0).getDate();
+  }
+  if (months < 0) {
+    years -= 1;
+    months += 12;
+  }
+
+  return { totalDays, years, months, days };
+}
+
 export function greeting(now = new Date()) {
   const h = now.getHours();
   if (h < 12) return 'Good morning';
