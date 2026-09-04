@@ -26,6 +26,9 @@ import {
   Vibrate,
 } from '../../src/components/icons';
 import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
+import { getMyProfile } from '../../src/api/profile';
+import { getMyTrustScore } from '../../src/api/trust';
 import { getMyStreak } from '../../src/api/streaks';
 import TortoiseMark from '../../src/components/TortoiseMark';
 import Avatar from '../../src/components/ui/Avatar';
@@ -129,17 +132,17 @@ export default function ProfileScreen() {
 
   const { data: profile, isError: profileFailed, refetch: refetchProfile } = useQuery({
     queryKey: ['profile-me'],
-    queryFn: async () => (await api.get('/profile/me')).data,
+    queryFn: getMyProfile,
   });
   // isError on every stat feed: a failed fetch must render as "—", never as
   // a confident 0 (rulebook: failed loads never masquerade as real data).
   const { data: trust } = useQuery({
     queryKey: ['trust-my-score'],
-    queryFn: async () => (await api.get('/trust/my-score')).data,
+    queryFn: getMyTrustScore,
   });
   const { data: connections, isError: connectionsFailed } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const { data: streak, isError: streakFailed } = useQuery({
     queryKey: ['streak-me'],

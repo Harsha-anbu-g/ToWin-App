@@ -11,7 +11,8 @@ import { useRouter } from 'expo-router';
 import { Check } from '../icons';
 import { useRef, useState } from 'react';
 import { Animated, Text, View } from 'react-native';
-import api, { friendlyWriteError } from '../../api/client';
+import { friendlyWriteError } from '../../api/client';
+import { getFamilyLinks } from '../../api/family';
 import { checkInToday, getMyStreak } from '../../api/streaks';
 import { familyNamesLabel } from '../../lib/copy';
 import { buildWeek } from '../../lib/streaks';
@@ -146,7 +147,7 @@ export default function CheckinCard() {
   // honest; inviting a duplicate request is a claim.
   const { data: familyLinks, isError: familyFailed } = useQuery({
     queryKey: ['family-links'],
-    queryFn: async () => (await api.get('/family/links')).data,
+    queryFn: getFamilyLinks,
   });
   const familyNames = (familyLinks?.activeLinks || [])
     .filter((l) => l.iAmElder)

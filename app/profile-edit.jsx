@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import api, { friendlyWriteError } from '../src/api/client';
+import { getMyProfile } from '../src/api/profile';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import ChipsField from '../src/components/ui/ChipsField';
@@ -106,7 +107,7 @@ export default function ProfileEdit() {
 
   const { data: me, isError: meFailed, refetch: refetchMe } = useQuery({
     queryKey: ['profile-me'],
-    queryFn: async () => (await api.get('/profile/me')).data,
+    queryFn: getMyProfile,
   });
 
   const [form, setForm] = useState(EMPTY_FORM);

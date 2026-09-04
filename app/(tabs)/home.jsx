@@ -9,8 +9,9 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ScrollView } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
-import api from '../../src/api/client';
+import { listMyConnections } from '../../src/api/connections';
 import { getMyStreak } from '../../src/api/streaks';
+import { getMyTrustScore } from '../../src/api/trust';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
@@ -46,14 +47,14 @@ export default function HomeScreen() {
   // Live trust score for the gold pill (rounded, like the web navbar)
   const { data: trust } = useQuery({
     queryKey: ['trust-my-score'],
-    queryFn: async () => (await api.get('/trust/my-score')).data,
+    queryFn: getMyTrustScore,
   });
 
   // Opening Home reads the hub, so the red "new people" tab badge clears here
   // (web b37420d: the dashboard marks its tab's tokens seen on open).
   const { data: connectionsData } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const connTokens = useMemo(
     () =>

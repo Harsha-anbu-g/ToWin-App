@@ -16,3 +16,14 @@ export async function getFamilyTransparency() {
   const res = await api.get('/family/transparency');
   return res?.data?.connections ?? [];
 }
+
+/**
+ * The signed-in person's family links from both seats, as GET /family/links
+ * returns them: activeLinks (each saying whether I am the elder in it) and
+ * any pending invitations.
+ * @returns {Promise<object>} rejects with the axios error
+ */
+export async function getFamilyLinks() {
+  const res = await api.get('/family/links');
+  return res?.data;
+}

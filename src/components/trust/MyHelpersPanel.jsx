@@ -9,8 +9,11 @@ import { useRouter } from 'expo-router';
 import { ChevronRight } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api, { friendlyWriteError } from '../../api/client';
+import { friendlyWriteError } from '../../api/client';
+import { listMyConnections } from '../../api/connections';
 import { getFamilyTransparency } from '../../api/family';
+import { listMyHelpRequests } from '../../api/needs';
+import { confirmTrustStep, getMyTrustScore, pauseTrustSteps, resumeTrustSteps } from '../../api/trust';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
@@ -216,8 +219,11 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
               {/* Step 4 transparency: nothing about you happens out of your
                   sight — you always see which of your family connected with
                   this helper. Wording is the web ElderDashboard's, verbatim. */}
-              {transparency.map((f, i) => (
-                <Text key={i} style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 10 }}>
+              {transparency.map((f) => (
+                <Text
+                  key={`${f.helperUserId}:${f.familyMemberName}`}
+                  style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 10 }}
+                >
                   {f.inherited
                     ? `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} can message ${f.helperName} through your shared trust.`
                     : `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} and ${f.helperName} are talking.`}
@@ -265,35 +271,32 @@ export default function MyHelpersPanel() {
 
   const { data: breakdown, isLoading, isError, refetch } = useQuery({
     queryKey: ['trust-my-score'],
-    queryFn: async () => (await api.get('/trust/my-score')).data,
+    queryFn: getMyTrustScore,
   });
   const { data: connections } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const connOf = (id) => (connections ?? []).find((c) => c.id === id);
   // My posted requests, to say which one a helper is on (trustOrigin.js).
   // Same key as Posted Help and the tab shell, so react-query dedupes it.
   const { data: needsMine } = useQuery({
     queryKey: ['needs-mine'],
-    queryFn: async () => (await api.get('/needs/mine')).data,
+    queryFn: listMyHelpRequests,
   });
   const { data: blocked } = useQuery({
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
   // Step 4 transparency: which of my family are connected with which helpers
-  // (web ElderDashboard). Optional context — errors fold to empty and the
-  // cards render with nothing to tell, never a loud failure.
+  // (web ElderDashboard). Optional context: the query is allowed to error —
+  // react-query keeps retrying quietly — and the read below folds missing
+  // data to empty, so the cards render with nothing to tell, never a loud
+  // failure. (No try/catch in the queryFn: caching [] as a SUCCESS would hide
+  // the notes until an unrelated invalidation.)
   const { data: familyTransparency } = useQuery({
     queryKey: ['family-transparency'],
-    queryFn: async () => {
-      try {
-        return await getFamilyTransparency();
-      } catch {
-        return [];
-      }
-    },
+    queryFn: getFamilyTransparency,
   });
   const transparencyFor = (otherUserId) =>
     (familyTransparency ?? []).filter((f) => f.helperUserId === otherUserId);
@@ -305,7 +308,7 @@ export default function MyHelpersPanel() {
   const stepSeenKey = seenKey(user?.userId, TRUST_STEPS_CATEGORY);
 
   const confirm = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),
+    mutationFn: confirmTrustStep,
     onSuccess: (_r, connectionId) => {
       const c = connOf(connectionId);
       showToast(
@@ -327,7 +330,7 @@ export default function MyHelpersPanel() {
   // Pausing is reversible on the same connection id, so the way back rides in
   // the toast (rulebook: undo over confirmation) — no dialog stands in front.
   const pause = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
+    mutationFn: pauseTrustSteps,
     onSuccess: (_r, connectionId) => {
       showToast('Paused. You can resume any time.', 'info', {
         actionLabel: 'Undo',
@@ -340,7 +343,7 @@ export default function MyHelpersPanel() {
       showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
   });
   const resume = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
+    mutationFn: resumeTrustSteps,
     onSuccess: () => {
       showToast('Welcome back. Trust steps and messages are on again.', 'success');
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });

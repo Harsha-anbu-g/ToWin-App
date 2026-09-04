@@ -3,7 +3,7 @@
 // another card.
 import { useQuery } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { getMyProfile } from '../../api/profile';
 import { greeting } from '../../lib/streaks';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -12,7 +12,7 @@ export default function GreetingHeader() {
 
   const { data: me } = useQuery({
     queryKey: ['profile-me'],
-    queryFn: async () => (await api.get('/profile/me')).data,
+    queryFn: getMyProfile,
   });
 
   const firstName = me?.name?.split(' ')[0];
