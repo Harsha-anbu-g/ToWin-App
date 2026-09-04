@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { ScrollView } from 'react-native';
 import RefreshControl from '../../src/components/ui/RefreshControl';
 import api from '../../src/api/client';
+import { getMyStreak } from '../../src/api/streaks';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
@@ -72,7 +73,7 @@ export default function HomeScreen() {
   // effect below never fires for them.
   const { data: streak } = useQuery({
     queryKey: ['streak-me'],
-    queryFn: async () => (await api.get('/streaks/me')).data,
+    queryFn: getMyStreak,
     enabled: !!user && !isFamily,
   });
   const gated = useRef(false);

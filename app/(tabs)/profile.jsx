@@ -26,6 +26,7 @@ import {
   Vibrate,
 } from '../../src/components/icons';
 import api from '../../src/api/client';
+import { getMyStreak } from '../../src/api/streaks';
 import TortoiseMark from '../../src/components/TortoiseMark';
 import Avatar from '../../src/components/ui/Avatar';
 import Button from '../../src/components/ui/Button';
@@ -142,7 +143,7 @@ export default function ProfileScreen() {
   });
   const { data: streak, isError: streakFailed } = useQuery({
     queryKey: ['streak-me'],
-    queryFn: async () => (await api.get('/streaks/me')).data,
+    queryFn: getMyStreak,
   });
   const { data: myReviews } = useQuery({
     queryKey: ['reviews-mine'],
