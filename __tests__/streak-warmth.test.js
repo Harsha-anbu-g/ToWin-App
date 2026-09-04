@@ -174,15 +174,17 @@ describe('Age card (web Streaks.jsx)', () => {
     expect(
       r.getByText('Add your date of birth in your profile to see your life in days.')
     ).toBeTruthy();
-    fireEvent.press(r.getByText('Add date of birth →'));
+    fireEvent.press(r.getByText('Add date of birth'));
     expect(mockRouter.push).toHaveBeenCalledWith('/profile-edit');
   });
 
-  test('a failed profile read shows the invitation, never an error (web parity)', async () => {
+  test('a failed profile read renders nothing: no error, and no false invitation', async () => {
+    // A DOB the person already gave must never come back as "add your date
+    // of birth" just because the network dropped (H9: an error may go quiet,
+    // but it must not masquerade as an instruction to re-enter data).
     api.get.mockRejectedValue(new Error('offline'));
     const r = await wrap(<AgeCard />);
-    await waitFor(() =>
-      expect(r.getByText('How many days have you lived?')).toBeTruthy()
-    );
+    await waitFor(() => expect(r.toJSON()).toBeNull());
+    expect(r.queryByText('How many days have you lived?')).toBeNull();
   });
 });
