@@ -54,6 +54,21 @@ describe('emergency contact API module', () => {
     });
   });
 
+  test.each([
+    ['a non-number', 'five'],
+    ['zero', 0],
+    ['above the cap', 31],
+    ['an empty string', ''],
+  ])('addEmergencyContact refuses %s inactivityDays before the wire', async (_label, bad) => {
+    // Act / Assert - the named tool is the boundary (Rule 6): an agent
+    // calling it directly gets a clear refusal, never a NaN or an
+    // out-of-range number forwarded to the server.
+    await expect(
+      addEmergencyContact({ name: 'Sarah', phone: '+15145550123', relationship: 'Daughter', inactivityDays: bad })
+    ).rejects.toThrow('inactivityDays must be a whole number between 1 and 30.');
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
   test('removeEmergencyContact deletes by id', async () => {
     // Arrange
     api.delete.mockResolvedValue({});

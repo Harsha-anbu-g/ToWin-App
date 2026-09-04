@@ -15,16 +15,24 @@ export async function listEmergencyContacts() {
 
 /**
  * Add one emergency contact. inactivityDays is how many quiet days pass
- * before this person is alerted; it is coerced to a number like the website.
+ * before this person is alerted; it is coerced to a number like the website
+ * and must be a whole number from 1 to 30 — this function is the tool
+ * boundary (Rule 6), so it refuses bad input itself instead of forwarding
+ * NaN or an out-of-range number for the server to reject.
  * @param {{name: string, phone: string, relationship: string, inactivityDays: number|string}} contact
  * @returns {Promise<{id: string, name: string, phone: string, relationship: string, inactivityDays: number}>}
+ *   rejects with an Error naming the rule when inactivityDays is not 1-30
  */
 export async function addEmergencyContact({ name, phone, relationship, inactivityDays }) {
+  const days = Number(inactivityDays);
+  if (!Number.isInteger(days) || days < 1 || days > 30) {
+    throw new Error('inactivityDays must be a whole number between 1 and 30.');
+  }
   const res = await api.post('/emergency/contacts', {
     name,
     phone,
     relationship,
-    inactivityDays: Number(inactivityDays),
+    inactivityDays: days,
   });
   return res?.data;
 }
