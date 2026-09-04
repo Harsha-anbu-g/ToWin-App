@@ -13,7 +13,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Pressable, Text, View } from 'react-native';
 import { Phone, Trash2 } from '../src/components/icons';
-import api, { friendlyWriteError } from '../src/api/client';
+import { friendlyWriteError } from '../src/api/client';
+import {
+  addEmergencyContact,
+  listEmergencyContacts,
+  removeEmergencyContact,
+} from '../src/api/emergency';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import Card from '../src/components/ui/Card';
@@ -39,7 +44,7 @@ export default function EmergencyContacts() {
   // never masquerade as empty).
   const { data: contacts, isLoading, isError, refetch } = useQuery({
     queryKey: ['emergency-contacts'],
-    queryFn: async () => (await api.get('/emergency/contacts')).data,
+    queryFn: listEmergencyContacts,
   });
   // Array.isArray, never `contacts ?? []`. A captive portal on hotel or cafe
   // wifi answers 200 with an HTML login page, so axios hands back a STRING.
@@ -49,7 +54,8 @@ export default function EmergencyContacts() {
   // shape as app/(tabs)/_layout.jsx:210.
   const contactList = Array.isArray(contacts) ? contacts : [];
 
-  const [form, setForm] = useState({ name: '', phone: '', relationship: '' });
+  // inactivityDays defaults to 5, like the website form.
+  const [form, setForm] = useState({ name: '', phone: '', relationship: '', inactivityDays: '5' });
   const [formError, setFormError] = useState('');
 
   // Stable per-field handlers (the action.jsx pattern): Input is memo'd
@@ -58,7 +64,7 @@ export default function EmergencyContacts() {
   const fieldHandlers = useMemo(
     () =>
       Object.fromEntries(
-        ['name', 'phone', 'relationship'].map((key) => [key, (v) => setForm((f) => ({ ...f, [key]: v }))])
+        ['name', 'phone', 'relationship', 'inactivityDays'].map((key) => [key, (v) => setForm((f) => ({ ...f, [key]: v }))])
       ),
     []
   );
@@ -68,17 +74,19 @@ export default function EmergencyContacts() {
   // reads fresh form state through a latest-ref.
   const phoneRef = useRef(null);
   const relationshipRef = useRef(null);
+  const daysRef = useRef(null);
   const focusPhone = useCallback(() => phoneRef.current?.focus(), []);
   const focusRelationship = useCallback(() => relationshipRef.current?.focus(), []);
+  const focusDays = useCallback(() => daysRef.current?.focus(), []);
   const submitRef = useRef(null);
   const submitFromKeyboard = useCallback(() => submitRef.current?.(), []);
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] });
 
   const add = useMutation({
-    mutationFn: (body) => api.post('/emergency/contacts', body),
+    mutationFn: addEmergencyContact,
     onSuccess: () => {
-      setForm({ name: '', phone: '', relationship: '' });
+      setForm({ name: '', phone: '', relationship: '', inactivityDays: '5' });
       showToast('Contact added.', 'success');
       refresh();
     },
@@ -99,7 +107,7 @@ export default function EmergencyContacts() {
     showToast(`Could not open the phone app. ${contact.name}'s number is ${contact.phone}.`, 'error');
 
   const remove = useMutation({
-    mutationFn: (contact) => api.delete(`/emergency/contacts/${contact.id}`),
+    mutationFn: (contact) => removeEmergencyContact(contact.id),
     onSuccess: (_r, contact) => {
       showToast(`${contact.name} removed.`, 'info', {
         actionLabel: 'Undo',
@@ -108,6 +116,7 @@ export default function EmergencyContacts() {
             name: contact.name,
             phone: contact.phone,
             relationship: contact.relationship || 'Contact',
+            inactivityDays: contact.inactivityDays ?? 5,
           }),
       });
       refresh();
@@ -127,7 +136,19 @@ export default function EmergencyContacts() {
       setFormError('Enter a valid phone number (10 to 15 digits).');
       return;
     }
-    add.mutate({ name: form.name.trim(), phone: digits, relationship: form.relationship.trim() || 'Contact' });
+    // The website input is capped min={1} max={30}; the browser enforces it
+    // there, this message does it here.
+    const days = Number(form.inactivityDays);
+    if (!Number.isInteger(days) || days < 1 || days > 30) {
+      setFormError('Enter between 1 and 30 days.');
+      return;
+    }
+    add.mutate({
+      name: form.name.trim(),
+      phone: digits,
+      relationship: form.relationship.trim() || 'Contact',
+      inactivityDays: days,
+    });
   };
   useEffect(() => {
     submitRef.current = () => {
@@ -203,6 +224,12 @@ export default function EmergencyContacts() {
                     {c.phone}
                   </Text>
                 </View>
+                {/* Website card line, verbatim: "Alerts after N inactive days". */}
+                {c.inactivityDays != null ? (
+                  <Text style={{ fontSize: text.sm, color: t.inkFaint2, marginTop: 2 }}>
+                    {`Alerts after ${c.inactivityDays} inactive days`}
+                  </Text>
+                ) : null}
               </Pressable>
               <Pressable
                 accessibilityRole="button"
@@ -275,6 +302,22 @@ export default function EmergencyContacts() {
           value={form.relationship}
           onChangeText={fieldHandlers.relationship}
           helper='Like "daughter", "neighbor", or "family friend".'
+          returnKeyType="next"
+          submitBehavior="submit"
+          onSubmitEditing={focusDays}
+          style={FIELD_GAP}
+        />
+        {/* Website field: "Alert after (days)", min 1, max 30, default 5.
+            number-pad is the native numeric control here; the helper is the
+            website page's own sentence explaining what the number does. */}
+        <Input
+          ref={daysRef}
+          label="Alert after (days)"
+          value={form.inactivityDays}
+          onChangeText={fieldHandlers.inactivityDays}
+          helper="We'll alert these people if you don't check in for several days."
+          keyboardType="number-pad"
+          maxLength={2}
           returnKeyType="done"
           onSubmitEditing={submitFromKeyboard}
           style={FIELD_GAP_LG}
