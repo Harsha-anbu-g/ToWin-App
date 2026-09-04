@@ -45,3 +45,12 @@ export async function addEmergencyContact({ name, phone, relationship, inactivit
 export async function removeEmergencyContact(contactId) {
   await api.delete(`/emergency/contacts/${contactId}`);
 }
+
+/**
+ * Send an SOS: immediately alert every one of the signed-in person's
+ * emergency contacts that they need help.
+ * @returns {Promise<void>}
+ */
+export async function sendSos() {
+  await api.post('/emergency/sos');
+}
