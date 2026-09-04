@@ -11,7 +11,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { Switch, Text, View } from 'react-native';
-import api from '../../api/client';
+import { setFamilyVisibility } from '../../api/connections';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 
@@ -24,8 +24,7 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
   const [shared, setShared] = useState(!!initialShared);
 
   const save = useMutation({
-    mutationFn: async (next) =>
-      (await api.post(`/connections/${connectionId}/family-visibility`, { shared: next })).data,
+    mutationFn: (next) => setFamilyVisibility({ connectionId, shared: next }),
     onSuccess: (fresh) => {
       // The response IS the caller's fresh ConnectionResponse — patch the
       // ['connections'] cache immutably so no refetch (or flash) is needed.
