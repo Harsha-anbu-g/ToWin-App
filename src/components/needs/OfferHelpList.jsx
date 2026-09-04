@@ -11,7 +11,7 @@ import { memo, useCallback, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import RefreshControl from '../ui/RefreshControl';
-import api from '../../api/client';
+import { listNearbyHelpRequests, listOpenHelpRequests, listMyApplications } from '../../api/needs';
 import { useAuth } from '../../context/AuthContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { timeAgo } from '../../lib/copy';
@@ -284,14 +284,14 @@ export default function OfferHelpList() {
   // already snapped to the 0.02 degree cell. A raw fix never reaches it.
   const nearbyQuery = useQuery({
     queryKey: ['needs-nearby', lat, lng, radiusKm],
-    queryFn: async () => (await api.get('/needs/nearby', { params: { lat, lng, radiusKm } })).data,
+    queryFn: () => listNearbyHelpRequests({ lat, lng, radiusKm }),
     enabled: settled && hasPosition,
   });
   // WITHOUT one: every open request, exactly as before. Browsing is never the
   // price of handing over a position.
   const openQuery = useQuery({
     queryKey: ['needs-open'],
-    queryFn: async () => (await api.get('/needs/open')).data,
+    queryFn: listOpenHelpRequests,
     enabled: settled && !hasPosition,
   });
   const feed = hasPosition ? nearbyQuery : openQuery;
@@ -303,7 +303,7 @@ export default function OfferHelpList() {
   const refetchFeed = feed.refetch;
   const { data: appsData, isLoading: appsLoading, isError: appsFailed, refetch: refetchApps } = useQuery({
     queryKey: ['needs-applications'],
-    queryFn: async () => (await api.get('/needs/applications')).data,
+    queryFn: listMyApplications,
   });
 
   const { data: blocked } = useQuery({
