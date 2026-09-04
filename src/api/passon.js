@@ -37,6 +37,15 @@ export async function listKeyholders() {
 }
 
 /**
+ * Keyholder invitations waiting for the signed-in person's yes or no.
+ * @returns {Promise<Array<{id: string, ownerName: string, approvalsNeeded: number, keyholderCount: number}>>}
+ */
+export async function listKeyholderAsksOfMe() {
+  const res = await api.get('/passon/keyholders/asked-of-me');
+  return res?.data;
+}
+
+/**
  * The items in the signed-in elder's sealed box, by name only — the server
  * never decrypts a body for this list. Returns the body as-is; callers
  * guard the shape.
@@ -167,4 +176,26 @@ export async function getPassOnSheet() {
  */
 export async function recordPassOnSheetSaved() {
   await api.post('/passon/sheet/saved');
+}
+
+/**
+ * Answer one keyholder invitation: accept or decline holding a key.
+ * @param {{askId: string, accept: boolean}} answer which ask, and the answer
+ * @returns {Promise<void>} rejects with an Error when askId is missing
+ */
+export async function respondToKeyholderAsk({ askId, accept }) {
+  if (!askId) throw new Error('askId is required.');
+  await api.post(`/passon/keyholders/${askId}/respond`, { accept });
+}
+
+/**
+ * One elder's passed-on page as this visitor may read it — the server decides
+ * visibility, this function only carries the answer.
+ * @param {string} ownerId the elder whose writing is being read
+ * @returns {Promise<{ownerName: string, items: Array}>} rejects with an Error when ownerId is missing
+ */
+export async function getPassedOnFrom(ownerId) {
+  if (!ownerId) throw new Error('ownerId is required.');
+  const res = await api.get(`/passon/from/${ownerId}`);
+  return res?.data;
 }

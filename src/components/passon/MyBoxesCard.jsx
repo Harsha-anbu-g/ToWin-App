@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { Archive } from '../icons';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { getPassOnSetup, getMyPassOnItems } from '../../api/passon';
 import { MY_BOXES } from '../../lib/passOnLocks';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
@@ -35,12 +35,12 @@ export default function MyBoxesCard() {
   // session, because nothing anywhere invalidated it.
   const { data: mine } = useQuery({
     queryKey: ['passon-mine'],
-    queryFn: async () => (await api.get('/passon/mine')).data,
+    queryFn: getMyPassOnItems,
     enabled: canPassOn,
   });
   const { data: setup } = useQuery({
     queryKey: ['passon-setup'],
-    queryFn: async () => (await api.get('/passon/setup')).data,
+    queryFn: getPassOnSetup,
     enabled: canPassOn,
   });
 

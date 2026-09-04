@@ -10,7 +10,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Star } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../api/client';
+import { postReview } from '../../api/reviews';
 import { useToast } from '../../context/ToastContext';
 import { objectionableError } from '../../lib/contentFilter';
 import { TRUSTED_STAGE, stageIndexOf } from '../../lib/trustStages';
@@ -76,7 +76,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
 
   const save = useMutation({
     mutationFn: () =>
-      api.post('/reviews', {
+      postReview({
         revieweeId: helper.helperUserId,
         rating,
         comment: comment.trim() || null,

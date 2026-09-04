@@ -11,10 +11,13 @@ import {
   getMyPassOnItems,
   getPassOnSetup,
   getPassOnSheet,
+  getPassedOnFrom,
+  listKeyholderAsksOfMe,
   listKeyholders,
   listSealedItems,
   recordPassOnSheetSaved,
   removeSealedItem,
+  respondToKeyholderAsk,
   revealSealedItem,
   undoPassOnArming,
   updatePassOnItem,
@@ -180,5 +183,54 @@ describe('pass-on API module', () => {
     expect(api.post).not.toHaveBeenCalled();
     expect(api.put).not.toHaveBeenCalled();
     expect(api.delete).not.toHaveBeenCalled();
+  });
+
+  test('listKeyholderAsksOfMe reads /passon/keyholders/asked-of-me', async () => {
+    // Arrange
+    const asks = [{ id: 'a1', ownerName: 'Margaret' }];
+    api.get.mockResolvedValue({ data: asks });
+
+    // Act
+    const result = await listKeyholderAsksOfMe();
+
+    // Assert
+    expect(api.get).toHaveBeenCalledWith('/passon/keyholders/asked-of-me');
+    expect(result).toEqual(asks);
+  });
+
+  test('respondToKeyholderAsk posts the answer to the ask', async () => {
+    // Arrange
+    api.post.mockResolvedValue({});
+
+    // Act
+    await respondToKeyholderAsk({ askId: 'a1', accept: true });
+
+    // Assert
+    expect(api.post).toHaveBeenCalledWith('/passon/keyholders/a1/respond', { accept: true });
+  });
+
+  test('respondToKeyholderAsk refuses a missing askId before the wire', async () => {
+    // Act / Assert
+    await expect(respondToKeyholderAsk({ accept: false })).rejects.toThrow('askId is required.');
+    expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('getPassedOnFrom reads /passon/from/{ownerId}', async () => {
+    // Arrange
+    const page = { ownerName: 'Margaret', items: [] };
+    api.get.mockResolvedValue({ data: page });
+
+    // Act
+    const result = await getPassedOnFrom('u7');
+
+    // Assert
+    expect(api.get).toHaveBeenCalledWith('/passon/from/u7');
+    expect(result).toEqual(page);
+  });
+
+  test('getPassedOnFrom refuses a missing ownerId before the wire', async () => {
+    // Act / Assert
+    await expect(getPassedOnFrom()).rejects.toThrow('ownerId is required.');
+    expect(api.get).not.toHaveBeenCalled();
   });
 });

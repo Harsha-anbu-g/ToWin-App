@@ -3,7 +3,7 @@
 // emergency contacts (mirrors EmergencyContacts.jsx / NavBar).
 import { useMutation } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { sendSos } from '../../api/emergency';
 import Button from '../ui/Button';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
@@ -15,7 +15,7 @@ export default function SosCard() {
   const confirm = useConfirm();
 
   const sos = useMutation({
-    mutationFn: () => api.post('/emergency/sos'),
+    mutationFn: sendSos,
     onSuccess: () => showToast('SOS sent to all emergency contacts.', 'success'),
     onError: () => showToast('Failed to send SOS. Please call your contacts directly.', 'error'),
   });

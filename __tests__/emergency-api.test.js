@@ -7,6 +7,7 @@ import {
   addEmergencyContact,
   listEmergencyContacts,
   removeEmergencyContact,
+  sendSos,
 } from '../src/api/emergency';
 
 jest.mock('../src/api/client', () => ({
@@ -67,6 +68,17 @@ describe('emergency contact API module', () => {
       addEmergencyContact({ name: 'Sarah', phone: '+15145550123', relationship: 'Daughter', inactivityDays: bad })
     ).rejects.toThrow('inactivityDays must be a whole number between 1 and 30.');
     expect(api.post).not.toHaveBeenCalled();
+  });
+
+  test('sendSos posts to /emergency/sos with no body', async () => {
+    // Arrange
+    api.post.mockResolvedValue({});
+
+    // Act
+    await sendSos();
+
+    // Assert
+    expect(api.post).toHaveBeenCalledWith('/emergency/sos');
   });
 
   test('removeEmergencyContact deletes by id', async () => {
