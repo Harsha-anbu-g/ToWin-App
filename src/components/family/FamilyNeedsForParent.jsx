@@ -8,7 +8,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../api/client';
+import { postHelpRequest, removeHelpRequest } from '../../api/needs';
 import { useToast } from '../../context/ToastContext';
 import { objectionableError } from '../../lib/contentFilter';
 import { useTheme } from '../../theme/ThemeContext';
@@ -86,7 +86,7 @@ export default function FamilyNeedsForParent({
 
   const post = useMutation({
     mutationFn: () =>
-      api.post('/needs', {
+      postHelpRequest({
         title: form.title.trim(),
         description: form.description.trim() || null,
         category: form.category,
@@ -107,7 +107,7 @@ export default function FamilyNeedsForParent({
   });
 
   const close = useMutation({
-    mutationFn: (needId) => api.delete(`/needs/${needId}`),
+    mutationFn: (needId) => removeHelpRequest(needId),
     onSuccess: () => {
       showToast(`Closed that request for ${parent}.`, 'success');
       onChanged?.();
