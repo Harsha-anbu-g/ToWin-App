@@ -4,7 +4,8 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Text } from 'react-native';
-import api, { friendlyAuthError } from '../../src/api/client';
+import { resetPassword } from '../../src/api/auth';
+import { friendlyAuthError } from '../../src/api/client';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import PasswordInput from '../../src/components/ui/PasswordInput';
@@ -50,7 +51,7 @@ export default function ResetPassword() {
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
-      await api.post('/auth/reset-password', { token, newPassword: pw });
+      await resetPassword({ token, newPassword: pw });
       setDone(true);
     } catch (err) {
       // A dropped request used to read as a dead link, which sent the person
