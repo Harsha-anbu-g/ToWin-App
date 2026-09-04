@@ -53,6 +53,7 @@ import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { DURATION, EASE } from '../../src/theme/motion';
 import api from '../../src/api/client';
 import AskAiAssistant from '../../src/components/AskAiAssistant';
+import BottomEdgeBlur from '../../src/components/ui/BottomEdgeBlur';
 import { useAuth } from '../../src/context/AuthContext';
 import { haptic } from '../../src/lib/haptics';
 import { setAppBadgeCountAsync } from '../../src/lib/pushNotifications';
@@ -218,6 +219,17 @@ function tabBarFill(t, mode) {
   if (hasLiquidGlass) return 'transparent';
   return mode === 'dark' ? 'rgba(32,31,29,0.78)' : 'rgba(255,255,255,0.72)';
 }
+
+// Every tab scene carries the WhatsApp bottom edge: content blurs
+// progressively as it slides into the bar's band (BottomEdgeBlur). Rendered
+// per scene, under the tab bar — module-level so the navigator sees one
+// stable function across re-renders.
+const sceneWithBottomEdge = ({ children }) => (
+  <>
+    {children}
+    <BottomEdgeBlur />
+  </>
+);
 
 function CenterActionButton({ label, Icon, onPress, accessibilityState, t, type, fontScaleCaps, pressRipple }) {
   // The ONE filled primary of the shell. The whole slot is the target (>=44pt).
@@ -544,6 +556,7 @@ export default function TabsLayout() {
       // is the library's own press state (opacity dip on iOS/web, ripple on
       // Android) plus the FAB's pressed opacity below.
       screenListeners={{ tabPress: () => haptic.impact() }}
+      screenLayout={sceneWithBottomEdge}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: t.blueDeep,

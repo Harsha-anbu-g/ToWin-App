@@ -140,6 +140,43 @@ const openResponse = (router, response) => {
 };
 
 /**
+ * The queries a ping refreshes, by kind. The news must be visible the moment
+ * the banner is: a message bumps the Messages count, an offer the Posted
+ * Help count, an accepted offer the My Elders list — the new elder and the
+ * blue badge on their row and tab (owner call 2026-08-31: "even in the
+ * helper's account, My Elders should show a blue color when it gets a
+ * notification"). Exported for the tests.
+ * @param {object | undefined} data  the notification's data payload
+ * @returns {Array<string[]>} react-query keys to invalidate; [] for unknown kinds
+ */
+export function queryKeysForNotification(data) {
+  if (!data || typeof data !== 'object') return [];
+  if (data.type === 'message') return [['unread-count']];
+  if (data.type === 'need') return [['needs-mine'], ['needs-open']];
+  if (data.type === 'need_accepted') return [['connections'], ['needs-applications']];
+  return [];
+}
+
+/**
+ * A ping landing while the app is OPEN refreshes the screens it is about.
+ * Without this the banner showed but the data behind it sat stale: the
+ * helper's My Elders page kept its 30s-old list and the blue new-activity
+ * badge only appeared after a pull or an app switch. Background arrivals
+ * need no listener — coming back to the app refetches through focusManager
+ * (root layout). Wired once at the root, beside the tap listener.
+ * @param {{ invalidateQueries: Function }} queryClient  the app's query client
+ * @returns {() => void} unsubscribe
+ */
+export function wireNotificationRefresh(queryClient) {
+  if (!isNative()) return () => {};
+  const sub = notifications().addNotificationReceivedListener((notification) => {
+    const keys = queryKeysForNotification(notification?.request?.content?.data);
+    for (const queryKey of keys) queryClient.invalidateQueries({ queryKey });
+  });
+  return () => sub.remove();
+}
+
+/**
  * Tapping a notification while the app runs opens the screen it is about:
  * the chat thread, your help request's applicants, or your jobs. Wired once
  * at the root.
