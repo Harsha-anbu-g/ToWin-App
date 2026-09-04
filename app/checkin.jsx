@@ -5,13 +5,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Redirect, useRouter } from 'expo-router';
 import { useEffect } from 'react';
+import AgeCard from '../src/components/home/AgeCard';
 import CheckinCard from '../src/components/home/CheckinCard';
 import GreetingHeader from '../src/components/home/GreetingHeader';
 import PeekabooRow from '../src/components/home/PeekabooRow';
 import FirstTimeCard from '../src/components/ui/FirstTimeCard';
 import Screen from '../src/components/ui/Screen';
 import TextLink from '../src/components/ui/TextLink';
-import api from '../src/api/client';
+import { getMyStreak } from '../src/api/streaks';
 import { useAuth } from '../src/context/AuthContext';
 import { markPromptedToday } from '../src/lib/checkinGate';
 import { KEYS } from '../src/lib/storageKeys';
@@ -35,7 +36,7 @@ export default function Checkin() {
   // the streak moment stays on screen until the person chooses to leave).
   const { data: streak, refetch } = useQuery({
     queryKey: ['streak-me'],
-    queryFn: async () => (await api.get('/streaks/me')).data,
+    queryFn: getMyStreak,
   });
   const done = streak?.alreadyCheckedIn;
 
@@ -58,6 +59,9 @@ export default function Checkin() {
         onLink={() => router.push('/guide')}
       />
       <CheckinCard />
+      {/* Web Streaks parity: the age card sits right under the streak — the
+          run of days inside the days of a whole life. */}
+      <AgeCard />
       <PeekabooRow />
       {/* A real 44pt exit — this screen opens unrequested once a day, so its
           way out must never be a 13pt underline (rulebook). */}

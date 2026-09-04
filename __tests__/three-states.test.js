@@ -240,6 +240,8 @@ const NO_LOADERROR_LEDGER = {
   'app/(tabs)/_layout.jsx': 'tab chrome: badge counts fold to zero, never an error surface',
   'app/(tabs)/home.jsx': 'composition shell: every card it mounts owns its three states',
   'app/checkin.jsx': 'CheckinCard owns the states; the streak query only words the exit link',
+  'src/components/home/AgeCard.jsx':
+    'web Streaks parity: a failed profile read shows the add-your-date-of-birth invitation, never an error',
   'src/components/home/GreetingHeader.jsx': 'greeting falls back to a plain hello, never blocks',
   'src/components/passon/MyBoxesCard.jsx': 'doorway card (web parity): renders only once real counts arrive',
   'src/components/passon/KeyholderAsk.jsx': 'doorway card: renders only when an ask is waiting',
