@@ -7,7 +7,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { listFamilyAlerts } from '../../api/family';
 import { friendlyDate } from '../../lib/copy';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
@@ -112,7 +112,7 @@ export default function FamilyAlertsFeed() {
 
   const { data: alerts, isLoading, isError, refetch } = useQuery({
     queryKey: ['family-alerts'],
-    queryFn: async () => (await api.get('/family/alerts')).data?.alerts ?? [],
+    queryFn: listFamilyAlerts,
     // Alerts are in-app ONLY ("nothing is sent by text or email"), so this
     // feed is the sole SOS channel — it must not wait for a pull-to-refresh
     // while the app sits open. 30s is the unread-count convention
