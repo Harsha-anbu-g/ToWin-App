@@ -6,7 +6,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text } from 'react-native';
-import api from '../../src/api/client';
+import { verifyEmail } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
@@ -21,8 +21,7 @@ export default function VerifyEmail() {
 
   const verify = useCallback(() => {
     setState('verifying');
-    api
-      .post('/auth/verify-email', { token })
+    verifyEmail({ token })
       .then(() => setState('success'))
       // No reply at all is a connection problem, not a dead link. Collapsing
       // the two told an elder on flaky wifi to sign up again and throw away a
