@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import api from '../../api/client';
+import { logIn } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { yearsOld } from '../../lib/copy';
@@ -31,7 +31,7 @@ export default function DemoCard({ onError }) {
     setLoadingRole(role);
     onError?.('');
     try {
-      const { data } = await api.post('/auth/login', DEMO[role]);
+      const data = await logIn(DEMO[role]);
       await login(data.token);
       router.replace('/');
     } catch (err) {
