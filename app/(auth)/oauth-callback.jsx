@@ -10,7 +10,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { AlertCircle } from '../../src/components/icons';
-import api from '../../src/api/client';
+import { exchangeOAuthCode } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
@@ -46,9 +46,8 @@ export default function OAuthCallback() {
         return;
       }
 
-      api
-        .post('/auth/oauth/exchange', { code, state, codeVerifier })
-        .then(async ({ data }) => {
+      exchangeOAuthCode({ code, state, codeVerifier })
+        .then(async (data) => {
         if (data.status === 'READY') {
           // login() returns false when this device rejects the token
           // (malformed, or already expired against a clock set far ahead).
