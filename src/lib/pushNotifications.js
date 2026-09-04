@@ -9,7 +9,7 @@
 // exist and must never be evaluated.
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
-import api from '../api/client';
+import { registerPushToken, unregisterPushToken } from '../api/notifications';
 import * as Store from './storage';
 import { KEYS } from './storageKeys';
 
@@ -75,7 +75,7 @@ export async function registerForPushAsync() {
     ))?.data;
     if (!token) return null;
 
-    await api.post('/notifications/token', { token, platform: Platform.OS });
+    await registerPushToken({ token, platform: Platform.OS });
     // Remembered so sign-out can silence exactly this device later.
     await Store.setItemAsync(KEYS.pushToken, token);
     return token;
@@ -98,7 +98,7 @@ export async function unregisterPushAsync() {
   try {
     const token = await Store.getItemAsync(KEYS.pushToken);
     if (!token) return;
-    await api.delete('/notifications/token', { data: { token } });
+    await unregisterPushToken(token);
     await Store.deleteItemAsync(KEYS.pushToken);
   } catch {
     // Kept locally, retried by PushRegistrar on the next signed-out boot. The
