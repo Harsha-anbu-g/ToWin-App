@@ -236,11 +236,13 @@ describe('every POST /needs call site in the repo', () => {
     expect(offenders.join('\n\n')).toBe('');
   });
 
-  test('finds the two creating call sites, so the scan is not matching nothing', () => {
+  // Since the Rule 6 migration the wire call lives in ONE place: the named
+  // postHelpRequest in src/api/needs.js. Both posting forms (the action
+  // screen and FamilyNeedsForParent) go through it, so the module is the
+  // single file the two locks above must hold on. A second entry appearing
+  // here means somebody bypassed the api layer — move the call into needs.js.
+  test('finds the one creating call site, so the scan is not matching nothing', () => {
     const creators = sourceFiles().filter((file) => needsPostCalls(read(file)).some(createsANeed));
-    expect(creators).toEqual([
-      'app/(tabs)/action.jsx',
-      'src/components/family/FamilyNeedsForParent.jsx',
-    ]);
+    expect(creators).toEqual(['src/api/needs.js']);
   });
 });
