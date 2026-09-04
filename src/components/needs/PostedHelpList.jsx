@@ -14,7 +14,9 @@ import { ChevronRight } from '../icons';
 import { memo, useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, Text, View } from 'react-native';
 import RefreshControl from '../ui/RefreshControl';
-import api, { friendlyWriteError } from '../../api/client';
+import { friendlyWriteError } from '../../api/client';
+import { listMyHelpRequests, acceptHelper, completeHelpRequest, removeHelpRequest } from '../../api/needs';
+import { listMyConnections } from '../../api/connections';
 import { applicantsLabel, timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
 import { trustStandingFor } from '../../lib/trustStanding';
@@ -314,14 +316,14 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['needs-mine'],
-    queryFn: async () => (await api.get('/needs/mine')).data,
+    queryFn: listMyHelpRequests,
   });
   const needs = data?.content ?? [];
   // The friendships behind In Progress requests — where trust stands with
   // each helper. Same key as the tab shell and My Helpers, so one fetch.
   const { data: connections } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
 
   // Opening this list no longer clears the tab's badge: the badge counts
@@ -351,7 +353,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   };
 
   const accept = useMutation({
-    mutationFn: ({ needId, helperId }) => api.post(`/needs/${needId}/accept/${helperId}`),
+    mutationFn: ({ needId, helperId }) => acceptHelper({ needId, helperId }),
     onSuccess: () => {
       showToast('Helper accepted. They can now message you.', 'success');
       refresh();
@@ -367,7 +369,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast(friendlyWriteError(err, 'Could not accept right now. Please try again.'), 'error'),
   });
   const complete = useMutation({
-    mutationFn: (needId) => api.post(`/needs/${needId}/complete`),
+    mutationFn: (needId) => completeHelpRequest(needId),
     onSuccess: () => {
       showToast('Marked as completed. Well done!', 'success');
       refresh();
@@ -376,7 +378,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       showToast(friendlyWriteError(err, 'Could not mark completed. Please try again.'), 'error'),
   });
   const remove = useMutation({
-    mutationFn: (needId) => api.delete(`/needs/${needId}`),
+    mutationFn: (needId) => removeHelpRequest(needId),
     onSuccess: () => {
       showToast('Request removed.', 'success');
       refresh();

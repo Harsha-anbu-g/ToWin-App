@@ -9,7 +9,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api from '../../api/client';
+import { listMyApplications } from '../../api/needs';
+import { listMyConnections } from '../../api/connections';
 import { ChevronRight } from '../icons';
 import { timeAgo } from '../../lib/copy';
 import { catLabel } from '../../lib/needs';
@@ -147,14 +148,14 @@ export default function MyJobsCard() {
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['needs-applications'],
-    queryFn: async () => (await api.get('/needs/applications')).data,
+    queryFn: listMyApplications,
   });
   const jobs = Array.isArray(data) ? data : data?.content ?? [];
   // The friendships behind my accepted offers — where trust stands with each
   // elder. Same key as the tab shell and My Elders, so one fetch.
   const { data: connections } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
 
   const waiting = jobs.filter((n) => segmentOf(n) === 'open');
