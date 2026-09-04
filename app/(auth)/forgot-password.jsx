@@ -4,7 +4,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text } from 'react-native';
-import api from '../../src/api/client';
+import { requestPasswordReset } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
@@ -29,7 +29,7 @@ export default function ForgotPassword() {
     setError('');
     setLoading(true);
     try {
-      await api.post('/auth/forgot-password', { email });
+      await requestPasswordReset({ email });
       setSent(true);
     } catch (err) {
       if (err?.response) {
