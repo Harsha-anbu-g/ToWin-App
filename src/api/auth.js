@@ -73,6 +73,85 @@ export async function registerAccount({ username, email, password, role, dateOfB
 }
 
 /**
+ * Send the confirmation email again for a signup that has not been opened
+ * yet. No account exists at this point, so nobody is logged in when this runs.
+ * @param {object} input
+ * @param {string} input.email  the address the signup used
+ * @returns {Promise<void>} resolves once the backend has queued the email;
+ *   rejects with the axios error (response.data.message carries the reason)
+ */
+export async function resendVerificationEmail({ email }) {
+  if (!email) throw new Error('email is required to resend the verification link.');
+  await api.post('/auth/resend-verification', { email });
+}
+
+/**
+ * Confirm an emailed signup link. This is what actually creates the account:
+ * the backend checks the token and finishes the signup it belongs to.
+ * @param {object} input
+ * @param {string} input.token  the token from the /verify-email link
+ * @returns {Promise<void>} resolves once verified; rejects with the axios
+ *   error (no err.response at all means the server was unreachable, not a
+ *   dead link — callers show the two cases differently)
+ */
+export async function verifyEmail({ token }) {
+  if (!token) throw new Error('token is required to verify an email link.');
+  await api.post('/auth/verify-email', { token });
+}
+
+/**
+ * Trade a Google redirect code for a Towinly session. The codeVerifier is the
+ * PKCE secret this app generated when it started the flow, so the server can
+ * bind the code to this client.
+ * @param {object} input
+ * @param {string} input.code          the ?code= from the Google redirect
+ * @param {string} input.state         the ?state= the redirect carried back
+ * @param {string} input.codeVerifier  the PKCE verifier this app stored
+ * @returns {Promise<object>} { status: 'READY', token } for an existing
+ *   account, or { status: 'NEEDS_ONBOARDING', onboardingToken, email, name }
+ *   for a new one; rejects with the axios error
+ */
+export async function exchangeOAuthCode({ code, state, codeVerifier }) {
+  if (!code || !codeVerifier) {
+    throw new Error('code and codeVerifier are required to complete a Google sign-in.');
+  }
+  const res = await api.post('/auth/oauth/exchange', { code, state, codeVerifier });
+  return res?.data;
+}
+
+/**
+ * Finish a Google signup: attach the chosen role, username, and phone to the
+ * onboarding token the exchange handed back, creating the account.
+ * @param {object} input
+ * @param {string} input.onboardingToken  from exchangeOAuthCode's NEEDS_ONBOARDING reply
+ * @param {'ELDER'|'HELPER'} input.role   who they are joining as
+ * @param {string} input.username         3-20 chars, lowercase letters, digits, underscores
+ * @param {string} input.phone            digits only (optional + prefix), 10-15 digits
+ * @returns {Promise<object>} { token } for the new session; rejects with the
+ *   axios error (response.data.message carries the reason)
+ */
+export async function completeOAuthSignup({ onboardingToken, role, phone, username }) {
+  if (!onboardingToken) throw new Error('onboardingToken is required to finish a Google signup.');
+  const res = await api.post('/auth/oauth/complete', { onboardingToken, role, phone, username });
+  return res?.data;
+}
+
+/**
+ * Submit a photo of a government ID for the one-time human review that earns
+ * profile trust points. The ID is never shown to other members.
+ * @param {object} input
+ * @param {object} input.file  the upload part (uri/name/type on native, Blob on web)
+ * @returns {Promise<void>} resolves once the ID is queued for review; rejects
+ *   with the axios error (response.data.message carries the reason)
+ */
+export async function submitIdPhoto({ file }) {
+  if (!file) throw new Error('file is required to submit an ID photo.');
+  const fd = new FormData();
+  fd.append('file', file);
+  await api.post('/auth/verify-id', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+}
+
+/**
  * Set the first password on a Google-signup account that has none yet
  * (profile hasPassword === false). No current password exists, so none is
  * sent. Signing in with Google keeps working afterwards.

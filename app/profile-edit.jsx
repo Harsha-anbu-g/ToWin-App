@@ -8,8 +8,17 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import api, { friendlyWriteError } from '../src/api/client';
-import { getMyProfile } from '../src/api/profile';
+import { friendlyWriteError } from '../src/api/client';
+import { submitIdPhoto } from '../src/api/auth';
+import {
+  geocodePlace,
+  getMyProfile,
+  updateElderProfile,
+  updateHelperProfile,
+  updatePhoneNumber,
+  updateProfileLocation,
+  updateProfilePhoto,
+} from '../src/api/profile';
 import Avatar from '../src/components/ui/Avatar';
 import Button from '../src/components/ui/Button';
 import ChipsField from '../src/components/ui/ChipsField';
@@ -257,9 +266,7 @@ export default function ProfileEdit() {
     }
     setUploadingPhoto(true);
     try {
-      const data = new FormData();
-      data.append('file', file);
-      await api.put('/profile/photo', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await updateProfilePhoto({ file });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
       showToast('Photo updated.', 'success');
     } catch (err) {
@@ -280,9 +287,7 @@ export default function ProfileEdit() {
     }
     setUploadingId(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      await api.post('/auth/verify-id', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      await submitIdPhoto({ file });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
       showToast('ID uploaded. Verification is pending review.', 'success');
     } catch (err) {
@@ -322,24 +327,24 @@ export default function ProfileEdit() {
         dateOfBirth: dob,
       };
       if (isHelper) {
-        await api.put('/profile/helper', {
+        await updateHelperProfile({
           ...base,
           skillsOffered: toList(form.tags),
           hobbies: toList(form.extraTags),
         });
       } else {
-        await api.put('/profile/elder', {
+        await updateElderProfile({
           ...base,
           interests: toList(form.tags),
           lookingFor: form.lookingFor,
         });
       }
       if (form.phone.trim() && form.phone.trim() !== (me?.phone ?? '')) {
-        await api.put('/profile/phone', { phone: form.phone.trim() });
+        await updatePhoneNumber({ phone: form.phone.trim() });
       }
       if (form.city.trim() && form.city.trim() !== (me?.city ?? '')) {
         // Web flow: geocode the typed place, then save coordinates + city.
-        const { data } = await api.get(`/geocode/search?q=${encodeURIComponent(form.city.trim())}`);
+        const data = await geocodePlace({ query: form.city.trim() });
         // Through the SAME grid the phone path uses (src/lib/deviceLocation.js
         // returns coarsen(fix?.coords)), never a second rounding written here.
         // A geocoder asked for a street address answers at address precision,
@@ -351,7 +356,7 @@ export default function ProfileEdit() {
         // the only place this can be defended, and the shipped privacy policy
         // is what promises it.
         const cell = coarsen({ latitude: data.lat, longitude: data.lng });
-        await api.put('/profile/location', {
+        await updateProfileLocation({
           // Spread, not `locationLat: cell?.locationLat`: an unusable geocode
           // must send the town ALONE. Explicit nulls would tell the backend to
           // clear the stored position (ProfileService sets both columns from

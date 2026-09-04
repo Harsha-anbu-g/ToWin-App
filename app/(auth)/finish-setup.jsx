@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AlertCircle } from '../../src/components/icons';
-import api from '../../src/api/client';
+import { completeOAuthSignup } from '../../src/api/auth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Input from '../../src/components/ui/Input';
@@ -83,7 +83,7 @@ export default function FinishSetup() {
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/oauth/complete', {
+      const data = await completeOAuthSignup({
         onboardingToken,
         role,
         phone: digits,
