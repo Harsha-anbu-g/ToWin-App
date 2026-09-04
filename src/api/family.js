@@ -27,3 +27,13 @@ export async function getFamilyLinks() {
   const res = await api.get('/family/links');
   return res?.data;
 }
+
+/**
+ * The family seat's alert feed, as GET /family/alerts returns it — an
+ * object whose `alerts` array holds the rows.
+ * @returns {Promise<object>} rejects with the axios error
+ */
+export async function listFamilyAlerts() {
+  const res = await api.get('/family/alerts');
+  return res?.data;
+}
