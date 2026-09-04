@@ -17,7 +17,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../api/client';
+import { listKeyholderAsksOfMe, respondToKeyholderAsk } from '../../api/passon';
 import { KEYHOLDER_ASK } from '../../lib/passOnLocks';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
@@ -101,8 +101,8 @@ export default function KeyholderAsk() {
     // "is Mum okay" — an error banner about a feature most people have never
     // heard of would only alarm.
     queryFn: async () => {
-      const r = await api.get('/passon/keyholders/asked-of-me');
-      return Array.isArray(r.data) ? r.data : [];
+      const rows = await listKeyholderAsksOfMe();
+      return Array.isArray(rows) ? rows : [];
     },
   });
 
@@ -110,7 +110,7 @@ export default function KeyholderAsk() {
     setSendingId(ask.id);
     setErrors((prev) => ({ ...prev, [ask.id]: null }));
     try {
-      await api.post(`/passon/keyholders/${ask.id}/respond`, { accept });
+      await respondToKeyholderAsk({ askId: ask.id, accept });
       setAnswered((prev) => ({ ...prev, [ask.id]: accept ? 'accepted' : 'declined' }));
     } catch (err) {
       setErrors((prev) => ({
