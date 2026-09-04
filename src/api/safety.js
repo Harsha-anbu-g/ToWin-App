@@ -12,3 +12,22 @@ import api from './client';
 export async function reportUser(reportedUserId, reason) {
   await api.post('/reports', { reportedUserId, reason, description: reason });
 }
+
+/**
+ * Report one passed-on story or letter, naming the exact item so an admin is
+ * told what was written, not only who wrote it.
+ * @param {{reportedUserId: string, contentId: string, reason: string, description: string}} report
+ *   the writer, the item, and the visitor's reason in their own words
+ * @returns {Promise<void>} rejects with an Error when the writer or item is missing
+ */
+export async function reportPassOnStory({ reportedUserId, contentId, reason, description }) {
+  if (!reportedUserId) throw new Error('reportedUserId is required.');
+  if (!contentId) throw new Error('contentId is required.');
+  await api.post('/reports', {
+    reportedUserId,
+    contentType: 'PASSON_ITEM',
+    contentId,
+    reason,
+    description,
+  });
+}
