@@ -15,7 +15,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Redirect, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
-import api from '../../src/api/client';
+import { getPassedOnFrom } from '../../src/api/passon';
+import { reportPassOnStory } from '../../src/api/safety';
 import PassOnReadCard from '../../src/components/passon/PassOnReadCard';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
@@ -43,7 +44,7 @@ export default function PassOnFrom() {
     refetch,
   } = useQuery({
     queryKey: ['passon-from', ownerId],
-    queryFn: async () => (await api.get(`/passon/from/${ownerId}`)).data,
+    queryFn: () => getPassedOnFrom(ownerId),
     enabled: !!user && !!ownerId,
   });
 
@@ -54,15 +55,9 @@ export default function PassOnFrom() {
     setSending(true);
     setReportError('');
     try {
-      await api.post('/reports', {
-        reportedUserId: ownerId,
-        // Names the story, not only the person. Without it an admin is told
-        // somebody wrote something upsetting somewhere — not actionable.
-        contentType: 'PASSON_ITEM',
-        contentId: itemId,
-        reason,
-        description,
-      });
+      // Names the story, not only the person. Without it an admin is told
+      // somebody wrote something upsetting somewhere — not actionable.
+      await reportPassOnStory({ reportedUserId: ownerId, contentId: itemId, reason, description });
       setReportingId(null);
       setSentIds((ids) => [...ids, itemId]);
     } catch (err) {
