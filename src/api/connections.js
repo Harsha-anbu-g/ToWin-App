@@ -13,3 +13,14 @@ export async function listMyConnections() {
   const res = await api.get('/connections');
   return res?.data;
 }
+
+/**
+ * End one connection for good — the friendship (or family chat) closes for
+ * both people. Blocking uses this too: the row leaves both inboxes.
+ * @param {string} connectionId the connection to end
+ * @returns {Promise<void>} rejects with the axios error when refused
+ */
+export async function endConnection(connectionId) {
+  if (!connectionId) throw new Error('endConnection needs a connectionId');
+  await api.delete(`/connections/${connectionId}`);
+}
