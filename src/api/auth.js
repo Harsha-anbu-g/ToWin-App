@@ -19,3 +19,28 @@ import api from './client';
 export async function registerAccount({ username, email, password, role, dateOfBirth }) {
   await api.post('/auth/register', { username, email, password, role, dateOfBirth });
 }
+
+/**
+ * Set the first password on a Google-signup account that has none yet
+ * (profile hasPassword === false). No current password exists, so none is
+ * sent. Signing in with Google keeps working afterwards.
+ * @param {string} newPassword  at least 8 characters
+ * @returns {Promise<void>} resolves once the password is set; rejects with
+ *   the axios error (response.data.message carries the reason)
+ */
+export async function setPassword(newPassword) {
+  await api.post('/auth/set-password', { newPassword });
+}
+
+/**
+ * Change the signed-in account's password. The backend checks the current
+ * one before accepting the new one.
+ * @param {object} input
+ * @param {string} input.currentPassword  the password used today
+ * @param {string} input.newPassword      at least 8 characters
+ * @returns {Promise<void>} resolves once changed; rejects with the axios
+ *   error (response.data.message carries the reason)
+ */
+export async function changePassword({ currentPassword, newPassword }) {
+  await api.post('/auth/change-password', { currentPassword, newPassword });
+}
