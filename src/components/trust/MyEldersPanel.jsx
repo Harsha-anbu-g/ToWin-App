@@ -9,7 +9,16 @@ import { useRouter } from 'expo-router';
 import { ChevronRight, Phone } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import api, { friendlyWriteError } from '../../api/client';
+import { friendlyWriteError } from '../../api/client';
+import { endConnection, listMyConnections } from '../../api/connections';
+import { getFamilyBehindMe } from '../../api/family';
+import { listMyApplications } from '../../api/needs';
+import {
+  confirmTrustStep,
+  getMyTrustScore,
+  pauseTrustSteps,
+  resumeTrustSteps,
+} from '../../api/trust';
 import { useAuth } from '../../context/AuthContext';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
@@ -277,11 +286,11 @@ export default function MyEldersPanel() {
 
   const { data: connections, isLoading, isError, refetch } = useQuery({
     queryKey: ['connections'],
-    queryFn: async () => (await api.get('/connections')).data,
+    queryFn: listMyConnections,
   });
   const { data: breakdown } = useQuery({
     queryKey: ['trust-my-score'],
-    queryFn: async () => (await api.get('/trust/my-score')).data,
+    queryFn: getMyTrustScore,
   });
 
   const { data: blocked } = useQuery({
@@ -292,7 +301,7 @@ export default function MyEldersPanel() {
   // (trustOrigin.js, helper seat). Same key as My Jobs and the Updates feed.
   const { data: applicationsData } = useQuery({
     queryKey: ['needs-applications'],
-    queryFn: async () => (await api.get('/needs/applications')).data,
+    queryFn: listMyApplications,
   });
   const myOffers = Array.isArray(applicationsData) ? applicationsData : applicationsData?.content ?? [];
 
@@ -304,7 +313,7 @@ export default function MyEldersPanel() {
     queryKey: ['family-behind'],
     queryFn: async () => {
       try {
-        return (await api.get('/family/behind-me')).data;
+        return await getFamilyBehindMe();
       } catch {
         return { entries: [] };
       }
@@ -347,7 +356,7 @@ export default function MyEldersPanel() {
   };
 
   const confirm = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/confirm`),
+    mutationFn: (connectionId) => confirmTrustStep(connectionId),
     onSuccess: (_r, connectionId) => {
       const c = active.find((x) => x.id === connectionId);
       showToast(
@@ -363,7 +372,7 @@ export default function MyEldersPanel() {
   });
 
   const end = useMutation({
-    mutationFn: (connectionId) => api.delete(`/connections/${connectionId}`),
+    mutationFn: (connectionId) => endConnection(connectionId),
     onSuccess: () => {
       showToast('Connection ended.', 'info');
       refresh();
@@ -375,7 +384,7 @@ export default function MyEldersPanel() {
   // Pausing is reversible on the same connection id, so the way back rides in
   // the toast (rulebook: undo over confirmation) — no dialog stands in front.
   const pause = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/pause`),
+    mutationFn: (connectionId) => pauseTrustSteps(connectionId),
     onSuccess: (_r, connectionId) => {
       showToast('Paused. You can resume any time.', 'info', {
         actionLabel: 'Undo',
@@ -387,7 +396,7 @@ export default function MyEldersPanel() {
       showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
   });
   const resume = useMutation({
-    mutationFn: (connectionId) => api.post(`/trust/${connectionId}/resume`),
+    mutationFn: (connectionId) => resumeTrustSteps(connectionId),
     onSuccess: () => {
       showToast('Welcome back. Trust steps and messages are on again.', 'success');
       refresh();
