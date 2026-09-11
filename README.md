@@ -4,7 +4,12 @@
 
 Towinly connects elders with helpers who live nearby. Help is easy to find. Trust takes time. Every friendship climbs a seven-stage Trust Ladder, both people agree to each step, and family can watch over it all.
 
-This repo is the mobile app: React Native + Expo, built for the iOS App Store and Google Play. It talks to the same Spring Boot backend as the Towinly website.
+This repo holds the mobile app, built with React Native and Expo. It talks to the same Spring Boot backend as the Towinly website.
+
+## Status
+
+- iOS: version 1.1.0 (build 25) has been in TestFlight since 29 August 2026. It is not on the public App Store yet.
+- Android: not on Google Play yet.
 
 ## Screens
 
@@ -31,13 +36,16 @@ This repo is the mobile app: React Native + Expo, built for the iOS App Store an
 - One tap checks an elder in for the day. Family sees it.
 - An elder invites family and chooses which friendships they see. A family member can move a trust step in the elder's name, and the step says so.
 - Chat lives inside the app and opens as one of the trust stages.
+- New messages and help activity arrive as push notifications.
+- You can report or block someone from a message thread. A block hides both people from each other.
+- An elder can write letters to pass on and keep private ones in a sealed box.
 
 ## Stack
 
 - React Native with Expo Router. Expo SDK is locked at 54: read `AGENTS.md` before touching dependencies.
 - The Spring Boot + Postgres backend from the Towinly website, reused unchanged. The app is one more API client.
 - Named API functions in `src/api` over an axios client with a JWT bearer. Screens call those functions and never fetch on their own.
-- Jest (`jest-expo`), 175 test suites: `npm test`.
+- Jest (`jest-expo`), 198 test suites: `npm test`.
 - EAS for store builds. iOS ships to TestFlight.
 
 ## Run it
