@@ -49,3 +49,7 @@ yarn-error.*
 .artifacts/
 __pycache__/
 keys/
+
+# Private notes kept outside the public repo (2026-09-11)
+docs/audit/
+docs/store/enrollment-decision.md
