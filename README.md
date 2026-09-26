@@ -11,6 +11,12 @@ This repo holds the mobile app, built with React Native and Expo. It talks to th
 - iOS: version 1.1.0 (build 25) has been in TestFlight since 29 August 2026. It is not on the public App Store yet.
 - Android: not on Google Play yet.
 
+## Links
+
+- Investor deck: [PDF](docs/pitch/Towinly-Investor-Deck.pdf) or [PowerPoint](docs/pitch/Towinly-Investor-Deck.pptx)
+- Instagram: [@towinly.trust](https://www.instagram.com/towinly.trust/)
+- LinkedIn: [Towinly](https://www.linkedin.com/company/towinly/)
+
 ## Screens
 
 <table>
