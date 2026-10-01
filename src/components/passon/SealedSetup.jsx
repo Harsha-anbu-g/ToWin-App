@@ -298,9 +298,11 @@ export default function SealedSetup({ family, setup, already = [], saving, onFin
               color: t.ink,
               lineHeight: 24,
               marginTop: spacing[4],
-              paddingLeft: spacing[3],
-              borderLeftWidth: 2,
-              borderLeftColor: t.trustGold,
+              padding: spacing[4],
+              borderRadius: radius.lg,
+              overflow: 'hidden',
+              backgroundColor: t.heroParchment,
+              textAlign: 'center',
             }}
           >
             {SETUP.howMany.inRealTerms(mustAgree, listOfNames(chosen.map((p) => p.name)), chosen.length)}
