@@ -40,6 +40,7 @@ jest.mock('../src/lib/useReducedMotion', () => ({ useReducedMotion: () => true }
 import api from '../src/api/client';
 import FamilyShareToggle from '../src/components/family/FamilyShareToggle';
 import MyEldersPanel from '../src/components/trust/MyEldersPanel';
+import HelperSeatDetail from '../src/components/trust/HelperSeatDetail';
 import MyHelpersPanel from '../src/components/trust/MyHelpersPanel';
 
 const wrap = (ui) =>
@@ -168,20 +169,25 @@ test('server-truth re-sync: a changed prop updates the toggle in place', async (
   r.getByText('Kept private from family. Only you can change this.');
 });
 
-test('MyHelpersPanel keeps the switch on every row, opening with the row', async () => {
+test('the switch lives on each helper\'s own page, never in the list', async () => {
   stubGet(
     [conn(), conn({ id: 'c2', otherUserId: 'u2', otherUserName: 'Priya', sharedWithFamily: true })],
     [customer(), customer({ connectionId: 'c2', customerName: 'Priya', stageIndex: 2 })]
   );
-  const r = await wrap(<MyHelpersPanel />);
-  await r.findByText('Harsha');
-  // Rows are name-only until touched (owner call 2026-08-26), and one touch
-  // opens the switch with the ladder — no second arrow ("no double clicking").
-  expect(r.queryByLabelText('Let my family see this friendship')).toBeNull();
-  await fireEvent.press(r.getByText('Harsha'));
-  await fireEvent.press(r.getByText('Priya'));
-  expect(r.queryByLabelText(/Family options/)).toBeNull();
-  expect(r.getAllByLabelText('Let my family see this friendship')).toHaveLength(2);
+  // The list rows are name-only (owner call 2026-08-26, and 2026-09-25: a name
+  // opens a page, not a dropdown).
+  const list = await wrap(<MyHelpersPanel />);
+  await list.findByText('Harsha');
+  expect(list.queryByLabelText('Let my family see this friendship')).toBeNull();
+  await list.unmount();
+
+  // One page per helper, the switch on both — no second arrow ("no double clicking").
+  for (const id of ['c1', 'c2']) {
+    const page = await wrap(<HelperSeatDetail connectionId={id} />);
+    await page.findByLabelText('Let my family see this friendship');
+    expect(page.queryByLabelText(/Family options/)).toBeNull();
+    await page.unmount();
+  }
 });
 
 test('MyEldersPanel (helper side) never gets the switch', async () => {

@@ -11,7 +11,7 @@
 // of the tree), plus source scans so a NEW screen cannot ship outside the
 // safe areas and a mid-form screen cannot silently regain iOS swipe-back.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, waitFor } from '@testing-library/react-native';
+import { render, waitFor, within } from '@testing-library/react-native';
 import { StyleSheet, Text } from 'react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
@@ -20,6 +20,7 @@ import { light } from '../src/theme/tokens';
 import api from '../src/api/client';
 import Screen from '../src/components/ui/Screen';
 import ChatThread from '../app/chat/[connectionId]';
+import Checkin from '../app/checkin';
 
 let mockUser = null;
 
@@ -109,6 +110,45 @@ test('Screen header: page background, hairline underneath, 44px labelled back, N
   expect(titleStyle.fontWeight).toBeUndefined(); // weight 400 only, never bolded
 });
 
+test('Screen footer: pinned outside the scroller, page background, hairline on top', async () => {
+  const r = await wrap(
+    <Screen footer={<Text>pinned action</Text>}>
+      <Text>body</Text>
+    </Screen>
+  );
+
+  const footer = r.getByTestId('screen-footer');
+  const footerStyle = StyleSheet.flatten(footer.props.style);
+  expect(footerStyle.backgroundColor).toBe(light.surface);
+  expect(footerStyle.borderTopWidth).toBe(1);
+  expect(footerStyle.borderTopColor).toBe(light.border);
+
+  expect(within(footer).getByText('pinned action')).toBeTruthy();
+  expect(within(r.getByTestId('screen-scroll')).queryByText('pinned action')).toBeNull();
+});
+
+test('Screen without a footer renders none', async () => {
+  const r = await wrap(
+    <Screen>
+      <Text>body</Text>
+    </Screen>
+  );
+  expect(r.queryByTestId('screen-footer')).toBeNull();
+});
+
+test('check-in: "Take me home" is pinned in the footer, not inside the scrolling page', async () => {
+  mockUser = { role: 'ELDER', userId: 'me', emailVerified: true };
+  api.get.mockImplementation((url) =>
+    Promise.resolve({ data: url.includes('streak') ? { alreadyCheckedIn: true } : {} })
+  );
+
+  const r = await wrap(<Checkin />);
+  await waitFor(() => expect(r.getByText('Take me home')).toBeTruthy());
+
+  expect(within(r.getByTestId('screen-footer')).getByText('Take me home')).toBeTruthy();
+  expect(within(r.getByTestId('screen-scroll')).queryByText('Take me home')).toBeNull();
+});
+
 test('chat header: same page background and hairline, 44px labelled back', async () => {
   mockUser = { role: 'ELDER', userId: 'me', emailVerified: true };
   api.get.mockImplementation((url) => {
@@ -174,13 +214,24 @@ test('every screen under app/ renders inside safe areas (Screen primitive, SafeA
   const screens = walk(path.join(ROOT, 'app')).filter(
     (f) => !f.endsWith('_layout.jsx')
   );
+  // A route may hand the whole page to components that render the Screen
+  // primitive themselves (the person page picks its seat by role); the scan
+  // then checks those components instead.
+  const DELEGATES = {
+    [path.join('app', 'connection', '[connectionId].jsx')]: [
+      path.join('src', 'components', 'trust', 'HelperSeatDetail.jsx'),
+      path.join('src', 'components', 'trust', 'ElderSeatDetail.jsx'),
+    ],
+  };
   const offenders = [];
   for (const file of screens) {
     const code = readCode(file);
+    const delegates = DELEGATES[path.relative(ROOT, file)];
     const handlesSafeArea =
       code.includes('<Screen') ||
       code.includes('SafeAreaView') ||
-      code.includes('useSafeAreaInsets');
+      code.includes('useSafeAreaInsets') ||
+      (!!delegates && delegates.every((d) => readCode(path.join(ROOT, d)).includes('<Screen')));
     // URL-parity aliases and auth gates render no chrome of their own.
     const isPureRedirect = code.includes('<Redirect') && !code.includes('<View');
     if (!handlesSafeArea && !isPureRedirect) {

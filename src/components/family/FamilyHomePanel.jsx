@@ -17,7 +17,6 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import {
-  getFamilyJourney,
   getFamilyLinks,
   removeFamilyLink,
   respondToFamilyRequest,
@@ -35,7 +34,6 @@ import SwipeSegments from '../ui/SwipeSegments';
 import KeyholderAsk from '../passon/KeyholderAsk';
 import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
-import { ParentStatusLine } from './FamilyJourney';
 // Rows moved to FamilyRows (FAM-403) — the elder's My Family screen shares them.
 import { LinkRow, SectionHeading } from './FamilyRows';
 
@@ -57,16 +55,6 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
     queryKey: ['family-links'],
     queryFn: getFamilyLinks,
   });
-
-  // The parent's journey: check-in, open requests, and the friendships they
-  // chose to share. Kept as its own query so a journey outage still leaves the
-  // links list — and the accept/cancel actions — working (HCI 9).
-  const { data: journeyData } = useQuery({
-    queryKey: ['family-journey'],
-    queryFn: getFamilyJourney,
-  });
-  const journeyFor = (elderId) =>
-    (journeyData?.elders ?? []).find((e) => e.elderId === elderId);
 
   // This panel is the FAMILY seat: only links where I'm the family side.
   const familySide = (list) => (list ?? []).filter((l) => !l.iAmElder);
@@ -201,45 +189,13 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
                 <LinkRow
                   key={l.id}
                   name={l.otherUserName}
-                  line={
-                    l.relationship
-                      ? `You're their ${l.relationship.toLowerCase()}`
-                      : 'Your family member'
-                  }
                   first={i === 0}
-                  collapsible
-                  badge={
-                    // A label, not a button — a soft neutral wash so it can't
-                    // be mistaken for something tappable (the fill carries no
-                    // hue since the 2026-07-26 green-background removal).
-                    <View
-                      style={{
-                        backgroundColor: t.greenTint,
-                        borderWidth: 1,
-                        borderColor: t.greenLine,
-                        borderRadius: radius.pill,
-                        paddingVertical: 6,
-                        paddingHorizontal: 14,
-                      }}
-                    >
-                      <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep }}>
-                        Linked
-                      </Text>
-                    </View>
-                  }
-                >
-                  {/* The row keeps the at-a-glance status; everything deeper —
-                      shared friendships, guardian actions, open requests —
-                      moved to the per-parent screen (FAM-506, web user call
-                      2026-07-20: the home list got too crowded). */}
-                  <ParentStatusLine journey={journeyFor(l.elderId)} />
-                  <ActionChip
-                    label={`See ${l.otherUserName}`}
-                    tonal
-                    onPress={() => router.push(`/family/parent/${l.elderId}`)}
-                    style={{ marginTop: spacing[3], alignSelf: 'flex-start' }}
-                  />
-                </LinkRow>
+                  // The row is the person alone; everything about them — the
+                  // at-a-glance status, shared friendships, guardian actions,
+                  // open requests — lives on the per-parent page (FAM-506; owner
+                  // call 2026-09-25: a name opens a page, not a dropdown).
+                  onPress={() => router.push(`/family/parent/${l.elderId}`)}
+                />
               ))}
             </View>
           )

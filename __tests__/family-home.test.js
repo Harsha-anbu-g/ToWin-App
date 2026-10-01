@@ -6,8 +6,9 @@ import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -130,10 +131,9 @@ test('load: parents, requests, and alerts render web-exact — elder-side links 
   const r = await wrap(<FamilyHomePanel />);
 
   await r.findByText('margaret');
-  // A linked parent folds to the name (owner call 2026-08-26): open it.
-  await fireEvent.press(r.getByText('margaret'));
-  r.getByText("You're their daughter");
-  r.getByText('Linked');
+  // A linked parent is the name alone (owner call 2026-08-26); the name opens
+  // the parent's own page, not a dropdown (owner call 2026-09-25).
+  expect(r.queryByText('Linked')).toBeNull();
 
   // Requests live under their own segment (the elder hub's pair, 2026-08-28);
   // the chip wears how many are waiting on my yes.
@@ -251,9 +251,10 @@ test('add form: no API call on a blank identifier; trimmed payload posts side el
 
 
 // Owner call 2026-08-26, "do the same for the family": a linked parent is a
-// name-only row; one touch opens the relationship, the Linked label, the
-// status line and "See <name>". Requests never fold.
-test('a linked parent shows the name alone until touched; requests stay open', async () => {
+// name-only row. Owner call 2026-09-25: the name opens that parent's own page
+// (relationship, status line and everything else live there), not a dropdown.
+// Requests never fold.
+test('a linked parent is the name alone and opens their page; requests stay open', async () => {
   stubGet(fullLinks, []);
   const r = await wrap(<FamilyHomePanel />);
 
@@ -261,8 +262,9 @@ test('a linked parent shows the name alone until touched; requests stay open', a
   expect(r.queryByText("You're their daughter")).toBeNull();
   expect(r.queryByText('Linked')).toBeNull();
   expect(r.queryByLabelText('See margaret')).toBeNull();
-  // The sentence still reaches a screen reader through the row's label.
-  r.getByRole('button', { name: "margaret. You're their daughter", expanded: false });
+  // The row goes to a page, so it no longer claims to expand.
+  const row = r.getByRole('button', { name: 'margaret' });
+  expect(row.props.accessibilityState?.expanded).toBeUndefined();
   // The incoming request keeps its choice in view without any touch, under
   // the Requests segment.
   await fireEvent.press(r.getByRole('tab', { name: 'Requests, 1 waiting' }));
@@ -271,9 +273,9 @@ test('a linked parent shows the name alone until touched; requests stay open', a
   await fireEvent.press(r.getByRole('tab', { name: 'Parents' }));
 
   await fireEvent.press(await r.findByText('margaret'));
-  r.getByText("You're their daughter");
-  r.getByText('Linked');
-  r.getByLabelText('See margaret');
+  expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/family\/parent\/./));
+  // Nothing unfolds in the list.
+  expect(r.queryByText('Linked')).toBeNull();
 });
 
 // The elder hub's skeleton on the family seat (owner call 2026-08-28, "keep

@@ -1,7 +1,8 @@
 // My Helpers rows (owner call 2026-08-26): each helper is a name-only row,
-// "like whatsapp". Touching the name opens the trust ladder and the family
-// section at the same time, no second tap; touching the photo opens the
-// profile, the way a WhatsApp row splits photo from name.
+// "like whatsapp". Touching the name opens the helper's own page (owner call
+// 2026-09-25, not a dropdown) where the trust ladder and the family section
+// live together; touching the photo opens the profile, the way a WhatsApp row
+// splits photo from name.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
@@ -34,6 +35,7 @@ jest.mock('../src/context/AuthContext', () => ({
 jest.mock('../src/lib/useReducedMotion', () => ({ useReducedMotion: () => true }));
 
 import api from '../src/api/client';
+import HelperSeatDetail from '../src/components/trust/HelperSeatDetail';
 import MyHelpersPanel from '../src/components/trust/MyHelpersPanel';
 
 const wrap = (ui) =>
@@ -88,61 +90,73 @@ beforeEach(() => {
 });
 afterEach(() => jest.clearAllMocks());
 
-test('a row shows the name alone until it is touched', async () => {
+test('a row shows the name alone', async () => {
   const r = await wrap(<MyHelpersPanel />);
 
   await r.findByText('Priya Sharma');
   r.getByText('Tom Walker');
-  // Nothing from the body: no ladder, no stage line, no family switch, no step.
+  // Nothing from the page: no ladder, no stage line, no family switch, no step.
   expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
   expect(r.queryByText(/Stage 3 of 7/)).toBeNull();
   expect(r.queryByRole('switch')).toBeNull();
   expect(r.queryByText('Start the next step')).toBeNull();
-  // The stage still reaches a screen reader through the row's own label.
-  r.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone', expanded: false });
+  // The stage still reaches a screen reader through the row's own label, and
+  // the row no longer claims to expand: it goes to a page.
+  const row = r.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone' });
+  expect(row.props.accessibilityState?.expanded).toBeUndefined();
 });
 
-test('touching the name opens the ladder and the family section together', async () => {
+test('touching the name opens the helper\'s own page, and nothing unfolds in the list', async () => {
   const r = await wrap(<MyHelpersPanel />);
 
   await fireEvent.press(await r.findByText('Priya Sharma'));
 
-  r.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone', expanded: true });
-  r.getByLabelText('Trust ladder: Stage 3 of 7');
+  expect(mockPush).toHaveBeenCalledWith('/connection/c1');
+  expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
+  expect(r.queryByText('Start the next step')).toBeNull();
+});
+
+test('the helper\'s page shows the ladder and the family section together', async () => {
+  const r = await wrap(<HelperSeatDetail connectionId="c1" />);
+
+  await r.findByLabelText('Trust ladder: Stage 3 of 7');
   r.getByText('Stage 3 of 7 · Phone');
-  // The family section is open too — no second arrow to find (owner call
-  // 2026-08-26: "no double clicking").
+  // The family section is on the same page — no second arrow to find (owner
+  // call 2026-08-26: "no double clicking").
   expect(r.queryByLabelText(/Family options/)).toBeNull();
   r.getByRole('switch', { name: 'Let my family see this friendship', checked: true });
   r.getByLabelText('Open the family group');
   r.getByText('Start the next step');
   r.getByLabelText('Message');
-  // Only the touched row opened; the other stays a name.
+  // Only this helper, named in the header.
   expect(r.getAllByLabelText(/Trust ladder/)).toHaveLength(1);
-
-  // Touching again folds it back to the name.
-  await fireEvent.press(r.getByText('Priya Sharma'));
-  expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
+  r.getByText('Priya Sharma');
 });
 
-test('touching the photo opens the profile, not the row', async () => {
+test('touching the photo opens the profile, not the page', async () => {
   const r = await wrap(<MyHelpersPanel />);
 
   await fireEvent.press(await r.findByLabelText("View Tom Walker's profile"));
 
   expect(mockPush).toHaveBeenCalledWith('/user/u2');
-  expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
+  expect(mockPush).not.toHaveBeenCalledWith('/connection/c2');
 });
 
-test('an open row says why the ladder exists and when it started', async () => {
-  const r = await wrap(<MyHelpersPanel />);
+test('the page says why the ladder exists and when it started', async () => {
   const since = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
   // Priya was accepted on a posted request: the request is the reason.
-  await fireEvent.press(await r.findByText('Priya Sharma'));
-  await r.findByText(`Helping with “Weekly grocery run” · since ${since('2026-08-25T13:01:16')}`);
+  const priya = await wrap(<HelperSeatDetail connectionId="c1" />);
+  await priya.findByText(`Helping with “Weekly grocery run” · since ${since('2026-08-25T13:01:16')}`);
+  await priya.unmount();
 
   // Tom is a plain friendship.
-  await fireEvent.press(r.getByText('Tom Walker'));
-  r.getByText(`Friends · since ${since('2026-08-12T09:00:00')}`);
+  const tom = await wrap(<HelperSeatDetail connectionId="c2" />);
+  await tom.findByText(`Friends · since ${since('2026-08-12T09:00:00')}`);
+});
+
+test('a friendship that is gone says so instead of an empty page', async () => {
+  const r = await wrap(<HelperSeatDetail connectionId="nope" />);
+
+  await r.findByText('This friendship is not here any more.');
 });

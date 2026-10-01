@@ -5,7 +5,7 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
 import KeyboardAvoider from './KeyboardAvoider';
@@ -26,6 +26,9 @@ export default function Screen({
   // gesture with the themed spinner. Needs `scroll` (the default) — a
   // scroll={false} screen owns its scroller and mounts RefreshControl itself.
   onRefresh,
+  // One action pinned to the bottom edge, outside the scroller, so it stays in
+  // thumb reach however long the page is. Clears the home indicator itself.
+  footer,
   // Screens that have to move the page themselves pass a ref in and get the
   // ScrollView (register scrolls its submit error back into view). Read-only
   // to Screen: nothing here depends on it, so no caller is affected.
@@ -35,6 +38,7 @@ export default function Screen({
 }) {
   const { t, spacing, text, fontFamily, fontScaleCaps, pressRipple } = useTheme();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
 
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
@@ -136,6 +140,21 @@ export default function Screen({
     <SafeAreaView edges={['top']} style={[{ flex: 1, backgroundColor: t.surface }, style]}>
       {header}
       {keyboard ? <KeyboardAvoider>{body}</KeyboardAvoider> : body}
+      {footer ? (
+        <View
+          testID="screen-footer"
+          style={{
+            paddingHorizontal: spacing[5],
+            paddingTop: spacing[2],
+            paddingBottom: Math.max(insets.bottom, spacing[3]),
+            backgroundColor: t.surface,
+            borderTopWidth: 1,
+            borderTopColor: t.border,
+          }}
+        >
+          {footer}
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }

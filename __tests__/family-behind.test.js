@@ -2,10 +2,12 @@
 // exactly the people who can already reach them, nested under the elder they
 // belong to (web 2026-07-26), with the chat only where the coordination
 // connection exists — and the updates-thread link only on shared friendships.
+// It all lives on the elder's own page (owner call 2026-09-25: a name opens a
+// page, not a dropdown).
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import React from 'react';
-import MyEldersPanel from '../src/components/trust/MyEldersPanel';
+import ElderSeatDetail from '../src/components/trust/ElderSeatDetail';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
@@ -90,11 +92,9 @@ const sarah = {
 
 test('family rows nest under the elder they stand behind, with the relationship', async () => {
   stub({ entries: [sarah] });
-  const r = await wrap(<MyEldersPanel />);
+  const r = await wrap(<ElderSeatDetail connectionId="c1" />);
 
-  // Name-only until touched (owner call 2026-08-26): the name opens the
-  // family with the ladder — no second arrow.
-  await fireEvent.press(await r.findByText('Margaret'));
+  // The family sits on the same page as the ladder — no second arrow.
   await r.findByText("Margaret's family");
   r.getByText(/Sarah/);
   r.getByText(/, Margaret's daughter/);
@@ -111,24 +111,21 @@ test('the chat appears only with the FAMILY coordination connection', async () =
     ],
     entries: [sarah],
   });
-  const r = await wrap(<MyEldersPanel />);
+  const r = await wrap(<ElderSeatDetail connectionId="c1" />);
 
-  await fireEvent.press(await r.findByText('Margaret'));
   await r.findByText("Margaret's family");
   r.getByText('You can message each other while this friendship stays shared.');
 });
 
 test('an elder friendship with nobody behind it shows no family section', async () => {
   stub();
-  const r = await wrap(<MyEldersPanel />);
-  await r.findByText('Margaret');
+  const r = await wrap(<ElderSeatDetail connectionId="c1" />);
+  await r.findByText('Stage 2 of 7 · Messaging');
   expect(r.queryByText("Margaret's family")).toBeNull();
 });
 
 test('the updates-thread link rides only on shared friendships', async () => {
   stub({ connections: [conn({ sharedWithFamily: true })] });
-  const r = await wrap(<MyEldersPanel />);
-  await r.findByText('Margaret');
-  await fireEvent.press(await r.findByText('Margaret'));
-  r.getByLabelText('Open the family group');
+  const r = await wrap(<ElderSeatDetail connectionId="c1" />);
+  await r.findByLabelText('Open the family group');
 });

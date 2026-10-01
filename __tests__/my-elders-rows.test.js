@@ -1,9 +1,11 @@
 // My Elders rows (owner call 2026-08-26, "do the same for the helper"): each
-// elder is a name-only row; one touch opens the ladder, why it exists, and
-// the family behind it together; the photo opens the profile.
+// elder is a name-only row; touching the name opens the elder's own page (owner
+// call 2026-09-25, not a dropdown) with the ladder, why it exists, and the
+// family behind it together; the photo opens the profile.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import ElderSeatDetail from '../src/components/trust/ElderSeatDetail';
 import MyEldersPanel from '../src/components/trust/MyEldersPanel';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
@@ -86,7 +88,7 @@ const wrap = (ui) =>
     </ThemeProvider>
   );
 
-test('a row shows the name alone until it is touched', async () => {
+test('a row shows the name alone', async () => {
   const r = await wrap(<MyEldersPanel />);
 
   await r.findByText('Margaret');
@@ -96,17 +98,24 @@ test('a row shows the name alone until it is touched', async () => {
   expect(r.queryByLabelText('Message')).toBeNull();
   expect(r.queryByText("Margaret's family")).toBeNull();
   expect(r.queryByLabelText(/Family options/)).toBeNull();
-  r.getByRole('button', { name: 'Margaret. Stage 3 of 7, Phone', expanded: false });
+  const row = r.getByRole('button', { name: 'Margaret. Stage 3 of 7, Phone' });
+  expect(row.props.accessibilityState?.expanded).toBeUndefined();
 });
 
-test('one touch opens the ladder, the reason, and the family together', async () => {
+test('touching the name opens the elder\'s own page, and nothing unfolds in the list', async () => {
   const r = await wrap(<MyEldersPanel />);
-  const since = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 
   await fireEvent.press(await r.findByText('Margaret'));
 
-  r.getByRole('button', { name: 'Margaret. Stage 3 of 7, Phone', expanded: true });
-  r.getByLabelText('Trust ladder: Stage 3 of 7');
+  expect(mockPush).toHaveBeenCalledWith('/connection/c1');
+  expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
+});
+
+test('the elder\'s page shows the ladder, the reason, and the family together', async () => {
+  const r = await wrap(<ElderSeatDetail connectionId="c1" />);
+  const since = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  await r.findByLabelText('Trust ladder: Stage 3 of 7');
   r.getByText('Stage 3 of 7 · Phone');
   await r.findByText(`Helping with “Weekly grocery run” · since ${since('2026-08-25T13:01:16')}`);
   r.getByText("Margaret's family");
@@ -114,21 +123,29 @@ test('one touch opens the ladder, the reason, and the family together', async ()
   r.getByLabelText('Open the family group');
   r.getByLabelText('Message');
   r.getByText('Margaret starts each trust step. You\'ll get a tap here to accept.');
-  // Only the touched row opened.
-  expect(r.getAllByLabelText(/Trust ladder/)).toHaveLength(1);
-
-  // George is a plain friendship, and folds back on a second touch.
-  await fireEvent.press(r.getByText('George'));
-  r.getByText(`Friends · since ${since('2026-08-12T09:00:00')}`);
-  await fireEvent.press(r.getByText('George'));
   expect(r.getAllByLabelText(/Trust ladder/)).toHaveLength(1);
 });
 
-test('touching the photo opens the profile, not the row', async () => {
+test('a plain friendship page says friends since, with no family section', async () => {
+  const r = await wrap(<ElderSeatDetail connectionId="c2" />);
+  const since = (iso) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+
+  await r.findByText(`Friends · since ${since('2026-08-12T09:00:00')}`);
+  expect(r.queryByText("George's family")).toBeNull();
+  expect(r.queryByLabelText('Open the family group')).toBeNull();
+});
+
+test('touching the photo opens the profile, not the page', async () => {
   const r = await wrap(<MyEldersPanel />);
 
   await fireEvent.press(await r.findByLabelText("View George's profile"));
 
   expect(mockPush).toHaveBeenCalledWith('/user/elder-2');
-  expect(r.queryByLabelText(/Trust ladder/)).toBeNull();
+  expect(mockPush).not.toHaveBeenCalledWith('/connection/c2');
+});
+
+test('a connection that is gone says so instead of an empty page', async () => {
+  const r = await wrap(<ElderSeatDetail connectionId="nope" />);
+
+  await r.findByText('This connection is not here any more.');
 });

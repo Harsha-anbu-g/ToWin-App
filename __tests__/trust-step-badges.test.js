@@ -15,8 +15,9 @@ import { ConfirmProvider } from '../src/context/ConfirmContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -63,6 +64,8 @@ jest.mock('../src/lib/storage', () => {
 });
 
 import api from '../src/api/client';
+import ElderSeatDetail from '../src/components/trust/ElderSeatDetail';
+import HelperSeatDetail from '../src/components/trust/HelperSeatDetail';
 import MyEldersPanel from '../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../src/components/trust/MyHelpersPanel';
 import { _resetSeenForTests, loadSeen, seedNewIds, unseenCount, unseenTokens } from '../src/lib/seenIds';
@@ -233,36 +236,47 @@ describe('the elder seat: My Helpers', () => {
       return { data: {} };
     });
 
-  test('a ladder that moved wears a 1 on the name through opening the row, until the elder starts the next step', async () => {
+  test('a ladder that moved wears a 1 on the name, the page opens without clearing it, starting the step does', async () => {
     // The elder saw Priya at PHONE_CALL; the helper has since accepted a step.
-    Store._backing.set(seenKey('me', TRUST_STEPS_CATEGORY), JSON.stringify(['c1:PHONE_CALL', 'c2:HANDSHAKE']));
+    const key = seenKey('me', TRUST_STEPS_CATEGORY);
+    Store._backing.set(key, JSON.stringify(['c1:PHONE_CALL', 'c2:HANDSHAKE']));
     elderFixtures('MEET_PUBLIC');
-    const r = await wrap(<MyHelpersPanel />);
+    const list = await wrap(<MyHelpersPanel />);
 
-    await r.findByText('Priya Sharma');
+    await list.findByText('Priya Sharma');
     await waitFor(() =>
-      r.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone. New: one step up, your move' })
+      list.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone. New: one step up, your move' })
     );
-    expect(r.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
+    expect(list.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
     // Tom's ladder has not moved: no badge, plain label.
-    r.getByRole('button', { name: /^Tom Walker\. Stage 2 of 7, [^.]+$/ });
+    list.getByRole('button', { name: /^Tom Walker\. Stage 2 of 7, [^.]+$/ });
 
-    // Opening the row is not the elder's move: the badge stays (owner call
+    // The name goes to the helper's own page (owner call 2026-09-25).
+    await fireEvent.press(list.getByText('Priya Sharma'));
+    expect(mockPush).toHaveBeenCalledWith('/connection/c1');
+    await list.unmount();
+
+    // Opening the page is not the elder's move: the badge stays (owner call
     // 2026-08-28, "until I accept, the badge should be there").
-    await fireEvent.press(r.getByText('Priya Sharma'));
-    expect(r.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
-    r.getByRole('button', { name: 'Priya Sharma. Stage 3 of 7, Phone. New: one step up, your move', expanded: true });
+    const page = await wrap(<HelperSeatDetail connectionId="c1" />);
+    const start = await page.findByRole('button', { name: 'Start the next step' });
+    expect(JSON.parse(Store._backing.get(key))).not.toContain('c1:MEET_PUBLIC');
 
     // Starting the next step is: the badge goes, and stays gone.
-    await fireEvent.press(r.getByRole('button', { name: 'Start the next step' }));
-    await fireEvent.press(await r.findByRole('button', { name: 'Start' }));
+    await fireEvent.press(start);
+    await fireEvent.press(await page.findByRole('button', { name: 'Start' }));
     await waitFor(() => expect(api.post).toHaveBeenCalledWith('/trust/c1/confirm'));
-    await waitFor(() => expect(r.queryByTestId('row-badge', HIDDEN)).toBeNull());
-    expect(JSON.parse(Store._backing.get(seenKey('me', TRUST_STEPS_CATEGORY)))).toContain('c1:MEET_PUBLIC');
+    await waitFor(() => expect(JSON.parse(Store._backing.get(key))).toContain('c1:MEET_PUBLIC'));
+    await page.unmount();
+
+    const again = await wrap(<MyHelpersPanel />);
+    await again.findByText('Priya Sharma');
+    await waitFor(() => expect(again.queryByTestId('row-badge', HIDDEN)).toBeNull());
   });
 
-  test('at the top of the ladder there is nothing to start, so opening the row reads the news', async () => {
-    Store._backing.set(seenKey('me', TRUST_STEPS_CATEGORY), JSON.stringify(['c1:FIRST_MEET', 'c2:HANDSHAKE']));
+  test('at the top of the ladder there is nothing to start, so opening the page reads the news', async () => {
+    const key = seenKey('me', TRUST_STEPS_CATEGORY);
+    Store._backing.set(key, JSON.stringify(['c1:FIRST_MEET', 'c2:HANDSHAKE']));
     api.get.mockImplementation(async (url) => {
       if (url === '/trust/my-score')
         return {
@@ -275,17 +289,17 @@ describe('the elder seat: My Helpers', () => {
       if (url === '/needs/mine') return { data: { content: [] } };
       return { data: {} };
     });
-    const r = await wrap(<MyHelpersPanel />);
+    const list = await wrap(<MyHelpersPanel />);
     // A finished ladder lives under Trusted Friends.
-    await fireEvent.press(await r.findByRole('tab', { name: 'Trusted Friends' }));
-    await r.findByText('Priya Sharma');
-    await waitFor(() => r.getByRole('button', { name: 'Priya Sharma. Stage 7 of 7, Trusted. New: fully trusted' }));
-    expect(r.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
+    await fireEvent.press(await list.findByRole('tab', { name: 'Trusted Friends' }));
+    await list.findByText('Priya Sharma');
+    await waitFor(() => list.getByRole('button', { name: 'Priya Sharma. Stage 7 of 7, Trusted. New: fully trusted' }));
+    expect(list.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
+    await list.unmount();
 
-    await fireEvent.press(r.getByText('Priya Sharma'));
-    await waitFor(() => expect(r.queryByTestId('row-badge', HIDDEN)).toBeNull());
-    r.getByRole('button', { name: 'Priya Sharma. Stage 7 of 7, Trusted', expanded: true });
-    expect(JSON.parse(Store._backing.get(seenKey('me', TRUST_STEPS_CATEGORY)))).toContain('c1:TRUSTED');
+    const page = await wrap(<HelperSeatDetail connectionId="c1" />);
+    await page.findByText('Fully trusted');
+    await waitFor(() => expect(JSON.parse(Store._backing.get(key))).toContain('c1:TRUSTED'));
   });
 
   test('a first run is quiet: the ladders already here are not news', async () => {
@@ -313,8 +327,7 @@ describe('the elder seat: My Helpers', () => {
 
   test('"Start the next step" is the filled blue button', async () => {
     elderFixtures('PHONE_CALL');
-    const r = await wrap(<MyHelpersPanel />);
-    await fireEvent.press(await r.findByText('Priya Sharma'));
+    const r = await wrap(<HelperSeatDetail connectionId="c1" />);
     const button = await r.findByRole('button', { name: 'Start the next step' });
     expect(flatten(button.props.style).backgroundColor).toBe(light.actionFill);
   });
@@ -336,21 +349,29 @@ describe('the helper seat: My Elders', () => {
       return { data: {} };
     });
 
-  test('an elder who started a step wears a 1 on the name, and opening the row does not clear it', async () => {
+  test('an elder who started a step wears a 1 on the name, and opening the page does not clear it', async () => {
     mockRole = 'HELPER';
     helperFixtures({ confirmedByOther: true });
-    const r = await wrap(<MyEldersPanel />);
+    const list = await wrap(<MyEldersPanel />);
 
-    await r.findByText('Margaret');
-    r.getByRole('button', { name: 'Margaret. Stage 3 of 7, Phone. 1 step waiting for you to accept' });
-    expect(r.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
-    r.getByRole('button', { name: 'George. Stage 3 of 7, Phone' });
+    await list.findByText('Margaret');
+    list.getByRole('button', { name: 'Margaret. Stage 3 of 7, Phone. 1 step waiting for you to accept' });
+    expect(list.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
+    list.getByRole('button', { name: 'George. Stage 3 of 7, Phone' });
 
-    await fireEvent.press(r.getByText('Margaret'));
-    // Still waiting: only an accept clears it.
-    expect(r.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
-    const button = r.getByRole('button', { name: 'Accept the next step' });
+    await fireEvent.press(list.getByText('Margaret'));
+    expect(mockPush).toHaveBeenCalledWith('/connection/c1');
+    await list.unmount();
+
+    const page = await wrap(<ElderSeatDetail connectionId="c1" />);
+    const button = await page.findByRole('button', { name: 'Accept the next step' });
     expect(flatten(button.props.style).backgroundColor).toBe(light.actionFill);
+    await page.unmount();
+
+    // Still waiting: only an accept clears it.
+    const again = await wrap(<MyEldersPanel />);
+    await again.findByText('Margaret');
+    expect(again.getAllByTestId('row-badge', HIDDEN)).toHaveLength(1);
   });
 
   test('nothing waiting, nothing worn', async () => {

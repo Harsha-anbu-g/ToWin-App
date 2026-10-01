@@ -47,7 +47,7 @@ export const TAB_BAR_RADIUS = TAB_BAR_HEIGHT / 2; // fully round ends = capsule
 
 /**
  * The floating capsule's width on this screen width: the screen minus the
- * gap on each side. The layout and the glass lens both read this, so they
+ * gap on each side. The layout and the label boxes both read this, so they
  * agree.
  */
 export function tabBarCapsuleWidth(windowWidth) {

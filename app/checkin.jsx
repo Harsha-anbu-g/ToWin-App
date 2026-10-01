@@ -49,7 +49,20 @@ export default function Checkin() {
   }
 
   return (
-    <Screen onRefresh={refetch} contentStyle={{ gap: spacing[4] }}>
+    <Screen
+      onRefresh={refetch}
+      contentStyle={{ gap: spacing[4] }}
+      // A real 44pt exit pinned to the bottom edge — this screen opens
+      // unrequested once a day, so its way out is always in thumb reach and
+      // never a 13pt underline (rulebook).
+      footer={
+        <TextLink
+          label={done ? 'Take me home' : 'Not now, take me home'}
+          muted={!done}
+          onPress={toHome}
+        />
+      }
+    >
       <GreetingHeader />
       <FirstTimeCard
         flag={KEYS.checkinExplained}
@@ -63,13 +76,6 @@ export default function Checkin() {
           run of days inside the days of a whole life. */}
       <AgeCard />
       <PeekabooRow />
-      {/* A real 44pt exit — this screen opens unrequested once a day, so its
-          way out must never be a 13pt underline (rulebook). */}
-      <TextLink
-        label={done ? 'Take me home' : 'Not now, take me home'}
-        muted={!done}
-        onPress={toHome}
-      />
     </Screen>
   );
 }

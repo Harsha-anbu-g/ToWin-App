@@ -18,8 +18,6 @@ import { Text, View } from 'react-native';
 import { listMyConnections } from '../../src/api/connections';
 import {
   getFamilyLinks,
-  makePrimaryFamilyContact,
-  openFamilyChat,
   removeFamilyLink,
   respondToFamilyRequest,
   respondToPowerRequest,
@@ -36,7 +34,6 @@ import SegmentedControl from '../../src/components/ui/SegmentedControl';
 import SwipeSegments from '../../src/components/ui/SwipeSegments';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
-import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { POWERS } from '../../src/lib/familyPowers';
 import { SHARING_GIVES } from '../../src/lib/sharingGives';
@@ -57,7 +54,6 @@ export default function MyFamilyScreen() {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { user, booted } = useAuth();
   const { showToast } = useToast();
-  const confirm = useConfirm();
   const queryClient = useQueryClient();
   const router = useRouter();
   const [showAddForm, setShowAddForm] = useState(false);
@@ -147,64 +143,9 @@ export default function MyFamilyScreen() {
       ),
   });
 
-  // Revoking an ACTIVE link may drop the family trust point — refetch score.
-  const remove = useMutation({
-    mutationFn: (id) => removeFamilyLink(id),
-    onSuccess: () => {
-      showToast('Removed from your family.', 'success');
-      queryClient.invalidateQueries({ queryKey: ['family-links'] });
-      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
-    },
-    onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not remove them. Please try again.', 'error'),
-  });
-
-  const makePrimary = useMutation({
-    mutationFn: (id) => makePrimaryFamilyContact(id),
-    onSuccess: () => {
-      showToast('Main contact updated.', 'success');
-      queryClient.invalidateQueries({ queryKey: ['family-links'] });
-    },
-    onError: (err) =>
-      showToast(
-        err?.response?.data?.message || 'Could not change your main contact. Please try again.',
-        'error'
-      ),
-  });
-
-  // Open (or reopen) the private chat with a family member (FAM-510). The
-  // family link is the only permission; the server checks it and returns the
-  // conversation to open.
-  const openChat = useMutation({
-    mutationFn: (l) => openFamilyChat(l.otherUserId),
-    onSuccess: (chatConnectionId) => {
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
-      router.push(`/chat/${chatConnectionId}`);
-    },
-    onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
-  });
-
-  // The shared confirm dialog with the web's exact danger message — removing
-  // must spell out what the person loses (HCI 5).
-  const confirmRemove = async (link) => {
-    const ok = await confirm({
-      title: `Remove ${link.otherUserName} from your family?`,
-      message:
-        "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again.",
-      cancelLabel: 'Keep',
-      confirmLabel: 'Remove from family',
-      destructive: true,
-    });
-    if (ok) remove.mutate(link.id);
-  };
-
   const respondingTo = respond.isPending ? respond.variables?.id : null;
   const answeringAsk = respondToAsk.isPending ? respondToAsk.variables?.id : null;
   const cancelling = cancel.isPending ? cancel.variables : null;
-  const removing = remove.isPending ? remove.variables : null;
-  const promoting = makePrimary.isPending ? makePrimary.variables : null;
-  const chatOpening = openChat.isPending ? openChat.variables?.id : null;
 
   // Elder-seat guard (web ElderOnly parity, FAM-407 2026-07-19): entry points
   // are elder-gated, but deep links and imperative pushes reach the route for
@@ -456,56 +397,13 @@ export default function MyFamilyScreen() {
                 <LinkRow
                   key={l.id}
                   name={l.otherUserName}
-                  line={l.relationship || 'Family member'}
                   first={i === 0}
-                  collapsible
-                  badge={
-                    l.isPrimary ? (
-                      // A label, not a button — the trust token marks the one
-                      // main contact (trust semantics, never action blue).
-                      <View
-                        style={{
-                          backgroundColor: t.greenTint,
-                          borderWidth: 1,
-                          borderColor: t.greenLine,
-                          borderRadius: radius.pill,
-                          paddingVertical: 6,
-                          paddingHorizontal: 14,
-                        }}
-                      >
-                        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>
-                          Main contact
-                        </Text>
-                      </View>
-                    ) : null
-                  }
-                >
-                  <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
-                    {/* Private family chat (FAM-510): the link is the permission. */}
-                    <ActionChip
-                      label={chatOpening === l.id ? 'Opening…' : 'Message'}
-                      tonal
-                      disabled={chatOpening === l.id}
-                      onPress={() => openChat.mutate(l)}
-                      style={{ flex: 1 }}
-                    />
-                    {!l.isPrimary ? (
-                      <ActionChip
-                        label="Make main contact"
-                        disabled={promoting === l.id}
-                        onPress={() => makePrimary.mutate(l.id)}
-                        style={{ flex: 1 }}
-                      />
-                    ) : null}
-                    <ActionChip
-                      label="Remove"
-                      destructive
-                      disabled={removing === l.id}
-                      onPress={() => confirmRemove(l)}
-                      style={{ flex: 1 }}
-                    />
-                  </View>
-                </LinkRow>
+                  // The row is the person alone; how they are related, the Main
+                  // contact label and Message / Make main contact / Remove live
+                  // on their own page (owner call 2026-09-25: a name opens a
+                  // page, not a dropdown).
+                  onPress={() => router.push(`/family/member/${l.id}`)}
+                />
               ))}
             </View>
           )}

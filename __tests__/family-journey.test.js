@@ -114,27 +114,33 @@ function wrap(ui) {
 
 afterEach(() => jest.clearAllMocks());
 
+// The status line lives on the per-parent page (Today tab); the Home row is the
+// name alone and opens that page (owner call 2026-09-25: not a dropdown).
 describe('the parent status line', () => {
   test('says so plainly when the parent has checked in today', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
-    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
-    expect(await r.findByText('Checked in today')).toBeTruthy();
+    const r = await wrap(<FamilyParentScreen />);
+    await r.findByText('Friendships shared with you');
+    await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
+    // The header chip and the status line both say it.
+    expect((await r.findAllByText('Checked in today')).length).toBeGreaterThan(0);
   });
 
   test('reports a missing check-in without alarm', async () => {
     stubGet({
       elders: [{ ...JOURNEY.elders[0], checkedInToday: false, openNeedsCount: 0, openNeeds: [] }],
     });
-    const r = await wrap(<FamilyHomePanel />);
-    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
-    expect(await r.findByText('No check-in yet today')).toBeTruthy();
+    const r = await wrap(<FamilyParentScreen />);
+    await r.findByText('Friendships shared with you');
+    await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
+    expect((await r.findAllByText('No check-in yet today')).length).toBeGreaterThan(0);
   });
 
   test('counts open help requests, pluralised', async () => {
     stubGet();
-    const r = await wrap(<FamilyHomePanel />);
-    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
+    const r = await wrap(<FamilyParentScreen />);
+    await r.findByText('Friendships shared with you');
+    await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
     expect(await r.findByText('2 help requests open')).toBeTruthy();
   });
 
@@ -144,8 +150,9 @@ describe('the parent status line', () => {
         { ...JOURNEY.elders[0], openNeedsCount: 1, openNeeds: [JOURNEY.elders[0].openNeeds[0]] },
       ],
     });
-    const r = await wrap(<FamilyHomePanel />);
-    await fireEvent.press(await r.findByText('Margaret')); // name-only until touched
+    const r = await wrap(<FamilyParentScreen />);
+    await r.findByText('Friendships shared with you');
+    await fireEvent.press(r.getByRole('tab', { name: /^Today/ }));
     expect(await r.findByText('1 help request open')).toBeTruthy();
   });
 });
@@ -214,6 +221,18 @@ describe('watching alone never acts for the parent', () => {
   });
 });
 
+describe('the Home row', () => {
+  test('is the parent\'s name alone and opens that parent\'s page', async () => {
+    stubGet();
+    const r = await wrap(<FamilyHomePanel />);
+    await fireEvent.press(await r.findByText('Margaret'));
+    expect(mockPush).toHaveBeenCalledWith('/family/parent/elder-margaret');
+    // Nothing unfolds in the list.
+    expect(r.queryByText('Checked in today')).toBeNull();
+    expect(r.queryByText('Linked')).toBeNull();
+  });
+});
+
 describe('resilience', () => {
   test('a failed journey fetch still leaves the linked parent visible', async () => {
     api.get.mockImplementation((url) => {
@@ -224,7 +243,7 @@ describe('resilience', () => {
     });
     const r = await wrap(<FamilyHomePanel />);
     expect(await r.findByText('Margaret')).toBeTruthy();
-    await fireEvent.press(r.getByText('Margaret')); // name-only until touched
-    expect(r.getByText('Linked')).toBeTruthy();
+    await fireEvent.press(r.getByText('Margaret'));
+    expect(mockPush).toHaveBeenCalledWith('/family/parent/elder-margaret');
   });
 });

@@ -6,10 +6,10 @@
 // the helper's ElderCard draw (owner call 2026-08-26: "do the same for the
 // family" — one row grammar across all three seats, which is also what the
 // 2026-07-26 "make family look the same" call was asking for; the bordered
-// cards it chose then are gone from those hubs too). A linked person folds to
-// the name alone until touched (`collapsible`); a request stays open, because
-// its Accept / Not now must never hide behind a tap.
-import { useState } from 'react';
+// cards it chose then are gone from those hubs too). A linked person is the name
+// alone and opens their own page (`onPress`, owner call 2026-09-25: not a
+// dropdown); a request stays open, because its Accept / Not now must never hide
+// behind a tap.
 import { Pressable, Text, View } from 'react-native';
 import { ChevronRight } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
@@ -30,13 +30,10 @@ export function SectionHeading({ children }) {
 // One person-row: avatar + serif name, then a consent-first sentence. `badge`
 // sits right of the sentence (a label, never a button) and `children` carry
 // the row's actions below it. `first` widens the gap under the section
-// heading; later rows sit on a hairline. With `collapsible`, the row shows
-// the name alone until the name is touched — the sentence rides the spoken
-// label so nothing is hidden from a screen reader (HCI rule 1).
-export function LinkRow({ name, line, first, badge, collapsible = false, children }) {
+// heading; later rows sit on a hairline. With `onPress`, the row is a doorway
+// to the person's own page: the name alone and a chevron, no sentence or body.
+export function LinkRow({ name, line, first, badge, onPress, children }) {
   const { t, spacing, type, fontFamily } = useTheme();
-  const [open, setOpen] = useState(false);
-  const showBody = !collapsible || open;
 
   const identity = (
     <>
@@ -58,12 +55,11 @@ export function LinkRow({ name, line, first, badge, collapsible = false, childre
         borderTopColor: t.hairline,
       }}
     >
-      {collapsible ? (
+      {onPress ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${name}. ${line}`}
-          accessibilityState={{ expanded: open }}
-          onPress={() => setOpen((o) => !o)}
+          accessibilityLabel={name}
+          onPress={onPress}
           style={({ pressed }) => ({
             flexDirection: 'row',
             alignItems: 'center',
@@ -73,19 +69,14 @@ export function LinkRow({ name, line, first, badge, collapsible = false, childre
           })}
         >
           {identity}
-          <ChevronRight
-            size={18}
-            color={t.inkFaint2}
-            strokeWidth={1.8}
-            style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}
-          />
+          <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
         </Pressable>
       ) : (
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 64 }}>
           {identity}
         </View>
       )}
-      {showBody ? (
+      {!onPress ? (
         <View style={{ paddingBottom: spacing[3] }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
             <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>{line}</Text>

@@ -1,33 +1,25 @@
 // My Helpers (3d) — now the heart of the elder's Home: one row per helper,
-// name only until touched (owner call 2026-08-26, "like whatsapp"), opening
-// to the 7-node trust ladder, the family arrow and the mutual-consent "Start
-// the next step"; Trusted Friends / Building Trust segments above. Extracted
-// from the old dashboard route so Home owns it; parent provides the scroll
-// container.
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// name only (owner call 2026-08-26, "like whatsapp"). Touching the name opens
+// the helper's own page (owner call 2026-09-25, HelperSeatDetail) with the
+// 7-node trust ladder, the family and the mutual-consent "Start the next
+// step"; Trusted Friends / Building Trust segments above. Extracted from the
+// old dashboard route so Home owns it; parent provides the scroll container.
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ChevronRight } from '../icons';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { friendlyWriteError } from '../../api/client';
 import { listMyConnections } from '../../api/connections';
-import { getFamilyTransparency } from '../../api/family';
-import { listMyHelpRequests } from '../../api/needs';
-import { confirmTrustStep, getMyTrustScore, pauseTrustSteps, resumeTrustSteps } from '../../api/trust';
+import { getMyTrustScore } from '../../api/trust';
 import { useAuth } from '../../context/AuthContext';
-import { useConfirm } from '../../context/ConfirmContext';
-import { useToast } from '../../context/ToastContext';
 import { filterBlocked, getBlocked } from '../../lib/blockList';
 import { centerActionFor } from '../../lib/roles';
 import { filterByQuery } from '../../lib/searchFilter';
-import { markSeen, useUnseenTokens } from '../../lib/seenIds';
-import { seenKey } from '../../lib/storageKeys';
-import { trustOriginLine } from '../../lib/trustOrigin';
-import { TRUST_STEPS_CATEGORY, isStepNewsPending, stepNewsToken, stepNewsTokens } from '../../lib/trustStepBadges';
+import { useUnseenTokens } from '../../lib/seenIds';
+import { TRUST_STEPS_CATEGORY, isStepNewsPending, stepNewsTokens } from '../../lib/trustStepBadges';
 import { SHORT_STAGES } from '../../lib/trustStages';
+import useHelperSeatActions from '../../lib/useHelperSeatActions';
 import { useTheme } from '../../theme/ThemeContext';
-import FamilyShareToggle from '../family/FamilyShareToggle';
-import ActionChip from '../ui/ActionChip';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
@@ -37,28 +29,19 @@ import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
-import TrustLadder from './TrustLadder';
 
-
-function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, onConfirm, onPause, divider, originLine, news, onSeen, transparency = [] }) {
+// The row is the person alone, like a WhatsApp chat row (owner call
+// 2026-08-26: "only show the name of the person like whatsapp"). Touching the
+// name opens the helper's own page (owner call 2026-09-25: not a dropdown,
+// "a new page like whatsapp"), where the ladder, the family and the next step
+// live (HelperSeatDetail). The photo opens the profile, the way WhatsApp's own
+// row splits photo from name.
+function HelperCard({ card, conn, news, divider }) {
   const { t, type, fontFamily } = useTheme();
   const router = useRouter();
-  // The row is the person alone, like a WhatsApp chat row (owner call
-  // 2026-08-26: "only show the name of the person like whatsapp"). Touching
-  // the name opens the ladder AND the family section in one go — no second
-  // arrow to find (owner, same day: "it should also open the family, no
-  // double clicking"). This retires the 2026-08-17 fold-under-an-arrow rule:
-  // the row itself is the fold now. The photo opens the profile, the way
-  // WhatsApp's own row splits photo from name.
-  const [open, setOpen] = useState(false);
   const atTop = card.stageIndex >= 6;
   const stageNo = Math.min(card.stageIndex + 1, 7);
   const stageName = SHORT_STAGES[Math.min(card.stageIndex, 6)];
-  const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
-  // Backend rule (TrustService): the elder STARTS every step and the helper
-  // can only accept afterwards — so this card's button always reads Start
-  // (a helper-first confirm is refused server-side; owner call 2026-08-17).
-  const ctaLabel = 'Start the next step';
 
   return (
     <View style={divider ? { borderTopWidth: 1, borderTopColor: t.hairline } : null}>
@@ -73,22 +56,14 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
         >
           <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={48} />
         </Pressable>
-        {/* The stage rides the spoken label so collapsing never hides status
-            from a screen reader (HCI rule 1); the eye gets it on open. */}
+        {/* The stage rides the spoken label so the name-only row never hides
+            status from a screen reader (HCI rule 1). */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}${
             news ? (atTop ? '. New: fully trusted' : '. New: one step up, your move') : ''
           }`}
-          accessibilityState={{ expanded: open }}
-          onPress={() => {
-            // The badge stays until the elder starts the next step (owner
-            // call 2026-08-28: "until I accept, the badge should be there");
-            // only at the top of the ladder, where nothing is left to start,
-            // does opening the row read the news.
-            if (!open && news && atTop) onSeen?.();
-            setOpen((o) => !o);
-          }}
+          onPress={() => router.push(`/connection/${card.connectionId}`)}
           style={({ pressed }) => ({
             flex: 1,
             flexDirection: 'row',
@@ -110,148 +85,9 @@ function HelperCard({ card, conn, connReady, confirmedByMe, confirmedByOther, on
               next one yet (owner call 2026-08-28: "a badge near the name of
               the helper", "until I accept, the badge should be there"). */}
           <RowBadge count={news ? 1 : 0} />
-          <ChevronRight
-            size={18}
-            color={t.inkFaint2}
-            strokeWidth={1.8}
-            style={{ transform: [{ rotate: open ? '90deg' : '0deg' }] }}
-          />
+          <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
         </Pressable>
       </View>
-
-      {open ? (
-        <View style={{ paddingBottom: 14 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
-                Stage {stageNo} of 7 · {stageName}
-              </Text>
-              {/* Why this ladder exists and when it started (owner call
-                  2026-08-26): a friendship, or one of my posted requests by
-                  name. Waits for ['connections'], which carries the date. */}
-              {originLine ? (
-                <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>
-                  {originLine}
-                </Text>
-              ) : null}
-            </View>
-            {/* Message rides the stage line (owner call 2026-08-17: it does
-                not need a line of its own). */}
-            {conn ? (
-              <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${card.connectionId}`)} />
-            ) : null}
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`Trust score ${card.total} of ${card.totalMax}. Open your Trust Score page`}
-              onPress={() => router.push('/trust')}
-              hitSlop={10}
-              style={({ pressed }) => ({
-                minWidth: 40,
-                minHeight: 40,
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: pressed ? 0.7 : 1,
-              })}
-            >
-              <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-                {card.total}
-                <Text style={{ fontWeight: '400', fontSize: type.caption, fontVariant: ['tabular-nums'] }}>/{card.totalMax}</Text>
-              </Text>
-            </Pressable>
-          </View>
-
-          <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 12 }} />
-
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-            <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
-            {!atTop ? (
-              <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
-            ) : null}
-            <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
-          </View>
-
-          {atTop ? (
-            // The product's headline achievement gets a moment, not one meta line
-            // (rulebook: peak-end — engineer the peak).
-            <View
-              style={{
-                backgroundColor: t.greenTint,
-                borderWidth: 1,
-                borderColor: t.greenLine,
-                borderRadius: 12,
-                padding: 12,
-                marginTop: 12,
-              }}
-            >
-              <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.greenDeep }}>
-                Fully trusted
-              </Text>
-              <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 18, marginTop: 2 }}>
-                Seven steps, climbed together. The whole ladder is complete.
-              </Text>
-            </View>
-          ) : confirmedByMe && !confirmedByOther ? (
-            <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-              You've started the next step. Waiting for {card.customerName} to accept.
-            </Text>
-          ) : !connReady ? (
-            // Confirmed flags are unknown until ['connections'] resolves — a
-            // premature "Start the next step" would 400 as already-confirmed.
-            null
-          ) : (
-            // Filled blue, not the tonal chip (owner call 2026-08-28: "start
-            // the next step also in blue"): the step is the row's one action.
-            <Button
-              title={ctaLabel}
-              variant="primary"
-              size="small"
-              onPress={onConfirm}
-              style={{ marginTop: 12 }}
-            />
-          )}
-
-          {/* Family visibility (FAM-404) + the shared updates thread (FAM-511),
-              open with the row. sharedWithFamily lives on the connection
-              object, so the section waits for ['connections']. */}
-          {conn ? (
-            <>
-              <FamilyShareToggle connectionId={conn.id} shared={conn.sharedWithFamily} />
-              {/* Step 4 transparency: nothing about you happens out of your
-                  sight — you always see which of your family connected with
-                  this helper. Wording is the web ElderDashboard's, verbatim. */}
-              {transparency.map((f) => (
-                <Text
-                  key={`${f.helperUserId}:${f.familyMemberName}`}
-                  style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 10 }}
-                >
-                  {f.inherited
-                    ? `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} can message ${f.helperName} through your shared trust.`
-                    : `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} and ${f.helperName} are talking.`}
-                </Text>
-              ))}
-              {conn.sharedWithFamily ? (
-                <ActionChip
-                  label="Open the family group"
-                  onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
-                  style={{ marginTop: 8, alignSelf: 'flex-start' }}
-                />
-              ) : null}
-            </>
-          ) : null}
-
-          {/* Trust steps can be paused/resumed (HCI rule 3) — quiet, in the
-              right corner, never crowding the CTA. */}
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 }}>
-            <Button
-              title="Take a break"
-              variant="text"
-              onPress={onPause}
-              accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
-              style={{ paddingHorizontal: 0 }}
-            />
-          </View>
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -260,10 +96,9 @@ export default function MyHelpersPanel() {
   const { t, type, fontFamily } = useTheme();
   // Blocks are per account (blockList.js), so the read is keyed by who is in.
   const { user } = useAuth();
-  const { showToast } = useToast();
-  const askConfirm = useConfirm();
-  const queryClient = useQueryClient();
   const router = useRouter();
+  // Resume for a paused card; Start / Take a break live on the helper's page.
+  const { resume } = useHelperSeatActions();
   const [seg, setSeg] = useState('building');
   // The search box above the list (owner call 2026-08-28, WhatsApp): narrows
   // the open segment by name.
@@ -278,93 +113,15 @@ export default function MyHelpersPanel() {
     queryFn: listMyConnections,
   });
   const connOf = (id) => (connections ?? []).find((c) => c.id === id);
-  // My posted requests, to say which one a helper is on (trustOrigin.js).
-  // Same key as Posted Help and the tab shell, so react-query dedupes it.
-  const { data: needsMine } = useQuery({
-    queryKey: ['needs-mine'],
-    queryFn: listMyHelpRequests,
-  });
   const { data: blocked } = useQuery({
     queryKey: ['block-list', user?.userId],
     queryFn: () => getBlocked(user?.userId),
   });
-  // Step 4 transparency: which of my family are connected with which helpers
-  // (web ElderDashboard). Optional context: the query is allowed to error —
-  // react-query keeps retrying quietly — and the read below folds missing
-  // data to empty, so the cards render with nothing to tell, never a loud
-  // failure. (No try/catch in the queryFn: caching [] as a SUCCESS would hide
-  // the notes until an unrelated invalidation.)
-  const { data: familyTransparency } = useQuery({
-    queryKey: ['family-transparency'],
-    queryFn: getFamilyTransparency,
-  });
-  const transparencyFor = (otherUserId) =>
-    (familyTransparency ?? []).filter((f) => f.helperUserId === otherUserId);
   // Ladders that moved and are waiting on the elder's move: a helper accepted
   // a step and the elder has not started the next one (owner call
   // 2026-08-28). Seeded on first run, so the friendships already here never
   // arrive as news (trustStepBadges.js).
   const stepNews = useUnseenTokens(user?.userId, TRUST_STEPS_CATEGORY, stepNewsTokens(connections), { seed: true });
-  const stepSeenKey = seenKey(user?.userId, TRUST_STEPS_CATEGORY);
-
-  const confirm = useMutation({
-    mutationFn: confirmTrustStep,
-    onSuccess: (_r, connectionId) => {
-      const c = connOf(connectionId);
-      showToast(
-        c && !c.confirmedByOther
-          ? `Step confirmed. Waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed. One step up the ladder!',
-        'success'
-      );
-      // Starting the next step is the elder's move: the news badge for this
-      // ladder is done with (trustStepBadges.js, isStepNewsPending).
-      if (c) markSeen(stepSeenKey, [stepNewsToken(c)]);
-      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
-    },
-    onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
-  });
-
-  // Pausing is reversible on the same connection id, so the way back rides in
-  // the toast (rulebook: undo over confirmation) — no dialog stands in front.
-  const pause = useMutation({
-    mutationFn: pauseTrustSteps,
-    onSuccess: (_r, connectionId) => {
-      showToast('Paused. You can resume any time.', 'info', {
-        actionLabel: 'Undo',
-        onAction: () => resume.mutate(connectionId),
-      });
-      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
-    },
-    onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
-  });
-  const resume = useMutation({
-    mutationFn: resumeTrustSteps,
-    onSuccess: () => {
-      showToast('Welcome back. Trust steps and messages are on again.', 'success');
-      queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
-      queryClient.invalidateQueries({ queryKey: ['connections'] });
-    },
-    onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
-  });
-
-  // askConfirm, not confirm: `confirm` is already the trust-step mutation.
-  const confirmStep = async (card) => {
-    // Always the Start dialog: only the elder can begin a step (TrustService).
-    const ok = await askConfirm({
-      title: 'Start the next step?',
-      message: `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
-      cancelLabel: 'Not yet',
-      confirmLabel: 'Start',
-    });
-    if (ok) confirm.mutate(card.connectionId);
-  };
-
   // Blocked people never appear in the relationship hub (UGC 1.2); score
   // cards map back to their connection for the other person's id.
   const customers = filterBlocked(
@@ -446,26 +203,7 @@ export default function MyHelpersPanel() {
               divider={i > 0}
               card={card}
               conn={c}
-              originLine={c ? trustOriginLine(c, needsMine?.content) : null}
-              transparency={c ? transparencyFor(c.otherUserId) : []}
-              connReady={!!connections}
-              confirmedByMe={!!c?.confirmedByMe}
-              confirmedByOther={!!c?.confirmedByOther}
               news={isStepNewsPending(c, stepNews)}
-              onSeen={() => c && markSeen(stepSeenKey, [stepNewsToken(c)])}
-              onConfirm={() => confirmStep(card)}
-              onPause={async () => {
-                // Asks first (owner call 2026-08-17): a mis-tap here
-                // silences a friendship, so the dialog stands in front and
-                // the undo toast stays as the second net.
-                const ok = await askConfirm({
-                  title: 'Take a break?',
-                  message: `Trust steps and messages with ${card.customerName} pause until either of you resumes. Nothing is lost.`,
-                  cancelLabel: 'Not now',
-                  confirmLabel: 'Take a break',
-                });
-                if (ok) pause.mutate(card.connectionId);
-              }}
             />
           );
         })

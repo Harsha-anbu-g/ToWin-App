@@ -167,3 +167,24 @@ home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
 53. [ ] Backlog from the extraction review (all small): move friendlyWriteError/friendlyAuthError
         prose helpers from src/api/client.js to src/lib; reportUser takes a named-fields object
         + validation; move discover* out of connections.js and geocodePlace out of profile.js.
+54. [ ] Phone web looks like iOS (owner call 2026-09-04): pull-to-refresh, clear glass lens,
+        sized switches, glass Ask AI pill + card sheet, shell CSS — built local-only, 1635
+        tests green. Next: owner checks on the phone (LAN recipe in memory), then commit and
+        `npx vercel deploy --prod --archive=tgz` from App/ after "push".
+
+# Queue — 2026-09-25 (owner messages, in the order given)
+
+55. [x] Check-in: "Take me home" pinned to the bottom of the screen (Screen `footer` prop,
+        app/checkin.jsx). 37 tests green across 5 suites. Awaiting owner review; not committed.
+56. [x] Home: tapping a helper's / elder's name opens a person page (app/connection/[connectionId]),
+        not a dropdown. Family seat rows go to the existing /family/parent/:id. Plan approved:
+        ~/.claude/plans/dazzling-orbiting-wind.md. Elder's own My Family screen left alone.
+57. [x] Tab bar: remove the sliding glass bubble (lens) only; keep the frosted capsule. Do NOT delete
+        tabLensGeometry.js or its test without owner OK (they become unused).
+        Items 55-57 done 2026-09-25: full jest 200 suites / 1655 tests green, lint 0 errors.
+        Uncommitted, unpushed, not yet seen on a device. tabLensGeometry.js + its test are now
+        unused: delete only with owner OK.
+58. [x] 2026-09-25 owner said yes to both follow-ups: deleted src/lib/tabLensGeometry.js and
+        __tests__/tab-lens-geometry.test.js (explicit OK); My Family member rows now open
+        app/family/member/[linkId].jsx (Message / Make main contact / Remove moved there via
+        src/lib/useFamilyMemberActions.js). LinkRow's dead `collapsible` branch removed.

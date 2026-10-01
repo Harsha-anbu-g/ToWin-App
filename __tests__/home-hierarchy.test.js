@@ -199,14 +199,15 @@ test('elder/helper home content contributes zero filled primaries: the shell FAB
 // The one deliberate exception, named: the trust-step buttons are filled blue
 // (owner calls 2026-08-28: "accept the next step should be in blue
 // background"; "start the next step also in blue in elders log in"). They
-// live inside an opened row, one per friendship, and nowhere else on the hub
-// may a Button say variant="primary".
+// live on each person's own page (owner call 2026-09-25: a name opens a page,
+// not a dropdown), one per page, and nowhere else on the hub may a Button say
+// variant="primary".
 test('the trust-step buttons are the hubs\' only explicit primaries', () => {
   const explicitPrimaries = (src) => (src.match(/variant="primary"/g) ?? []).length;
-  expect(explicitPrimaries(read('src/components/trust/MyHelpersPanel.jsx'))).toBe(1);
-  expect(explicitPrimaries(read('src/components/trust/MyEldersPanel.jsx'))).toBe(1);
-  const rest = ELDER_HELPER_HOME_CLOSURE.filter((f) => !f.includes('MyHelpersPanel') && !f.includes('MyEldersPanel'));
-  expect(rest.filter((f) => explicitPrimaries(read(f)) > 0)).toEqual([]);
+  expect(explicitPrimaries(read('src/components/trust/HelperSeatDetail.jsx'))).toBe(1);
+  expect(explicitPrimaries(read('src/components/trust/ElderSeatDetail.jsx'))).toBe(1);
+  // The list rows themselves carry none.
+  expect(ELDER_HELPER_HOME_CLOSURE.filter((f) => explicitPrimaries(read(f)) > 0)).toEqual([]);
 });
 
 test('family home surface holds exactly one filled primary per state', () => {

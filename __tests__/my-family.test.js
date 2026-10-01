@@ -1,16 +1,17 @@
 // My Family (FAM-403), locked by tests: web-exact copy, the elder-seat
 // (iAmElder) filter, the 5-seat cap that counts open requests, the danger
-// remove confirm (DELETE only after "Remove from family"), main-contact
-// promotion, and the elder-only MenuSheet entry.
+// name-only member rows that open the member's own page (owner call
+// 2026-09-25; remove confirm, main-contact promotion and Message live in
+// family-member-page.test.js), and the elder-only MenuSheet entry.
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
 
+const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn(), canGoBack: () => true }),
   useFocusEffect: (effect) => require('react').useEffect(effect, [effect]),
   Redirect: () => null,
 }));
@@ -152,14 +153,17 @@ test('load: promises card, seat counter, and member rows render web-exact — fa
 
   await openMembersTab(r);
   await r.findByText('sarah');
-  // Members fold to the name until touched (owner call 2026-08-26): open both.
+  // Members are the name alone (owner call 2026-08-26) and open their own page
+  // (owner call 2026-09-25) — nothing unfolds in the list.
+  r.getByText('tom');
+  expect(r.queryByText('Daughter')).toBeNull();
+  expect(r.queryByText('Main contact')).toBeNull();
+  expect(r.queryByRole('button', { name: 'Make main contact' })).toBeNull();
+  expect(r.queryByRole('button', { name: 'Message' })).toBeNull();
   await fireEvent.press(r.getByText('sarah'));
-  r.getByText('Daughter');
-  r.getByText('Main contact'); // gold badge on the primary row
+  expect(mockPush).toHaveBeenCalledWith('/family/member/m1');
   await fireEvent.press(r.getByText('tom'));
-  r.getByText('Family member'); // relationship fallback
-  // Only the non-primary member offers promotion.
-  expect(r.getAllByRole('button', { name: 'Make main contact' })).toHaveLength(1);
+  expect(mockPush).toHaveBeenCalledWith('/family/member/m2');
 
   r.getByText('They want to join your family');
   r.getByText("Niece · wants to join as your family. It's your choice.");
@@ -179,67 +183,6 @@ test('cap: at 5 seats counting open requests, the add button is replaced by the 
     "You've reached the limit of 5 family members, counting open requests. Remove someone or cancel a request to add another person."
   );
   expect(r.queryByRole('button', { name: '+ Add a family member' })).toBeNull();
-});
-
-// This used to spy on Alert.alert and call its button callback by hand, because
-// Alert rendered natively and was unreachable from the tree. The dialog is now a
-// real component, so the test presses the actual button — which also proves the
-// path works on web, where Alert.alert is a no-op and this flow was dead.
-test('remove: confirm quotes the web danger message; DELETE fires only on confirm', async () => {
-  stubGet(fullLinks);
-  const r = await wrap(<MyFamilyScreen />);
-  await r.findByText('My Family (4/5)');
-  await openMembersTab(r);
-  await r.findByText('sarah');
-  await fireEvent.press(r.getByText('sarah')); // name-only until touched
-
-  // Members render sarah (primary) then tom — press sarah's Remove.
-  // NOT awaited: the handler returns confirm()'s promise, which only settles
-  // once a dialog button is pressed. Awaiting the press would make act() wait
-  // for a promise that this line itself is blocking — an instant deadlock.
-  fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
-
-  await r.findByText('Remove sarah from your family?');
-  r.getByText(
-    "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again."
-  );
-  r.getByLabelText('Keep');
-  // Opening the dialog must not delete anything on its own.
-  expect(api.delete).not.toHaveBeenCalled();
-
-  await fireEvent.press(r.getByLabelText('Remove from family'));
-  expect(api.delete).toHaveBeenCalledWith('/family/links/m1');
-  await r.findByText('Removed from your family.');
-});
-
-test('remove: keeping the family member fires no DELETE', async () => {
-  stubGet(fullLinks);
-  const r = await wrap(<MyFamilyScreen />);
-  await r.findByText('My Family (4/5)');
-  await openMembersTab(r);
-  await r.findByText('sarah');
-  await fireEvent.press(r.getByText('sarah')); // name-only until touched
-
-  fireEvent.press(r.getAllByRole('button', { name: 'Remove' })[0]);
-  await r.findByText('Remove sarah from your family?');
-  fireEvent.press(r.getByLabelText('Keep'));
-
-  await waitFor(() => expect(r.queryByText('Remove sarah from your family?')).toBeNull());
-  expect(api.delete).not.toHaveBeenCalled();
-});
-
-test('make main contact POSTs primary and toasts', async () => {
-  stubGet(fullLinks);
-  const r = await wrap(<MyFamilyScreen />);
-  await r.findByText('My Family (4/5)');
-  await openMembersTab(r);
-  await r.findByText('tom');
-
-  await fireEvent.press(await r.findByText('tom')); // tom's row is name-only until touched
-
-  await fireEvent.press(r.getByRole('button', { name: 'Make main contact' }));
-  expect(api.post).toHaveBeenCalledWith('/family/links/m2/primary');
-  await r.findByText('Main contact updated.');
 });
 
 test('accept and decline post the respond payloads and toast the elder-side web copy', async () => {
@@ -372,19 +315,8 @@ test('power ask: Yes and Not now post the respond payloads and toast', async () 
   await r.findByText('Done. They can do this for you now.');
 });
 
-// ── FAM-510 (elder side): the private chat with a family member. ─────────
-test('Message opens the family chat through the server', async () => {
-  stubGet(fullLinks);
-  api.post.mockResolvedValue({ data: 'chat-77' });
-  const r = await wrap(<MyFamilyScreen />);
-  await r.findByText('My Family (4/5)');
-  await openMembersTab(r);
-  await r.findByText('sarah');
-  await fireEvent.press(r.getByText('sarah')); // name-only until touched
-
-  await fireEvent.press(r.getAllByRole('button', { name: 'Message' })[0]);
-  expect(api.post).toHaveBeenCalledWith('/family/chat/f1');
-});
+// FAM-510 (elder side): Message, Make main contact and Remove now live on the
+// member's own page — see family-member-page.test.js.
 
 test('MenuSheet: My Family row shows for elders only', async () => {
   const elder = await wrap(<MenuSheet visible onClose={jest.fn()} />);

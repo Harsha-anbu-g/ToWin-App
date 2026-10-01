@@ -1,12 +1,13 @@
 // Step 4 transparency, elder seat (web ElderDashboard 2026-07): nothing about
-// you happens out of your sight — under each helper card the elder sees which
+// you happens out of your sight — on each helper's page the elder sees which
 // of her family members is talking with that helper, or can reach them through
 // her shared trust. Wording is the website's, verbatim: "Your daughter Anna
 // can message Priya through your shared trust." / "Your son Ravi and Priya
 // are talking." The endpoint is optional context: when it fails, the cards
-// render as if there were nothing to tell.
+// render as if there were nothing to tell. (The card became the helper's own
+// page on 2026-09-25: a name opens a page, not a dropdown.)
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import { ThemeProvider } from '../src/theme/ThemeContext';
 import { ToastProvider } from '../src/context/ToastContext';
 import { ConfirmProvider } from '../src/context/ConfirmContext';
@@ -37,7 +38,7 @@ jest.mock('../src/context/AuthContext', () => ({
 jest.mock('../src/lib/useReducedMotion', () => ({ useReducedMotion: () => true }));
 
 import api from '../src/api/client';
-import MyHelpersPanel from '../src/components/trust/MyHelpersPanel';
+import HelperSeatDetail from '../src/components/trust/HelperSeatDetail';
 
 const wrap = (ui) =>
   render(
@@ -89,13 +90,11 @@ const mockApis = (transparency) => {
 
 afterEach(() => jest.clearAllMocks());
 
-test('an open helper card names the family member talking with that helper, in the website words', async () => {
+test('the helper page names the family member talking with that helper, in the website words', async () => {
   mockApis([
     { familyMemberName: 'Ravi', relationship: 'Son', helperUserId: 'u1', helperName: 'Priya Sharma', inherited: false },
   ]);
-  const r = await wrap(<MyHelpersPanel />);
-
-  await fireEvent.press(await r.findByText('Priya Sharma'));
+  const r = await wrap(<HelperSeatDetail connectionId="c1" />);
 
   await r.findByText('Your son Ravi and Priya Sharma are talking.');
 });
@@ -104,9 +103,7 @@ test('an inherited standing reads as shared trust, not a chat', async () => {
   mockApis([
     { familyMemberName: 'Anna', relationship: 'Daughter', helperUserId: 'u1', helperName: 'Priya Sharma', inherited: true },
   ]);
-  const r = await wrap(<MyHelpersPanel />);
-
-  await fireEvent.press(await r.findByText('Priya Sharma'));
+  const r = await wrap(<HelperSeatDetail connectionId="c1" />);
 
   await r.findByText('Your daughter Anna can message Priya Sharma through your shared trust.');
 });
@@ -115,36 +112,29 @@ test('a missing relationship falls back to "family member"', async () => {
   mockApis([
     { familyMemberName: 'Anna', relationship: null, helperUserId: 'u1', helperName: 'Priya Sharma', inherited: false },
   ]);
-  const r = await wrap(<MyHelpersPanel />);
-
-  await fireEvent.press(await r.findByText('Priya Sharma'));
+  const r = await wrap(<HelperSeatDetail connectionId="c1" />);
 
   await r.findByText('Your family member Anna and Priya Sharma are talking.');
 });
 
-test('the note stays on its own helper card and off the folded row', async () => {
+test('the note stays on its own helper page', async () => {
   mockApis([
     { familyMemberName: 'Ravi', relationship: 'Son', helperUserId: 'u1', helperName: 'Priya Sharma', inherited: false },
   ]);
-  const r = await wrap(<MyHelpersPanel />);
 
-  // Folded rows carry the name alone — no note yet.
-  await r.findByText('Priya Sharma');
-  expect(r.queryByText(/are talking\./)).toBeNull();
+  // Tom's page carries no note of Priya's.
+  const tom = await wrap(<HelperSeatDetail connectionId="c2" />);
+  await tom.findByText('Stage 2 of 7 · Messaging');
+  expect(tom.queryByText(/are talking\./)).toBeNull();
+  await tom.unmount();
 
-  // Tom's card opens without Priya's note.
-  await fireEvent.press(r.getByText('Tom Walker'));
-  expect(r.queryByText(/are talking\./)).toBeNull();
-
-  await fireEvent.press(r.getByText('Priya Sharma'));
-  await r.findByText('Your son Ravi and Priya Sharma are talking.');
+  const priya = await wrap(<HelperSeatDetail connectionId="c1" />);
+  await priya.findByText('Your son Ravi and Priya Sharma are talking.');
 });
 
-test('a failed transparency call stays quiet — the card still works', async () => {
+test('a failed transparency call stays quiet — the page still works', async () => {
   mockApis(new Error('network down'));
-  const r = await wrap(<MyHelpersPanel />);
-
-  await fireEvent.press(await r.findByText('Priya Sharma'));
+  const r = await wrap(<HelperSeatDetail connectionId="c1" />);
 
   await r.findByText('Stage 3 of 7 · Phone');
   expect(r.queryByText(/are talking\.|shared trust\./)).toBeNull();

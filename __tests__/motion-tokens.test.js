@@ -133,15 +133,12 @@ test('no magic durations: every duration is a named beat (brand ledger aside)', 
   expect(failures).toEqual([]);
 });
 
-// The glass lens (owner call 2026-08-17: "like the WhatsApp slider") glides
-// with a CRITICALLY DAMPED Animated.spring — high damping, no visible
-// overshoot, so the no-bounce law's intent holds while the glide tracks the
-// finger organically. Only these two files carry that exemption; anything
-// else reaching for a spring still fails here.
-const SPRING_EXEMPT = [
-  path.join('app', '(tabs)', '_layout.jsx'),
-  path.join('src', 'components', 'ui', 'SegmentedControl.jsx'),
-];
+// The family switch's glass lens (owner call 2026-08-17: "like the WhatsApp
+// slider") glides with a CRITICALLY DAMPED Animated.spring — high damping, no
+// visible overshoot, so the no-bounce law's intent holds while the glide tracks
+// the finger organically. Only this file carries that exemption (the tab bar's
+// own lens went 2026-09-25); anything else reaching for a spring still fails here.
+const SPRING_EXEMPT = [path.join('src', 'components', 'ui', 'SegmentedControl.jsx')];
 
 test('no inline curves, no weak built-ins, no bounce, no layout animation', () => {
   const BANNED = [
@@ -160,8 +157,8 @@ test('no inline curves, no weak built-ins, no bounce, no layout animation', () =
     const code = readCode(file);
     for (const re of BANNED) {
       if (re === SPRING && SPRING_EXEMPT.includes(rel)) {
-        // The lens files may spring, but never with visible bounce: every
-        // spring they declare must keep damping in the critical range.
+        // The lens file may spring, but never with visible bounce: every
+        // spring it declares must keep damping in the critical range.
         const dampings = [...code.matchAll(/damping:\s*(\d+)/g)].map((m) => Number(m[1]));
         if (/\bAnimated\.spring\b/.test(code) && (dampings.length === 0 || dampings.some((d) => d < 20))) {
           failures.push(`${rel} springs with visible bounce (damping < 20)`);
