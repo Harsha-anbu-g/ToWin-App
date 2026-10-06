@@ -11,23 +11,22 @@ import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { tr } from '../../i18n';
 
 // Exact web copy per side — FamilyHome.jsx vs MyFamily.jsx. The only
 // differences the web has: title, consent helper, relationship label, toast.
 const COPY = {
   elder: {
-    title: 'Add your parent',
-    helper:
-      'Type their exact Towinly username, email or phone. They must say yes before you see anything.',
-    relationshipLabel: 'Relationship (what you are to them)',
-    successToast: 'Request sent. You become family here once they accept.',
+    get title() { return tr('Add your parent'); },
+    get helper() { return tr('Type their exact Towinly username, email or phone. They must say yes before you see anything.'); },
+    get relationshipLabel() { return tr('Relationship (what you are to them)'); },
+    get successToast() { return tr('Request sent. You become family here once they accept.'); },
   },
   family: {
-    title: 'Add a family member',
-    helper:
-      'Type their exact Towinly username, email or phone. They must say yes before anything is shared.',
+    get title() { return tr('Add a family member'); },
+    get helper() { return tr('Type their exact Towinly username, email or phone. They must say yes before anything is shared.'); },
     relationshipLabel: 'Relationship',
-    successToast: 'Request sent. It becomes a family link when they accept.',
+    get successToast() { return tr('Request sent. It becomes a family link when they accept.'); },
   },
 };
 
@@ -58,14 +57,14 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
     // The backend's messages are already elder-friendly safe strings — surface
     // them first, fall back to the web's generic line.
     onError: (err) =>
-      setFormError(err?.response?.data?.message || 'Could not send the request. Please try again.'),
+      setFormError(err?.response?.data?.message || tr('Could not send the request. Please try again.')),
   });
 
   const submit = () => {
     // The web relies on the browser's `required`; mobile gates here with the
     // backend's own blank-identifier message so no invented copy appears.
     if (!identifier.trim()) {
-      setFormError('Please enter a username, email, or phone number');
+      setFormError(tr('Please enter a username, email, or phone number'));
       return;
     }
     setFormError('');
@@ -96,10 +95,10 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
       {/* Autofill is told to stand down: this identifies the OTHER person,
           and iOS/Android would otherwise offer the user's own handle. */}
       <Input
-        label="Username, email or phone"
+        label={tr('Username, email or phone')}
         value={identifier}
         onChangeText={setIdentifier}
-        placeholder="Exactly as they use it on Towinly"
+        placeholder={tr('Exactly as they use it on Towinly')}
         autoCapitalize="none"
         autoCorrect={false}
         textContentType="none"
@@ -114,7 +113,7 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
         label={copy.relationshipLabel}
         value={relationship}
         onChangeText={setRelationship}
-        placeholder="Daughter, Son, Niece…"
+        placeholder={tr('Daughter, Son, Niece…')}
         autoCapitalize="words"
         returnKeyType="done"
         style={{ marginTop: spacing[4] }}
@@ -133,12 +132,12 @@ export default function AddParentForm({ onClose, side = 'elder' }) {
         {/* "Send request" is the screen's one filled primary while the form is
             open — the "+ Add …" pill that opened it is hidden either side. */}
         <Button
-          title={send.isPending ? 'Sending…' : 'Send request'}
+          title={send.isPending ? tr('Sending…') : tr('Send request')}
           onPress={submit}
           loading={send.isPending}
           style={{ flex: 1 }}
         />
-        <Button title="Cancel" variant="secondary" onPress={onClose} style={{ flex: 1 }} />
+        <Button title={tr('Cancel')} variant="secondary" onPress={onClose} style={{ flex: 1 }} />
       </View>
     </View>
   );

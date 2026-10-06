@@ -29,6 +29,7 @@ import SearchField, { SearchMiss } from '../ui/SearchField';
 import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
+import { tr } from '../../i18n';
 
 // The row is the person alone, like a WhatsApp chat row (owner call
 // 2026-08-26: "only show the name of the person like whatsapp"). Touching the
@@ -41,14 +42,14 @@ function HelperCard({ card, conn, news, divider }) {
   const router = useRouter();
   const atTop = card.stageIndex >= 6;
   const stageNo = Math.min(card.stageIndex + 1, 7);
-  const stageName = SHORT_STAGES[Math.min(card.stageIndex, 6)];
+  const stageName = tr(SHORT_STAGES[Math.min(card.stageIndex, 6)]);
 
   return (
     <View style={divider ? { borderTopWidth: 1, borderTopColor: t.hairline } : null}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View ${card.customerName}'s profile`}
+          accessibilityLabel={tr("View {customerName}'s profile", { customerName: card.customerName })}
           disabled={!conn}
           onPress={() => router.push(`/user/${conn.otherUserId}`)}
           hitSlop={6}
@@ -60,9 +61,7 @@ function HelperCard({ card, conn, news, divider }) {
             status from a screen reader (HCI rule 1). */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${card.customerName}. Stage ${stageNo} of 7, ${stageName}${
-            news ? (atTop ? '. New: fully trusted' : '. New: one step up, your move') : ''
-          }`}
+          accessibilityLabel={tr('{customerName}. Stage {stageNo} of 7, {stageName}', { customerName: card.customerName, stageNo, stageName }) + (news ? (atTop ? tr('. New: fully trusted') : tr('. New: one step up, your move')) : '')}
           onPress={() => router.push(`/connection/${card.connectionId}`)}
           style={({ pressed }) => ({
             flex: 1,
@@ -153,7 +152,7 @@ export default function MyHelpersPanel() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
-        My Helpers
+        {tr('My Helpers')}
       </Text>
 
       {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}
@@ -164,8 +163,8 @@ export default function MyHelpersPanel() {
           // shelf. The order now matches the default segment below.
           // No counts on these labels (owner call 2026-08-22: "it should not
           // show the number near the building trust, trusted friends").
-          { key: 'building', label: 'Building Trust' },
-          { key: 'trusted', label: 'Trusted Friends' },
+          { key: 'building', label: tr('Building Trust') },
+          { key: 'trusted', label: tr('Trusted Friends') },
         ]}
         value={seg}
         onChange={setSeg}
@@ -177,7 +176,7 @@ export default function MyHelpersPanel() {
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (
-        <LoadError what="your helpers" onRetry={refetch} style={{ marginTop: 16 }} />
+        <LoadError what={tr('your helpers')} onRetry={refetch} style={{ marginTop: 16 }} />
       ) : query.trim() && shown.length === 0 && paused.length === 0 ? (
         // A search that finds nobody says so, and never borrows the empty
         // state below, whose doors are for someone with no one yet.
@@ -186,13 +185,13 @@ export default function MyHelpersPanel() {
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14, marginTop: 12 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
-              ? 'No fully trusted friends yet. Every ladder ends here.'
-              : 'No ladders in progress. Add a friend and trust starts growing.'}
+              ? tr('No fully trusted friends yet. Every ladder ends here.')
+              : tr('No ladders in progress. Add a friend and trust starts growing.')}
           </Text>
           {/* Both doors (owner call 2026-08-28, "same for my helper"): the
               elder's own verb, worded as the centre button, then Find friends. */}
           <Button title={centerActionFor('ELDER').label} variant="secondary" onPress={() => router.push('/(tabs)/action')} style={{ marginTop: 16 }} />
-          <Button title="Find friends" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 10 }} />
+          <Button title={tr('Find friends')} variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 10 }} />
         </View>
       ) : (
         shown.map((card, i) => {

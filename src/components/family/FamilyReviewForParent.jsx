@@ -18,6 +18,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { tr } from '../../i18n';
 
 // The one place a star glyph is allowed — it IS the rating, not decoration.
 // Same fill convention as the feedback screen: trustGold filled, idleGrey empty.
@@ -32,7 +33,7 @@ function StarPicker({ question, value, onChange }) {
         <Pressable
           key={n}
           accessibilityRole="radio"
-          accessibilityLabel={`${n} star${n === 1 ? '' : 's'}`}
+          accessibilityLabel={(n === 1 ? tr('1 star') : tr('{n} stars', { n }))}
           aria-checked={n === value}
           onPress={() => onChange(n)}
           style={({ pressed }) => ({
@@ -68,11 +69,11 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
   // rather than in the card's server-error slot.
   const [commentError, setCommentError] = useState('');
 
-  const parent = elderName || 'your parent';
+  const parent = elderName || tr('your parent');
   const firstName = (helper?.helperName || 'them').split(' ')[0];
   // Written once: it is drawn above the stars and it is also what labels them
   // for a screen reader, and those two must never drift apart.
-  const question = `How has ${firstName} been for ${parent}?`;
+  const question = tr('How has {firstName} been for {parent}?', { firstName, parent });
 
   const save = useMutation({
     mutationFn: () =>
@@ -86,10 +87,10 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
     onSuccess: () => {
       setDone(true);
       setOpen(false);
-      showToast(`Review saved for ${parent}. ${firstName} will see you wrote it.`, 'success');
+      showToast(tr('Review saved for {parent}. {firstName} will see you wrote it.', { parent, firstName }), 'success');
     },
     onError: (err) =>
-      setErrMsg(err?.response?.data?.message || 'Could not save that review. Please try again.'),
+      setErrMsg(err?.response?.data?.message || tr('Could not save that review. Please try again.')),
   });
 
   // Stopped before it is posted, and named. The stars are untouched and the
@@ -117,7 +118,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
           marginTop: spacing[3],
         }}
       >
-        Review saved for {parent}, with your name on it.
+        {tr('Review saved for {parent}, with your name on it.', { parent })}
       </Text>
     );
   }
@@ -125,7 +126,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
   if (!open) {
     return (
       <ActionChip
-        label={`Leave a review for ${parent}`}
+        label={tr('Leave a review for {parent}', { parent })}
         tonal
         onPress={() => setOpen(true)}
         style={{ marginTop: spacing[3] }}
@@ -151,7 +152,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
       <StarPicker question={question} value={rating} onChange={setRating} />
 
       <Input
-        label="A few words (optional)"
+        label={tr('A few words (optional)')}
         value={comment}
         onChangeText={(value) => {
           setComment(value);
@@ -160,7 +161,7 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
         }}
         multiline
         error={commentError}
-        placeholder={`What ${firstName} has been like for ${parent}`}
+        placeholder={tr('What {firstName} has been like for {parent}', { firstName, parent })}
       />
 
       {errMsg ? (
@@ -173,19 +174,19 @@ export default function FamilyReviewForParent({ helper, elderId, elderName }) {
       ) : null}
 
       <Text style={{ fontSize: type.meta, color: t.trustGold, lineHeight: 20 }}>
-        This is saved as {parent}&apos;s review, with your name on it as the person who wrote it.
+        {tr("This is saved as {parent}'s review, with your name on it as the person who wrote it.", { parent })}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing[3] }}>
         <Button
-          title={save.isPending ? 'Saving…' : `Save for ${parent}`}
+          title={save.isPending ? tr('Saving…') : tr('Save for {parent}', { parent })}
           variant="secondary"
           onPress={submit}
           disabled={save.isPending}
           style={{ flex: 1 }}
         />
         <ActionChip
-          label="Never mind"
+          label={tr('Never mind')}
           onPress={() => {
             setOpen(false);
             setErrMsg('');

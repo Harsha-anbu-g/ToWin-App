@@ -7,6 +7,7 @@ import { Text, View } from 'react-native';
 import { announce } from '../../lib/announce';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from './Button';
+import { tr } from '../../i18n';
 
 export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, style }) {
   const { t, radius, type, fontFamily, fontScaleCaps } = useTheme();
@@ -31,7 +32,7 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
   const dismiss = () => {
     setShow(false);
     Store.setItemAsync(flag, '1').catch(() => {}); // best-effort — worst case the note shows again
-    announce('Got it. This note will not show again.');
+    announce(tr('Got it. This note will not show again.'));
   };
 
   if (!show) return null;
@@ -61,7 +62,7 @@ export default function FirstTimeCard({ flag, title, body, linkTitle, onLink, st
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 }}>
         {onLink ? <Button title={linkTitle} variant="text" size="small" onPress={onLink} /> : null}
-        <Button title="Got it" variant="secondary" size="small" onPress={dismiss} />
+        <Button title={tr('Got it')} variant="secondary" size="small" onPress={dismiss} />
       </View>
     </View>
   );

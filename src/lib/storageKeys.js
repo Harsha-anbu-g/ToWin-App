@@ -21,6 +21,9 @@ export const KEYS = {
   // silence exactly this phone. Native builds only; never written on web.
   pushToken: 'towinly-push-token',
   haptics: 'towin-haptics',
+  // 'en', 'fr' or 'ta', chosen on Profile or the welcome screen. Absent means
+  // "follow the phone's own language" (src/i18n).
+  language: 'towinly-app-language',
   checkinPrompted: 'towin-checkin-prompted',
   checkinExplained: 'towin-checkin-explained',
   // LEGACY device-wide block list, from before blocks were scoped per account.
@@ -88,6 +91,7 @@ export const APP_WRITTEN_KEYS = [
   KEYS.authToken,
   KEYS.theme,
   KEYS.haptics,
+  KEYS.language,
   KEYS.checkinPrompted,
   KEYS.checkinExplained,
   KEYS.blockedUsers,

@@ -18,13 +18,14 @@ import { sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { clearPendingOnboarding, getPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { FULL_STAGES, PHONE_STAGE } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 // Heading and group label read from one string, so they cannot drift apart.
 const ROLE_PROMPT = 'I am joining as';
 
 const ROLES = [
-  { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help' },
-  { value: 'HELPER', label: 'Helper', desc: 'Want to help others' },
+  { value: 'ELDER', get label() { return tr('Elder'); }, get desc() { return tr('Looking for friends or help'); } },
+  { value: 'HELPER', get label() { return tr('Helper'); }, get desc() { return tr('Want to help others'); } },
 ];
 
 export default function FinishSetup() {
@@ -59,10 +60,10 @@ export default function FinishSetup() {
       <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
         <Card>
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 26 }}>
-            This page is only accessible after signing in with Google.
+            {tr('This page is only accessible after signing in with Google.')}
           </Text>
           <Button
-            title="Go to log in"
+            title={tr('Go to log in')}
             variant="primary"
             onPress={() => router.replace('/(auth)/login')}
             style={{ marginTop: spacing[5] }}
@@ -76,9 +77,9 @@ export default function FinishSetup() {
     setError('');
     const errs = {};
     if (!USERNAME_RE.test(username))
-      errs.username = 'Username must be 3-20 characters: lowercase letters, numbers, underscores only';
+      errs.username = tr('Username must be 3-20 characters: lowercase letters, numbers, underscores only');
     const digits = String(phone).replace(/[\s()-]/g, '');
-    if (!/^\+?[0-9]{10,15}$/.test(digits)) errs.phone = 'Enter a valid phone number (10 to 15 digits)';
+    if (!/^\+?[0-9]{10,15}$/.test(digits)) errs.phone = tr('Enter a valid phone number (10 to 15 digits)');
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
@@ -94,7 +95,7 @@ export default function FinishSetup() {
       // the person back at Login with the whole form done and nothing said.
       // Same handling as login.jsx.
       if (!(await login(data.token))) {
-        setError(SIGN_IN_DEVICE_ERROR);
+        setError(tr(SIGN_IN_DEVICE_ERROR));
         return;
       }
       // Spent. A failure above deliberately leaves it, so the person can fix
@@ -103,7 +104,7 @@ export default function FinishSetup() {
       clearPendingOnboarding();
       router.replace('/');
     } catch (err) {
-      setError(err?.response?.data?.message || 'Something went wrong. Please try again.');
+      setError(err?.response?.data?.message || tr('Something went wrong. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -116,11 +117,11 @@ export default function FinishSetup() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, textAlign: 'center' }}
         >
-          One last step
+          {tr('One last step')}
         </Text>
         <Text style={{ fontSize: type.body, color: t.ink3, textAlign: 'center', marginTop: spacing[2], marginBottom: spacing[5], lineHeight: 24 }}>
-          {googleName ? `Welcome, ${String(googleName).split(' ')[0]}! ` : ''}
-          Tell us a little more to finish creating your account.
+          {googleName ? tr('Welcome, {value}! ', { value: String(googleName).split(' ')[0] }) : ''}
+          {tr('Tell us a little more to finish creating your account.')}
         </Text>
 
         {googleEmail ? (
@@ -136,7 +137,7 @@ export default function FinishSetup() {
           >
             {/* blueDeep, not teal — teal on the wash measured 3.47:1 (rulebook) */}
             <Text style={{ fontSize: type.body, color: t.blueDeep, textAlign: 'center' }}>
-              Signing in as <Text style={{ fontWeight: '700' }}>{googleEmail}</Text>
+              {tr('Signing in as')}{' '}<Text style={{ fontWeight: '700' }}>{googleEmail}</Text>
             </Text>
           </View>
         ) : null}
@@ -167,13 +168,13 @@ export default function FinishSetup() {
         {/* Same size and weight as register's prompt: the twins ask one
             question and had drifted to two different sizes. */}
         <Text style={{ fontSize: type.body, fontWeight: '700', color: t.ink, marginBottom: spacing[3] }}>
-          {ROLE_PROMPT}
+          {tr(ROLE_PROMPT)}
         </Text>
         {/* The two cards were loose Pressables with no group around them, so a
             screen reader read two radios belonging to nothing. */}
         <View
           accessibilityRole="radiogroup"
-          accessibilityLabel={ROLE_PROMPT}
+          accessibilityLabel={tr(ROLE_PROMPT)}
           style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[5] }}
         >
           {ROLES.map(({ value, label, desc }) => {
@@ -216,14 +217,14 @@ export default function FinishSetup() {
         </View>
 
         <Input
-          label="Username"
+          label={tr('Username')}
           value={username}
           onChangeText={(v) => {
             setUsername(sanitizeUsername(v));
             setFieldErrors((f) => ({ ...f, username: '' }));
           }}
           error={fieldErrors.username}
-          helper="3-20 characters. Visible to others on your profile."
+          helper={tr('3-20 characters. Visible to others on your profile.')}
           placeholder="your_username"
           autoCapitalize="none"
           autoCorrect={false}
@@ -237,14 +238,14 @@ export default function FinishSetup() {
 
         <Input
           ref={phoneRef}
-          label="Phone number"
+          label={tr('Phone number')}
           value={phone}
           onChangeText={(v) => {
             setPhone(v);
             setFieldErrors((f) => ({ ...f, phone: '' }));
           }}
           error={fieldErrors.phone}
-          helper={`Only shared after both people reach the ${FULL_STAGES[PHONE_STAGE]} trust stage.`}
+          helper={tr('Only shared after both people reach the {PHONE_STAGE} trust stage.', { PHONE_STAGE: tr(FULL_STAGES[PHONE_STAGE]) })}
           placeholder="+1 416 555 0123"
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
@@ -260,21 +261,21 @@ export default function FinishSetup() {
 
         {!role ? (
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21, marginBottom: spacing[3] }}>
-            Choose who you are joining as above.
+            {tr('Choose who you are joining as above.')}
           </Text>
         ) : null}
         <Button
-          title={loading ? 'Signing in…' : 'Sign In'}
+          title={loading ? tr('Signing in…') : tr('Sign In')}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
           disabled={!role}
-          accessibilityHint={role ? undefined : 'Choose a role first'}
+          accessibilityHint={role ? undefined : tr('Choose a role first')}
         />
         {/* The escape hatch (rulebook: every multi-step flow has a Cancel) —
             a person on the wrong Google account was trapped here before. */}
         <TextLink
-          label="Cancel and use a different account"
+          label={tr('Cancel and use a different account')}
           onPress={() => {
             // Walking away spends nothing, so the record must not sit in memory
             // for the rest of the session waiting to be reused.

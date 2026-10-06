@@ -18,6 +18,7 @@ import { listKeyholderAsksOfMe } from '../api/passon';
 import { listMyReviews } from '../api/reviews';
 import { useUnseenBadge, markSeen } from './seenIds';
 import { seenKey } from './storageKeys';
+import { tr } from '../i18n';
 
 /** The seen-state category the bell owns. Clears when Updates opens. */
 export const UPDATES_CATEGORY = 'updates';
@@ -54,7 +55,7 @@ export function connectionItems(connections) {
         token: `conn:${c.id}:PENDING`,
         kind: 'friend-request',
         name: c.otherUserName,
-        title: `${c.otherUserName} wants to be your friend`,
+        title: tr('{otherUserName} wants to be your friend', { otherUserName: c.otherUserName }),
         body: c.requestMessage || null,
         at: at(c.createdAt),
         href: '/friends',
@@ -65,7 +66,7 @@ export function connectionItems(connections) {
         token: `conn:${c.id}:ACTIVE`,
         kind: 'friend-new',
         name: c.otherUserName,
-        title: `You and ${c.otherUserName} are now friends`,
+        title: tr('You and {otherUserName} are now friends', { otherUserName: c.otherUserName }),
         at: at(c.updatedAt || c.createdAt),
         href: '/home',
       });
@@ -85,8 +86,8 @@ export function messageItems(connections) {
       name: c.otherUserName,
       title:
         c.unreadCount === 1
-          ? `New message from ${c.otherUserName}`
-          : `${c.unreadCount} new messages from ${c.otherUserName}`,
+          ? tr('New message from {otherUserName}', { otherUserName: c.otherUserName })
+          : tr('{unreadCount} new messages from {otherUserName}', { unreadCount: c.unreadCount, otherUserName: c.otherUserName }),
       body: c.lastMessagePreview || null,
       at: at(c.lastMessageAt || c.updatedAt),
       href: `/chat/${c.id}`,
@@ -104,7 +105,7 @@ export function applicantItems(needsMine) {
         token: `app:${n.id}:${a.helperId}`,
         kind: 'applicant',
         name: a.helperName,
-        title: `${a.helperName} offered to help with "${n.title}"`,
+        title: tr('{helperName} offered to help with "{title}"', { helperName: a.helperName, title: n.title }),
         body: a.message || null,
         at: at(n.createdAt), // applications carry no time of their own
         href: '/posted-help',
@@ -123,7 +124,7 @@ export function myOfferItems(applications) {
         token: `offer:${n.id}:ACCEPTED`,
         kind: 'offer-accepted',
         name: n.elderName,
-        title: `${n.elderName} said yes to your offer on "${n.title}"`,
+        title: tr('{elderName} said yes to your offer on "{title}"', { elderName: n.elderName, title: n.title }),
         at: at(n.createdAt),
         href: '/my-jobs',
       });
@@ -132,7 +133,7 @@ export function myOfferItems(applications) {
         token: `offer:${n.id}:DECLINED`,
         kind: 'offer-declined',
         name: n.elderName,
-        title: `"${n.title}" went to someone else this time`,
+        title: tr('"{title}" went to someone else this time', { title: n.title }),
         at: at(n.createdAt),
         href: '/my-jobs',
       });
@@ -148,7 +149,7 @@ export function familyAlertItems(alertsData) {
     token: `fam:${a.id}`,
     kind: a.type === 'SOS' ? 'family-sos' : 'family-alert',
     name: a.elderName,
-    title: a.body || `${a.elderName} needs your attention`,
+    title: a.body || tr('{elderName} needs your attention', { elderName: a.elderName }),
     at: at(a.createdAt),
     href: '/home',
   }));
@@ -160,7 +161,7 @@ export function keyholderAskItems(asks) {
     token: `key:${k.id}`,
     kind: 'keyholder-ask',
     name: k.ownerName,
-    title: `${k.ownerName} asked you to hold a key`,
+    title: tr('{ownerName} asked you to hold a key', { ownerName: k.ownerName }),
     at: 0, // the ask carries no timestamp; it sorts last until acted on
     href: '/home',
   }));
@@ -172,7 +173,7 @@ export function reviewItems(reviews) {
     token: `rev:${r.id}`,
     kind: 'review',
     name: r.reviewerName,
-    title: `${r.reviewerName} wrote you a review`,
+    title: tr('{reviewerName} wrote you a review', { reviewerName: r.reviewerName }),
     body: r.comment || null,
     at: at(r.createdAt),
     href: '/profile',

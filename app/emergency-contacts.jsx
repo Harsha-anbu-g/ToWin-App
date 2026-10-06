@@ -29,6 +29,7 @@ import SkeletonCard from '../src/components/ui/Skeleton';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
+import { tr } from '../src/i18n';
 
 // Hoisted so memo'd Inputs get the same style object every render
 const FIELD_GAP = { marginBottom: spacing[4] };
@@ -87,12 +88,12 @@ export default function EmergencyContacts() {
     mutationFn: addEmergencyContact,
     onSuccess: () => {
       setForm({ name: '', phone: '', relationship: '', inactivityDays: '5' });
-      showToast('Contact added.', 'success');
+      showToast(tr('Contact added.'), 'success');
       refresh();
     },
     onError: (err) =>
       showToast(
-        friendlyWriteError(err, err?.response?.data?.message || 'Could not add the contact. Please try again.'),
+        friendlyWriteError(err, err?.response?.data?.message || tr('Could not add the contact. Please try again.')),
         'error'
       ),
   });
@@ -104,13 +105,13 @@ export default function EmergencyContacts() {
   // hand (the CreatorCard ending, DEEP-30). react-native-web resolves openURL
   // either way, so this only ever runs on a device with no dialer.
   const dialerRefused = (contact) =>
-    showToast(`Could not open the phone app. ${contact.name}'s number is ${contact.phone}.`, 'error');
+    showToast(tr("Could not open the phone app. {name}'s number is {phone}.", { name: contact.name, phone: contact.phone }), 'error');
 
   const remove = useMutation({
     mutationFn: (contact) => removeEmergencyContact(contact.id),
     onSuccess: (_r, contact) => {
-      showToast(`${contact.name} removed.`, 'info', {
-        actionLabel: 'Undo',
+      showToast(tr('{name} removed.', { name: contact.name }), 'info', {
+        actionLabel: tr('Undo'),
         onAction: () =>
           add.mutate({
             name: contact.name,
@@ -122,25 +123,25 @@ export default function EmergencyContacts() {
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not remove the contact. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not remove the contact. Please try again.')), 'error'),
   });
 
   const submit = () => {
     setFormError('');
     if (!form.name.trim()) {
-      setFormError('Please add their name.');
+      setFormError(tr('Please add their name.'));
       return;
     }
     const digits = form.phone.replace(/[\s()-]/g, '');
     if (!/^\+?[0-9]{10,15}$/.test(digits)) {
-      setFormError('Enter a valid phone number (10 to 15 digits).');
+      setFormError(tr('Enter a valid phone number (10 to 15 digits).'));
       return;
     }
     // The website input is capped min={1} max={30}; the browser enforces it
     // there, this message does it here.
     const days = Number(form.inactivityDays);
     if (!Number.isInteger(days) || days < 1 || days > 30) {
-      setFormError('Enter between 1 and 30 days.');
+      setFormError(tr('Enter between 1 and 30 days.'));
       return;
     }
     add.mutate({
@@ -157,12 +158,11 @@ export default function EmergencyContacts() {
   });
 
   return (
-    <Screen back title="Emergency contacts" keyboard onRefresh={refresh}>
+    <Screen back title={tr('Emergency contacts')} keyboard onRefresh={refresh}>
 
       <Card style={{ marginTop: spacing[4] }}>
         <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-          Tap a name to call them. Towinly also sends each of them a text message when you and a
-          friend agree to meet in person for the first time.
+          {tr('Tap a name to call them. Towinly also sends each of them a text message when you and a friend agree to meet in person for the first time.')}
         </Text>
       </Card>
 
@@ -173,7 +173,7 @@ export default function EmergencyContacts() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
         >
-          My contacts
+          {tr('My contacts')}
           {!isLoading && !isError ? (
             <Text style={{ fontSize: text.base, color: t.ink3 }}>
               {'  '}({contactList.length}/3)
@@ -183,10 +183,10 @@ export default function EmergencyContacts() {
         {isLoading ? (
           <SkeletonCard lines={2} />
         ) : isError ? (
-          <LoadError what="your emergency contacts" onRetry={refetch} style={{ marginTop: spacing[3] }} />
+          <LoadError what={tr('your emergency contacts')} onRetry={refetch} style={{ marginTop: spacing[3] }} />
         ) : contactList.length === 0 ? (
           <Text style={{ marginTop: spacing[3], fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-            Nobody yet. Add a family member or a trusted neighbor below.
+            {tr('Nobody yet. Add a family member or a trusted neighbor below.')}
           </Text>
         ) : (
           contactList.map((c, i) => (
@@ -213,8 +213,8 @@ export default function EmergencyContacts() {
                   to tell a hand-off from an in-app route change. */}
               <Pressable
                 accessibilityRole="link"
-                accessibilityLabel={`Call ${c.name}${c.relationship ? `, ${c.relationship}` : ''}, ${c.phone}`}
-                accessibilityHint="Opens your phone app"
+                accessibilityLabel={tr('Call {name}, {phone}', { name: c.relationship ? `${c.name}, ${c.relationship}` : c.name, phone: c.phone })}
+                accessibilityHint={tr('Opens your phone app')}
                 onPress={() => Linking.openURL(`tel:${c.phone}`).catch(() => dialerRefused(c))}
                 style={({ pressed }) => ({
                   flex: 1,
@@ -236,13 +236,13 @@ export default function EmergencyContacts() {
                     the parity contract. */}
                 {c.inactivityDays != null ? (
                   <Text style={{ fontSize: text.sm, color: t.inkFaint2, marginTop: 2 }}>
-                    {`Alerts after ${c.inactivityDays} inactive ${c.inactivityDays === 1 ? 'day' : 'days'}`}
+                    {(c.inactivityDays === 1 ? tr('Alerts after 1 inactive day') : tr('Alerts after {inactivityDays} inactive days', { inactivityDays: c.inactivityDays }))}
                   </Text>
                 ) : null}
               </Pressable>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Remove ${c.name}`}
+                accessibilityLabel={tr('Remove {name}', { name: c.name })}
                 onPress={() => remove.mutate(c)}
                 hitSlop={8}
                 style={({ pressed }) => ({
@@ -268,7 +268,7 @@ export default function EmergencyContacts() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink, marginBottom: spacing[4] }}
         >
-          Add a contact
+          {tr('Add a contact')}
         </Text>
         {formError ? (
           <View
@@ -288,7 +288,7 @@ export default function EmergencyContacts() {
         {/* No autofill hints on purpose: this is ANOTHER person's name and
             number, and autofill would offer the elder their own. */}
         <Input
-          label="Name"
+          label={tr('Name')}
           value={form.name}
           onChangeText={fieldHandlers.name}
           autoCapitalize="words"
@@ -299,7 +299,7 @@ export default function EmergencyContacts() {
         />
         <Input
           ref={phoneRef}
-          label="Phone number"
+          label={tr('Phone number')}
           value={form.phone}
           onChangeText={fieldHandlers.phone}
           keyboardType="phone-pad"
@@ -310,10 +310,10 @@ export default function EmergencyContacts() {
         />
         <Input
           ref={relationshipRef}
-          label="Who they are to you"
+          label={tr('Who they are to you')}
           value={form.relationship}
           onChangeText={fieldHandlers.relationship}
-          helper='Like "daughter", "neighbor", or "family friend".'
+          helper={tr('Like "daughter", "neighbor", or "family friend".')}
           returnKeyType="next"
           submitBehavior="submit"
           onSubmitEditing={focusDays}
@@ -325,10 +325,10 @@ export default function EmergencyContacts() {
             intro ("for several days") reads wrong as a field helper. */}
         <Input
           ref={daysRef}
-          label="Alert after (days)"
+          label={tr('Alert after (days)')}
           value={form.inactivityDays}
           onChangeText={fieldHandlers.inactivityDays}
-          helper="We'll alert this person after this many quiet days."
+          helper={tr("We'll alert this person after this many quiet days.")}
           keyboardType="number-pad"
           maxLength={2}
           returnKeyType="done"
@@ -336,7 +336,7 @@ export default function EmergencyContacts() {
           style={FIELD_GAP_LG}
         />
         <Button
-          title={add.isPending ? 'Adding…' : 'Add contact'}
+          title={add.isPending ? tr('Adding…') : tr('Add contact')}
           variant="primary"
           onPress={submit}
           loading={add.isPending}

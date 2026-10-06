@@ -9,14 +9,15 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../theme/ThemeContext';
 import TextLink from './ui/TextLink';
 import { SIGN_IN_DEVICE_ERROR, yearsOld } from '../lib/copy';
+import { tr } from '../i18n';
 
 // Ages track the demo accounts' seeded birthdates (DemoDataSeeder) — same as
 // web. Sarah (FAM-406, 2026-07-19) is the seeded FAMILY seat: fixed sub line,
 // no computed age (web parity — she's introduced by relationship, not age).
 const DEMO = {
-  ELDER: { identifier: 'elder', password: '12345678', label: 'Try as an Elder', sub: `Margaret, ${yearsOld('1953-05-14')}` },
-  HELPER: { identifier: 'helper', password: '123456789', label: 'Try as a Helper', sub: `Harsha, ${yearsOld('2003-03-14')}` },
-  FAMILY: { identifier: 'demo.sarah@towin.app', password: 'DemoSarah!2026', label: 'Try as Family', sub: "Sarah, Margaret's daughter" },
+  ELDER: { identifier: 'elder', password: '12345678', get label() { return tr('Try as an Elder'); }, get sub() { return tr('Margaret, {yearsOld}', { yearsOld: yearsOld('1953-05-14') }); } },
+  HELPER: { identifier: 'helper', password: '123456789', get label() { return tr('Try as a Helper'); }, get sub() { return tr('Harsha, {yearsOld}', { yearsOld: yearsOld('2003-03-14') }); } },
+  FAMILY: { identifier: 'demo.sarah@towin.app', password: 'DemoSarah!2026', get label() { return tr('Try as Family'); }, get sub() { return tr("Sarah, Margaret's daughter"); } },
 };
 
 // `collapsed` folds the three seats behind one line of text. Login leaves them
@@ -42,15 +43,15 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
       // already expired against a clock set far ahead). Navigating anyway put
       // the person back on Login with nothing said. Same handling as login.jsx.
       if (!(await login(data.token))) {
-        onError?.(SIGN_IN_DEVICE_ERROR);
+        onError?.(tr(SIGN_IN_DEVICE_ERROR));
         return;
       }
       router.replace('/'); // index routes by role/verification state
     } catch (err) {
       onError?.(
         err?.response?.status === 429
-          ? err.response.data?.message || 'Too many attempts. Please try again later.'
-          : 'Could not start demo session. Please try again.'
+          ? err.response.data?.message || tr('Too many attempts. Please try again later.')
+          : tr('Could not start demo session. Please try again.')
       );
     } finally {
       setGuestLoading('');
@@ -81,7 +82,7 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
       })}
     >
       <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>
-        {guestLoading === role ? 'Opening…' : DEMO[role].label}
+        {guestLoading === role ? tr('Opening…') : DEMO[role].label}
       </Text>
       <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{DEMO[role].sub}</Text>
     </Pressable>
@@ -93,7 +94,7 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
   if (!open) {
     return (
       <View style={{ marginTop: spacing[8] }}>
-        <TextLink label="Just looking? Try a sample account" onPress={() => setOpen(true)} />
+        <TextLink label={tr('Just looking? Try a sample account')} onPress={() => setOpen(true)} />
       </View>
     );
   }
@@ -104,13 +105,13 @@ export default function DemoAccountsCard({ onError, collapsed = false }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
         <Text style={{ fontSize: type.caption, color: t.inkFaint2, letterSpacing: 1, textTransform: 'uppercase' }}>
-          or
+          {tr('or')}
         </Text>
         <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />
       </View>
 
       <Text style={{ fontSize: type.meta, color: t.inkSlate, textAlign: 'center', marginTop: spacing[4], marginBottom: spacing[3] }}>
-        Just want to see how it works? Look around with a sample account.
+        {tr('Just want to see how it works? Look around with a sample account.')}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing[2] }}>

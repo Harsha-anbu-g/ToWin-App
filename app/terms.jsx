@@ -5,11 +5,12 @@ import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
 import { DRAFT, TERMS_CONTENT } from '../src/data/legalContent';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function Terms() {
   const { t, spacing, text } = useTheme();
   return (
-    <Screen back title="Terms of service">
+    <Screen back title={tr('Terms of service')}>
       <Card>
         <Text
           style={{

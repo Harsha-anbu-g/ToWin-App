@@ -15,6 +15,7 @@ import Switch from '../ui/Switch';
 import { setFamilyVisibility } from '../../api/connections';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function FamilyShareToggle({ connectionId, shared: initialShared = false }) {
   const { t, type } = useTheme();
@@ -36,7 +37,7 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
     },
     onError: (_err, next) => {
       setShared(!next); // roll the optimistic flip back
-      showToast("Couldn't save that change. Please try again.", 'error');
+      showToast(tr("Couldn't save that change. Please try again."), 'error');
     },
   });
 
@@ -64,16 +65,16 @@ export default function FamilyShareToggle({ connectionId, shared: initialShared 
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, marginTop: 8 }}>
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, lineHeight: 18 }}>
-          Let my family see this friendship
+          {tr('Let my family see this friendship')}
         </Text>
         <Text style={{ fontSize: type.caption, color: t.inkSlate, lineHeight: 16, marginTop: 2 }}>
           {shared
-            ? 'Your family can see this friendship.'
-            : 'Kept private from family. Only you can change this.'}
+            ? tr('Your family can see this friendship.')
+            : tr('Kept private from family. Only you can change this.')}
         </Text>
       </View>
       <Switch
-        accessibilityLabel="Let my family see this friendship"
+        accessibilityLabel={tr('Let my family see this friendship')}
         value={shared}
         disabled={save.isPending}
         onValueChange={flip}

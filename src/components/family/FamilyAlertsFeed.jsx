@@ -13,6 +13,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+import { tr } from '../../i18n';
 
 // The feed sits inside the Home tab's plain ScrollView, so every row it
 // renders is mounted and laid out at once. The backend returns the whole
@@ -24,23 +25,23 @@ const NEWEST_SHOWN = 20;
 // this line explains what kind of news it is (web ALERT_KINDS).
 const alertKindsFor = (t) => ({
   SOS: {
-    label: 'Urgent help',
-    explain: 'They pressed their SOS button and asked for urgent help. A call right now matters.',
+    label: tr('Urgent help'),
+    explain: tr('They pressed their SOS button and asked for urgent help. A call right now matters.'),
     color: t.redDeep,
     line: t.redLine,
     wash: t.redTint,
   },
   INACTIVITY: {
-    label: 'Quiet lately',
-    explain: 'They have not checked in for a while. A friendly call could help.',
+    label: tr('Quiet lately'),
+    explain: tr('They have not checked in for a while. A friendly call could help.'),
     color: t.inkSlate,
     line: t.greyLine,
     wash: t.chipNeutral,
   },
   FIRST_MEET: {
-    label: 'First meeting',
+    label: tr('First meeting'),
     explain:
-      "They're meeting a friend in person for the first time. A friendship they chose to share with you.",
+      tr("They're meeting a friend in person for the first time. A friendship they chose to share with you."),
     color: t.trustGold,
     line: t.greenLine,
     wash: t.greenTint,
@@ -123,7 +124,7 @@ export default function FamilyAlertsFeed() {
   const [showingAll, setShowingAll] = useState(false);
 
   const kinds = alertKindsFor(t);
-  const fallbackKind = { label: 'Update', explain: '', color: t.greyText, line: t.greyLine, wash: t.chipNeutral };
+  const fallbackKind = { label: tr('Update'), explain: '', color: t.greyText, line: t.greyLine, wash: t.chipNeutral };
 
   const all = alerts ?? [];
   const shown = showingAll ? all : all.slice(0, NEWEST_SHOWN);
@@ -144,10 +145,10 @@ export default function FamilyAlertsFeed() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        News about your family
+        {tr('News about your family')}
       </Text>
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: 4 }}>
-        Alerts appear here when something needs your attention. Nothing is sent by text or email.
+        {tr('Alerts appear here when something needs your attention. Nothing is sent by text or email.')}
       </Text>
 
       {isLoading ? (
@@ -155,7 +156,7 @@ export default function FamilyAlertsFeed() {
           <SkeletonCard lines={2} />
         </View>
       ) : isError ? (
-        <LoadError what="your family news" onRetry={refetch} style={{ marginTop: spacing[4] }} />
+        <LoadError what={tr('your family news')} onRetry={refetch} style={{ marginTop: spacing[4] }} />
       ) : all.length === 0 ? (
         <View
           style={{
@@ -169,7 +170,7 @@ export default function FamilyAlertsFeed() {
           }}
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-            No alerts right now
+            {tr('No alerts right now')}
           </Text>
           <Text
             style={{
@@ -180,8 +181,7 @@ export default function FamilyAlertsFeed() {
               textAlign: 'center',
             }}
           >
-            That's good news. You'll see it here if your parent asks for help, goes quiet for a
-            while, or shares a first meeting with a friend.
+            {tr("That's good news. You'll see it here if your parent asks for help, goes quiet for a while, or shares a first meeting with a friend.")}
           </Text>
         </View>
       ) : (
@@ -201,7 +201,7 @@ export default function FamilyAlertsFeed() {
           ))}
           {older > 0 ? (
             <Button
-              title={`Show ${older} older ${older === 1 ? 'alert' : 'alerts'}`}
+              title={(older === 1 ? tr('Show 1 older alert') : tr('Show {older} older alerts', { older }))}
               variant="secondary"
               onPress={() => setShowingAll(true)}
               style={{ alignSelf: 'flex-start', marginTop: spacing[4] }}

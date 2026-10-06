@@ -5,6 +5,7 @@
 // raw query results, and a captive portal on public wifi answers 200 with an
 // HTML page, so what arrives can be a string. `|| []` passes a string straight
 // through to .filter and throws inside the caller's render (HARD-100).
+import { tr } from '../i18n';
 const asList = (value) => (Array.isArray(value) ? value : []);
 
 /**
@@ -16,7 +17,7 @@ const asList = (value) => (Array.isArray(value) ? value : []);
 export function peopleSheKnows(links, connections) {
   const family = asList(links)
     .filter((l) => l.status === 'ACTIVE' && l.otherUserId)
-    .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || 'Family' }));
+    .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || tr('Family') }));
 
   const helpers = asList(connections)
     .filter(
@@ -26,7 +27,7 @@ export function peopleSheKnows(links, connections) {
         c.currentTrustLevel === 'TRUSTED' &&
         c.otherUserId
     )
-    .map((c) => ({ id: c.otherUserId, name: c.otherUserName, note: 'Helper you trust' }));
+    .map((c) => ({ id: c.otherUserId, name: c.otherUserName, note: tr('Helper you trust') }));
 
   const seen = new Set();
   return [...family, ...helpers].filter((p) => !seen.has(p.id) && seen.add(p.id));
@@ -40,5 +41,5 @@ export function peopleSheKnows(links, connections) {
 export function herFamilyList(links) {
   return asList(links)
     .filter((l) => l.status === 'ACTIVE' && l.otherUserId)
-    .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || 'Family' }));
+    .map((l) => ({ id: l.otherUserId, name: l.otherUserName, note: l.relationship || tr('Family') }));
 }

@@ -1,5 +1,6 @@
 // Ported verbatim from Towinly/frontend/src/pages/ElderDashboard.jsx —
 // plain everyday words (elder-first), same status copy, same ordering.
+import { tr } from '../i18n';
 export const CATEGORY = {
   COMPANIONSHIP: 'Company',
   TRANSPORTATION: 'Rides',
@@ -12,10 +13,10 @@ export const catLabel = (c) => CATEGORY[c] || c;
 
 // Status pill roles reference theme token NAMES; cards resolve them via useTheme.
 export const NEED_STATUS = {
-  OPEN: { label: 'Looking for Help', color: 'inkSlate', bg: 'chipNeutral' },
-  ASSIGNED: { label: 'Helper Found', color: 'blueDeep', bg: 'blueTint' },
-  COMPLETED: { label: 'Completed', color: 'greenDeep', bg: 'greenTint' },
-  CANCELLED: { label: 'Cancelled', color: 'inkSlate', bg: 'surface2' },
+  OPEN: { get label() { return tr('Looking for Help'); }, color: 'inkSlate', bg: 'chipNeutral' },
+  ASSIGNED: { get label() { return tr('Helper Found'); }, color: 'blueDeep', bg: 'blueTint' },
+  COMPLETED: { get label() { return tr('Completed'); }, color: 'greenDeep', bg: 'greenTint' },
+  CANCELLED: { get label() { return tr('Cancelled'); }, color: 'inkSlate', bg: 'surface2' },
 };
 
 const NEED_STATUS_ORDER = { OPEN: 0, ASSIGNED: 1, COMPLETED: 2, CANCELLED: 3 };

@@ -22,6 +22,7 @@ import { centerActionFor } from '../../src/lib/roles';
 import { tabBarSpace } from '../../src/lib/tabBarMetrics';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
+import { tr } from '../../src/i18n';
 
 // Hoisted so memo'd Inputs get the same style object every render
 const FIELD_GAP = { marginBottom: spacing[4] };
@@ -62,12 +63,12 @@ function PostNeedForm({ title }) {
       setForm({ title: '', description: '', category: 'COMPANIONSHIP', urgency: 'NORMAL', categoryOther: '' });
       setFieldErrors({});
       queryClient.invalidateQueries({ queryKey: ['needs-mine'] });
-      showToast('Help posted!', 'success');
+      showToast(tr('Help posted!'), 'success');
       router.push('/(tabs)/posted-help'); // lands in "Looking for Help"
     },
     onError: (err) =>
       showToast(
-        friendlyWriteError(err, err?.response?.data?.message || 'Failed to post. Please try again.'),
+        friendlyWriteError(err, err?.response?.data?.message || tr('Failed to post. Please try again.')),
         'error'
       ),
   });
@@ -98,9 +99,9 @@ function PostNeedForm({ title }) {
 
   const submit = () => {
     const errs = {};
-    if (!form.title.trim()) errs.title = 'Please give your request a short title.';
+    if (!form.title.trim()) errs.title = tr('Please give your request a short title.');
     if (form.category === 'OTHER' && !form.categoryOther.trim())
-      errs.categoryOther = 'Please tell us what kind of help you need.';
+      errs.categoryOther = tr('Please tell us what kind of help you need.');
     // Apple 1.2: objectionable material must be stopped before it is posted.
     errs.title = errs.title || objectionableError(form.title);
     errs.description = objectionableError(form.description);
@@ -112,7 +113,7 @@ function PostNeedForm({ title }) {
     const body = { ...rest };
     if (form.category === 'OTHER') {
       const detail = categoryOther.trim();
-      body.description = body.description ? `Kind of help: ${detail}\n\n${body.description}` : `Kind of help: ${detail}`;
+      body.description = body.description ? tr('Kind of help: {detail}\n\n{description}', { detail, description: body.description }) : tr('Kind of help: {detail}', { detail });
     }
     post.mutate(body);
   };
@@ -135,15 +136,15 @@ function PostNeedForm({ title }) {
         </Text>
 
         <Input
-          label="Title"
+          label={tr('Title')}
           value={form.title}
           onChangeText={setTitle}
           error={fieldErrors.title}
-          helper='Short and clear, like "A ride to the clinic on Thursday".'
+          helper={tr('Short and clear, like "A ride to the clinic on Thursday".')}
           style={FIELD_GAP}
         />
 
-        <FieldLabel>Kind of help</FieldLabel>
+        <FieldLabel>{tr('Kind of help')}</FieldLabel>
         {/* One question, one answer: a labelled radiogroup so a screen reader
             says what is being asked and which chip answers it, instead of
             reading five unrelated buttons. */}
@@ -156,7 +157,7 @@ function PostNeedForm({ title }) {
           horizontal
           showsHorizontalScrollIndicator={false}
           accessibilityRole="radiogroup"
-          accessibilityLabel="Kind of help"
+          accessibilityLabel={tr('Kind of help')}
           keyboardShouldPersistTaps="handled"
           style={{ marginBottom: spacing[4], marginHorizontal: -spacing[4] }}
           contentContainerStyle={{
@@ -178,7 +179,7 @@ function PostNeedForm({ title }) {
 
         {form.category === 'OTHER' ? (
           <Input
-            label="What kind of help?"
+            label={tr('What kind of help?')}
             value={form.categoryOther}
             onChangeText={setCategoryOther}
             error={fieldErrors.categoryOther}
@@ -186,20 +187,20 @@ function PostNeedForm({ title }) {
           />
         ) : null}
 
-        <FieldLabel>How soon?</FieldLabel>
+        <FieldLabel>{tr('How soon?')}</FieldLabel>
         <View
           accessibilityRole="radiogroup"
-          accessibilityLabel="How soon?"
+          accessibilityLabel={tr('How soon?')}
           style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}
         >
           <Chip
-            label="Normal"
+            label={tr('Normal')}
             accessibilityRole="radio"
             aria-checked={form.urgency === 'NORMAL'}
             onPress={setUrgencyNormal}
           />
           <Chip
-            label="Urgent"
+            label={tr('Urgent')}
             accessibilityRole="radio"
             aria-checked={form.urgency === 'URGENT'}
             onPress={setUrgencyUrgent}
@@ -207,7 +208,7 @@ function PostNeedForm({ title }) {
         </View>
 
         <Input
-          label="Details (optional)"
+          label={tr('Details (optional)')}
           value={form.description}
           onChangeText={setDescription}
           error={fieldErrors.description}
@@ -230,7 +231,7 @@ function PostNeedForm({ title }) {
         }}
       >
         <Button
-          title={post.isPending ? 'Posting…' : 'Post Help'}
+          title={post.isPending ? tr('Posting…') : tr('Post Help')}
           variant="primary"
           onPress={submit}
           loading={post.isPending}

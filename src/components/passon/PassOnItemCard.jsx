@@ -8,6 +8,7 @@ import { AUDIENCES, LETTERS, onDay } from '../../lib/passOnLocks';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import { tr } from '../../i18n';
 
 function QuietChip({ label, color, borderColor }) {
   const { t, type, radius } = useTheme();
@@ -61,7 +62,7 @@ export default function PassOnItemCard({ item, onChange, onRemove }) {
           {item.title}
         </Text>
         {isLetter ? (
-          <QuietChip label={`To ${item.audienceUserName || 'someone'}`} />
+          <QuietChip label={tr('To {value}', { value: item.audienceUserName || tr('someone') })} />
         ) : audience ? (
           <QuietChip label={audience.title} />
         ) : null}
@@ -92,15 +93,15 @@ export default function PassOnItemCard({ item, onChange, onRemove }) {
           )}
           {item.firstReadAt ? (
             <Text style={{ fontSize: text.sm, color: t.ink3 }}>
-              {item.audienceUserName} read this on {onDay(item.firstReadAt)}
+              {tr('{audienceUserName} read this on {onDay}', { audienceUserName: item.audienceUserName, onDay: onDay(item.firstReadAt) })}
             </Text>
           ) : null}
         </View>
       ) : null}
 
       <View style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[4] }}>
-        <Button title="Change" variant="secondary" size="small" onPress={() => onChange(item)} />
-        <Button title="Remove" variant="secondary" size="small" onPress={() => onRemove(item)} />
+        <Button title={tr('Change')} variant="secondary" size="small" onPress={() => onChange(item)} />
+        <Button title={tr('Remove')} variant="secondary" size="small" onPress={() => onRemove(item)} />
       </View>
     </Card>
   );

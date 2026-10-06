@@ -23,6 +23,7 @@ import Screen from '../ui/Screen';
 import SkeletonCard from '../ui/Skeleton';
 import { Phone } from '../icons';
 import TrustLadder from './TrustLadder';
+import { tr } from '../../i18n';
 
 const sameId = (a, b) => String(a) === String(b);
 
@@ -64,14 +65,14 @@ export default function ElderSeatDetail({ connectionId }) {
 
   if (!conn) {
     return (
-      <Screen back title="Elder" onRefresh={refresh}>
+      <Screen back title={tr('Elder')} onRefresh={refresh}>
         {isLoading ? (
           <SkeletonCard lines={4} />
         ) : isError ? (
-          <LoadError what="this elder" onRetry={refetchConnections} />
+          <LoadError what={tr('this elder')} onRetry={refetchConnections} />
         ) : (
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-            This connection is not here any more.
+            {tr('This connection is not here any more.')}
           </Text>
         )}
       </Screen>
@@ -87,8 +88,8 @@ export default function ElderSeatDetail({ connectionId }) {
   const stageIndex = scoreCard?.stageIndex ?? LEVEL_INDEX[conn.currentTrustLevel] ?? 0;
   const atTop = stageIndex >= 6;
   const stageNo = Math.min(stageIndex + 1, 7);
-  const stageName = SHORT_STAGES[Math.min(stageIndex, 6)];
-  const next = SHORT_STAGES[Math.min(stageIndex + 1, 6)];
+  const stageName = tr(SHORT_STAGES[Math.min(stageIndex, 6)]);
+  const next = tr(SHORT_STAGES[Math.min(stageIndex + 1, 6)]);
   const waiting = conn.confirmedByMe && !conn.confirmedByOther;
   // The elder started the next step and it is waiting on me (owner call
   // 2026-08-28): counted on the My Elders tab until I accept.
@@ -100,7 +101,7 @@ export default function ElderSeatDetail({ connectionId }) {
     <Screen back title={conn.otherUserName} onRefresh={refresh}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`View ${conn.otherUserName}'s profile`}
+        accessibilityLabel={tr("View {otherUserName}'s profile", { otherUserName: conn.otherUserName })}
         onPress={() => router.push(`/user/${conn.otherUserId}`)}
         hitSlop={6}
         style={({ pressed }) => ({ alignSelf: 'center', marginBottom: 16, opacity: pressed ? 0.6 : 1 })}
@@ -111,7 +112,7 @@ export default function ElderSeatDetail({ connectionId }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
-            Stage {stageNo} of 7 · {stageName}
+            {tr('Stage {stageNo} of 7 · {stageName}', { stageNo, stageName })}
           </Text>
           {/* Why this ladder exists and when it started (owner call
               2026-08-26): a friendship, or one of their requests I was
@@ -121,11 +122,11 @@ export default function ElderSeatDetail({ connectionId }) {
           ) : null}
           {conn.otherUserAge ? (
             <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>
-              Age {conn.otherUserAge}
+              {tr('Age {otherUserAge}', { otherUserAge: conn.otherUserAge })}
             </Text>
           ) : null}
         </View>
-        <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${conn.id}`)} />
+        <ActionChip label={tr('Message')} tonal onPress={() => router.push(`/chat/${conn.id}`)} />
         {scoreCard ? (
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
             {scoreCard.total}
@@ -145,11 +146,11 @@ export default function ElderSeatDetail({ connectionId }) {
 
       <TrustLadder stageIndex={stageIndex} style={{ marginTop: 12 }} />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{tr('Connected')}</Text>
         {!atTop ? (
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{tr('Next: {next}', { next })}</Text>
         ) : null}
-        <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
+        <Text style={{ fontSize: type.meta, color: t.trustGold }}>{tr('Trusted')}</Text>
       </View>
 
       {/* Backend rule (website ea03935): the elder starts each step — the
@@ -168,15 +169,15 @@ export default function ElderSeatDetail({ connectionId }) {
           }}
         >
           <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.greenDeep }}>
-            Fully trusted
+            {tr('Fully trusted')}
           </Text>
           <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 18, marginTop: 2 }}>
-            Seven steps, climbed together. The whole ladder is complete.
+            {tr('Seven steps, climbed together. The whole ladder is complete.')}
           </Text>
         </View>
       ) : waitingOnMe ? (
         <Button
-          title="Accept the next step"
+          title={tr('Accept the next step')}
           variant="primary"
           size="small"
           onPress={() => acceptStep(conn)}
@@ -184,11 +185,11 @@ export default function ElderSeatDetail({ connectionId }) {
         />
       ) : waiting ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-          Waiting for {conn.otherUserName} to accept the next step. They'll get a tap on their side.
+          {tr("Waiting for {otherUserName} to accept the next step. They'll get a tap on their side.", { otherUserName: conn.otherUserName })}
         </Text>
       ) : (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-          {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
+          {tr("{otherUserName} starts each trust step. You'll get a tap here to accept.", { otherUserName: conn.otherUserName })}
         </Text>
       )}
 
@@ -198,7 +199,7 @@ export default function ElderSeatDetail({ connectionId }) {
       {familyBehind.length > 0 ? (
         <View style={{ borderTopWidth: 1, borderTopColor: t.hairline, marginTop: 12, paddingTop: 10 }}>
           <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink, marginBottom: 8 }}>
-            {conn.otherUserName ? `${conn.otherUserName}'s family` : 'Their family'}
+            {conn.otherUserName ? tr("{otherUserName}'s family", { otherUserName: conn.otherUserName }) : tr('Their family')}
           </Text>
           {familyBehind.map((f) => {
             // The family coordination connection (auto-materialized while the
@@ -221,12 +222,12 @@ export default function ElderSeatDetail({ connectionId }) {
                   </Text>
                   <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
                     {famConn
-                      ? 'You can message each other while this friendship stays shared.'
-                      : 'Can see how this friendship is going and may message you.'}
+                      ? tr('You can message each other while this friendship stays shared.')
+                      : tr('Can see how this friendship is going and may message you.')}
                   </Text>
                 </View>
                 {famConn ? (
-                  <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${famConn.id}`)} />
+                  <ActionChip label={tr('Message')} tonal onPress={() => router.push(`/chat/${famConn.id}`)} />
                 ) : null}
               </View>
             );
@@ -238,7 +239,7 @@ export default function ElderSeatDetail({ connectionId }) {
           (FAM-511 entry point, helper side). */}
       {conn.sharedWithFamily ? (
         <ActionChip
-          label="Open the family group"
+          label={tr('Open the family group')}
           onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
           style={{ marginTop: hasFamily ? 8 : 12, alignSelf: 'flex-start' }}
         />
@@ -248,14 +249,14 @@ export default function ElderSeatDetail({ connectionId }) {
           crowding the CTA. Once either is done the person lands back on Home. */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
         <Button
-          title="Take a break"
+          title={tr('Take a break')}
           variant="text"
           onPress={() => takeBreak(conn, goBack)}
-          accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
+          accessibilityHint={tr('Pauses trust steps and messages with this person until either of you resumes')}
           style={{ paddingHorizontal: 0 }}
         />
         <ActionChip
-          label="End"
+          label={tr('End')}
           destructive
           onPress={() => {
             endConnection(conn, goBack);

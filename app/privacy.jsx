@@ -5,11 +5,12 @@ import Card from '../src/components/ui/Card';
 import Screen from '../src/components/ui/Screen';
 import { DRAFT, PRIVACY_CONTENT } from '../src/data/legalContent';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function Privacy() {
   const { t, spacing, text } = useTheme();
   return (
-    <Screen back title="Privacy policy">
+    <Screen back title={tr('Privacy policy')}>
       <Card>
         <Text
           style={{

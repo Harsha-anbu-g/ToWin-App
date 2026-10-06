@@ -19,24 +19,28 @@
 // quietly lose whatever the backend adds next, which is the same bug again.
 import { Platform, Share } from 'react-native';
 import { onDayInFull } from './passOnLocks';
+import { tr } from '../i18n';
 
 /** Windows Notepad still shows a bare \n as one long line. This one wraps. */
 const NEWLINE = '\r\n';
 
 export const MY_DATA = {
-  fileName: 'Towinly - my information.txt',
+  get fileName() { return tr('Towinly - my information.txt'); },
 
-  title: 'Your Towinly information',
+  get title() { return tr('Your Towinly information'); },
 
-  lead:
-    'This is everything Towinly holds about you on the day it was made. Keep it somewhere '
-    + 'safe. Towinly does not keep a copy of this file for you.',
+  get lead() {
+    return tr(
+      'This is everything Towinly holds about you on the day it was made. Keep it somewhere '
+      + 'safe. Towinly does not keep a copy of this file for you.'
+    );
+  },
 
   /** A section the server sent with nothing in it. Said out loud, never left blank. */
-  nothingHere: 'Nothing here.',
+  get nothingHere() { return tr('Nothing here.'); },
 
   /** A field the server sent with no value. Shown, never hidden. */
-  noValue: '(nothing)',
+  get noValue() { return tr('(nothing)'); },
 
   /**
    * The one sentence that stops this file being a false promise.
@@ -48,15 +52,18 @@ export const MY_DATA = {
    * means the file genuinely cannot contain what she most wants to keep. She is
    * told so, in the place she would look for it.
    */
-  sealedBoxNote:
-    'What is inside these is not in this file. Towinly locks your Sealed box with your '
-    + 'password and cannot read it, so it cannot copy it out for you. To keep what is inside, '
-    + 'open your Sealed box and save each thing yourself.',
+  get sealedBoxNote() {
+    return tr(
+      'What is inside these is not in this file. Towinly locks your Sealed box with your '
+      + 'password and cannot read it, so it cannot copy it out for you. To keep what is inside, '
+      + 'open your Sealed box and save each thing yourself.'
+    );
+  },
 
   /** What actually happened, on each of the three paths that can happen. */
-  saved: 'Saved. Your copy of your information is in your downloads.',
-  shared: 'Your copy is ready. Choose where to keep it.',
-  failed: 'We could not make your copy. Please try again.',
+  get saved() { return tr('Saved. Your copy of your information is in your downloads.'); },
+  get shared() { return tr('Your copy is ready. Choose where to keep it.'); },
+  get failed() { return tr('We could not make your copy. Please try again.'); },
 };
 
 /** Her file, named so she can find it again in a year. */
@@ -79,7 +86,7 @@ export function myDataAsText(body, { madeOn } = {}) {
   }
 
   const day = onDayInFull(madeOn || new Date().toISOString());
-  const lines = [MY_DATA.title, `Made on ${day}.`, '', MY_DATA.lead];
+  const lines = [MY_DATA.title, tr('Made on {day}.', { day }), '', MY_DATA.lead];
 
   Object.entries(body).forEach(([key, value]) => {
     lines.push('', HEADINGS[key] || key);
@@ -129,23 +136,23 @@ export async function saveMyDataCopy(body, { madeOn } = {}) {
  * written out under the server's own name rather than dropped.
  */
 const HEADINGS = {
-  account: 'Your account',
-  elderProfile: 'Your profile',
-  helperProfile: 'Your helper profile',
-  needsPosted: 'The help you asked for',
-  reviewsGiven: 'Reviews you wrote',
-  reviewsReceived: 'Reviews people wrote about you',
-  emergencyContacts: 'Your emergency contacts',
-  connections: 'Your connections',
-  familyLinks: 'Your family',
-  familyAlerts: 'What your family was told',
-  delegatedPowers: 'What your family can do for you',
-  powerRequests: 'What your family asked to do',
-  passOnItems: 'Your stories and letters',
-  sealedBoxItems: 'What is in your Sealed box',
-  sealedBoxKeyholders: 'Your Keyholders',
-  sealedBoxSettings: 'Your Sealed box settings',
-  sealedBoxOpens: 'Who opened your Sealed box',
+  get account() { return tr('Your account'); },
+  get elderProfile() { return tr('Your profile'); },
+  get helperProfile() { return tr('Your helper profile'); },
+  get needsPosted() { return tr('The help you asked for'); },
+  get reviewsGiven() { return tr('Reviews you wrote'); },
+  get reviewsReceived() { return tr('Reviews people wrote about you'); },
+  get emergencyContacts() { return tr('Your emergency contacts'); },
+  get connections() { return tr('Your connections'); },
+  get familyLinks() { return tr('Your family'); },
+  get familyAlerts() { return tr('What your family was told'); },
+  get delegatedPowers() { return tr('What your family can do for you'); },
+  get powerRequests() { return tr('What your family asked to do'); },
+  get passOnItems() { return tr('Your stories and letters'); },
+  get sealedBoxItems() { return tr('What is in your Sealed box'); },
+  get sealedBoxKeyholders() { return tr('Your Keyholders'); },
+  get sealedBoxSettings() { return tr('Your Sealed box settings'); },
+  get sealedBoxOpens() { return tr('Who opened your Sealed box'); },
 };
 
 /** One section: a list of things, a single thing, or a plain value. */

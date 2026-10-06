@@ -12,6 +12,7 @@ import Button from './ui/Button';
 import { DRAFT } from '../data/legalContent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
+import { tr } from '../i18n';
 
 const IS_IOS_SHEET = Platform.OS === 'ios';
 
@@ -53,7 +54,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
       </Text>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Close"
+        accessibilityLabel={tr('Close')}
         onPress={onClose}
         android_ripple={pressRipple}
         hitSlop={8}
@@ -108,7 +109,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
         borderTopColor: t.border,
       }}
     >
-      <Button title="Close" variant="primary" onPress={onClose} />
+      <Button title={tr('Close')} variant="primary" onPress={onClose} />
     </View>
   );
 
@@ -162,7 +163,7 @@ export default function LegalModal({ title, sections, visible, onClose }) {
         <Pressable
           testID="legal-scrim"
           accessibilityRole="button"
-          accessibilityLabel="Close"
+          accessibilityLabel={tr('Close')}
           onPress={onClose}
           style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim }}
         />

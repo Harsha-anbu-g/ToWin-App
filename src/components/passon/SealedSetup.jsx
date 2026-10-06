@@ -19,6 +19,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import TextLink from '../ui/TextLink';
+import { tr } from '../../i18n';
 
 const SMALLEST_POOL = 3;
 const LARGEST_POOL = 5;
@@ -193,7 +194,7 @@ export default function SealedSetup({ family, setup, already = [], saving, onFin
   const stepBlurb = step === 1 ? SETUP.who.blurb : step === 2 ? SETUP.howMany.blurb : null;
 
   return (
-    <Card accessibilityLabel="Setting up your sealed box" contentStyle={{ gap: spacing[4] }}>
+    <Card accessibilityLabel={tr('Setting up your sealed box')} contentStyle={{ gap: spacing[4] }}>
       <View>
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink3, letterSpacing: 0.3 }}>
           {SETUP.step(step, STEPS)}

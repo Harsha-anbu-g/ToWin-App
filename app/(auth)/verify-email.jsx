@@ -11,6 +11,7 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import Screen from '../../src/components/ui/Screen';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 export default function VerifyEmail() {
   const { t, spacing, text, fontFamily } = useTheme();
@@ -49,19 +50,19 @@ export default function VerifyEmail() {
           <>
             <ActivityIndicator color={t.blue} />
             <Text accessibilityRole="header" style={{ ...heading, marginTop: spacing[4] }}>
-              Verifying your email…
+              {tr('Verifying your email…')}
             </Text>
-            <Text style={body}>Just a moment.</Text>
+            <Text style={body}>{tr('Just a moment.')}</Text>
           </>
         ) : null}
         {state === 'success' ? (
           <>
             <Text accessibilityRole="header" style={heading}>
-              Email verified!
+              {tr('Email verified!')}
             </Text>
-            <Text style={body}>Your account is ready. Please log in to get started.</Text>
+            <Text style={body}>{tr('Your account is ready. Please log in to get started.')}</Text>
             <Button
-              title="Go to log in"
+              title={tr('Go to log in')}
               variant="primary"
               onPress={() => router.replace('/(auth)/login')}
               style={{ marginTop: spacing[6] }}
@@ -71,14 +72,13 @@ export default function VerifyEmail() {
         {state === 'offline' ? (
           <>
             <Text accessibilityRole="header" style={heading}>
-              Couldn't reach Towinly
+              {tr("Couldn't reach Towinly")}
             </Text>
             <Text style={body}>
-              Your link is still good. We just couldn't get through to check it. Please check your
-              connection and try again.
+              {tr("Your link is still good. We just couldn't get through to check it. Please check your connection and try again.")}
             </Text>
             <Button
-              title="Try again"
+              title={tr('Try again')}
               variant="primary"
               onPress={verify}
               style={{ marginTop: spacing[6] }}
@@ -88,13 +88,13 @@ export default function VerifyEmail() {
         {state === 'error' ? (
           <>
             <Text accessibilityRole="header" style={heading}>
-              Link didn't work
+              {tr("Link didn't work")}
             </Text>
             <Text style={body}>
-              This link is invalid or has expired. Please sign up again to get a fresh one.
+              {tr('This link is invalid or has expired. Please sign up again to get a fresh one.')}
             </Text>
             <Button
-              title="Back to sign up"
+              title={tr('Back to sign up')}
               variant="primary"
               onPress={() => router.replace('/(auth)/register')}
               style={{ marginTop: spacing[6] }}

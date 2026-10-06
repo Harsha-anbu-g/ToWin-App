@@ -43,6 +43,7 @@ import { useAuth } from '../src/context/AuthContext';
 import { useUnseenTokens } from '../src/lib/seenIds';
 import { UPDATES_CATEGORY, markUpdateSeen, timeAgo, useUpdatesFeed } from '../src/lib/updatesFeed';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 // One glyph per kind of news, so a row is recognisable before it is read.
 const KIND_ICONS = {
@@ -168,7 +169,7 @@ export default function UpdatesScreen() {
   const gutter = { padding: spacing[5] };
 
   return (
-    <Screen back title="Updates" scroll={false} contentStyle={{ padding: 0 }}>
+    <Screen back title={tr('Updates')} scroll={false} contentStyle={{ padding: 0 }}>
       {items.length === 0 && isLoading ? (
         // Nothing to show YET. Six sources feed this list and the first paint
         // happens before any of them answer.
@@ -181,13 +182,13 @@ export default function UpdatesScreen() {
         // total fetch failure and a genuinely empty week looked identical, and
         // the person was told there was nothing new when nothing had loaded.
         <View style={gutter}>
-          <LoadError what="your updates" onRetry={reload} />
+          <LoadError what={tr('your updates')} onRetry={reload} />
         </View>
       ) : items.length === 0 ? (
         <View style={[gutter, { alignItems: 'center', paddingTop: spacing[10], gap: spacing[3] }]}>
           <Bell size={40} color={t.inkFaint2} strokeWidth={1.5} />
           <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center' }}>
-            Nothing new right now.{'\n'}Friend requests, offers, and messages will show up here.
+            {tr('Nothing new right now.\nFriend requests, offers, and messages will show up here.')}
           </Text>
         </View>
       ) : (
@@ -197,7 +198,7 @@ export default function UpdatesScreen() {
             // still show; the gap is named above them rather than hidden.
             isError ? (
               <View style={{ paddingHorizontal: spacing[5] }}>
-                <LoadError what="all of your updates" onRetry={reload} bare />
+                <LoadError what={tr('all of your updates')} onRetry={reload} bare />
               </View>
             ) : null
           }

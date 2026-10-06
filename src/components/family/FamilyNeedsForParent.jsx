@@ -15,6 +15,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import { tr } from '../../i18n';
 
 // The same everyday words the parent sees on their own form.
 const CATEGORIES = [
@@ -81,7 +82,7 @@ export default function FamilyNeedsForParent({
   const [fieldErrors, setFieldErrors] = useState({});
   const [confirmId, setConfirmId] = useState(null);
 
-  const parent = elderName || 'your parent';
+  const parent = elderName || tr('your parent');
   const needs = openNeeds || [];
 
   const post = useMutation({
@@ -99,22 +100,22 @@ export default function FamilyNeedsForParent({
       setForm(EMPTY_FORM);
       setFieldErrors({});
       setFormOpen(false);
-      showToast(`Asked for help for ${parent}. Helpers will see you asked for them.`, 'success');
+      showToast(tr('Asked for help for {parent}. Helpers will see you asked for them.', { parent }), 'success');
       onChanged?.();
     },
     onError: (err) =>
-      setFormMsg(err?.response?.data?.message || 'Could not send that request. Please try again.'),
+      setFormMsg(err?.response?.data?.message || tr('Could not send that request. Please try again.')),
   });
 
   const close = useMutation({
     mutationFn: (needId) => removeHelpRequest(needId),
     onSuccess: () => {
-      showToast(`Closed that request for ${parent}.`, 'success');
+      showToast(tr('Closed that request for {parent}.', { parent }), 'success');
       onChanged?.();
     },
     onError: (err) =>
       showToast(
-        err?.response?.data?.message || 'Could not close that request. Please try again.',
+        err?.response?.data?.message || tr('Could not close that request. Please try again.'),
         'error'
       ),
   });
@@ -129,7 +130,7 @@ export default function FamilyNeedsForParent({
   // place under the field.
   const postNeed = () => {
     const errs = {};
-    if (!form.title.trim()) errs.title = `Please write what ${parent} needs help with.`;
+    if (!form.title.trim()) errs.title = tr('Please write what {parent} needs help with.', { parent });
     errs.title = errs.title || objectionableError(form.title);
     errs.description = objectionableError(form.description);
     Object.keys(errs).forEach((k) => { if (!errs[k]) delete errs[k]; });
@@ -154,19 +155,18 @@ export default function FamilyNeedsForParent({
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        {parent}&apos;s open help requests
+        {tr("{parent}'s open help requests", { parent })}
       </Text>
 
       {canManage ? (
         <Text style={{ fontSize: type.meta, color: t.trustGold, lineHeight: 20, marginTop: spacing[2] }}>
-          {parent} asked you to handle these for them. Helpers always see your name next to theirs
-          on anything you do here.
+          {tr('{parent} asked you to handle these for them. Helpers always see your name next to theirs on anything you do here.', { parent })}
         </Text>
       ) : null}
 
       {needs.length === 0 ? (
         <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}>
-          {parent} has no open help requests right now.
+          {tr('{parent} has no open help requests right now.', { parent })}
         </Text>
       ) : null}
 
@@ -196,13 +196,13 @@ export default function FamilyNeedsForParent({
                 marginTop: spacing[1],
               }}
             >
-              Asked by {n.actedByName}, for {parent}
+              {tr('Asked by {actedByName}, for {parent}', { actedByName: n.actedByName, parent })}
             </Text>
           ) : null}
 
           {canManage && confirmId !== n.id ? (
             <ActionChip
-              label={closing === n.id ? 'Closing…' : `Close this request for ${parent}`}
+              label={closing === n.id ? tr('Closing…') : tr('Close this request for {parent}', { parent })}
               disabled={closing === n.id}
               onPress={() => setConfirmId(n.id)}
               style={{ marginTop: spacing[3], alignSelf: 'flex-start' }}
@@ -212,11 +212,11 @@ export default function FamilyNeedsForParent({
           {canManage && confirmId === n.id ? (
             <View style={{ marginTop: spacing[3], gap: spacing[2] }}>
               <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 22 }}>
-                Close this for {parent}? Helpers will stop seeing it.
+                {tr('Close this for {parent}? Helpers will stop seeing it.', { parent })}
               </Text>
               <View style={{ flexDirection: 'row', gap: spacing[3] }}>
                 <ActionChip
-                  label="Yes, close it"
+                  label={tr('Yes, close it')}
                   tonal
                   onPress={() => {
                     setConfirmId(null);
@@ -224,7 +224,7 @@ export default function FamilyNeedsForParent({
                   }}
                   style={{ flex: 1 }}
                 />
-                <ActionChip label="Keep it" onPress={() => setConfirmId(null)} style={{ flex: 1 }} />
+                <ActionChip label={tr('Keep it')} onPress={() => setConfirmId(null)} style={{ flex: 1 }} />
               </View>
             </View>
           ) : null}
@@ -235,7 +235,7 @@ export default function FamilyNeedsForParent({
         <Button
           // secondary: Message {parent} is the screen's ONE filled primary
           // (rulebook) — this opener must not compete.
-          title={`Ask for help for ${parent}`}
+          title={tr('Ask for help for {parent}', { parent })}
           variant="secondary"
           onPress={() => {
             setFormOpen(true);
@@ -257,22 +257,22 @@ export default function FamilyNeedsForParent({
           }}
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, lineHeight: 22 }}>
-            Ask for help for {parent}
+            {tr('Ask for help for {parent}', { parent })}
           </Text>
 
           <Input
-            label={`What does ${parent} need help with?`}
+            label={tr('What does {parent} need help with?', { parent })}
             value={form.title}
             onChangeText={(v) => {
               setForm((f) => ({ ...f, title: v }));
               setFieldErrors((f) => ({ ...f, title: '' }));
             }}
             error={fieldErrors.title}
-            placeholder="A ride to the doctor on Tuesday"
+            placeholder={tr('A ride to the doctor on Tuesday')}
           />
 
           <Input
-            label="Anything else a helper should know? (optional)"
+            label={tr('Anything else a helper should know? (optional)')}
             value={form.description}
             onChangeText={(v) => {
               setForm((f) => ({ ...f, description: v }));
@@ -284,11 +284,11 @@ export default function FamilyNeedsForParent({
 
           <View>
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, marginBottom: spacing[2] }}>
-              What kind of help?
+              {tr('What kind of help?')}
             </Text>
             <View
               accessibilityRole="radiogroup"
-              accessibilityLabel="What kind of help?"
+              accessibilityLabel={tr('What kind of help?')}
               style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing[2] }}
             >
               {CATEGORIES.map(([key, label]) => (
@@ -304,11 +304,11 @@ export default function FamilyNeedsForParent({
 
           <View>
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, marginBottom: spacing[2] }}>
-              How soon does {parent} need it?
+              {tr('How soon does {parent} need it?', { parent })}
             </Text>
             <View
               accessibilityRole="radiogroup"
-              accessibilityLabel={`How soon does ${parent} need it?`}
+              accessibilityLabel={tr('How soon does {parent} need it?', { parent })}
               style={{ flexDirection: 'row', gap: spacing[2] }}
             >
               {URGENCIES.map(([key, label]) => (
@@ -332,19 +332,19 @@ export default function FamilyNeedsForParent({
           ) : null}
 
           <Text style={{ fontSize: type.meta, color: t.trustGold, lineHeight: 20 }}>
-            This goes out as {parent}&apos;s request, with your name on it as the person who asked.
+            {tr("This goes out as {parent}'s request, with your name on it as the person who asked.", { parent })}
           </Text>
 
           <View style={{ flexDirection: 'row', gap: spacing[3] }}>
             <Button
-              title={post.isPending ? 'Sending…' : `Send for ${parent}`}
+              title={post.isPending ? tr('Sending…') : tr('Send for {parent}', { parent })}
               variant="secondary"
               onPress={postNeed}
               disabled={post.isPending}
               style={{ flex: 1 }}
             />
             <ActionChip
-              label="Never mind"
+              label={tr('Never mind')}
               onPress={() => {
                 setFormOpen(false);
                 setFormMsg('');

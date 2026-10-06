@@ -40,6 +40,7 @@ import { useToast } from '../../../src/context/ToastContext';
 import { SHARING_GIVES } from '../../../src/lib/sharingGives';
 import { SHORT_STAGES, TRUSTED_STAGE, stageIndexOf } from '../../../src/lib/trustStages';
 import { useTheme } from '../../../src/theme/ThemeContext';
+import { tr } from '../../../src/i18n';
 
 /** The "are they alright?" answer, in the header where it never hides behind a tab. */
 function CheckInChip({ checkedIn }) {
@@ -63,7 +64,7 @@ function CheckInChip({ checkedIn }) {
     >
       <Icon size={13} color={color} strokeWidth={2.4} />
       <Text style={{ fontSize: type.meta, fontWeight: '600', color }}>
-        {checkedIn ? 'Checked in today' : 'No check-in yet today'}
+        {checkedIn ? tr('Checked in today') : tr('No check-in yet today')}
       </Text>
     </View>
   );
@@ -107,7 +108,7 @@ export default function FamilyParentScreen() {
   const standings = standingsData?.standings || [];
   const powers = link?.delegatedPowers || [];
   const sharedHelpers = j?.sharedHelpers || [];
-  const elderName = j?.elderName || link?.otherUserName || 'your parent';
+  const elderName = j?.elderName || link?.otherUserName || tr('your parent');
 
   // Open (or reopen) the private chat with the parent. The link is the only
   // permission; the server checks it and hands back the conversation to open.
@@ -118,7 +119,7 @@ export default function FamilyParentScreen() {
       router.push(`/chat/${chatId}`);
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Could not open the chat. Please try again.'), 'error'),
   });
 
   const loaded = !linksLoading && family !== undefined;
@@ -138,7 +139,7 @@ export default function FamilyParentScreen() {
           }}
         >
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-            This parent is no longer linked to you
+            {tr('This parent is no longer linked to you')}
           </Text>
           <Text
             style={{
@@ -149,11 +150,11 @@ export default function FamilyParentScreen() {
               textAlign: 'center',
             }}
           >
-            This link may have been removed.
+            {tr('This link may have been removed.')}
           </Text>
           {/* The empty state carries its own action (rulebook). */}
           <Button
-            title="Back to My Parents"
+            title={tr('Back to My Parents')}
             variant="secondary"
             onPress={() => router.replace('/(tabs)/home')}
             style={{ marginTop: spacing[4], alignSelf: 'stretch' }}
@@ -171,7 +172,7 @@ export default function FamilyParentScreen() {
         // A dropped links fetch used to hold the skeleton forever (UX-706).
         // It must also never wear "this parent is no longer linked to you".
         <LoadError
-          what="your parent's page"
+          what={tr("your parent's page")}
           onRetry={refetchLinks}
           style={{ marginTop: spacing[4] }}
         />
@@ -194,8 +195,8 @@ export default function FamilyParentScreen() {
               </Text>
               <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
                 {link?.relationship
-                  ? `You're ${elderName}'s ${link.relationship.toLowerCase()}`
-                  : 'Your family member'}
+                  ? tr("You're {elderName}'s {toLowerCase}", { elderName, toLowerCase: link.relationship.toLowerCase() })
+                  : tr('Your family member')}
               </Text>
             </View>
           </View>
@@ -205,7 +206,7 @@ export default function FamilyParentScreen() {
             </View>
           ) : null}
           <Button
-            title={messageParent.isPending ? 'Opening…' : `Message ${elderName}`}
+            title={messageParent.isPending ? tr('Opening…') : tr('Message {elderName}', { elderName })}
             onPress={() => messageParent.mutate()}
             disabled={messageParent.isPending}
             style={{ marginTop: spacing[4] }}
@@ -215,13 +216,13 @@ export default function FamilyParentScreen() {
               an open help request is the one thing that may want acting on. */}
           <SegmentedControl
             segments={[
-              { key: 'friendships', label: 'Friendships' },
+              { key: 'friendships', label: tr('Friendships') },
               {
                 key: 'today',
-                label: 'Today',
+                label: tr('Today'),
                 count: (j?.openNeedsCount ?? j?.openNeeds?.length) || undefined,
               },
-              { key: 'powers', label: 'What I can do' },
+              { key: 'powers', label: tr('What I can do') },
             ]}
             value={tab}
             onChange={setTab}
@@ -236,10 +237,10 @@ export default function FamilyParentScreen() {
                 accessibilityRole="header"
                 style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, marginTop: spacing[5] }}
               >
-                Friendships shared with you
+                {tr('Friendships shared with you')}
               </Text>
               <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}>
-                {elderName} chooses which friendships you see here.
+                {tr('{elderName} chooses which friendships you see here.', { elderName })}
               </Text>
 
               {/* What sharing gives you is explained once — in the empty
@@ -250,7 +251,7 @@ export default function FamilyParentScreen() {
                   <Text
                     style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[3] }}
                   >
-                    No friendships shared with you yet. When {elderName} shares one, you can:
+                    {tr('No friendships shared with you yet. When {elderName} shares one, you can:', { elderName })}
                   </Text>
                   <View style={{ marginTop: spacing[2] }}>
                     {SHARING_GIVES.map((g) => (
@@ -304,7 +305,7 @@ export default function FamilyParentScreen() {
                       {h.trustScore != null ? <TrustBadge score={h.trustScore} /> : null}
                     </View>
                     <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-                      Stage {Math.min(stage + 1, 7)} of 7 · {h.stageLabel || SHORT_STAGES[stage]}
+                      {tr('Stage {min} of 7 ·', { min: Math.min(stage + 1, 7) })}{' '}{tr(h.stageLabel || SHORT_STAGES[stage])}
                     </Text>
                   </View>
                 </View>
@@ -317,7 +318,7 @@ export default function FamilyParentScreen() {
                   >
                     <UserRound size={15} color={t.blueDeep} strokeWidth={2} />
                     <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flex: 1 }}>
-                      {h.helperName} is getting ready to meet in person
+                      {tr('{helperName} is getting ready to meet in person', { helperName: h.helperName })}
                     </Text>
                   </View>
                 ) : null}
@@ -326,7 +327,7 @@ export default function FamilyParentScreen() {
                 <Pressable
                   onPress={() => router.push(`/user/${h.helperUserId}`)}
                   accessibilityRole="button"
-                  accessibilityLabel={`See ${h.helperName}'s full profile`}
+                  accessibilityLabel={tr("See {helperName}'s full profile", { helperName: h.helperName })}
                   style={({ pressed }) => ({
                     minHeight: 44,
                     justifyContent: 'center',
@@ -335,7 +336,7 @@ export default function FamilyParentScreen() {
                   })}
                 >
                   <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-                    See their full profile →
+                    {tr('See their full profile →')}
                   </Text>
                 </Pressable>
 
@@ -351,7 +352,7 @@ export default function FamilyParentScreen() {
                 <Pressable
                   onPress={() => router.push(`/chat/${h.connectionId}?channel=family`)}
                   accessibilityRole="button"
-                  accessibilityLabel={`Open the group with ${elderName} and ${h.helperName}`}
+                  accessibilityLabel={tr('Open the group with {elderName} and {helperName}', { elderName, helperName: h.helperName })}
                   style={({ pressed }) => ({
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -363,7 +364,7 @@ export default function FamilyParentScreen() {
                 >
                   <MessageCircle size={15} color={t.blueDeep} strokeWidth={2} />
                   <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-                    Open the group chat
+                    {tr('Open the group chat')}
                   </Text>
                 </Pressable>
 
@@ -381,7 +382,7 @@ export default function FamilyParentScreen() {
                     <Text
                       style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold, lineHeight: 20 }}
                     >
-                      Anything you do here is in {elderName}&apos;s name
+                      {tr("Anything you do here is in {elderName}'s name", { elderName })}
                     </Text>
                     {canAdvance ? (
                       <FamilyTrustAdvance helper={h} elderName={elderName} onChanged={reload} />
@@ -403,7 +404,7 @@ export default function FamilyParentScreen() {
                   (rulebook: no silent partial failure). */}
               {journeyFailed ? (
                 <LoadError
-                  what={`how ${elderName} is doing`}
+                  what={tr('how {elderName} is doing', { elderName })}
                   onRetry={refetchJourney}
                   style={{ marginTop: spacing[4] }}
                 />
@@ -415,7 +416,7 @@ export default function FamilyParentScreen() {
                     accessibilityRole="header"
                     style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
                   >
-                    How {elderName} is today
+                    {tr('How {elderName} is today', { elderName })}
                   </Text>
                   <ParentStatusLine journey={j} />
 
@@ -442,7 +443,7 @@ export default function FamilyParentScreen() {
               <Text
                 style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[5] }}
               >
-                On a friendship {elderName} shares, you can:
+                {tr('On a friendship {elderName} shares, you can:', { elderName })}
               </Text>
               <View style={{ marginTop: spacing[2] }}>
                 {SHARING_GIVES.map((g) => (

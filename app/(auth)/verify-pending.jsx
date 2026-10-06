@@ -14,6 +14,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useToast } from '../../src/context/ToastContext';
 import { parseJwtPayload } from '../../src/lib/jwt';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
+import emphasize from '../../src/i18n/emphasize';
 
 export default function VerifyPending() {
   const { t, spacing, radius, text, fontFamily } = useTheme();
@@ -31,9 +33,9 @@ export default function VerifyPending() {
     setSending(true);
     try {
       await resendVerificationEmail();
-      showToast('Verification email sent. Check your inbox.', 'success');
+      showToast(tr('Verification email sent. Check your inbox.'), 'success');
     } catch (e) {
-      showToast(e?.response?.data?.message || 'Could not send the email. Try again shortly.', 'error');
+      showToast(e?.response?.data?.message || tr('Could not send the email. Try again shortly.'), 'error');
     } finally {
       setSending(false);
     }
@@ -52,14 +54,14 @@ export default function VerifyPending() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, textAlign: 'center' }}
         >
-          Verify your email
+          {tr('Verify your email')}
         </Text>
         <Text style={{ fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[3], lineHeight: 26 }}>
-          We sent a verification link to{' '}
-          {email ? <Text style={{ fontWeight: '600', color: t.ink }}>{email}</Text> : 'your email'}.
+          {tr('We sent a verification link to')}{' '}
+          {email ? <Text style={{ fontWeight: '600', color: t.ink }}>{email}</Text> : tr('your email')}.
         </Text>
         <Text style={{ fontSize: text.base, color: t.slate, textAlign: 'center', marginTop: spacing[2], lineHeight: 26 }}>
-          Open it to activate your account, then sign in again to continue.
+          {tr('Open it to activate your account, then sign in again to continue.')}
         </Text>
 
         <View
@@ -73,15 +75,15 @@ export default function VerifyPending() {
           }}
         >
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
-            <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
-            <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder. The Towinly verification email often lands there. If you find it, mark it "Not spam"
-            so future emails reach your inbox.
+            {emphasize(
+              tr('*Can\'t find it?* Please check your *Spam* or *Junk* folder. The Towinly verification email often lands there. If you find it, mark it "Not spam" so future emails reach your inbox.'),
+              { fontWeight: '700' }
+            )}
           </Text>
         </View>
 
         <Button
-          title={sending ? 'Sending…' : 'Resend email'}
+          title={sending ? tr('Sending…') : tr('Resend email')}
           variant="primary"
           onPress={resend}
           loading={sending}
@@ -90,7 +92,7 @@ export default function VerifyPending() {
         {/* The label names its consequence — this signs the current session
             out so the fresh JWT can carry the verified claim (rulebook). */}
         <TextLink
-          label="I've verified. Sign in again"
+          label={tr("I've verified. Sign in again")}
           onPress={backToLogin}
           style={{ marginTop: spacing[2] }}
         />

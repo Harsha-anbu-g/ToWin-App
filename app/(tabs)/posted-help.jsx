@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import PostedHelpList from '../../src/components/needs/PostedHelpList';
 import Screen from '../../src/components/ui/Screen';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 export default function PostedHelp() {
   const { t, spacing, fontFamily } = useTheme();
@@ -16,7 +17,7 @@ export default function PostedHelp() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
         >
-          Posted Help
+          {tr('Posted Help')}
         </Text>
         <PostedHelpList />
       </View>

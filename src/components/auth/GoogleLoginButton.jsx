@@ -22,6 +22,7 @@ import {
   GOOGLE_G_YELLOW,
 } from '../../theme/parity';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export const GOOGLE_OAUTH_URL = `${API_BASE_URL.replace(/\/api$/, '')}/oauth2/authorization/google`;
 
@@ -38,8 +39,8 @@ function GoogleG() {
 }
 
 export default function GoogleLoginButton({
-  label = 'Log in with Google',
-  dividerLabel = 'or log in with username',
+  label = tr('Log in with Google'),
+  dividerLabel = tr('or log in with username'),
   style,
 }) {
   const { t, radius, text, type, spacing } = useTheme();
@@ -73,7 +74,7 @@ export default function GoogleLoginButton({
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{label}</Text>
       </Pressable>
       <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center', marginTop: spacing[2] }}>
-        Fastest way in, no password to remember.
+        {tr('Fastest way in, no password to remember.')}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3], marginVertical: spacing[5] }}>
         <View style={{ flex: 1, height: 1, backgroundColor: t.border }} />

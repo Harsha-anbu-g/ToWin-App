@@ -33,6 +33,9 @@ import { markOnboarded } from '../../src/lib/onboarding';
 import { useReducedMotion } from '../../src/lib/useReducedMotion';
 import { DURATION, EASE } from '../../src/theme/motion';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
+import emphasize from '../../src/i18n/emphasize';
+import LanguagePicker from '../../src/components/LanguagePicker';
 
 // Indexed to match STAGES (src/lib/trustStages.js), not keyed by the rung's
 // words: the names live in one file now (HARD-110). The last rung is the goal
@@ -106,7 +109,7 @@ function MiniCard({ title, badge, stars, Icon, children }) {
           // things.
           accessible
           accessibilityRole="image"
-          accessibilityLabel="five stars"
+          accessibilityLabel={tr('five stars')}
           style={{ flexDirection: 'row', gap: 3, marginBottom: 4 }}
         >
           {Array.from({ length: 5 }).map((_, i) => (
@@ -132,12 +135,14 @@ function Slide({ index }) {
         <View style={{ alignItems: 'center' }}>
           <IntroBrandLockup size={58} wordStyle={{ fontSize: 26, fontWeight: '600', color: t.ink, letterSpacing: -0.6 }} />
           <Text style={{ fontFamily: fontFamily.display, fontSize: 34, color: t.ink, letterSpacing: -0.7, lineHeight: 38, textAlign: 'center', marginTop: 24, marginBottom: 16 }}>
-            It takes <Text style={{ fontFamily: fontFamily.displayItalic }}>two</Text> To Win.
+            {emphasize(tr('It takes *two* To Win.'), { fontFamily: fontFamily.displayItalic })}
           </Text>
           <Text style={{ fontSize: 16, fontWeight: '500', color: t.inkSlate, textAlign: 'center', marginBottom: 12 }}>
-            Connecting generations, building <Text style={{ color: t.trustGold, fontWeight: '600' }}>trust</Text>.
+            {emphasize(tr('Connecting generations, building *trust*.'), { color: t.trustGold, fontWeight: '600' })}
           </Text>
           <Text style={{ fontSize: type.body, color: t.ink2, lineHeight: 22, textAlign: 'center' }}>{COPY.welcome.body}</Text>
+          {/* First thing a newcomer can do: pick the language the rest is told in. */}
+          <LanguagePicker variant="inline" style={{ marginTop: 20 }} />
         </View>
       )}
 
@@ -160,7 +165,7 @@ function Slide({ index }) {
           <Title>{COPY.solves.title}</Title>
           <Lead>{COPY.solves.lead}</Lead>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 16 }}>
-            {COPY.solves.chips.map((label, i) => {
+            {COPY.solves.chips.map((chip) => tr(chip)).map((label, i) => {
               const Icon = [ShoppingBag, Car, MessageCircle][i];
               return (
                 <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: radius.pill, paddingVertical: 8, paddingHorizontal: 16 }}>
@@ -177,7 +182,7 @@ function Slide({ index }) {
       {index === 3 && (
         <View>
           <Title>
-            <Text style={{ color: t.trustGold }}>Trust</Text> is earned, not given
+            {emphasize(tr('*Trust* is earned, not given'), { color: t.trustGold })}
           </Title>
           <Lead>{COPY.trust.lead}</Lead>
           <View style={{ gap: 8, marginBottom: 12 }}>
@@ -202,7 +207,7 @@ function Slide({ index }) {
       {index === 4 && (
         <View>
           <Title>
-            Rooting (<Text style={{ color: t.trustGold }}>Trust</Text> Ladder): how trust grows
+            {emphasize(tr('Rooting (*Trust* Ladder): how trust grows'), { color: t.trustGold })}
           </Title>
           <Lead>{COPY.rooting.lead}</Lead>
           <View style={{ alignSelf: 'center', marginBottom: 12 }}>
@@ -240,7 +245,7 @@ function Slide({ index }) {
                     </Text>
                     <View style={{ flexDirection: 'row', backgroundColor: t.blueWash, borderWidth: 1, borderColor: t.blueSoft, borderRadius: radius.pill, paddingVertical: 1, paddingHorizontal: 8 }}>
                       <Text style={{ fontSize: 11, fontWeight: '700', color: t.blueDeep }}>+1</Text>
-                      <Text style={{ fontSize: 11, fontWeight: '700', color: t.inkSlate }}> trust score</Text>
+                      <Text style={{ fontSize: 11, fontWeight: '700', color: t.inkSlate }}>{' '}{tr('trust score')}</Text>
                     </View>
                   </View>
                 </View>
@@ -294,7 +299,7 @@ function Slide({ index }) {
             })}
           </View>
           <Text style={{ fontFamily: fontFamily.display, fontSize: 19, color: t.ink, lineHeight: 26, textAlign: 'center' }}>
-            Towinly is where they meet and share, and <Text style={{ fontFamily: fontFamily.displayItalic }}>both</Text> win.
+            {emphasize(tr('Towinly is where they meet and share, and *both* win.'), { fontFamily: fontFamily.displayItalic })}
           </Text>
         </View>
       )}
@@ -373,7 +378,7 @@ export default function Landing() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TortoiseMark size={24} />
-          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>Towinly</Text>
+          <Text style={{ fontSize: type.wordmark, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.4 }}>{tr('Towinly')}</Text>
         </View>
         {/* gap 24, not 16: the two 8pt side slops eat 16 between them, and
             these are different destinations — 8dp of inert space has to survive. */}
@@ -382,7 +387,7 @@ export default function Landing() {
               NEW person — Log in alone routed them to the wrong door). */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Skip the story and sign up"
+            accessibilityLabel={tr('Skip the story and sign up')}
             onPress={() => go('/(auth)/register')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={({ pressed }) => ({
@@ -395,11 +400,11 @@ export default function Landing() {
               paddingHorizontal: 4,
             })}
           >
-            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.inkSlate }}>Skip</Text>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.inkSlate }}>{tr('Skip')}</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Log in"
+            accessibilityLabel={tr('Log in')}
             onPress={() => go('/(auth)/login')}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             style={({ pressed }) => ({
@@ -412,7 +417,7 @@ export default function Landing() {
               paddingHorizontal: 4,
             })}
           >
-            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>Log in</Text>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.blueDeep }}>{tr('Log in')}</Text>
           </Pressable>
         </View>
       </View>
@@ -445,7 +450,7 @@ export default function Landing() {
                     say "Start" and land on the login form, which is a door
                     they have no key to. Returning people still have the Log in
                     link in the top bar, where it has always been. */}
-                <Button title="Create my account" onPress={() => go('/(auth)/register')} />
+                <Button title={tr('Create my account')} onPress={() => go('/(auth)/register')} />
               </View>
             ) : null}
           </View>

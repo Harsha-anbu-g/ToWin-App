@@ -19,6 +19,7 @@
 // measured, we do not claim a phone line that does not exist, and we do not
 // describe safety machinery the code does not have.
 import { DELETION_PAGE_URL, legalContactEmail } from './legalContent';
+import { tr } from '../i18n';
 
 /**
  * The address typed into App Store Connect (Support URL) and Play Console.
@@ -43,36 +44,22 @@ export function supportMailto(email) {
 export const SUPPORT_PAGE = {
   // One heading, rendered by <Screen title>, kept short because the header row
   // shares its width with the back control.
-  title: 'Get help',
+  get title() { return tr('Get help'); },
 
-  intro:
-    'Towinly connects older people with younger helpers for company and everyday help. ' +
-    'If something is not working, or you are unsure about someone you have met here, ' +
-    'write to us. A person reads every message.',
+  get intro() { return tr('Towinly connects older people with younger helpers for company and everyday help. If something is not working, or you are unsure about someone you have met here, write to us. A person reads every message.'); },
 
   sections: [
     {
-      h: 'Ask us anything',
-      p:
-        'Write to us about anything at all: a button that does nothing, a word you do not ' +
-        'understand, a person who worries you, or a question about how Towinly works. ' +
-        'There is no wrong question. Tell us what you were doing and what happened, and ' +
-        'we will take it from there.',
+      get h() { return tr('Ask us anything'); },
+      get p() { return tr('Write to us about anything at all: a button that does nothing, a word you do not understand, a person who worries you, or a question about how Towinly works. There is no wrong question. Tell us what you were doing and what happened, and we will take it from there.'); },
     },
     {
-      h: 'How long it takes',
-      p:
-        'Towinly is small and new, so replies come from a person rather than a call centre. ' +
-        'We answer as quickly as we can. If your message is about someone putting you or ' +
-        'your family at risk, say so at the top and we will look at it first.',
+      get h() { return tr('How long it takes'); },
+      get p() { return tr('Towinly is small and new, so replies come from a person rather than a call centre. We answer as quickly as we can. If your message is about someone putting you or your family at risk, say so at the top and we will look at it first.'); },
     },
     {
-      h: 'If you feel unsafe',
-      p:
-        'You can block a person from their profile at any time, and you do not have to ' +
-        'explain why. Blocking is silent: they are not told. If you are in immediate ' +
-        'danger, call your local emergency number first. Then write to us so we can act ' +
-        'on the account.',
+      get h() { return tr('If you feel unsafe'); },
+      get p() { return tr('You can block a person from their profile at any time, and you do not have to explain why. Blocking is silent: they are not told. If you are in immediate danger, call your local emergency number first. Then write to us so we can act on the account.'); },
     },
     {
       // Walked against the app on 2026-08-22 (HARD-112). This used to say "open
@@ -82,12 +69,8 @@ export const SUPPORT_PAGE = {
       // (app/(tabs)/profile.jsx -> /guide). The contents listed here are the
       // Guide's own four cards, not the walk-through of every screen the old
       // sentence promised: the trust score has no section in it at all.
-      h: 'Learning your way around',
-      p:
-        'The Guide inside the app explains what you can do in your part of Towinly, all seven ' +
-        'steps of the trust ladder and what each one means, and how to stay safe when you meet ' +
-        'somebody. Open Profile at the bottom of the screen and tap Guide. You can read it as ' +
-        'many times as you like.',
+      get h() { return tr('Learning your way around'); },
+      get p() { return tr('The Guide inside the app explains what you can do in your part of Towinly, all seven steps of the trust ladder and what each one means, and how to stay safe when you meet somebody. Open Profile at the bottom of the screen and tap Guide. You can read it as many times as you like.'); },
     },
     {
       // "A parent circle" was a name for something the product does not have: it
@@ -96,35 +79,28 @@ export const SUPPORT_PAGE = {
       // (FamilyHomePanel.jsx:112, posting /family/requests). Nothing is shared
       // before the parent accepts (AddParentForm COPY.elder), and every setting
       // and power starts off (app/family/index.jsx: "Everything starts off.").
-      h: 'Helping an older parent',
-      p:
-        'A family member joins by asking. On the Home screen, tap "Add your parent" and type ' +
-        'the name your parent uses on Towinly. Nothing is shared until your parent says yes. ' +
-        'After that the elder stays in charge: every sharing setting and every power starts ' +
-        'off, and only the elder can turn one on. If you are setting Towinly up for a parent ' +
-        'and get stuck, write to us and say so.',
+      get h() { return tr('Helping an older parent'); },
+      get p() { return tr('A family member joins by asking. On the Home screen, tap "Add your parent" and type the name your parent uses on Towinly. Nothing is shared until your parent says yes. After that the elder stays in charge: every sharing setting and every power starts off, and only the elder can turn one on. If you are setting Towinly up for a parent and get stuck, write to us and say so.'); },
     },
     {
       // The same two rows the deletion page quotes, so a person reading either
       // one taps the same words. profile-label-drift.test.js renders the profile
       // screen and proves both pages quote what the app puts on screen.
-      h: 'Closing your account',
-      p:
-        'Open Profile, tap "Account and data", then "Delete my account". If you cannot get ' +
-        'in, you can ask us on the web instead, without installing anything.',
+      get h() { return tr('Closing your account'); },
+      get p() { return tr('Open Profile, tap "Account and data", then "Delete my account". If you cannot get in, you can ask us on the web instead, without installing anything.'); },
     },
   ],
 
-  actionLabel: 'Write to us',
+  get actionLabel() { return tr('Write to us'); },
 
   // What the press did, said on the page and not only in a toast: a mail app
   // opens over this page and a toast is long gone by the time the person comes
   // back (HCI 1, same reasoning as the deletion page).
-  started: (email) => `We have started a message to ${email}. Tell us what happened and send it.`,
+  started: (email) => tr('We have started a message to {email}. Tell us what happened and send it.', { email }),
   startedOnWeb: (email) =>
-    `If a mail app opened, tell us what happened and send it. If nothing opened, write to ${email} yourself.`,
-  noMailApp: (email) => `No mail app opened. Write to ${email} and tell us what happened.`,
+    tr('If a mail app opened, tell us what happened and send it. If nothing opened, write to {email} yourself.', { email }),
+  noMailApp: (email) => tr('No mail app opened. Write to {email} and tell us what happened.', { email }),
 
-  deletionLinkLabel: 'Delete your account on the web',
+  get deletionLinkLabel() { return tr('Delete your account on the web'); },
   deletionUrl: DELETION_PAGE_URL,
 };

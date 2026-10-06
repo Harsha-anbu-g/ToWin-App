@@ -16,6 +16,7 @@ import TextLink from '../../src/components/ui/TextLink';
 import { SIGNUP_ROLE_PROMPT, SIGNUP_ROLES } from '../../src/data/signupRoles';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
+import { tr } from '../../src/i18n';
 
 export default function Register() {
   const { t, type, fontFamily, pressRipple } = useTheme();
@@ -31,10 +32,10 @@ export default function Register() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
-          Join Towinly.
+          {tr('Join Towinly.')}
         </Text>
         <Text style={{ fontSize: type.body, color: t.ink3, marginTop: spacing[1], marginBottom: spacing[8] }}>
-          Create your free account in minutes.
+          {tr('Create your free account in minutes.')}
         </Text>
 
         {/* Body size and bold, the same setting finish-setup gives its role
@@ -44,7 +45,7 @@ export default function Register() {
           accessibilityRole="header"
           style={{ fontSize: type.body, fontWeight: '700', color: t.ink, marginBottom: spacing[2] }}
         >
-          {SIGNUP_ROLE_PROMPT}
+          {tr(SIGNUP_ROLE_PROMPT)}
         </Text>
 
         {SIGNUP_ROLES.map(({ value, label, desc }, index) => (
@@ -89,8 +90,8 @@ export default function Register() {
             marginTop: spacing[8],
           }}
         >
-          <Text style={{ fontSize: type.body, color: t.ink3 }}>Already have an account? </Text>
-          <TextLink label="Log in" onPress={() => router.push('/(auth)/login')} />
+          <Text style={{ fontSize: type.body, color: t.ink3 }}>{tr('Already have an account?')}{' '}</Text>
+          <TextLink label={tr('Log in')} onPress={() => router.push('/(auth)/login')} />
         </View>
       </View>
     </Screen>

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import Avatar from '../ui/Avatar';
 import Button from '../ui/Button';
+import { tr } from '../../i18n';
 
 export default function PausedCard({ conn, onResume, resuming }) {
   const { t, radius, type, fontFamily } = useTheme();
@@ -15,11 +16,11 @@ export default function PausedCard({ conn, onResume, resuming }) {
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}>{conn.otherUserName}</Text>
           <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1, lineHeight: 16 }}>
-            On a break. Trust steps and messages are paused.
+            {tr('On a break. Trust steps and messages are paused.')}
           </Text>
         </View>
       </View>
-      <Button title="Resume" variant="secondary" loading={resuming} onPress={onResume} style={{ marginTop: 12 }} />
+      <Button title={tr('Resume')} variant="secondary" loading={resuming} onPress={onResume} style={{ marginTop: 12 }} />
     </View>
   );
 }

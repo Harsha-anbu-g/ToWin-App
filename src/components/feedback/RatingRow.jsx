@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Star } from '../icons';
 import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function RatingRow({ label, value, onChange }) {
   const { t, type } = useTheme();
@@ -19,7 +20,7 @@ export default function RatingRow({ label, value, onChange }) {
           <Pressable
             key={n}
             accessibilityRole="radio"
-            accessibilityLabel={`${label}: ${n} star${n > 1 ? 's' : ''}`}
+            accessibilityLabel={(n > 1 ? tr('{label}: {n} stars', { label, n }) : tr('{label}: 1 star', { label }))}
             aria-checked={value === n}
             onPress={() => {
               // A rating is a value changing under the finger → the selection

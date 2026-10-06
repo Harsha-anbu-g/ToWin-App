@@ -13,13 +13,14 @@
 import { View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import { SkeletonLine } from './Skeleton';
+import { tr } from '../../i18n';
 
 export default function BootScreen() {
   const { t, spacing } = useTheme();
   return (
     <View
       accessibilityRole="progressbar"
-      accessibilityLabel="Loading Towinly"
+      accessibilityLabel={tr('Loading Towinly')}
       style={{
         flex: 1,
         backgroundColor: t.surface,

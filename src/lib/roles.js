@@ -15,22 +15,23 @@
 // button's single line still fits a 5-slot bar on a 320pt phone at the 1.2
 // chrome text cap.
 // The route key stays 'ask'.
+import { tr } from '../i18n';
 export function centerActionFor(role) {
   if (role === 'FAMILY') return null;
-  if (role === 'HELPER') return { key: 'find', label: 'Offer Help' };
-  return { key: 'ask', label: 'Ask Help' };
+  if (role === 'HELPER') return { key: 'find', label: tr('Offer Help') };
+  return { key: 'ask', label: tr('Ask Help') };
 }
 
 // The first tab's identity (route stays "home"; the label is the hub's name).
 export function homeTabFor(role) {
-  if (role === 'FAMILY') return { label: 'My Parents' };
-  if (role === 'HELPER') return { label: 'My Elders' };
-  return { label: 'My Helpers' };
+  if (role === 'FAMILY') return { label: tr('My Parents') };
+  if (role === 'HELPER') return { label: tr('My Elders') };
+  return { label: tr('My Helpers') };
 }
 
 // Second tab: elders track their requests; helpers and family have no second
 // tab (their hub already fills the first slot).
 export function secondTabFor(role) {
   if (role === 'HELPER' || role === 'FAMILY') return null;
-  return { name: 'posted-help', label: 'Posted Help' };
+  return { name: 'posted-help', label: tr('Posted Help') };
 }

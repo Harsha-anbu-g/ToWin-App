@@ -8,6 +8,7 @@ import { logIn } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { yearsOld } from '../../lib/copy';
+import { tr } from '../../i18n';
 
 const DEMO = {
   ELDER: { identifier: 'elder', password: '12345678' },
@@ -17,8 +18,8 @@ const DEMO = {
 // Ages track the demo accounts' seeded birthdates (DemoDataSeeder) so the
 // chips never drift from what the app itself computes.
 const CHIPS = [
-  { role: 'ELDER', label: 'Try as an Elder', sub: `Margaret, ${yearsOld('1953-05-14')}` },
-  { role: 'HELPER', label: 'Try as a Helper', sub: `Harsha, ${yearsOld('2003-03-14')}` },
+  { role: 'ELDER', get label() { return tr('Try as an Elder'); }, get sub() { return tr('Margaret, {yearsOld}', { yearsOld: yearsOld('1953-05-14') }); } },
+  { role: 'HELPER', get label() { return tr('Try as a Helper'); }, get sub() { return tr('Harsha, {yearsOld}', { yearsOld: yearsOld('2003-03-14') }); } },
 ];
 
 export default function DemoCard({ onError }) {
@@ -37,8 +38,8 @@ export default function DemoCard({ onError }) {
     } catch (err) {
       onError?.(
         err?.response?.status === 429
-          ? (err.response.data?.message || 'Too many attempts. Please try again later.')
-          : 'Could not start demo session. Please try again.'
+          ? (err.response.data?.message || tr('Too many attempts. Please try again later.'))
+          : tr('Could not start demo session. Please try again.')
       );
     } finally {
       setLoadingRole('');
@@ -80,7 +81,7 @@ export default function DemoCard({ onError }) {
             overflow: 'hidden',
           }}
         >
-          DEMO
+          {tr('DEMO')}
         </Text>
       </View>
 
@@ -93,7 +94,7 @@ export default function DemoCard({ onError }) {
           marginTop: spacing[1],
         }}
       >
-        Just want to see how it works?
+        {tr('Just want to see how it works?')}
       </Text>
       <Text
         style={{
@@ -105,7 +106,7 @@ export default function DemoCard({ onError }) {
           lineHeight: text.xs * 1.5,
         }}
       >
-        Look around with a sample account, no account needed.
+        {tr('Look around with a sample account, no account needed.')}
       </Text>
 
       <View style={{ flexDirection: 'row', gap: spacing[2] }}>
@@ -130,7 +131,7 @@ export default function DemoCard({ onError }) {
             })}
           >
             <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.blueTeal }}>
-              {loadingRole === role ? 'Opening…' : label}
+              {loadingRole === role ? tr('Opening…') : label}
             </Text>
             <Text style={{ fontSize: 12, color: t.ink3, marginTop: 2 }}>{sub}</Text>
           </Pressable>

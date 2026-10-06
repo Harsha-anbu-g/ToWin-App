@@ -19,6 +19,8 @@ import { useAuth } from '../../src/context/AuthContext';
 import { SIGN_IN_DEVICE_ERROR } from '../../src/lib/copy';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
+import { tr } from '../../src/i18n';
+import LanguagePicker from '../../src/components/LanguagePicker';
 
 // Hoisted so memo'd Inputs get the same style object every render
 const FIELD_GAP = { marginBottom: spacing[5] };
@@ -60,7 +62,7 @@ export default function Login() {
     () => (
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={showPwd ? 'Hide password' : 'Show password'}
+        accessibilityLabel={showPwd ? tr('Hide password') : tr('Show password')}
         onPress={togglePwd}
         hitSlop={8}
         style={({ pressed }) => ({
@@ -82,7 +84,7 @@ export default function Login() {
     // already expired against a clock set far ahead). Navigating anyway sent
     // the person back to this same screen with nothing said at all.
     if (!(await login(token))) {
-      setError(SIGN_IN_DEVICE_ERROR);
+      setError(tr(SIGN_IN_DEVICE_ERROR));
       return;
     }
     router.replace('/'); // index routes by role/verification state
@@ -91,10 +93,10 @@ export default function Login() {
   const handleSubmit = async () => {
     setError('');
     const errs = {};
-    if (!form.identifier.trim()) errs.identifier = 'Enter your username, Gmail, or phone number';
+    if (!form.identifier.trim()) errs.identifier = tr('Enter your username, Gmail, or phone number');
     // 8, matching the register rule — a 6-char floor here described a password
     // that cannot exist on any account (rulebook pass).
-    if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
+    if (form.password.length < 8) errs.password = tr('Password must be at least 8 characters');
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
@@ -106,7 +108,7 @@ export default function Login() {
       // the 15 second timeout and a 5xx each get their own sentence, because
       // the old single branch told an elder on weak wifi to change a password
       // that was never checked.
-      setError(friendlyAuthError(err, 'Invalid username or password.'));
+      setError(friendlyAuthError(err, tr('Invalid username or password.')));
     } finally {
       setLoading(false);
     }
@@ -124,7 +126,7 @@ export default function Login() {
       <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[8] }}>
         <TortoiseMark size={52} />
         <Text style={{ fontSize: 22, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.5, marginTop: spacing[2] }}>
-          Towinly
+          {tr('Towinly')}
         </Text>
       </View>
 
@@ -134,10 +136,10 @@ export default function Login() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
-          Welcome back.
+          {tr('Welcome back.')}
         </Text>
         <Text style={{ fontSize: type.body, color: t.ink3, marginTop: spacing[2], marginBottom: spacing[6] }}>
-          Log in to your Towinly account.
+          {tr('Log in to your Towinly account.')}
         </Text>
 
         {sessionExpired ? (
@@ -153,7 +155,7 @@ export default function Login() {
           >
             {/* blueDeep, not blueTeal — teal on the wash measured 3.47:1 (rulebook) */}
             <Text style={{ fontSize: type.body, color: t.blueDeep, lineHeight: 24 }}>
-              For your safety, you were logged out after a period of inactivity. Please log in again.
+              {tr('For your safety, you were logged out after a period of inactivity. Please log in again.')}
             </Text>
           </View>
         ) : null}
@@ -189,7 +191,7 @@ export default function Login() {
         <GoogleLoginButton />
 
         <Input
-          label="Username, Gmail, or phone"
+          label={tr('Username, Gmail, or phone')}
           icon={UserRound}
           value={form.identifier}
           onChangeText={setIdentifier}
@@ -206,7 +208,7 @@ export default function Login() {
 
         <Input
           ref={passwordRef}
-          label="Password"
+          label={tr('Password')}
           icon={Lock}
           value={form.password}
           onChangeText={setPassword}
@@ -222,17 +224,17 @@ export default function Login() {
         {/* marginBottom keeps this link's target clear of the Log In button
             (rulebook: >=8pt inert space between adjacent targets). */}
         <TextLink
-          label="Forgot password?"
+          label={tr('Forgot password?')}
           onPress={() => router.push('/(auth)/forgot-password')}
           style={{ alignSelf: 'flex-end', marginTop: spacing[2], marginBottom: spacing[5] }}
         />
 
         <Button
-          title={loading ? 'Logging in…' : 'Log In'}
+          title={loading ? tr('Logging in…') : tr('Log In')}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
-          accessibilityHint="Logs in to your Towinly account"
+          accessibilityHint={tr('Logs in to your Towinly account')}
         />
 
         <View
@@ -243,13 +245,15 @@ export default function Login() {
             marginTop: spacing[6],
           }}
         >
-          <Text style={{ fontSize: type.body, color: t.ink3 }}>New here? </Text>
-          <TextLink label="Create Account" onPress={() => router.push('/(auth)/register')} />
+          <Text style={{ fontSize: type.body, color: t.ink3 }}>{tr('New here?')}{' '}</Text>
+          <TextLink label={tr('Create Account')} onPress={() => router.push('/(auth)/register')} />
         </View>
 
         {/* Demo accounts live quietly under the form, not above it — hidden in
             store builds so the shared credentials never ship (audit). */}
         {showDemoAccounts() ? <DemoAccountsCard onError={setError} /> : null}
+
+        <LanguagePicker variant="inline" style={{ marginTop: spacing[6], marginBottom: spacing[4] }} />
       </View>
     </Screen>
   );

@@ -17,6 +17,7 @@ import { SHORT_STAGES, stageIndexOf } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import TrustLadder from '../trust/TrustLadder';
 import Avatar from '../ui/Avatar';
+import { tr } from '../../i18n';
 
 // Today's check-in, as a chip. Green = achieved (the parent is accounted for);
 // neutral grey = simply not yet, which must never read as alarming — "no
@@ -51,7 +52,7 @@ function CheckInChip({ checkedInToday }) {
           color: checkedInToday ? t.greenDeep : t.greyText,
         }}
       >
-        {checkedInToday ? 'Checked in today' : 'No check-in yet today'}
+        {checkedInToday ? tr('Checked in today') : tr('No check-in yet today')}
       </Text>
     </View>
   );
@@ -76,7 +77,7 @@ export function ParentStatusLine({ journey }) {
       <CheckInChip checkedInToday={!!journey.checkedInToday} />
       {open > 0 ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
-          {open} help request{open === 1 ? '' : 's'} open
+          {open === 1 ? tr('1 help request open') : tr('{open} help requests open', { open })}
         </Text>
       ) : null}
     </View>
@@ -108,7 +109,7 @@ function SharedHelperRow({ helper, first }) {
             {helper.helperName}
           </Text>
           <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-            Stage {Math.min(stage + 1, 7)} of 7 · {helper.stageLabel || SHORT_STAGES[stage]}
+            {tr('Stage {min} of 7 ·', { min: Math.min(stage + 1, 7) })}{' '}{tr(helper.stageLabel || SHORT_STAGES[stage])}
           </Text>
         </View>
       </View>
@@ -126,7 +127,7 @@ function SharedHelperRow({ helper, first }) {
         >
           <UserRound size={15} color={t.blueDeep} strokeWidth={2} />
           <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep, flex: 1 }}>
-            They&rsquo;re getting ready to meet in person
+            {tr('They’re getting ready to meet in person')}
           </Text>
         </View>
       ) : null}
@@ -135,7 +136,7 @@ function SharedHelperRow({ helper, first }) {
       <Pressable
         onPress={openProfile}
         accessibilityRole="button"
-        accessibilityLabel={`See ${helper.helperName}'s full profile`}
+        accessibilityLabel={tr("See {helperName}'s full profile", { helperName: helper.helperName })}
         style={({ pressed }) => ({
           minHeight: 44,
           justifyContent: 'center',
@@ -144,7 +145,7 @@ function SharedHelperRow({ helper, first }) {
         })}
       >
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-          See their full profile →
+          {tr('See their full profile →')}
         </Text>
       </Pressable>
     </View>
@@ -164,7 +165,7 @@ export function ParentOpenNeeds({ journey }) {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        Their open help requests
+        {tr('Their open help requests')}
       </Text>
       {needs.map((n, i) => (
         <View
@@ -204,13 +205,13 @@ export function SharedHelpers({ journey }) {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        Friendships shared with you
+        {tr('Friendships shared with you')}
       </Text>
       {helpers.length === 0 ? (
         <Text
           style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[2] }}
         >
-          No friendships shared with you yet. Your parent chooses what to share.
+          {tr('No friendships shared with you yet. Your parent chooses what to share.')}
         </Text>
       ) : (
         helpers.map((h, i) => <SharedHelperRow key={h.connectionId} helper={h} first={i === 0} />)

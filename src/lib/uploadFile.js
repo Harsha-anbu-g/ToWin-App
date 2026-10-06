@@ -14,6 +14,7 @@
 // arrive intact; and a rejection after a slow upload on a phone connection is
 // the worst moment to learn the photo was too big.
 import { Platform } from 'react-native';
+import { tr } from '../i18n';
 
 const isWeb = Platform.OS === 'web';
 
@@ -29,20 +30,20 @@ const NO_FILE = 'That photo could not be read. Please choose it again.';
  *   the value to append to FormData, or a plain-words reason not to.
  */
 export function buildUpload(asset) {
-  if (!asset) return { error: NO_FILE };
+  if (!asset) return { error: tr(NO_FILE) };
 
   if (isWeb) {
     const file = asset.file;
     // No File means the browser could not read the pick — refuse rather than
     // upload a placeholder that fails in a way nobody can explain.
-    if (!file) return { error: NO_FILE };
-    if (file.size > MAX_UPLOAD_BYTES) return { error: TOO_LARGE };
+    if (!file) return { error: tr(NO_FILE) };
+    if (file.size > MAX_UPLOAD_BYTES) return { error: tr(TOO_LARGE) };
     return { file };
   }
 
   // `fileSize` is optional on native; when the picker doesn't report it we let
   // the upload go and leave the server with the last word.
-  if (asset.fileSize > MAX_UPLOAD_BYTES) return { error: TOO_LARGE };
+  if (asset.fileSize > MAX_UPLOAD_BYTES) return { error: tr(TOO_LARGE) };
   return {
     file: {
       uri: asset.uri,
