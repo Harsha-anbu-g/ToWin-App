@@ -583,6 +583,8 @@ export default function FriendsScreen() {
                         accessibilityLabel={`${km} kilometers`}
                         aria-checked={active}
                         onPress={() => setRadiusIdx(i)}
+                        // 36pt pill + 4pt slop each side = 44pt, like the kit's ActionChip.
+                        hitSlop={{ top: 4, bottom: 4 }}
                         style={({ pressed }) => ({
                           flex: 1,
                           minHeight: 36,

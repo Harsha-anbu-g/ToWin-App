@@ -114,6 +114,8 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
               onChange(seg.key);
             }}
             android_ripple={pressRipple}
+            // 40pt segment + 2pt slop each side = Apple's 44pt touch target.
+            hitSlop={{ top: 2, bottom: 2 }}
             // Pressed feedback (rulebook: no silent taps) — this is the primary
             // in-screen filter control on 8+ screens and previously gave none.
             style={({ pressed }) => ({
