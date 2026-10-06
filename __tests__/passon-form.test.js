@@ -100,6 +100,21 @@ test('a letter already held stays offerable with no sealed box (undo must not fl
   expect(onSave.mock.calls[0][0].releaseWhen).toBe('AFTER');
 });
 
+test('a story shows a short example to show what to write; a letter does not', async () => {
+  const story = await wrap(
+    <PassOnItemForm kind="STORY" initial={null} people={PEOPLE} saving={false} onSave={jest.fn()} onCancel={jest.fn()} />
+  );
+  expect(story.getByLabelText('Give it a name').props.placeholder).toBe('What I learned too late');
+  expect(story.getByLabelText('Tell it').props.placeholder).toBe(
+    'At the end, all I wanted was the people I love. Call yours today.'
+  );
+
+  const letter = await wrap(
+    <PassOnItemForm kind="LETTER" initial={null} people={PEOPLE} saving={false} onSave={jest.fn()} onCancel={jest.fn()} />
+  );
+  expect(letter.getByLabelText('Write it').props.placeholder).toBeUndefined();
+});
+
 test('the bank-details warning sits on the story form', async () => {
   const { getByText } = await wrap(
     <PassOnItemForm kind="STORY" initial={null} people={PEOPLE} saving={false} onSave={jest.fn()} onCancel={jest.fn()} />

@@ -92,8 +92,10 @@ export const STORY_BOX = {
   start: 'Tell a story',
   save: 'Save this story',
   namePrompt: 'Give it a name',
-  namePlaceholder: 'The winter we lost the roof',
+  namePlaceholder: 'What I learned too late',
   bodyPrompt: 'Tell it',
+  /** Two lines, never a speech: an example small enough to show the size a story can be. */
+  bodyPlaceholder: 'At the end, all I wanted was the people I love. Call yours today.',
   audiencePrompt: 'Who should see this?',
 };
 

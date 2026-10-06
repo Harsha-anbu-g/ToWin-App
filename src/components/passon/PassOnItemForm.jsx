@@ -93,6 +93,7 @@ export default function PassOnItemForm({
         label={isLetter ? LETTERS.bodyPrompt : STORY_BOX.bodyPrompt}
         value={body}
         onChangeText={setBody}
+        placeholder={isLetter ? undefined : STORY_BOX.bodyPlaceholder}
         maxLength={20000}
         multiline
         inputStyle={{ minHeight: 180 }}
