@@ -82,7 +82,10 @@ export default function Button({
       disabled={blocked}
       onPress={handlePress}
       android_ripple={pressRipple}
-      hitSlop={small ? { top: 4, bottom: 4 } : undefined}
+      // The quiet variants draw at 40pt (owner call 2026-08-17); 2pt of slop
+      // above and below brings the touch target to Apple's 44pt (Fitts's law)
+      // without changing how they look.
+      hitSlop={small ? { top: 4, bottom: 4 } : variant === 'primary' ? undefined : { top: 2, bottom: 2 }}
       style={({ pressed }) => [
         {
           borderRadius: radius.pill,
