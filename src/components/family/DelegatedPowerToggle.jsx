@@ -7,7 +7,8 @@
 // half-on. Optimistic flip; the server's answer is the record that decides.
 import { useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import Switch from '../ui/Switch';
 import { setDelegatedPowers } from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';

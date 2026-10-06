@@ -15,11 +15,31 @@ import { FILL, GlassView } from './glass';
 
 export { hasLiquidGlass } from './glass';
 
+// The browser's stand-in for Liquid Glass (owner call 2026-09-04: the phone
+// web build looks like the iOS app). Like the real material it draws its own
+// edge — a bright inner rim — so parents give it no border of their own; the
+// hairline-plus-wash composite below read as the milky lens the owner sent
+// back on 2026-08-19.
+export const isWebGlass = Platform.OS === 'web';
+const WEB_RIM = {
+  light: { boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.85)' },
+  dark: { boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' },
+};
+
 export default function GlassLens({ tint, washColor, washOpacity = 0.75 }) {
   if (GlassView) {
     // colorScheme={tint}: the app's night mode is opt-in only — the glass
     // must follow the app's theme, never the OS setting.
     return <GlassView style={FILL} glassEffectStyle="regular" tintColor={washColor} colorScheme={tint} />;
+  }
+  if (isWebGlass) {
+    return (
+      <>
+        <BlurView intensity={22} tint={tint} style={FILL} />
+        <View style={[FILL, { backgroundColor: washColor, opacity: washOpacity }]} />
+        <View testID="glass-rim" pointerEvents="none" style={[FILL, WEB_RIM[tint] ?? WEB_RIM.light]} />
+      </>
+    );
   }
   return (
     <>

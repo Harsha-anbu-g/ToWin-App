@@ -136,7 +136,7 @@ const RIPPLE_SCOPE = [
 ];
 
 // Backdrops dim, they don't ripple — and they must stay ripple-free.
-const SCRIM_IDS = ['menu-scrim', 'legal-scrim', 'confirm-scrim'];
+const SCRIM_IDS = ['menu-scrim', 'legal-scrim', 'confirm-scrim', 'ask-ai-scrim'];
 
 test('every Pressable in the shared chrome carries android_ripple (scrims exempt)', () => {
   const missing = [];

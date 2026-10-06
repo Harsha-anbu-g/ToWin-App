@@ -223,6 +223,8 @@ const src = (rel) => fs.readFileSync(path.join(APP_ROOT, rel), 'utf8');
 // Everywhere a layout is known, loading draws a Skeleton in its shape.
 const SPINNER_LEDGER = {
   'src/components/ui/Button.jsx': 'in-control spinner: the pressed button itself is the layout',
+  'src/components/ui/RefreshControl.jsx':
+    'pull-to-refresh puck on the phone web build: the list it reloads stays on screen beneath it, as under the native control',
   'app/(auth)/oauth-callback.jsx': 'token-exchange transition: no content layout exists yet',
   'app/(auth)/verify-email.jsx': 'verification transition: no content layout exists yet',
 };

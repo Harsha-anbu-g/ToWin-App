@@ -10,7 +10,8 @@
 // the control every other app uses — in a plain settings-style row.
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
-import { Switch, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import Switch from '../ui/Switch';
 import { setFamilyVisibility } from '../../api/connections';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';

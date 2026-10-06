@@ -14,12 +14,14 @@ import {
   FlatList,
   Image,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   Text,
   TextInput,
   View,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Flag, Send, Volume2, X } from './icons';
 import { askAssistant } from '../api/ai';
 import { useAuth } from '../context/AuthContext';
@@ -50,6 +52,13 @@ const mascot = require('../../assets/ai-tortoise-small.png');
 // Module scope, like keyOf below: a fresh style object every render would
 // remount the native glass view and restart its materialize animation.
 const GLASS_PILL = { ...FILL, borderRadius: 22 };
+
+// The browser wears the iOS look (owner call 2026-09-04: the phone web build
+// looks like the iOS app): the pill is frosted glass with a soft cast, and
+// the helper opens as a card sheet that stops short of the top edge, over a
+// dimmed page, the way a pageSheet does.
+const IS_WEB = Platform.OS === 'web';
+const WEB_SHEET_TOP = 28;
 
 // Module scope so the list's key function never changes identity (see the
 // memoization note in AskAiAssistant).
@@ -327,6 +336,19 @@ export default function AskAiAssistant() {
     setOpen(false);
   };
 
+  // Web only: the iOS sheet's drag-down, on the header (LegalModal's
+  // pattern). iOS never uses this — the native sheet owns its own gesture.
+  const liveClose = useRef(close);
+  liveClose.current = close;
+  const drag = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_e, g) => g.dy > 12 && Math.abs(g.dy) > Math.abs(g.dx) * 2,
+      onPanResponderRelease: (_e, g) => {
+        if (g.dy > 60 || g.vy > 0.5) liveClose.current();
+      },
+    })
+  ).current;
+
   // No speech-to-text lives inside Expo Go — but the iPhone keyboard's own
   // dictation mic does the job today, so the mic hands the user over to it.
   const send = async (question) => {
@@ -417,9 +439,21 @@ export default function AskAiAssistant() {
           // neutral surface with a hairline, floating over content. On iOS 26
           // that surface IS Apple's glass, which draws its own edge — the
           // hairline and the solid fill step aside for it.
-          backgroundColor: hasLiquidGlass ? 'transparent' : t.surface,
-          borderWidth: hasLiquidGlass ? 0 : 1,
+          backgroundColor: hasLiquidGlass
+            ? 'transparent'
+            : IS_WEB
+              ? mode === 'dark'
+                ? 'rgba(38,37,35,0.8)'
+                : 'rgba(255,255,255,0.8)'
+              : t.surface,
+          borderWidth: hasLiquidGlass || IS_WEB ? 0 : 1,
           borderColor: t.border,
+          // The browser's glass: frost over the blur layer below, and the
+          // soft cast Apple's pill leaves on the page in place of a hairline.
+          ...(IS_WEB && {
+            boxShadow:
+              mode === 'dark' ? '0 2px 10px rgba(0,0,0,0.35)' : '0 2px 10px rgba(0,0,0,0.1)',
+          }),
           overflow: 'hidden', // clips the glass layer to the pill's radius
           flexDirection: 'row',
           alignItems: 'center',
@@ -442,6 +476,9 @@ export default function AskAiAssistant() {
             style={GLASS_PILL}
           />
         ) : null}
+        {IS_WEB ? (
+          <BlurView intensity={30} tint={mode === 'dark' ? 'dark' : 'light'} style={GLASS_PILL} />
+        ) : null}
         <Image source={mascot} style={{ width: 24, height: 24 }} resizeMode="contain" />
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Ask AI</Text>
       </Pressable>
@@ -453,6 +490,8 @@ export default function AskAiAssistant() {
         // closes it with the system's own physics. Android and web have no
         // pageSheet, so they keep the full-screen slide.
         presentationStyle={Platform.OS === 'ios' ? 'pageSheet' : 'fullScreen'}
+        // The browser's card sheet needs the page visible behind its scrim.
+        transparent={IS_WEB}
         statusBarTranslucent
         navigationBarTranslucent
         animationType={reducedMotion ? 'none' : 'slide'}
@@ -466,10 +505,25 @@ export default function AskAiAssistant() {
         {/* Full page (user call 2026-07-17): the helper owns the whole screen
             instead of a bottom sheet. On iOS the pageSheet already starts
             below the status bar, so only Android/web pad for it. */}
+        {IS_WEB ? (
+          // The dimmed page behind the card, and a third way out beside the
+          // × and the drag. It runs one viewport ABOVE the card on purpose:
+          // react-native-web slides the modal's whole content, scrim
+          // included, so the extra height keeps the page covered for the
+          // length of the slide.
+          <Pressable
+            testID="ask-ai-scrim"
+            accessibilityRole="button"
+            accessibilityLabel="Close"
+            onPress={close}
+            style={{ position: 'absolute', top: '-100%', left: 0, right: 0, bottom: 0, backgroundColor: t.scrim }}
+          />
+        ) : null}
         <View
           {...shield}
           style={{
             flex: 1,
+            marginTop: IS_WEB ? WEB_SHEET_TOP : 0,
             backgroundColor: t.surface,
             // A small hairline edge so the sheet reads as its own card, not a
             // borderless bleed into the screen (owner 2026-08-29). Rounded top
@@ -487,6 +541,7 @@ export default function AskAiAssistant() {
           <View style={{ flex: 1, overflow: 'hidden' }}>
             {/* Wash header: mascot + Ask AI / Your Towinly helper */}
             <View
+              {...(IS_WEB ? drag.panHandlers : null)}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',

@@ -10,7 +10,7 @@
 // with the same roles and states as always).
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
-import GlassLens, { hasLiquidGlass } from './GlassLens';
+import GlassLens, { hasLiquidGlass, isWebGlass } from './GlassLens';
 import { haptic } from '../../lib/haptics';
 import { useReducedMotion } from '../../lib/useReducedMotion';
 import { useTheme } from '../../theme/ThemeContext';
@@ -72,8 +72,9 @@ export default function SegmentedControl({ segments, value, onChange, style }) {
             width: slotW,
             borderRadius: radius.pill,
             overflow: 'hidden',
-            // Real Liquid Glass draws its own edge; only the fallback needs a rim.
-            borderWidth: hasLiquidGlass ? 0 : 1,
+            // Real Liquid Glass draws its own edge, and so does the web
+            // stand-in; only the blur-and-wash fallback needs a rim.
+            borderWidth: hasLiquidGlass || isWebGlass ? 0 : 1,
             borderColor: mode === 'dark' ? t.border : 'rgba(255,255,255,0.9)',
             transform: [{ translateX: slide }],
           }}

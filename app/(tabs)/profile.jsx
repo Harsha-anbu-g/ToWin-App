@@ -5,7 +5,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, Switch, Text, View } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
+import Switch from '../../src/components/ui/Switch';
 import {
   Archive,
   BookOpen,

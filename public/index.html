@@ -64,6 +64,31 @@
       #root {
         display: flex;
       }
+      /*
+        Browser habits no iPhone app has (owner call 2026-09-04: the phone
+        web build looks like the iOS app): the long-press callout and text
+        selection on labels, the page-level rubber band that lets Chrome
+        reload the whole page on a pull, and Chrome's pale autofill wash
+        inside a filled field. Fields keep selection; the two screens that
+        offer copyable text opt back in with `selectable`.
+      */
+      html,
+      body {
+        overscroll-behavior: none;
+      }
+      body {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      input,
+      textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      input:-webkit-autofill {
+        transition: background-color 600000s 0s, color 600000s 0s;
+      }
     </style>
   </head>
   <body>
