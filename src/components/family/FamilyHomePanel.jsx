@@ -213,7 +213,9 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
                   <LinkRow
                     key={r.id}
                     name={r.otherUserName}
-                    line={tr("wants you as their family here{value}. It's your choice.", { value: r.relationship ? ` (as their ${r.relationship.toLowerCase()})` : '' })}
+                    line={r.relationship
+                      ? tr("wants you as their family here (as their {relationship}). It's your choice.", { relationship: r.relationship.toLowerCase() })
+                      : tr("wants you as their family here. It's your choice.")}
                     first={i === 0}
                   >
                     <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>

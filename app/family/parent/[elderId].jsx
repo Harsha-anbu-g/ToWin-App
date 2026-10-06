@@ -195,7 +195,7 @@ export default function FamilyParentScreen() {
               </Text>
               <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
                 {link?.relationship
-                  ? tr("You're {elderName}'s {toLowerCase}", { elderName, toLowerCase: link.relationship.toLowerCase() })
+                  ? tr("You're {elderName}'s {relationship}", { elderName, relationship: link.relationship.toLowerCase() })
                   : tr('Your family member')}
               </Text>
             </View>

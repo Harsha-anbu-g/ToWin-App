@@ -6,7 +6,7 @@
 //                    where a person may need their language before anything else
 import { Pressable, Text, View } from 'react-native';
 import { Check, Globe } from './icons';
-import { LANGUAGES, setLanguage, useLanguage } from '../i18n';
+import { LANGUAGES, setLanguage, tr, useLanguage } from '../i18n';
 import { useTheme } from '../theme/ThemeContext';
 
 export default function LanguagePicker({ variant = 'list', style }) {
@@ -17,6 +17,7 @@ export default function LanguagePicker({ variant = 'list', style }) {
     return (
       <View
         accessibilityRole="radiogroup"
+        accessibilityLabel={tr('Language')}
         style={[{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: spacing[2] }, style]}
       >
         <Globe size={16} color={t.inkSlate} strokeWidth={1.8} />
@@ -26,7 +27,7 @@ export default function LanguagePicker({ variant = 'list', style }) {
             <Pressable
               key={code}
               accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
+              aria-checked={on}
               accessibilityLabel={label}
               onPress={() => setLanguage(code)}
               style={({ pressed }) => ({
@@ -49,14 +50,14 @@ export default function LanguagePicker({ variant = 'list', style }) {
   }
 
   return (
-    <View accessibilityRole="radiogroup" style={style}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={tr('Language')} style={style}>
       {LANGUAGES.map(({ code, label }, i) => {
         const on = code === lang;
         return (
           <Pressable
             key={code}
             accessibilityRole="radio"
-            accessibilityState={{ checked: on }}
+            aria-checked={on}
             accessibilityLabel={label}
             onPress={() => setLanguage(code)}
             style={({ pressed }) => ({

@@ -2,7 +2,7 @@
 //
 // Used by __tests__/i18n-coverage.test.js (every sentence has a French and a
 // Tamil line, with the same placeholders) and by anyone adding a language:
-//   node -e "console.log(JSON.stringify(require('./src/i18n/extractKeys').extractKeys(), null, 2))"
+//   node -e "console.log(JSON.stringify(require('./scripts/i18n-keys').extractKeys(), null, 2))"
 //
 // Three ways a sentence reaches tr():
 //   tr('Literal text')                         the sentence itself
@@ -10,12 +10,11 @@
 //   tr(item) over a list                       every string in a module-level list
 // The last two are found by collecting module-level strings and lists, so a
 // list rendered through tr() is covered without naming it here.
-/* eslint-env node */
 const fs = require('fs');
 const path = require('path');
 const parser = require('@babel/parser');
 
-const ROOT = path.join(__dirname, '..', '..');
+const ROOT = path.join(__dirname, '..');
 const SKIP_FILES = new Set([
   'src/data/legalContent.js', // legal text: a professional translation, not this dictionary
   'app/admin.jsx', // staff only

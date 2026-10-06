@@ -329,7 +329,7 @@ export default function MyFamilyScreen() {
                 <LinkRow
                   key={r.id}
                   name={r.otherUserName}
-                  line={tr("{value}wants to join as your family. It's your choice.", { value: r.relationship ? `${r.relationship} · ` : '' })}
+                  line={(r.relationship ? `${r.relationship} · ` : '') + tr("wants to join as your family. It's your choice.")}
                   first={i === 0}
                 >
                   <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>

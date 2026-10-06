@@ -55,7 +55,9 @@ export function deviceLanguage() {
 export function translate(text, vars, lang = current) {
   if (typeof text !== 'string') return text;
   const dict = DICTIONARIES[lang];
-  let out = (dict && dict[text]) || text;
+  // hasOwnProperty, not ||: a translation can be empty on purpose (French drops
+  // the "old" in "3 years, 2 months, 5 days old").
+  let out = dict && Object.prototype.hasOwnProperty.call(dict, text) ? dict[text] : text;
   if (vars) {
     out = out.replace(/\{(\w+)\}/g, (whole, name) =>
       Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : whole

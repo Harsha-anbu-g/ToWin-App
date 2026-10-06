@@ -179,7 +179,9 @@ export const SETUP = {
     get title() { return tr('How many must agree?'); },
     get blurb() { return tr('One day, when your Keyholders ask to open this, this many of them must agree. It is never all of them, so that one person who is far away, or who has passed on themselves, can never keep it shut forever.'); },
     inRealTerms: (agree, names, of) =>
-      tr('So: any {agree} of {names}. That means {agree} of them can open it even if the {value} no.', { agree, names, value: of - agree === 1 ? 'other one says' : 'others say' }),
+      of - agree === 1
+        ? tr('So: any {agree} of {names}. That means {agree} of them can open it even if the other one says no.', { agree, names })
+        : tr('So: any {agree} of {names}. That means {agree} of them can open it even if the others say no.', { agree, names }),
   },
 
   before: {
@@ -233,7 +235,9 @@ export const SEALED_KINDS = {
  */
 export const SEALED_ITEMS = {
   shut: (count) =>
-    tr('Your box is shut. {value} inside. Nobody can see them but you.', { value: count === 1 ? '1 thing is' : `${count} things are` }),
+    count === 1
+      ? tr('Your box is shut. 1 thing is inside. Nobody can see them but you.')
+      : tr('Your box is shut. {count} things are inside. Nobody can see them but you.', { count }),
   get nothingInside() { return tr('Your box is shut. There is nothing in it yet. Nobody can see what you put in but you.'); },
 
   locked: 'Locked',
