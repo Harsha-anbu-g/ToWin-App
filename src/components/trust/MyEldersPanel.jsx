@@ -115,7 +115,8 @@ export default function MyEldersPanel() {
   const scoreOf = (connId) => (breakdown?.customers ?? []).find((c) => c.connectionId === connId);
   // Blocked people never appear in the relationship hub (UGC 1.2)
   const active = filterBlocked(
-    (connections ?? []).filter((c) => c.status === 'ACTIVE'),
+    // Helper friends (PEER) just chat; they live under Messages, not here.
+    (connections ?? []).filter((c) => c.status === 'ACTIVE' && c.type !== 'PEER'),
     blocked,
     (c) => c.otherUserId
   );
@@ -131,7 +132,7 @@ export default function MyEldersPanel() {
   // comes from the connection's own currentTrustLevel — the backend enum name
   // (common/enums/TrustLevel.java), where TRUSTED is the top rung.
   const pausedAll = filterBlocked(
-    (connections ?? []).filter((c) => c.status === 'PAUSED'),
+    (connections ?? []).filter((c) => c.status === 'PAUSED' && c.type !== 'PEER'),
     blocked,
     (c) => c.otherUserId
   );

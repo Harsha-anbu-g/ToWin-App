@@ -26,7 +26,7 @@ import { LEVEL_INDEX, TRUSTED_STAGE } from './trustStages';
 export const TRUST_STEPS_CATEGORY = 'trust-steps';
 
 // Paused links carry no live ladder; family links never have one.
-const isLadder = (c) => !!c && c.status === 'ACTIVE' && c.type !== 'FAMILY';
+const isLadder = (c) => !!c && c.status === 'ACTIVE' && c.type !== 'FAMILY' && c.type !== 'PEER';
 
 /**
  * The token that changes each time this friendship's ladder moves up a

@@ -198,6 +198,8 @@ export default function ChatThread() {
     !isFamilyChannel &&
     conn?.status === 'ACTIVE' &&
     conn.type !== 'FAMILY' &&
+    // Friends who just chat (PEER) have no ladder: the chat is open once accepted.
+    conn.type !== 'PEER' &&
     stageIndexOf(conn) < MESSAGING_STAGE;
   // Backend rule (website ea03935): the elder starts each step — the helper
   // only ever ACCEPTS, and never sees a dead start button (TrustService

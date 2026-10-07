@@ -8,6 +8,7 @@
 // unit-testable; AuthContext wires both hooks at mount.
 import axios from 'axios';
 import { API_BASE_URL } from './config';
+import { attachIdempotencyKey, settleIdempotencyKey } from '../lib/idempotency';
 import { currentLanguage, tr } from '../i18n';
 
 let getToken = () => null;
@@ -39,15 +40,20 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
   // The server can answer in the language the person reads the app in.
   config.headers['Accept-Language'] = currentLanguage();
-  return config;
+  // Writes carry an Idempotency-Key. On a weak signal the 15 second timeout can
+  // fire after the server already saved the message; the "tap to try again"
+  // retry then reuses the key and gets the first answer back instead of a copy.
+  return attachIdempotencyKey(config);
 });
 
 api.interceptors.response.use(
   (res) => {
     onResponseSeen();
+    settleIdempotencyKey(res.config, true);
     return res;
   },
   (error) => {
+    settleIdempotencyKey(error?.config, false);
     // An answer of any kind — 401, 403, 500 — still proves the path is alive.
     // Only a request that never got a response (offline, DNS, timeout) says
     // nothing either way.

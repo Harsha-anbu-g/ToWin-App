@@ -13,7 +13,7 @@ import { tr } from '../i18n';
  */
 export function trustStandingFor(otherUserId, connections, { trustedWord = tr('Trusted friend') } = {}) {
   const conn = (Array.isArray(connections) ? connections : []).find(
-    (c) => c.otherUserId === otherUserId && c.status !== 'PENDING' && c.type !== 'FAMILY'
+    (c) => c.otherUserId === otherUserId && c.status !== 'PENDING' && c.type !== 'FAMILY' && c.type !== 'PEER'
   );
   if (!conn) return null;
   const stageIndex = LEVEL_INDEX[conn.currentTrustLevel] ?? 0;

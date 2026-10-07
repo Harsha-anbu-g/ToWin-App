@@ -36,24 +36,26 @@ import { tr } from '../../src/i18n';
 const INBOX_POLL_MS = 10_000;
 // Which tab a one-to-one chat belongs under (web groupOf, MessagesInbox.jsx).
 const groupOf = (c) => {
+  // Elder ↔ elder and helper ↔ helper: friends who just chat (PEER).
+  if (c.type === 'PEER') return 'friends';
   if (c.otherUserRole === 'FAMILY') return 'family';
   if (c.type === 'FAMILY') return 'family'; // a parent↔family chat, the family member's side
   if (c.otherUserRole === 'ELDER' || c.otherUserRole === 'BOTH') return 'elders';
   return 'helpers';
 };
 
-const GROUP_LABELS = { family: 'Family', elders: 'Elders', helpers: 'Helpers', groups: 'Groups' };
+const GROUP_LABELS = { family: 'Family', elders: 'Elders', helpers: 'Helpers', friends: 'Friends', groups: 'Groups' };
 
 // Every heading this account can ever fill stays on screen even while empty,
 // in a fixed order — one-to-one chats first, then Groups, then Family (web
 // f6e5e84). Only a bucket the role can never fill (e.g. a helper chatting
 // with another helper) is left out.
 const ROLE_TAB_ORDER = {
-  ELDER: ['helpers', 'groups', 'family'],
-  HELPER: ['elders', 'groups', 'family'],
+  ELDER: ['helpers', 'friends', 'groups', 'family'],
+  HELPER: ['elders', 'friends', 'groups', 'family'],
   FAMILY: ['helpers', 'groups', 'family'],
 };
-const DEFAULT_TAB_ORDER = ['elders', 'helpers', 'groups', 'family'];
+const DEFAULT_TAB_ORDER = ['elders', 'helpers', 'friends', 'groups', 'family'];
 // Two of these used to send the person to a "dashboard". There is no such
 // screen: app/(tabs)/dashboard.jsx is a redirect stub kept for old links and
 // carries href: null in the tab bar, so nobody can navigate to it and nobody
@@ -77,6 +79,11 @@ const EMPTY_TAB_COPY = {
   },
   family: {
     get text() { return tr('No family chats yet. When a family member joins you here, your chat with them will show up.'); },
+  },
+  friends: {
+    get text() { return tr('No friends to chat with yet. Find people like you on Add Friends.'); },
+    get actionLabel() { return tr('Find friends'); },
+    href: '/friends',
   },
 };
 

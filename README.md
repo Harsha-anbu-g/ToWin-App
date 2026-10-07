@@ -44,6 +44,9 @@ This repo holds the mobile app, built with React Native and Expo. It talks to th
 - Chat lives inside the app and opens as one of the trust stages.
 - New messages and help activity arrive as push notifications.
 - You can report or block someone from a message thread. A block hides both people from each other.
+- Elders can befriend other elders, and helpers other helpers. Those friendships just chat: no trust stages, no points, no reviews, no phone numbers.
+- Every Add Friends suggestion says who you both know: family first, then shared friends, then the friend you are linked through.
+- Every write sends an idempotency key, so a message retried after a lost reply is never saved twice.
 - An elder can write letters to pass on and keep private ones in a sealed box.
 
 ## Stack

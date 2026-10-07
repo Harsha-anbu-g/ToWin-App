@@ -628,10 +628,6 @@ export default {
     "Femme",
   "Fill a whole set to earn its point. It counts for every person you help.":
     "Remplissez tout un groupe pour gagner son point. Il compte pour chaque personne que vous aidez.",
-  "Find New Elders":
-    "Trouver de nouveaux aînés",
-  "Find New Helpers":
-    "Trouver de nouveaux aidants",
   "Find and connect with helpers near you.":
     "Trouvez des aidants près de chez vous et créez des liens.",
   "Find elders":
@@ -2852,4 +2848,36 @@ export default {
     "{why} · depuis le {since}",
   "{word} · Stage {stageNo} of 7, {stageName}. Tap to see their profile.":
     "{word} · Étape {stageNo} sur 7, {stageName}. Touchez pour voir son profil.",
+  "Find Friends":
+    "Trouver des amis",
+  "Elders near you":
+    "Aînés près de chez vous",
+  "Helpers near you":
+    "Aidants près de chez vous",
+  "Other elders to chat with. Friends here just chat: there are no trust steps.":
+    "D'autres aînés avec qui bavarder. Ces amitiés servent seulement à bavarder : il n'y a pas d'étapes de confiance.",
+  "Other helpers to chat with. Friends here just chat: there are no trust steps.":
+    "D'autres aidants avec qui bavarder. Ces amitiés servent seulement à bavarder : il n'y a pas d'étapes de confiance.",
+  "Couldn't load helpers right now.":
+    "Impossible de charger les aidants pour l'instant.",
+  "Share your location to see elders near you.":
+    "Partagez votre position pour voir les aînés près de chez vous.",
+  "Nobody nearby yet. Please check back soon.":
+    "Personne à proximité pour l'instant. Revenez bientôt.",
+  "No friends to chat with yet. Find people like you on Add Friends.":
+    "Pas encore d'amis avec qui bavarder. Trouvez des gens comme vous dans Ajouter des amis.",
+  "You both know {names}":
+    "Vous connaissez tous les deux {names}",
+  "Known through {names}":
+    "Vous êtes reliés par {names}",
+  "Also known through {names}":
+    "Reliés aussi par {names}",
+  "{name} (your {relationship})":
+    "{name} (votre {relationship})",
+  "{name} (your family)":
+    "{name} (votre famille)",
+  "{first} and {last}":
+    "{first} et {last}",
+  "{count} more":
+    "{count} autres",
 };

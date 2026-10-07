@@ -629,10 +629,6 @@ export default {
     "பெண்",
   "Fill a whole set to earn its point. It counts for every person you help.":
     "ஒரு முழுத் தொகுப்பையும் நிரப்பினால் அதன் புள்ளி கிடைக்கும். நீங்கள் உதவும் ஒவ்வொருவருக்கும் அது கணக்கில் வரும்.",
-  "Find New Elders":
-    "புதிய மூத்தவர்களைக் கண்டறி",
-  "Find New Helpers":
-    "புதிய உதவியாளர்களைக் கண்டறி",
   "Find and connect with helpers near you.":
     "உங்கள் அருகிலுள்ள உதவியாளர்களைக் கண்டறிந்து இணையுங்கள்.",
   "Find elders":
@@ -2853,4 +2849,36 @@ export default {
     "{why} · {since} முதல்",
   "{word} · Stage {stageNo} of 7, {stageName}. Tap to see their profile.":
     "{word} · 7-இல் படி {stageNo}, {stageName}. அவர்களின் சுயவிவரத்தைப் பார்க்க தட்டவும்.",
+  "Find Friends":
+    "நண்பர்களைக் கண்டறி",
+  "Elders near you":
+    "உங்கள் அருகிலுள்ள மூத்தவர்கள்",
+  "Helpers near you":
+    "உங்கள் அருகிலுள்ள உதவியாளர்கள்",
+  "Other elders to chat with. Friends here just chat: there are no trust steps.":
+    "உரையாட மற்ற மூத்தவர்கள். இங்குள்ள நண்பர்கள் உரையாட மட்டுமே: நம்பிக்கைப் படிகள் இல்லை.",
+  "Other helpers to chat with. Friends here just chat: there are no trust steps.":
+    "உரையாட மற்ற உதவியாளர்கள். இங்குள்ள நண்பர்கள் உரையாட மட்டுமே: நம்பிக்கைப் படிகள் இல்லை.",
+  "Couldn't load helpers right now.":
+    "இப்போது உதவியாளர்களை ஏற்ற முடியவில்லை.",
+  "Share your location to see elders near you.":
+    "உங்கள் அருகிலுள்ள மூத்தவர்களைப் பார்க்க உங்கள் இருப்பிடத்தைப் பகிருங்கள்.",
+  "Nobody nearby yet. Please check back soon.":
+    "இன்னும் அருகில் யாரும் இல்லை. விரைவில் மீண்டும் பாருங்கள்.",
+  "No friends to chat with yet. Find people like you on Add Friends.":
+    "உரையாட இன்னும் நண்பர்கள் இல்லை. நண்பர்களைச் சேர்க்கவும் பக்கத்தில் உங்களைப் போன்றவர்களைக் கண்டறியுங்கள்.",
+  "You both know {names}":
+    "நீங்கள் இருவருக்கும் {names} தெரியும்",
+  "Known through {names}":
+    "{names} மூலம் அறிமுகம்",
+  "Also known through {names}":
+    "{names} மூலமும் அறிமுகம்",
+  "{name} (your {relationship})":
+    "{name} (உங்கள் {relationship})",
+  "{name} (your family)":
+    "{name} (உங்கள் குடும்பம்)",
+  "{first} and {last}":
+    "{first} மற்றும் {last}",
+  "{count} more":
+    "மேலும் {count} பேர்",
 };

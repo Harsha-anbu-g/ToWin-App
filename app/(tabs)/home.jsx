@@ -59,7 +59,7 @@ export default function HomeScreen() {
   const connTokens = useMemo(
     () =>
       (Array.isArray(connectionsData) ? connectionsData : [])
-        .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
+        .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY' && c.type !== 'PEER')
         .map((c) => `${c.id}:${c.status}`),
     [connectionsData]
   );
