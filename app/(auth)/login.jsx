@@ -122,8 +122,13 @@ export default function Login() {
     // ran edge to edge and the page read as one solid block). The type on this
     // screen is large, so it needs a larger gutter to breathe.
     <Screen keyboard contentStyle={{ paddingHorizontal: spacing[6], paddingTop: spacing[2] }}>
+      {/* First on the page: somebody who cannot read English has to find their
+          language before anything else, and at the foot of the form it sat
+          below the fold on most phones. */}
+      <LanguagePicker variant="inline" style={{ marginTop: spacing[2] }} />
+
       {/* App-shaped opening: quiet brand lockup with breathing room */}
-      <View style={{ alignItems: 'center', marginTop: spacing[8], marginBottom: spacing[8] }}>
+      <View style={{ alignItems: 'center', marginTop: spacing[4], marginBottom: spacing[8] }}>
         <TortoiseMark size={52} />
         <Text style={{ fontSize: 22, fontWeight: '600', color: t.greenDeep, letterSpacing: -0.5, marginTop: spacing[2] }}>
           {tr('Towinly')}
@@ -252,8 +257,6 @@ export default function Login() {
         {/* Demo accounts live quietly under the form, not above it — hidden in
             store builds so the shared credentials never ship (audit). */}
         {showDemoAccounts() ? <DemoAccountsCard onError={setError} /> : null}
-
-        <LanguagePicker variant="inline" style={{ marginTop: spacing[6], marginBottom: spacing[4] }} />
       </View>
     </Screen>
   );
