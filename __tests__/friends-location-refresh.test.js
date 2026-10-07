@@ -94,8 +94,11 @@ const wrap = (ui) => {
   );
 };
 
+// The helper's main list. The screen also loads a second list (other helpers,
+// friends who just chat) under the same rules; counting one list keeps
+// "fetched exactly once" meaning one fetch per list.
 const discoverCalls = () =>
-  api.get.mock.calls.filter(([path]) => String(path).startsWith('/discover')).length;
+  api.get.mock.calls.filter(([path]) => String(path).startsWith('/discover/elders')).length;
 
 beforeEach(() => {
   jest.clearAllMocks();

@@ -77,7 +77,8 @@ export default function MyFamilyScreen() {
     queryFn: listMyConnections,
   });
   const connections = (Array.isArray(allConnections) ? allConnections : []).filter(
-    (c) => c.status === 'ACTIVE' && c.type !== 'FAMILY'
+    // Friends who just chat (PEER) have no trust journey to share with family.
+    (c) => c.status === 'ACTIVE' && c.type !== 'FAMILY' && c.type !== 'PEER'
   );
   // Failed AND nothing to show. Saying "you have no friendships yet" to an
   // elder who has several is a false statement about her own relationships,

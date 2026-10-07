@@ -138,7 +138,7 @@ export default function MyHelpersPanel() {
   // dialog promises "Nothing is lost", so a trusted friend must not vanish
   // from Trusted Friends into the other tab.
   const pausedAll = filterBlocked(
-    (connections ?? []).filter((c) => c.status === 'PAUSED'),
+    (connections ?? []).filter((c) => c.status === 'PAUSED' && c.type !== 'PEER'),
     blocked,
     (c) => c.otherUserId
   );

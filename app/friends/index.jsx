@@ -29,6 +29,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useConfirm } from '../../src/context/ConfirmContext';
 import { useToast } from '../../src/context/ToastContext';
 import { filterBlocked, getBlocked } from '../../src/lib/blockList';
+import { mutualFriendsText } from '../../src/lib/mutualFriends';
 import { STATUS } from '../../src/lib/deviceLocation';
 import useDevicePosition from '../../src/lib/useDevicePosition';
 import { useTheme } from '../../src/theme/ThemeContext';
@@ -71,6 +72,8 @@ function TonalChip({ label, onPress, neutral = false }) {
 // Memoized so a list-level render doesn't re-render every card (UX-705).
 const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
   const { t, radius, type } = useTheme();
+  // "You both know Sarah (your daughter)": only people the viewer already knows.
+  const mutual = mutualFriendsText(person.mutualFriends, person.mutualCount);
   return (
     <Pressable
       accessibilityRole="button"
@@ -117,6 +120,9 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
                   : ''}
           </Text>
         </Text>
+        {mutual ? (
+          <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 4, lineHeight: 18 }}>{mutual}</Text>
+        ) : null}
       </View>
       {trailing}
     </Pressable>
@@ -311,6 +317,9 @@ export default function FriendsScreen() {
   const isHelper = user?.role === 'HELPER';
   const path = isHelper ? '/discover/elders' : '/discover/helpers';
   const who = isHelper ? 'elders' : 'helpers';
+  // The second list: people with the same role, friends who just chat (PEER).
+  const peerPath = isHelper ? '/discover/helpers' : '/discover/elders';
+  const peerWho = isHelper ? 'Helpers' : 'Elders';
 
   // The chosen distance goes ON THE WIRE. Without it the backend falls back to
   // DiscoveryFilter's own default of 10 km, so the 25/50/100 km chips could
@@ -328,6 +337,13 @@ export default function FriendsScreen() {
     // measured (HARD-115). Holding the previous radius's people on screen while
     // the next answer arrives keeps the rows alive and keeps the list from
     // blinking under the person's thumb.
+    placeholderData: keepPreviousData,
+  });
+  // Same radius and the same ['discover', …] key prefix, so a radius tap, a
+  // new location and pull-to-refresh all refresh both lists together.
+  const { data: peersFound, isError: peersFailed } = useQuery({
+    queryKey: ['discover', peerPath, radiusKm],
+    queryFn: () => (isHelper ? discoverHelpers(radiusKm) : discoverElders(radiusKm)),
     placeholderData: keepPreviousData,
   });
   const { data: connections, isLoading: connsLoading, isError: connsFailed, refetch: refetchConns } = useQuery({
@@ -364,6 +380,9 @@ export default function FriendsScreen() {
   const people = filterBlocked(discovered ?? [], blocked, (p) => p.userId).filter(
     (p) => !Number.isFinite(p.distanceKm) || p.distanceKm <= radiusKm
   );
+  const peers = filterBlocked(peersFound ?? [], blocked, (p) => p.userId).filter(
+    (p) => p.userId !== user?.userId && (!Number.isFinite(p.distanceKm) || p.distanceKm <= radiusKm)
+  );
 
   const request = useMutation({
     mutationFn: (targetUserId) => sendConnectionRequest(targetUserId),
@@ -391,6 +410,7 @@ export default function FriendsScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ['discover', path] }); // prefix match: every radius
+    await queryClient.invalidateQueries({ queryKey: ['discover', peerPath] });
     await queryClient.invalidateQueries({ queryKey: ['connections'] });
     setRefreshing(false);
   };
@@ -521,7 +541,7 @@ export default function FriendsScreen() {
 
         <SegmentedControl
           segments={[
-            { key: 'find', label: isHelper ? 'Find New Elders' : 'Find New Helpers' },
+            { key: 'find', label: 'Find Friends' },
             { key: 'invites', label: 'New Invites', count: invites.length },
             { key: 'requested', label: 'Requested', count: requested.length },
           ]}
@@ -618,6 +638,29 @@ export default function FriendsScreen() {
               { failed: discoverFailed, what: 'people near you', retry: refetchDiscover }
             )}
             renderItem={renderFindRow}
+            ListFooterComponent={
+              // Second section: same-role friends who just chat. No trust
+              // steps, no help requests, no phone numbers (PEER).
+              <View style={{ marginTop: 18, gap: 10 }}>
+                <Text accessibilityRole="header" style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink, letterSpacing: -0.3 }}>
+                  {peerWho} near you
+                </Text>
+                <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18 }}>
+                  {isHelper ? 'Other helpers' : 'Other elders'} to chat with. Friends here just chat: there are no trust steps.
+                </Text>
+                {peersFailed ? (
+                  <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
+                    {isHelper ? "Couldn't load helpers right now." : 'Share your location to see elders near you.'}
+                  </Text>
+                ) : peers.length === 0 ? (
+                  <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
+                    Nobody nearby yet. Please check back soon.
+                  </Text>
+                ) : (
+                  peers.map((p) => <View key={p.userId}>{renderFindRow({ item: p })}</View>)
+                )}
+              </View>
+            }
           />
         ) : (
           <FlatList

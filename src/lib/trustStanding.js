@@ -12,7 +12,7 @@ import { LEVEL_INDEX, SHORT_STAGES, TRUSTED_STAGE } from './trustStages';
  */
 export function trustStandingFor(otherUserId, connections, { trustedWord = 'Trusted friend' } = {}) {
   const conn = (Array.isArray(connections) ? connections : []).find(
-    (c) => c.otherUserId === otherUserId && c.status !== 'PENDING' && c.type !== 'FAMILY'
+    (c) => c.otherUserId === otherUserId && c.status !== 'PENDING' && c.type !== 'FAMILY' && c.type !== 'PEER'
   );
   if (!conn) return null;
   const stageIndex = LEVEL_INDEX[conn.currentTrustLevel] ?? 0;

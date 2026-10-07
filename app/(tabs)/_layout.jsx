@@ -270,7 +270,7 @@ export default function TabsLayout() {
   const isHelperSeat = user?.role === 'HELPER' || user?.role === 'BOTH';
   const conns = Array.isArray(connectionsData) ? connectionsData : [];
   const connTokens = conns
-    .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY')
+    .filter((c) => c.status === 'ACTIVE' && c.type !== 'FAMILY' && c.type !== 'PEER')
     .map((c) => `${c.id}:${c.status}`);
   const newPeople = useUnseenTokens(user?.userId, 'connections', connTokens);
   // Trust steps, both seats (owner calls 2026-08-28, src/lib/trustStepBadges):
