@@ -26,6 +26,7 @@ import { Component } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { light, radius, spacing, text, type } from '../theme/tokens';
+import { tr } from '../i18n';
 
 // Night mode is opt-in and stored asynchronously, so there is no way to read
 // the person's choice without the provider that just went down. The emergency
@@ -49,7 +50,7 @@ export function ErrorFallback({ error, retry }) {
           accessibilityRole="header"
           style={{ fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
-          Something went wrong
+          {tr('Something went wrong')}
         </Text>
         <Text
           style={{
@@ -59,7 +60,7 @@ export function ErrorFallback({ error, retry }) {
             marginTop: spacing[4],
           }}
         >
-          This screen stopped working, and you did nothing wrong. Tap Try again.
+          {tr('This screen stopped working, and you did nothing wrong. Tap Try again.')}
         </Text>
 
         {/* The one filled sky-blue primary on this screen. Hand-built because
@@ -67,7 +68,7 @@ export function ErrorFallback({ error, retry }) {
             locked pair: actionFill behind actionInk, 46pt tall. */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Try again"
+          accessibilityLabel={tr('Try again')}
           onPress={retry}
           style={{
             minHeight: 46,
@@ -81,7 +82,7 @@ export function ErrorFallback({ error, retry }) {
           }}
         >
           <Text style={{ fontSize: text.base, fontWeight: '600', color: t.actionInk }}>
-            Try again
+            {tr('Try again')}
           </Text>
         </Pressable>
 
@@ -93,7 +94,7 @@ export function ErrorFallback({ error, retry }) {
             marginTop: spacing[5],
           }}
         >
-          If this keeps happening, close Towinly and start it again.
+          {tr('If this keeps happening, close Towinly and start it again.')}
         </Text>
 
         {/* Developer detail only. An elder gets plain words; whoever is holding

@@ -16,6 +16,7 @@ import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Input from '../ui/Input';
 import RadioCards from './RadioCards';
+import { tr } from '../../i18n';
 
 /**
  * Asked before anything is sent, because a report is read by a person and
@@ -38,7 +39,7 @@ function ReportForm({ sending, error, onCancel, onSend }) {
     >
       <RadioCards
         prompt={REPORT_STORY.reasonPrompt}
-        options={REPORT_STORY.reasons.map((r) => ({ key: r, title: r, blurb: '' }))}
+        options={REPORT_STORY.reasons.map((r) => ({ key: r, title: tr(r), blurb: '' }))}
         value={reason}
         onChange={setReason}
       />

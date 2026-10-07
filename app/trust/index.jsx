@@ -18,6 +18,8 @@ import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { SHORT_STAGES } from '../../src/lib/trustStages';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
+import emphasize from '../../src/i18n/emphasize';
 
 
 // Tier ladder (web parity): name + points needed to enter it.
@@ -31,7 +33,7 @@ const TIERS = [
 
 function nextTier(score) {
   for (const [name, min] of TIERS) {
-    if (score < min) return { name, missing: min - score };
+    if (score < min) return { name: tr(name), missing: min - score };
   }
   return null; // already at the top
 }
@@ -102,15 +104,15 @@ function FamilyCard({ family }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold }}>
-            Family connected
+            {tr('Family connected')}
           </Text>
           <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 3 }}>
-            One point for having your family connected, however many family members you add.
+            {tr('One point for having your family connected, however many family members you add.')}
           </Text>
         </View>
         <Dots earned={earned} max={max} color={t.trustGold} />
         <Text
-          accessibilityLabel={`+${earned} of ${max}`}
+          accessibilityLabel={tr('+{earned} of {max}', { earned, max })}
           style={{
             fontSize: type.meta,
             fontWeight: '600',
@@ -119,7 +121,7 @@ function FamilyCard({ family }) {
           }}
         >
           +{earned}
-          <Text style={{ fontWeight: '400', color: t.inkFaint2 }}> of {max}</Text>
+          <Text style={{ fontWeight: '400', color: t.inkFaint2 }}>{' '}{tr('of {max}', { max })}</Text>
         </Text>
       </View>
     </Card>
@@ -160,7 +162,7 @@ function ProfileGroup({ group }) {
               fontVariant: ['tabular-nums'],
             }}
           >
-            {completed ? '+1 point ✓' : `${doneCount}/${itemCount} · +1 point`}
+            {completed ? tr('+1 point ✓') : tr('{doneCount}/{itemCount} · +1 point', { doneCount, itemCount })}
           </Text>
         </View>
       </View>
@@ -206,10 +208,10 @@ function ProfilePointsCard({ profile, onGoToProfile }) {
       <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}>
-            Your profile
+            {tr('Your profile')}
           </Text>
           <Text style={{ fontSize: type.caption, color: t.inkSlate, lineHeight: 16, marginTop: 2 }}>
-            Fill a whole set to earn its point. It counts for every person you help.
+            {tr('Fill a whole set to earn its point. It counts for every person you help.')}
           </Text>
         </View>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, fontVariant: ['tabular-nums'] }}>
@@ -223,7 +225,7 @@ function ProfilePointsCard({ profile, onGoToProfile }) {
         ))}
       </View>
       {!done ? (
-        <Button title="Finish your profile" variant="secondary" onPress={onGoToProfile} style={{ marginTop: 12 }} />
+        <Button title={tr('Finish your profile')} variant="secondary" onPress={onGoToProfile} style={{ marginTop: 12 }} />
       ) : null}
     </Card>
   );
@@ -238,10 +240,10 @@ function HelperPointsCard({ card }) {
         <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={40} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
-          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{SHORT_STAGES[Math.min(card.stageIndex, 6)]}</Text>
+          <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{tr(SHORT_STAGES[Math.min(card.stageIndex, 6)])}</Text>
         </View>
         <Text style={{ fontSize: type.body, fontWeight: '600', color: t.trustGold, fontVariant: ['tabular-nums'] }}>
-          {card.total} <Text style={{ fontWeight: '400', fontSize: type.caption }}>/ {card.totalMax} points</Text>
+          {card.total} <Text style={{ fontWeight: '400', fontSize: type.caption }}>{tr('/ {totalMax} points', { totalMax: card.totalMax })}</Text>
         </Text>
       </View>
 
@@ -250,10 +252,10 @@ function HelperPointsCard({ card }) {
         <View style={{ width: `${pct * 100}%`, height: '100%', backgroundColor: t.blueDeep, borderRadius: radius.pill }} />
       </View>
 
-      <Meter label="Trust stages" right={`${card.rooting}/${card.rootingMax}`}>
+      <Meter label={tr('Trust stages')} right={`${card.rooting}/${card.rootingMax}`}>
         <Dots earned={card.rooting} max={card.rootingMax} />
       </Meter>
-      <Meter label="Their review" right={`${card.review}/${card.reviewMax}`}>
+      <Meter label={tr('Their review')} right={`${card.review}/${card.reviewMax}`}>
         <View style={{ flexDirection: 'row', gap: 3 }}>
           {Array.from({ length: card.reviewMax }).map((_, i) => (
             <Star
@@ -265,13 +267,13 @@ function HelperPointsCard({ card }) {
           ))}
         </View>
       </Meter>
-      <Meter label="Your profile" right={`${card.profile}/${card.profileMax}`}>
+      <Meter label={tr('Your profile')} right={`${card.profile}/${card.profileMax}`}>
         <Dots earned={card.profile} max={card.profileMax} />
       </Meter>
       {/* Elders' per-customer 15 is 7+5+2+1 — familyMax is 0 for everyone
           else, so the row hides itself (web parity: sky dots like the rest). */}
       {card.familyMax > 0 ? (
-        <Meter label="Family" right={`${card.family}/${card.familyMax}`}>
+        <Meter label={tr('Family')} right={`${card.family}/${card.familyMax}`}>
           <Dots earned={card.family} max={card.familyMax} />
         </Meter>
       ) : null}
@@ -306,17 +308,17 @@ export default function TrustScreen() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
-        Your <Text style={{ color: t.trustGold }}>Trust</Text> Score
+        {emphasize(tr('Your *Trust* Score'), { color: t.trustGold })}
       </Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 2 }}>
         {isFamily
           ? // Honest, profile-only framing — never the elder scoring rules.
-            'Your score comes from your profile. Fill it in to earn your first points.'
+            tr('Your score comes from your profile. Fill it in to earn your first points.')
           : helping
-          ? 'Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.'
+          ? tr('Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.')
           : // Elder split (FAM-405): elders score 7+5+2+1 — the family point
             // replaces the third profile point, so the total stays 15.
-            'Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.'}
+            tr('Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.')}
       </Text>
 
       {/* HARD-114, reworded under APS-07. The five review points are real and
@@ -332,14 +334,14 @@ export default function TrustScreen() {
           review in the app. */}
       {!isFamily ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 6 }}>
-          The 5 review points come from a review the other person writes.
+          {tr('The 5 review points come from a review the other person writes.')}
         </Text>
       ) : null}
 
       {isLoading ? (
         <SkeletonCard lines={3} />
       ) : isError ? (
-        <LoadError what="your trust score" onRetry={refetch} style={{ marginTop: spacing[4] }} />
+        <LoadError what={tr('your trust score')} onRetry={refetch} style={{ marginTop: spacing[4] }} />
       ) : (
         <>
           {/* Summary card — the trust seal (web e9d647c 2026-07-26): the
@@ -383,7 +385,7 @@ export default function TrustScreen() {
                     marginTop: 2,
                   }}
                 >
-                  points
+                  {tr('points')}
                 </Text>
               </View>
               <View style={{ flex: 1 }}>
@@ -402,7 +404,7 @@ export default function TrustScreen() {
                     }}
                   >
                     <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>
-                      {breakdown.tier}
+                      {tr(breakdown.tier)}
                     </Text>
                   </View>
                 ) : null}
@@ -418,8 +420,8 @@ export default function TrustScreen() {
                   }}
                 >
                   {next
-                    ? `${next.missing} point${next.missing === 1 ? '' : 's'} to ${next.name}`
-                    : "You've reached the top tier"}
+                    ? (next.missing === 1 ? tr('1 point to {name}', { name: next.name }) : tr('{missing} points to {name}', { missing: next.missing, name: next.name }))
+                    : tr("You've reached the top tier")}
                 </Text>
               </View>
             </View>
@@ -433,7 +435,7 @@ export default function TrustScreen() {
                   ))}
                 </View>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
-                  {customers.length} {customers.length === 1 ? 'person' : 'people'} helped you reach this
+                  {customers.length} {customers.length === 1 ? tr('person') : tr('people')}{' '}{tr('helped you reach this')}
                 </Text>
               </View>
             ) : null}
@@ -453,7 +455,7 @@ export default function TrustScreen() {
                   marginTop: spacing[5],
                 }}
               >
-                {helping ? 'The people you help' : 'Your helpers'}
+                {helping ? tr('The people you help') : tr('Your helpers')}
               </Text>
               {customers.map((card) => (
                 <HelperPointsCard key={card.connectionId} card={card} />
@@ -465,13 +467,13 @@ export default function TrustScreen() {
                 {isFamily
                   ? // No "add someone" for FAMILY — the role has no way to do
                     // it, and their score never grows from connections.
-                    'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
-                  : 'Trust starts with a friend. Add someone, and your points appear here.'}
+                    tr('Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.')
+                  : tr('Trust starts with a friend. Add someone, and your points appear here.')}
               </Text>
               {/* The empty state carries its own starter action (rulebook) */}
               {!isFamily ? (
                 <Button
-                  title="Find friends"
+                  title={tr('Find friends')}
                   variant="secondary"
                   onPress={() => router.push('/friends')}
                   style={{ marginTop: spacing[4] }}

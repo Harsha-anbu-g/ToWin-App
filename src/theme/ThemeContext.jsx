@@ -10,6 +10,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as Store from '../lib/storage';
 import { KEYS } from '../lib/storageKeys';
+import { useLanguage } from '../i18n';
 import { light, dark, spacing, radius, text, type, fontFamily, fontScaleCaps } from './tokens';
 
 const ThemeContext = createContext(null);
@@ -18,6 +19,9 @@ const LEGACY_KEY = KEYS.themeLegacyReadOnly;
 
 export function ThemeProvider({ children }) {
   const [mode, setMode] = useState('light');
+  // Nearly every component reads the theme, so folding the language into this
+  // value is what repaints the whole app when somebody switches language.
+  const lang = useLanguage();
 
   useEffect(() => {
     (async () => {
@@ -46,6 +50,7 @@ export function ThemeProvider({ children }) {
     const t = mode === 'dark' ? dark : light;
     return {
       mode,
+      lang,
       toggle,
       t,
       spacing,
@@ -58,7 +63,7 @@ export function ThemeProvider({ children }) {
       // bounded, themed, subtle. One object so call sites can't drift.
       pressRipple: { color: t.ripple },
     };
-  }, [mode, toggle]);
+  }, [mode, lang, toggle]);
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

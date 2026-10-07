@@ -27,6 +27,7 @@ import { useToast } from '../../src/context/ToastContext';
 import { SHEET, onDayInFull } from '../../src/lib/passOnLocks';
 import { buildSheet, sheetAsText, sheetFileName } from '../../src/lib/passOnSheet';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 /** On a phone there is no "my computer" — the honest verb is keeping a copy. */
 const SAVE_LABEL = Platform.OS === 'web' ? SHEET.save : 'Save a copy of this page';
@@ -98,7 +99,7 @@ export default function PassOnSheet() {
 
       {isError ? (
         // With retry in place, never a dead-end sentence (UX-706 / HCI 9).
-        <LoadError what="your one-page copy" onRetry={refetch} />
+        <LoadError what={tr('your one-page copy')} onRetry={refetch} />
       ) : !sheet ? (
         <SkeletonCard lines={3} />
       ) : (
@@ -109,7 +110,7 @@ export default function PassOnSheet() {
             <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 22 }}>
               {lastSavedAt ? SHEET.lastSaved(onDayInFull(lastSavedAt)) : SHEET.neverSaved}
             </Text>
-            <Button title={SAVE_LABEL} onPress={save} style={{ marginTop: spacing[3] }} />
+            <Button title={tr(SAVE_LABEL)} onPress={save} style={{ marginTop: spacing[3] }} />
           </Card>
 
           <Text

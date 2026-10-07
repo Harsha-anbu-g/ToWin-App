@@ -47,9 +47,14 @@ function readCode(file) {
     .replace(/(^|[^:])\/\/[^\n]*/gm, '$1');
 }
 
+// The translation dictionaries (src/i18n/fr.js, ta.js) translate each rung name
+// once, keyed by the English name; screens still take the names from here.
+const DICTIONARIES = /src[\\/]i18n[\\/](fr|ta)\.js$/;
+
 function sourceFiles() {
   return SCAN_DIRS.flatMap((dir) => walk(path.join(ROOT, dir)))
-    .filter((f) => !path.relative(ROOT, f).endsWith(SOURCE_OF_TRUTH));
+    .filter((f) => !path.relative(ROOT, f).endsWith(SOURCE_OF_TRUTH))
+    .filter((f) => !DICTIONARIES.test(f));
 }
 
 describe('the ladder is named in exactly one file', () => {

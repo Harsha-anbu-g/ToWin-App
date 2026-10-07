@@ -20,6 +20,7 @@ import { SIGN_IN_DEVICE_ERROR } from '../../src/lib/copy';
 import { consumeOAuthFlow } from '../../src/lib/oauthFlow';
 import { setPendingOnboarding } from '../../src/lib/pendingOnboarding';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 export default function OAuthCallback() {
   const { t, spacing, text, fontFamily } = useTheme();
@@ -35,14 +36,14 @@ export default function OAuthCallback() {
 
     (async () => {
       if (oauthError || !code) {
-        setError('Could not connect with Google. Please try again.');
+        setError(tr('Could not connect with Google. Please try again.'));
         return;
       }
 
       const codeVerifier = await consumeOAuthFlow(state);
       if (!codeVerifier) {
         // No pending sign-in from THIS app (or state mismatch) — refuse.
-        setError('Could not verify this sign-in attempt. Please start again from the log in screen.');
+        setError(tr('Could not verify this sign-in attempt. Please start again from the log in screen.'));
         return;
       }
 
@@ -54,7 +55,7 @@ export default function OAuthCallback() {
           // Navigating anyway bounced the person from Google straight back to
           // Login with nothing said. Same handling as login.jsx.
           if (!(await login(data.token))) {
-            setError(SIGN_IN_DEVICE_ERROR);
+            setError(tr(SIGN_IN_DEVICE_ERROR));
             return;
           }
           router.replace('/'); // index routes by role/verification state
@@ -66,10 +67,10 @@ export default function OAuthCallback() {
           setPendingOnboarding(data);
           router.replace('/(auth)/finish-setup');
         } else {
-          setError('Something went wrong. Please try again.');
+          setError(tr('Something went wrong. Please try again.'));
         }
         })
-        .catch(() => setError('Something went wrong. Please try again.'));
+        .catch(() => setError(tr('Something went wrong. Please try again.')));
     })();
   }, [code, state, oauthError, login, router]);
 
@@ -90,7 +91,7 @@ export default function OAuthCallback() {
               </Text>
             </View>
             <Button
-              title="Back to log in"
+              title={tr('Back to log in')}
               variant="primary"
               onPress={() => router.replace('/(auth)/login')}
               style={{ marginTop: spacing[5] }}
@@ -109,12 +110,12 @@ export default function OAuthCallback() {
                 marginTop: spacing[4],
               }}
             >
-              Connecting with Google…
+              {tr('Connecting with Google…')}
             </Text>
             {/* Escape hatch — if the exchange hangs, this screen must not be
                 a dead end (rulebook: never trap the user in a spinner). */}
             <TextLink
-              label="Back to log in"
+              label={tr('Back to log in')}
               muted
               onPress={() => router.replace('/(auth)/login')}
               style={{ marginTop: spacing[4] }}

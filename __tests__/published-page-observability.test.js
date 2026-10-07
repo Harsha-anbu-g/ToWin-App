@@ -59,7 +59,9 @@ describe('the published deletion page, observed rather than assumed', () => {
       for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
         const p = path.join(dir, e.name);
         if (e.isDirectory()) walk(p);
-        else if (/\.(js|jsx)$/.test(e.name) && !p.includes('deleteAccountPage')) {
+        // The translation dictionaries (src/i18n) hold every sentence of every
+        // page by design, this one included, so they cannot be told apart by it.
+        else if (/\.(js|jsx)$/.test(e.name) && !p.includes('deleteAccountPage') && !/src[\\/]i18n[\\/](fr|ta)\.js$/.test(p)) {
           appSources.push(fs.readFileSync(p, 'utf8'));
         }
       }

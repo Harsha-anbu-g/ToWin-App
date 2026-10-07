@@ -40,6 +40,7 @@ import Button from '../components/ui/Button';
 import { haptic } from '../lib/haptics';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
+import { tr } from '../i18n';
 
 const ConfirmContext = createContext(null);
 // Host plumbing rides a second context so useConfirm() consumers keep their
@@ -118,7 +119,7 @@ function ConfirmDialogBody({ request, settle }) {
         >
           {/* Cancel left, confirm right — matches iOS and the website. */}
           <Button
-            title={request.cancelLabel ?? 'Cancel'}
+            title={request.cancelLabel ?? tr('Cancel')}
             variant="text"
             onPress={() => settle(false)}
           />
@@ -126,7 +127,7 @@ function ConfirmDialogBody({ request, settle }) {
               scrim still owns the one filled sky pill (HCI rule 8), and
               destructive must not wear an ordinary action's shape. */}
           <Button
-            title={request.confirmLabel ?? 'Continue'}
+            title={request.confirmLabel ?? tr('Continue')}
             variant={request.destructive ? 'destructive' : 'secondary'}
             onPress={() => settle(true)}
           />

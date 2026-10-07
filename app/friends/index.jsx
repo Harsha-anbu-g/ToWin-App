@@ -32,6 +32,7 @@ import { filterBlocked, getBlocked } from '../../src/lib/blockList';
 import { STATUS } from '../../src/lib/deviceLocation';
 import useDevicePosition from '../../src/lib/useDevicePosition';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 // The km control cycles through the web's radius steps; people are filtered
 // client-side by their distanceKm (the discover API returns everyone nearby).
@@ -74,7 +75,7 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${person.name}'s profile`}
+      accessibilityLabel={tr("{name}'s profile", { name: person.name })}
       onPress={onPress}
       style={({ pressed }) => ({
         backgroundColor: t.canvas,
@@ -97,10 +98,10 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
         <Text numberOfLines={1} style={{ fontSize: type.meta, marginTop: 2 }}>
           {Number.isFinite(person.trustScore) && person.trustScore > 0 ? (
             <Text style={{ color: t.trustGold, fontWeight: '600', fontVariant: ['tabular-nums'] }}>
-              {person.trustScore} trust
+              {tr('{trustScore} trust', { trustScore: person.trustScore })}
             </Text>
           ) : (
-            <Text style={{ color: t.inkSlate }}>New here</Text>
+            <Text style={{ color: t.inkSlate }}>{tr('New here')}</Text>
           )}
           {/* "0 km" is a claim, and it was the wrong one: before real
               locations existed everybody shared one town-centre point, so
@@ -109,9 +110,9 @@ const PersonRow = memo(function PersonRow({ person, trailing, onPress }) {
               words rather than a number that reads as broken. */}
           <Text style={{ color: t.inkSlate }}>
             {Number.isFinite(person.distanceKm) && person.distanceKm >= 1
-              ? ` · ${person.distanceKm.toFixed(0)} km away`
+              ? tr(' · {toFixed} km away', { toFixed: person.distanceKm.toFixed(0) })
               : Number.isFinite(person.distanceKm)
-                ? ' · in your area'
+                ? tr(' · in your area')
                 : person.city
                   ? ` · ${person.city}`
                   : ''}
@@ -144,9 +145,9 @@ const FindRow = memo(function FindRow({
       onPress={() => onOpen(person.userId)}
       trailing={
         status === 'friends' ? (
-          <Text style={{ fontSize: type.meta, color: t.greenDeep, fontWeight: '600' }}>Friends</Text>
+          <Text style={{ fontSize: type.meta, color: t.greenDeep, fontWeight: '600' }}>{tr('Friends')}</Text>
         ) : status === 'requested' ? (
-          <TonalChip label="Requested" neutral />
+          <TonalChip label={tr('Requested')} neutral />
         ) : status === 'invited-me' ? (
           // They asked first. This row used to show Connect, which is the one
           // action that cannot succeed here: the pair already has a pending
@@ -154,12 +155,12 @@ const FindRow = memo(function FindRow({
           // is actually left to do (HCI heuristic 3, and heuristic 5: never
           // offer a control whose only outcome is an error).
           <TonalChip
-            label={accepting ? 'Accepting…' : 'Accept'}
+            label={accepting ? tr('Accepting…') : tr('Accept')}
             onPress={busy ? undefined : () => onAcceptInvite(person)}
           />
         ) : (
           <TonalChip
-            label={sending ? 'Sending…' : 'Connect'}
+            label={sending ? tr('Sending…') : tr('Connect')}
             // A sent request can't be withdrawn (backend has no cancel), so a
             // mis-tap must not send one — onConnect confirms first (HCI rule 5,
             // error prevention). While any request is in flight there is no
@@ -204,7 +205,7 @@ const InviteCard = memo(function InviteCard({
           "primaries" on one screen (HCI rule 8) */}
       <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
         <Button
-          title="Accept"
+          title={tr('Accept')}
           variant="secondary"
           loading={acceptPending}
           disabled={disabled}
@@ -212,7 +213,7 @@ const InviteCard = memo(function InviteCard({
           style={{ flex: 1 }}
         />
         <Button
-          title="Decline"
+          title={tr('Decline')}
           variant="text"
           loading={declinePending}
           disabled={disabled}
@@ -237,12 +238,12 @@ const RequestedCard = memo(function RequestedCard({ conn }) {
           trustScore: conn.otherUserTrustScore,
         }}
         onPress={() => router.push(`/user/${conn.otherUserId}`)}
-        trailing={<TonalChip label="Requested" neutral />}
+        trailing={<TonalChip label={tr('Requested')} neutral />}
       />
       {/* Requests can't be withdrawn yet (backend has no
           cancel) — at least say plainly what waiting means. */}
       <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 8 }}>
-        Waiting for {conn.otherUserName} to accept. They'll see your request in their invites.
+        {tr("Waiting for {otherUserName} to accept. They'll see your request in their invites.", { otherUserName: conn.otherUserName })}
       </Text>
     </View>
   );
@@ -368,12 +369,12 @@ export default function FriendsScreen() {
   const request = useMutation({
     mutationFn: (targetUserId) => sendConnectionRequest(targetUserId),
     onSuccess: () => {
-      showToast('Friend request sent!', 'success');
+      showToast(tr('Friend request sent!'), 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
       showToast(
-        friendlyWriteError(err, err?.response?.data?.message || 'Could not send the request. Please try again.'),
+        friendlyWriteError(err, err?.response?.data?.message || tr('Could not send the request. Please try again.')),
         'error'
       ),
   });
@@ -381,11 +382,11 @@ export default function FriendsScreen() {
   const respond = useMutation({
     mutationFn: ({ id, accept }) => respondToConnectionRequest({ connectionId: id, accept }),
     onSuccess: (_res, { accept }) => {
-      showToast(accept ? 'You are now friends!' : 'Request declined.', accept ? 'success' : 'info');
+      showToast(accept ? tr('You are now friends!') : tr('Request declined.'), accept ? 'success' : 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not respond right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not respond right now. Please try again.')), 'error'),
   });
 
   const onRefresh = async () => {
@@ -400,10 +401,10 @@ export default function FriendsScreen() {
   const connectTo = useCallback(
     async (p) => {
       const ok = await confirm({
-        title: 'Send a friend request?',
-        message: `${p.name} will be asked to connect with you.`,
-        cancelLabel: 'Not now',
-        confirmLabel: 'Send request',
+        title: tr('Send a friend request?'),
+        message: tr('{name} will be asked to connect with you.', { name: p.name }),
+        cancelLabel: tr('Not now'),
+        confirmLabel: tr('Send request'),
       });
       if (ok) requestMutate(p.userId);
     },
@@ -420,10 +421,10 @@ export default function FriendsScreen() {
       // Declining is permanent on the backend — the label must not promise
       // "later", and it confirms first.
       const ok = await confirm({
-        title: 'Decline this invite?',
-        message: `${conn.otherUserName} will be told you declined. They can invite you again later.`,
-        cancelLabel: 'Keep invite',
-        confirmLabel: 'Decline',
+        title: tr('Decline this invite?'),
+        message: tr('{otherUserName} will be told you declined. They can invite you again later.', { otherUserName: conn.otherUserName }),
+        cancelLabel: tr('Keep invite'),
+        confirmLabel: tr('Decline'),
         destructive: true,
       });
       if (ok) respondMutate({ id: conn.id, accept: false });
@@ -516,14 +517,14 @@ export default function FriendsScreen() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5, marginTop: 4 }}
         >
-          Add Friends
+          {tr('Add Friends')}
         </Text>
 
         <SegmentedControl
           segments={[
-            { key: 'find', label: isHelper ? 'Find New Elders' : 'Find New Helpers' },
-            { key: 'invites', label: 'New Invites', count: invites.length },
-            { key: 'requested', label: 'Requested', count: requested.length },
+            { key: 'find', label: isHelper ? tr('Find New Elders') : tr('Find New Helpers') },
+            { key: 'invites', label: tr('New Invites'), count: invites.length },
+            { key: 'requested', label: tr('Requested'), count: requested.length },
           ]}
           value={seg}
           onChange={setSeg}
@@ -560,7 +561,7 @@ export default function FriendsScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                   <MapPin size={14} color={t.inkSlate} strokeWidth={1.8} />
                   <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
-                    Showing {who} within
+                    {tr('Showing {who} within', { who })}
                   </Text>
                 </View>
                 {/* Direct choice, not a cycler — going from 25 back to 10 took
@@ -571,7 +572,7 @@ export default function FriendsScreen() {
                     flex: 1 keeps the five widths uniform on every screen. */}
                 <View
                   accessibilityRole="radiogroup"
-                  accessibilityLabel={`Showing ${who} within`}
+                  accessibilityLabel={tr('Showing {who} within', { who })}
                   style={{ flexDirection: 'row', gap: 6 }}
                 >
                   {RADIUS_STEPS.map((km, i) => {
@@ -580,7 +581,7 @@ export default function FriendsScreen() {
                       <Pressable
                         key={km}
                         accessibilityRole="radio"
-                        accessibilityLabel={`${km} kilometers`}
+                        accessibilityLabel={tr('{km} kilometers', { km })}
                         aria-checked={active}
                         onPress={() => setRadiusIdx(i)}
                         // 36pt pill + 4pt slop each side = 44pt, like the kit's ActionChip.
@@ -605,7 +606,7 @@ export default function FriendsScreen() {
                             fontVariant: ['tabular-nums'],
                           }}
                         >
-                          {km} km
+                          {tr('{km} km', { km })}
                         </Text>
                       </Pressable>
                     );
@@ -614,8 +615,8 @@ export default function FriendsScreen() {
               </View>
             }
             ListEmptyComponent={emptyCard(
-              `Nobody new within ${radiusKm} km right now. Try a wider distance, or check back soon.`,
-              { failed: discoverFailed, what: 'people near you', retry: refetchDiscover }
+              tr('Nobody new within {radiusKm} km right now. Try a wider distance, or check back soon.', { radiusKm }),
+              { failed: discoverFailed, what: tr('people near you'), retry: refetchDiscover }
             )}
             renderItem={renderFindRow}
           />
@@ -629,14 +630,14 @@ export default function FriendsScreen() {
             contentContainerStyle={{ paddingBottom: 64, gap: 10 }}
             ListEmptyComponent={
               seg === 'invites'
-                ? emptyCard('No new invites. When someone asks to connect, they appear here.', {
+                ? emptyCard(tr('No new invites. When someone asks to connect, they appear here.'), {
                     failed: connsFailed,
-                    what: 'your invites',
+                    what: tr('your invites'),
                     retry: refetchConns,
                   })
-                : emptyCard('No requests waiting. People you ask to connect with appear here.', {
+                : emptyCard(tr('No requests waiting. People you ask to connect with appear here.'), {
                     failed: connsFailed,
-                    what: 'your requests',
+                    what: tr('your requests'),
                     retry: refetchConns,
                   })
             }

@@ -13,6 +13,7 @@ import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import SkeletonCard from '../ui/Skeleton';
+import { tr } from '../../i18n';
 
 export default function AgeCard() {
   const { t, text, spacing, fontFamily } = useTheme();
@@ -42,13 +43,13 @@ export default function AgeCard() {
     return (
       <Card contentStyle={{ gap: spacing[2] }}>
         <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
-          How many days have you lived?
+          {tr('How many days have you lived?')}
         </Text>
         <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 20 }}>
-          Add your date of birth in your profile to see your life in days.
+          {tr('Add your date of birth in your profile to see your life in days.')}
         </Text>
         <Button
-          title="Add date of birth"
+          title={tr('Add date of birth')}
           variant="secondary"
           size="small"
           onPress={() => router.push('/profile-edit')}
@@ -86,15 +87,15 @@ export default function AgeCard() {
           <Text
             style={{ fontSize: text.sm, fontWeight: '600', color: t.inkSlate, marginTop: 4 }}
           >
-            days you have lived
+            {tr('days you have lived')}
           </Text>
         </View>
         <Text
           style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'right', lineHeight: 21 }}
         >
-          {age.years} {age.years === 1 ? 'year' : 'years'},{'\n'}
-          {age.months} {age.months === 1 ? 'month' : 'months'},{' '}
-          {age.days} {age.days === 1 ? 'day' : 'days'} old
+          {age.years} {age.years === 1 ? tr('year') : tr('years')},{'\n'}
+          {age.months} {age.months === 1 ? tr('month') : tr('months')},{' '}
+          {age.days} {age.days === 1 ? tr('day') : tr('days')}{' '}{tr('old')}
         </Text>
       </View>
     </Card>

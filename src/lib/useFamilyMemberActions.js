@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { makePrimaryFamilyContact, openFamilyChat, removeFamilyLink } from '../api/family';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
+import { tr } from '../i18n';
 
 /**
  * Family-member actions for an elder.
@@ -27,23 +28,23 @@ export default function useFamilyMemberActions() {
   const remove = useMutation({
     mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
-      showToast('Removed from your family.', 'success');
+      showToast(tr('Removed from your family.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not remove them. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Could not remove them. Please try again.'), 'error'),
   });
 
   const makePrimary = useMutation({
     mutationFn: (id) => makePrimaryFamilyContact(id),
     onSuccess: () => {
-      showToast('Main contact updated.', 'success');
+      showToast(tr('Main contact updated.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
     },
     onError: (err) =>
       showToast(
-        err?.response?.data?.message || 'Could not change your main contact. Please try again.',
+        err?.response?.data?.message || tr('Could not change your main contact. Please try again.'),
         'error'
       ),
   });
@@ -58,18 +59,18 @@ export default function useFamilyMemberActions() {
       router.push(`/chat/${chatConnectionId}`);
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Could not open the chat. Please try again.'), 'error'),
   });
 
   // The shared confirm dialog with the web's exact danger message — removing
   // must spell out what the person loses (HCI 5). `onDone` runs once removed.
   const confirmRemove = async (link, onDone) => {
     const ok = await confirm({
-      title: `Remove ${link.otherUserName} from your family?`,
+      title: tr('Remove {otherUserName} from your family?', { otherUserName: link.otherUserName }),
       message:
-        "They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again.",
-      cancelLabel: 'Keep',
-      confirmLabel: 'Remove from family',
+        tr("They will no longer see that you're safe or any friendship you shared. If they're your last family member here, your family trust point goes too. You can add them again later. They would need to accept again."),
+      cancelLabel: tr('Keep'),
+      confirmLabel: tr('Remove from family'),
       destructive: true,
     });
     if (ok) remove.mutate(link.id, { onSuccess: onDone });

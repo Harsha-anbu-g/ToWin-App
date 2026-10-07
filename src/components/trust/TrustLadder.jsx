@@ -5,6 +5,7 @@ import { Check } from '../icons';
 import { View } from 'react-native';
 import TortoiseMark from '../TortoiseMark';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function TrustLadder({ stageIndex, style }) {
   const { t } = useTheme();
@@ -13,8 +14,8 @@ export default function TrustLadder({ stageIndex, style }) {
   // different position than sighted users (HCI rule 6).
   const label =
     stageIndex >= 6
-      ? 'Trust ladder: Stage 7 of 7, full trust reached'
-      : `Trust ladder: Stage ${Math.min(stageIndex + 1, 7)} of 7`;
+      ? tr('Trust ladder: Stage 7 of 7, full trust reached')
+      : tr('Trust ladder: Stage {min} of 7', { min: Math.min(stageIndex + 1, 7) });
   return (
     <View
       accessible

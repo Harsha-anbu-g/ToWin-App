@@ -11,12 +11,13 @@ import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
+import { tr } from '../../i18n';
 
 export default function FamilyPowerAsks({ link, elderName, onChanged }) {
   const { t, spacing, radius, type, fontFamily } = useTheme();
   const { showToast } = useToast();
 
-  const parent = elderName || 'your parent';
+  const parent = elderName || tr('your parent');
   const powers = link?.delegatedPowers || [];
   // Powers I've asked for that are still waiting on their answer.
   const pendingAsks = (link?.pendingPowerRequests || []).map((r) => r.power);
@@ -24,11 +25,11 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
   const ask = useMutation({
     mutationFn: (powerKey) => askForPower({ linkId: link.id, power: powerKey }),
     onSuccess: () => {
-      showToast(`Asked. ${parent} decides on their My Family page.`, 'success');
+      showToast(tr('Asked. {parent} decides on their My Family page.', { parent }), 'success');
       onChanged?.();
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not send the ask. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Could not send the ask. Please try again.'), 'error'),
   });
 
   if (!link) return null;
@@ -40,10 +41,10 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
       >
-        What I can do for {parent}
+        {tr('What I can do for {parent}', { parent })}
       </Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: spacing[1] }}>
-        {parent} decides each of these, and anything you do carries your name.
+        {tr('{parent} decides each of these, and anything you do carries your name.', { parent })}
       </Text>
 
       {POWERS.map((p, i) => {
@@ -66,12 +67,12 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
               <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{p.title}</Text>
               <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 2 }}>
                 {isGranted
-                  ? `${parent} lets you do this.`
+                  ? tr('{parent} lets you do this.', { parent })
                   : isWaiting
-                    ? `You asked. Waiting for ${parent} to decide. They answer on their My Family page.`
+                    ? tr('You asked. Waiting for {parent} to decide. They answer on their My Family page.', { parent })
                     : p.key === 'LEAVE_REVIEWS'
-                      ? `Not on yet. You can ask ${parent}. Reviews unlock when a friendship is fully trusted.`
-                      : `Not on yet. You can ask ${parent}.`}
+                      ? tr('Not on yet. You can ask {parent}. Reviews unlock when a friendship is fully trusted.', { parent })
+                      : tr('Not on yet. You can ask {parent}.', { parent })}
               </Text>
             </View>
             {isGranted ? (
@@ -89,7 +90,7 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
                 }}
               >
                 <Check size={14} color={t.greenDeep} strokeWidth={2.5} />
-                <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep }}>On</Text>
+                <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep }}>{tr('On')}</Text>
               </View>
             ) : isWaiting ? (
               <View
@@ -103,12 +104,12 @@ export default function FamilyPowerAsks({ link, elderName, onChanged }) {
                 }}
               >
                 <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
-                  Waiting
+                  {tr('Waiting')}
                 </Text>
               </View>
             ) : (
               <ActionChip
-                label={asking === p.key ? 'Asking…' : `Ask ${parent}`}
+                label={asking === p.key ? tr('Asking…') : tr('Ask {parent}', { parent })}
                 tonal
                 disabled={ask.isPending}
                 onPress={() => ask.mutate(p.key)}

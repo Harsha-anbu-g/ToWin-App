@@ -22,6 +22,7 @@ import LoadError from '../ui/LoadError';
 import SegmentedControl from '../ui/SegmentedControl';
 import SkeletonCard from '../ui/Skeleton';
 import SwipeSegments from '../ui/SwipeSegments';
+import { tr } from '../../i18n';
 
 // Which segment an offer belongs under. A declined offer, or a request the
 // elder took down, is over — it lives with the finished ones.
@@ -32,9 +33,9 @@ const segmentOf = (need) => {
 };
 
 const EMPTY = {
-  open: 'No offers waiting. Offer to help with a request and it will show up here.',
-  progress: 'Nothing in progress. When an elder says yes to your offer, it moves here.',
-  done: 'No finished jobs yet.',
+  get open() { return tr('No offers waiting. Offer to help with a request and it will show up here.'); },
+  get progress() { return tr('Nothing in progress. When an elder says yes to your offer, it moves here.'); },
+  get done() { return tr('No finished jobs yet.'); },
 };
 
 function JobRow({ need, standing, divider }) {
@@ -44,8 +45,8 @@ function JobRow({ need, standing, divider }) {
   const meta = [
     catLabel(need.category),
     need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
-    need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null,
-    need.status === 'CANCELLED' ? 'Taken down' : null,
+    need.createdAt ? tr('posted {timeAgo}', { timeAgo: timeAgo(need.createdAt) }) : null,
+    need.status === 'CANCELLED' ? tr('Taken down') : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -53,7 +54,7 @@ function JobRow({ need, standing, divider }) {
   // a declined offer says so plainly rather than hiding under "Completed".
   const subtitle =
     need.myApplicationStatus === 'DECLINED'
-      ? 'Not this time'
+      ? tr('Not this time')
       : need.myApplicationStatus === 'ACCEPTED' && need.elderName
         ? [need.elderName, standing?.word].filter(Boolean).join(' · ')
         : null;
@@ -97,7 +98,7 @@ function JobRow({ need, standing, divider }) {
           {need.elderName ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`View ${need.elderName}'s profile`}
+              accessibilityLabel={tr("View {elderName}'s profile", { elderName: need.elderName })}
               onPress={() => router.push(`/user/${need.elderId}`)}
               style={({ pressed }) => ({
                 flexDirection: 'row',
@@ -113,8 +114,8 @@ function JobRow({ need, standing, divider }) {
                 <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>{need.elderName}</Text>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
                   {standing
-                    ? `${standing.word} · Stage ${standing.stageNo} of 7, ${standing.stageName}. Tap to see their profile.`
-                    : 'Tap to see their profile.'}
+                    ? tr('{word} · Stage {stageNo} of 7, {stageName}. Tap to see their profile.', { word: standing.word, stageNo: standing.stageNo, stageName: standing.stageName })
+                    : tr('Tap to see their profile.')}
                 </Text>
               </View>
               <ChevronRight size={16} color={t.inkFaint2} strokeWidth={2} />
@@ -130,7 +131,7 @@ function JobRow({ need, standing, divider }) {
           {/* The chat lives on the friendship the accept created. */}
           {standing?.connectionId && need.myApplicationStatus === 'ACCEPTED' ? (
             <ActionChip
-              label="Message"
+              label={tr('Message')}
               tonal
               onPress={() => router.push(`/chat/${standing.connectionId}`)}
               style={{ marginTop: 10, alignSelf: 'flex-start' }}
@@ -167,9 +168,9 @@ export default function MyJobsCard() {
     <View>
       <SegmentedControl
         segments={[
-          { key: 'open', label: 'Waiting', count: waiting.length },
-          { key: 'progress', label: 'In Progress', count: inProgress.length },
-          { key: 'done', label: 'Completed', count: finished.length },
+          { key: 'open', label: tr('Waiting'), count: waiting.length },
+          { key: 'progress', label: tr('In Progress'), count: inProgress.length },
+          { key: 'done', label: tr('Completed'), count: finished.length },
         ]}
         value={seg}
         onChange={setSeg}
@@ -180,7 +181,7 @@ export default function MyJobsCard() {
         {isLoading ? (
           <SkeletonCard />
         ) : isError ? (
-          <LoadError bare what="your jobs" onRetry={refetch} style={{ marginTop: 14 }} />
+          <LoadError bare what={tr('your jobs')} onRetry={refetch} style={{ marginTop: 14 }} />
         ) : shown.length === 0 ? (
           <Text style={{ paddingVertical: 24, fontSize: type.body, lineHeight: 22, color: t.inkSlate }}>
             {EMPTY[seg]}
@@ -191,7 +192,7 @@ export default function MyJobsCard() {
               key={need.id}
               need={need}
               divider={i > 0}
-              standing={trustStandingFor(need.elderId, connections, { trustedWord: 'Trusted elder' })}
+              standing={trustStandingFor(need.elderId, connections, { trustedWord: tr('Trusted elder') })}
             />
           ))
         )}

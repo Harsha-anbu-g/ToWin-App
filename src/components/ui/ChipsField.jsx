@@ -10,6 +10,7 @@ import { X } from '../icons';
 import { haptic } from '../../lib/haptics';
 import { useTheme } from '../../theme/ThemeContext';
 import Input from './Input';
+import { tr } from '../../i18n';
 
 const parseList = (s) =>
   (s ?? '')
@@ -49,7 +50,7 @@ export default function ChipsField({ label, value, onChangeText, helper, style }
             <Pressable
               key={`${item}-${idx}`}
               accessibilityRole="button"
-              accessibilityLabel={`Remove ${item}`}
+              accessibilityLabel={tr('Remove {item}', { item })}
               onPress={() => remove(idx)}
               android_ripple={pressRipple}
               // No hitSlop: the box itself clears 44pt both ways, and removal is

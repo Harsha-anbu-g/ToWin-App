@@ -7,6 +7,7 @@
 import { Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { Search, X } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function SearchField({ value, onChangeText, placeholder = 'Search', label = 'Search', style }) {
   const { t, spacing, radius, type, fontScaleCaps, pressRipple } = useTheme();
@@ -45,7 +46,7 @@ export default function SearchField({ value, onChangeText, placeholder = 'Search
       {Platform.OS !== 'ios' && value ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Clear search"
+          accessibilityLabel={tr('Clear search')}
           onPress={() => onChangeText('')}
           android_ripple={pressRipple}
           hitSlop={8}
@@ -69,7 +70,7 @@ export function SearchMiss({ query, style }) {
       maxFontSizeMultiplier={fontScaleCaps.body}
       style={[{ fontSize: type.body, color: t.inkSlate, lineHeight: 24, paddingVertical: spacing[4] }, style]}
     >
-      {`No matches for “${query.trim()}”.`}
+      {tr('No matches for “{trim}”.', { trim: query.trim() })}
     </Text>
   );
 }

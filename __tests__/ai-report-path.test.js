@@ -16,7 +16,7 @@ describe('reporting a bad answer from the AI helper', () => {
   test('every assistant answer offers a report control', () => {
     // Assert — the visible label and the screen-reader label both exist.
     expect(ASSISTANT).toContain('Report this answer');
-    expect(ASSISTANT).toContain('accessibilityLabel="Report this answer"');
+    expect(ASSISTANT).toContain("accessibilityLabel={tr('Report this answer')}");
   });
 
   test('the control carries the answer into the feedback form', () => {

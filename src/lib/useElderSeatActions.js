@@ -8,6 +8,7 @@ import { endConnection, listMyConnections } from '../api/connections';
 import { confirmTrustStep, pauseTrustSteps, resumeTrustSteps } from '../api/trust';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
+import { tr } from '../i18n';
 
 /**
  * Trust-step actions for a helper looking at their elders.
@@ -38,34 +39,34 @@ export default function useElderSeatActions() {
       const c = (connections ?? []).find((x) => x.id === connectionId);
       showToast(
         c && !c.confirmedByOther
-          ? `Step confirmed. Waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed. One step up the ladder!',
+          ? tr('Step confirmed. Waiting for {otherUserName} to agree too.', { otherUserName: c.otherUserName })
+          : tr('You both agreed. One step up the ladder!'),
         'success'
       );
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not confirm right now. Please try again.')), 'error'),
   });
 
   const end = useMutation({
     mutationFn: (connectionId) => endConnection(connectionId),
     onSuccess: () => {
-      showToast('Connection ended.', 'info');
+      showToast(tr('Connection ended.'), 'info');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not end it right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not end it right now. Please try again.')), 'error'),
   });
 
   const resume = useMutation({
     mutationFn: (connectionId) => resumeTrustSteps(connectionId),
     onSuccess: () => {
-      showToast('Welcome back. Trust steps and messages are on again.', 'success');
+      showToast(tr('Welcome back. Trust steps and messages are on again.'), 'success');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not resume right now. Please try again.')), 'error'),
   });
 
   // Pausing is reversible on the same connection id, so the way back rides in
@@ -73,23 +74,23 @@ export default function useElderSeatActions() {
   const pause = useMutation({
     mutationFn: (connectionId) => pauseTrustSteps(connectionId),
     onSuccess: (_r, connectionId) => {
-      showToast('Paused. You can resume any time.', 'info', {
-        actionLabel: 'Undo',
+      showToast(tr('Paused. You can resume any time.'), 'info', {
+        actionLabel: tr('Undo'),
         onAction: () => resume.mutate(connectionId),
       });
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not pause right now. Please try again.')), 'error'),
   });
 
   /** Asks, then accepts the step the elder started. */
   const acceptStep = async (conn) => {
     const ok = await askConfirm({
-      title: 'Accept the next step?',
-      message: `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`,
-      cancelLabel: 'Not yet',
-      confirmLabel: 'Accept',
+      title: tr('Accept the next step?'),
+      message: tr('{otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.', { otherUserName: conn.otherUserName }),
+      cancelLabel: tr('Not yet'),
+      confirmLabel: tr('Accept'),
     });
     if (ok) confirm.mutate(conn.id);
   };
@@ -97,10 +98,10 @@ export default function useElderSeatActions() {
   /** Asks first (a mis-tap silences a friendship), then pauses; `onDone` runs once paused. */
   const takeBreak = async (conn, onDone) => {
     const ok = await askConfirm({
-      title: 'Take a break?',
-      message: 'Trust steps and messages with this elder pause until either of you resumes. Nothing is lost.',
-      cancelLabel: 'Not now',
-      confirmLabel: 'Take a break',
+      title: tr('Take a break?'),
+      message: tr('Trust steps and messages with this elder pause until either of you resumes. Nothing is lost.'),
+      cancelLabel: tr('Not now'),
+      confirmLabel: tr('Take a break'),
     });
     if (ok) pause.mutate(conn.id, { onSuccess: onDone });
   };
@@ -108,10 +109,10 @@ export default function useElderSeatActions() {
   /** Asks, then ends the connection for good; `onDone` runs once it is gone. */
   const endConn = async (conn, onDone) => {
     const ok = await askConfirm({
-      title: 'End this connection?',
-      message: `You and ${conn.otherUserName} will no longer be connected. This cannot be undone.`,
-      cancelLabel: 'Keep it',
-      confirmLabel: 'End',
+      title: tr('End this connection?'),
+      message: tr('You and {otherUserName} will no longer be connected. This cannot be undone.', { otherUserName: conn.otherUserName }),
+      cancelLabel: tr('Keep it'),
+      confirmLabel: tr('End'),
       destructive: true,
     });
     if (ok) end.mutate(conn.id, { onSuccess: onDone });

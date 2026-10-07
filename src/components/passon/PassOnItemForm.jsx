@@ -19,6 +19,7 @@ import Input from '../ui/Input';
 import TextLink from '../ui/TextLink';
 import PersonPicker from './PersonPicker';
 import RadioCards from './RadioCards';
+import { tr } from '../../i18n';
 
 /**
  * Props:
@@ -60,12 +61,12 @@ export default function PassOnItemForm({
   const canHold = canHoldUntilGone || initial?.releaseWhen === 'AFTER';
 
   function submit() {
-    if (!title.trim()) return setProblem('Please give it a name.');
+    if (!title.trim()) return setProblem(tr('Please give it a name.'));
     if (!body.trim())
       return setProblem(
-        isLetter ? 'Please write something before you save it.' : 'Please tell it before you save it.'
+        isLetter ? tr('Please write something before you save it.') : tr('Please tell it before you save it.')
       );
-    if (wantsPerson && !personId) return setProblem('Please choose the one person this is for.');
+    if (wantsPerson && !personId) return setProblem(tr('Please choose the one person this is for.'));
     setProblem('');
     onSave({
       kind,
@@ -85,7 +86,7 @@ export default function PassOnItemForm({
         label={STORY_BOX.namePrompt}
         value={title}
         onChangeText={setTitle}
-        placeholder={isLetter ? 'For Sarah' : STORY_BOX.namePlaceholder}
+        placeholder={isLetter ? tr('For Sarah') : STORY_BOX.namePlaceholder}
         maxLength={120}
       />
 
@@ -100,7 +101,7 @@ export default function PassOnItemForm({
       />
 
       {!isLetter ? (
-        <Text style={{ fontSize: text.sm, color: t.trustGold, lineHeight: 23 }}>{NOT_HERE}</Text>
+        <Text style={{ fontSize: text.sm, color: t.trustGold, lineHeight: 23 }}>{tr(NOT_HERE)}</Text>
       ) : null}
 
       {!isLetter ? (
@@ -169,11 +170,11 @@ export default function PassOnItemForm({
 
       <View style={{ gap: spacing[2] }}>
         <Button
-          title={saving ? 'Saving…' : isLetter ? LETTERS.save : STORY_BOX.save}
+          title={saving ? tr('Saving…') : isLetter ? LETTERS.save : STORY_BOX.save}
           onPress={submit}
           loading={saving}
         />
-        <Button title="Cancel" variant="secondary" onPress={onCancel} disabled={saving} />
+        <Button title={tr('Cancel')} variant="secondary" onPress={onCancel} disabled={saving} />
       </View>
     </Card>
   );

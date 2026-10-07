@@ -20,6 +20,7 @@ import {
   PEEKABOO_WHITE,
 } from '../src/theme/parity';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 // Canvas 3j geometry: hexagon centers, 3 columns × 4 rows on the shell.
 const CELL_COLS = [118, 190, 262];
@@ -51,12 +52,12 @@ function TimerRing({ timeLeft }) {
       </Svg>
       <View style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
         <Text
-          accessibilityLabel={`${timeLeft} seconds left`}
+          accessibilityLabel={tr('{timeLeft} seconds left', { timeLeft })}
           style={{ fontSize: 17, fontWeight: '600', color: PEEKABOO_BODY, lineHeight: 18, fontVariant: ['tabular-nums'] }}
         >
           {timeLeft}
         </Text>
-        <Text style={{ fontSize: type.caption, color: t.inkSlate, letterSpacing: 0.8 }}>SEC</Text>
+        <Text style={{ fontSize: type.caption, color: t.inkSlate, letterSpacing: 0.8 }}>{tr('SEC')}</Text>
       </View>
     </View>
   );
@@ -74,7 +75,7 @@ const TortoiseBoard = memo(function TortoiseBoard({ cards, onFlip, disabled }) {
       width={boardW}
       height={boardW * (470 / 360)}
       viewBox="10 -32 360 470"
-      accessibilityLabel="Tortoise shell game board"
+      accessibilityLabel={tr('Tortoise shell game board')}
     >
       <Ellipse cx={190} cy={416} rx={118} ry={10} fill={PEEKABOO_BODY} opacity={0.07} />
       {/* legs + tail */}
@@ -110,7 +111,7 @@ const TortoiseBoard = memo(function TortoiseBoard({ cards, onFlip, disabled }) {
               strokeWidth={2.5}
               onPress={disabled || card.matched || showing ? undefined : () => onFlip(idx)}
               {...svgButtonA11y(
-                card.matched ? `Matched ${card.num}` : showing ? `Showing ${card.num}` : 'Hidden cell'
+                card.matched ? tr('Matched {num}', { num: card.num }) : showing ? tr('Showing {num}', { num: card.num }) : tr('Hidden cell')
               )}
             />
             {card.matched ? (
@@ -212,17 +213,17 @@ export default function GameScreen() {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: 30, color: PEEKABOO_BODY, letterSpacing: -0.5 }}
           >
-            Peekaboo!
+            {tr('Peekaboo!')}
           </Text>
           <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 5 }}>
-            Match all {PAIRS} pairs to win
+            {tr('Match all {PAIRS} pairs to win', { PAIRS })}
           </Text>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           {phase === 'playing' ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={paused ? 'Resume the game' : 'Pause the game'}
+              accessibilityLabel={paused ? tr('Resume the game') : tr('Pause the game')}
               onPress={() => setPaused((p) => !p)}
               style={({ pressed }) => ({
                 minHeight: 44,
@@ -236,7 +237,7 @@ export default function GameScreen() {
               })}
             >
               <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
-                {paused ? 'Resume' : 'Pause'}
+                {paused ? tr('Resume') : tr('Pause')}
               </Text>
             </Pressable>
           ) : null}
@@ -263,8 +264,8 @@ export default function GameScreen() {
 
       <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 21, marginTop: 12 }}>
         {paused
-          ? 'Paused. Take all the time you need. Tap Resume when ready.'
-          : 'Tap two cells on the shell. A pair that matches stays open. Slow and steady.'}
+          ? tr('Paused. Take all the time you need. Tap Resume when ready.')
+          : tr('Tap two cells on the shell. A pair that matches stays open. Slow and steady.')}
       </Text>
 
       <View style={{ alignItems: 'center', marginTop: 8 }}>
@@ -290,20 +291,20 @@ export default function GameScreen() {
             }}
           >
             {phase === 'won'
-              ? 'You found them all. Slow and steady wins!'
-              : "Time's up. No rush, try again whenever you like."}
+              ? tr('You found them all. Slow and steady wins!')
+              : tr("Time's up. No rush, try again whenever you like.")}
           </Text>
           {/* After a 60-second game, playing again is the likely next action —
               it gets the primary (rulebook); "Dashboard" was a dead redirect. */}
-          <Button title="Play again" variant="primary" onPress={restart} style={{ marginTop: spacing[4] }} />
-          <Button title="Back to Home" variant="secondary" onPress={toHome} style={{ marginTop: spacing[2] }} />
+          <Button title={tr('Play again')} variant="primary" onPress={restart} style={{ marginTop: spacing[4] }} />
+          <Button title={tr('Back to Home')} variant="secondary" onPress={toHome} style={{ marginTop: spacing[2] }} />
         </View>
       ) : (
         <Pressable
           // button, not link: it goes back to a screen inside the app, and
           // "link" would promise a screen-reader user they are leaving it.
           accessibilityRole="button"
-          accessibilityLabel="Skip to Home"
+          accessibilityLabel={tr('Skip to Home')}
           onPress={toHome}
           hitSlop={{ top: 8, bottom: 8 }}
           style={({ pressed }) => ({
@@ -318,7 +319,7 @@ export default function GameScreen() {
           })}
         >
           <Text style={{ fontSize: type.meta, color: t.inkSlate, textDecorationLine: 'underline' }}>
-            Skip to Home
+            {tr('Skip to Home')}
           </Text>
         </Pressable>
       )}

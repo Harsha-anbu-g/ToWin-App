@@ -43,7 +43,7 @@ describe('the badge cannot be cleared by looking', () => {
     expect(layout).toMatch(/offersWaitingCount\(needsData\?\.content\)/);
     expect(layout).not.toMatch(/useUnseenBadge\([^)]*'applicants'/);
     // The spoken label says what the number is.
-    expect(layout).toMatch(/tabA11yLabel\('Posted Help', applicantsBadge, 'waiting'\)/);
+    expect(layout).toMatch(/tabA11yLabel\(tr\('Posted Help'\), applicantsBadge, 'waiting'\)/);
   });
 
   test('opening Posted Help marks nothing seen', () => {

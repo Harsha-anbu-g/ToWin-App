@@ -10,7 +10,7 @@ import {
   LETTERS,
   MY_BOXES,
   NOT_A_WILL,
-  PAGE_LEAD,
+  pageLead,
   RELEASE_CONTACT,
   SEALED_ITEMS,
   SETUP,
@@ -36,7 +36,7 @@ describe('the dashboard card summary', () => {
   });
 
   test('the card and the page lead cannot drift apart', () => {
-    expect(PAGE_LEAD).toBe(`${MY_BOXES.lead} You choose who sees each one.`);
+    expect(pageLead()).toBe(`${MY_BOXES.lead} You choose who sees each one.`);
   });
 });
 

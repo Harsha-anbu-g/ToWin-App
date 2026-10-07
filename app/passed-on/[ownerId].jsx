@@ -24,6 +24,7 @@ import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { FROM_PAGE, REPORT_STORY } from '../../src/lib/passOnLocks';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 export default function PassOnFrom() {
   const { t, text, radius, spacing } = useTheme();
@@ -81,7 +82,7 @@ export default function PassOnFrom() {
       contentStyle={{ gap: spacing[4] }}
     >
       {isError ? (
-        <LoadError what="this page" onRetry={refetch} />
+        <LoadError what={tr('this page')} onRetry={refetch} />
       ) : isLoading ? (
         <SkeletonCard lines={3} />
       ) : (

@@ -9,6 +9,8 @@ import SwipeSegments from '../src/components/ui/SwipeSegments';
 import { useAuth } from '../src/context/AuthContext';
 import { FULL_STAGES, PHONE_STAGE } from '../src/lib/trustStages';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
+import emphasize from '../src/i18n/emphasize';
 
 const ELDER_CAN = [
   'Post a help request for company, a ride, shopping, cleaning, and more.',
@@ -68,7 +70,7 @@ function Bullets({ items }) {
       {items.map((item) => (
         <View key={item} style={{ flexDirection: 'row', gap: spacing[2] }}>
           <Text style={{ color: t.blueDeep, fontSize: text.base, lineHeight: 26 }}>•</Text>
-          <Text style={{ flex: 1, fontSize: text.base, lineHeight: 26, color: t.ink2 }}>{item}</Text>
+          <Text style={{ flex: 1, fontSize: text.base, lineHeight: 26, color: t.ink2 }}>{tr(item)}</Text>
         </View>
       ))}
     </View>
@@ -106,17 +108,14 @@ export default function Guide() {
   );
 
   return (
-    <Screen back title="How Towinly works">
+    <Screen back title={tr('How Towinly works')}>
       <Card>
-        <H>Welcome to Towinly</H>
+        <H>{tr('Welcome to Towinly')}</H>
         <P>
-          Towinly is a community that brings older people and younger helpers together, so no one
-          feels alone and everyday help is easy to find.
+          {tr('Towinly is a community that brings older people and younger helpers together, so no one feels alone and everyday help is easy to find.')}
         </P>
         <P>
-          Many older people have no safe, trusted way to meet new friends or get a hand with daily
-          tasks. Towinly gives them one, built around trust that grows one small step at a time, so
-          no one ever has to rush or feel unsafe.
+          {tr('Many older people have no safe, trusted way to meet new friends or get a hand with daily tasks. Towinly gives them one, built around trust that grows one small step at a time, so no one ever has to rush or feel unsafe.')}
         </P>
       </Card>
 
@@ -125,9 +124,9 @@ export default function Guide() {
             hand-rolled sibling with different metrics (rulebook consistency). */}
         <SegmentedControl
           segments={[
-            { key: 'ELDER', label: 'As an Elder' },
-            { key: 'HELPER', label: 'As a Helper' },
-            { key: 'FAMILY', label: 'As Family' },
+            { key: 'ELDER', label: tr('As an Elder') },
+            { key: 'HELPER', label: tr('As a Helper') },
+            { key: 'FAMILY', label: tr('As Family') },
           ]}
           value={role}
           onChange={setRole}
@@ -135,17 +134,16 @@ export default function Guide() {
         />
         {/* Swiping the role content steps the segments, iOS-style. */}
         <SwipeSegments keys={['ELDER', 'HELPER', 'FAMILY']} value={role} onChange={setRole}>
-        <H>What you can do</H>
+        <H>{tr('What you can do')}</H>
         {role === 'FAMILY' ? (
-          <P>As Family, you stay close to your parent&apos;s life here, always with their say-so.</P>
+          <P>{tr("As Family, you stay close to your parent's life here, always with their say-so.")}</P>
         ) : null}
         <Bullets
           items={role === 'HELPER' ? HELPER_CAN : role === 'FAMILY' ? FAMILY_CAN : ELDER_CAN}
         />
         {role === 'FAMILY' ? (
           <P>
-            Your parent stays in charge: every friendship starts private, every power starts off,
-            and they can change their mind at any time.
+            {tr('Your parent stays in charge: every friendship starts private, every power starts off, and they can change their mind at any time.')}
           </P>
         ) : null}
         </SwipeSegments>
@@ -153,11 +151,10 @@ export default function Guide() {
 
       <Card style={{ marginTop: spacing[4] }}>
         <H>
-          How <Text style={{ color: t.trustGold }}>trust</Text> grows
+          {emphasize(tr('How *trust* grows'), { color: t.trustGold })}
         </H>
         <P>
-          Trust is earned one step at a time on a seven-step ladder. Every step needs BOTH of you
-          to agree. Nobody can rush it.
+          {tr('Trust is earned one step at a time on a seven-step ladder. Every step needs BOTH of you to agree. Nobody can rush it.')}
         </P>
         <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
           {FULL_STAGES.map((stage, i) => (
@@ -179,7 +176,7 @@ export default function Guide() {
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>{stage}</Text>
                 <Text style={{ fontSize: text.sm, lineHeight: 21, color: t.inkSlate, marginTop: 1 }}>
-                  {LADDER_NOTES[i]}
+                  {tr(LADDER_NOTES[i])}
                 </Text>
               </View>
             </View>
@@ -188,10 +185,10 @@ export default function Guide() {
       </Card>
 
       <Card style={{ marginTop: spacing[4] }}>
-        <H>Staying safe</H>
+        <H>{tr('Staying safe')}</H>
         <Bullets
           items={[
-            `Phone numbers are shared only when you both reach the ${FULL_STAGES[PHONE_STAGE]} step.`,
+            tr('Phone numbers are shared only when you both reach the {stage} step.', { stage: tr(FULL_STAGES[PHONE_STAGE]) }),
             'Meet in public places for first meetings.',
             'Elders can keep emergency contacts: the people to call when something happens.',
             'You can report anyone from their profile; our team reviews every report.',

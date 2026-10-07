@@ -25,6 +25,7 @@ import { motion } from '../theme/tokens';
 import { useTheme } from '../theme/ThemeContext';
 import { TORTOISE_CELL_GREEN } from '../theme/parity';
 import { CELLS, DRAW, STROKE, VIEWBOX } from './tortoiseMarkPaths';
+import { tr } from '../i18n';
 
 const APath = Animated.createAnimatedComponent(Path);
 
@@ -190,8 +191,8 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
   if (!play) {
     return (
       <View style={{ flexDirection: 'row', alignItems: 'center', gap }}>
-        <TortoiseMark size={size} title="Towinly tortoise logo" />
-        <Text style={word}>Towinly</Text>
+        <TortoiseMark size={size} title={tr('Towinly tortoise logo')} />
+        <Text style={word}>{tr('Towinly')}</Text>
       </View>
     );
   }
@@ -200,7 +201,7 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
     // invisible until measured so the primed offsets never flash unshifted
     <View style={{ flexDirection: 'row', alignItems: 'center', gap, opacity: running ? 1 : 0 }}>
       <Animated.View style={markStyle}>
-        <TortoiseMark size={size} intro running={running} title="Towinly tortoise logo" />
+        <TortoiseMark size={size} intro running={running} title={tr('Towinly tortoise logo')} />
       </Animated.View>
       {/* the wipe: overflow hidden + a translated inner (transform, GPU) */}
       <View style={{ overflow: 'hidden' }}>
@@ -208,7 +209,7 @@ export function IntroBrandLockup({ size = 82, gap = 6, wordStyle }) {
           style={[word, wordInnerStyle]}
           onLayout={(e) => setWordWidth(e.nativeEvent.layout.width)}
         >
-          Towinly
+          {tr('Towinly')}
         </Animated.Text>
       </View>
     </View>

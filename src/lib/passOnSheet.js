@@ -12,6 +12,7 @@
 //
 // Digital only. There is no print path anywhere in this feature.
 import { SEALED_KINDS, SETUP, SHEET, keyholderLine, onDayInFull } from './passOnLocks';
+import { tr } from '../i18n';
 
 /** Windows Notepad still shows a bare \n as one long line. This is a keepsake; it wraps. */
 const NEWLINE = '\r\n';
@@ -96,7 +97,7 @@ export function sheetAsText(sheet) {
 /** Her name is in the file name — it is what somebody looking for it would search for. */
 export function sheetFileName(ownerName) {
   const safe = (ownerName || '').replace(NOT_IN_A_FILE_NAME, '').trim();
-  return `Towinly - what ${safe} passes on.txt`;
+  return tr('Towinly - what {safe} passes on.txt', { safe });
 }
 
 /** "Where the money is — Money". The name she gave it, then its chip, nothing else. */

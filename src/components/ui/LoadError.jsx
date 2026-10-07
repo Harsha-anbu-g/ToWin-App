@@ -8,10 +8,11 @@ import { announce } from '../../lib/announce';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from './Button';
 import Card from './Card';
+import { tr } from '../../i18n';
 
 export default function LoadError({ what = 'this', onRetry, style, bare = false }) {
   const { t, spacing, text, fontScaleCaps } = useTheme();
-  const message = `We couldn't load ${what} right now. Please check your connection and try again.`;
+  const message = tr("We couldn't load {what} right now. Please check your connection and try again.", { what });
   // This card replaces a whole screen's worth of content. A sighted person sees
   // the swap; a screen-reader user was left on a page that had silently become
   // something else, with nothing said. accessibilityRole="alert" alone does not
@@ -32,7 +33,7 @@ export default function LoadError({ what = 'this', onRetry, style, bare = false 
       </View>
       {onRetry ? (
         <Button
-          title="Try again"
+          title={tr('Try again')}
           variant="secondary"
           onPress={onRetry}
           style={{ marginTop: spacing[4] }}

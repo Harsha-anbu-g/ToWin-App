@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { friendlyWriteError } from '../api/client';
 import { applyToHelpRequest, withdrawApplication } from '../api/needs';
 import { useToast } from '../context/ToastContext';
+import { tr } from '../i18n';
 
 export function useApplyMutations() {
   const { showToast } = useToast();
@@ -17,12 +18,12 @@ export function useApplyMutations() {
   const apply = useMutation({
     mutationFn: (needId) => applyToHelpRequest(needId),
     onSuccess: () => {
-      showToast('Offer sent. The elder will see it right away.', 'success');
+      showToast(tr('Offer sent. The elder will see it right away.'), 'success');
       refresh();
     },
     onError: (err) =>
       showToast(
-        friendlyWriteError(err, err?.response?.data?.message || 'Could not send your offer. Please try again.'),
+        friendlyWriteError(err, err?.response?.data?.message || tr('Could not send your offer. Please try again.')),
         'error'
       ),
   });
@@ -30,11 +31,11 @@ export function useApplyMutations() {
   const withdraw = useMutation({
     mutationFn: (needId) => withdrawApplication(needId),
     onSuccess: () => {
-      showToast('Offer withdrawn.', 'success');
+      showToast(tr('Offer withdrawn.'), 'success');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not withdraw right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not withdraw right now. Please try again.')), 'error'),
   });
 
   return { apply, withdraw };

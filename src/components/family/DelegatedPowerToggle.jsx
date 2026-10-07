@@ -13,6 +13,7 @@ import { setDelegatedPowers } from '../../api/family';
 import { useToast } from '../../context/ToastContext';
 import { POWERS } from '../../lib/familyPowers';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 // One switch row — the platform's native Switch in a plain settings-style
 // row (owner call 2026-08-17: iOS-style controls everywhere; the hand-drawn
@@ -60,7 +61,7 @@ export default function DelegatedPowerToggle({ linkId, familyName, powers = [], 
     },
     onError: () => {
       if (previousRef.current) setGranted(previousRef.current);
-      showToast("Couldn't save that change. Please try again.", 'error');
+      showToast(tr("Couldn't save that change. Please try again."), 'error');
     },
     onSettled: () => setSavingKey(null),
   });
@@ -90,10 +91,9 @@ export default function DelegatedPowerToggle({ linkId, familyName, powers = [], 
 
   return (
     <View style={{ marginTop: 14 }}>
-      <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>Act for me</Text>
+      <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{tr('Act for me')}</Text>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 2, marginBottom: 4 }}>
-        Sharing lets {name} see. These let {name} act. Each one stays off until you turn it on,
-        and their name is always on whatever they do.
+        {tr('Sharing lets {name} see. These let {name} act. Each one stays off until you turn it on, and their name is always on whatever they do.', { name })}
       </Text>
       {POWERS.map((p) => (
         <PowerSwitch

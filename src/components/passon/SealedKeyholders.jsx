@@ -16,6 +16,7 @@ import { SETUP, SHEET, keyholderLine, listOfNames } from '../../lib/passOnLocks'
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import { tr } from '../../i18n';
 
 /**
  * Props:
@@ -45,7 +46,7 @@ export default function SealedKeyholders({ setup, keyholders, undoing, onUndo, o
     <View style={{ gap: spacing[4] }}>
       {setup.canStillUndo ? (
         <Card
-          accessibilityLabel="Your box is set up"
+          accessibilityLabel={tr('Your box is set up')}
           style={{ backgroundColor: t.greenTint, borderColor: t.trustGold }}
         >
           <Text

@@ -42,6 +42,7 @@ import { yearsOld } from '../src/lib/copy';
 import { FULL_STAGES, PHONE_STAGE } from '../src/lib/trustStages';
 import { useTheme } from '../src/theme/ThemeContext';
 import { spacing } from '../src/theme/tokens';
+import { tr } from '../src/i18n';
 
 const toList = (s) =>
   s
@@ -53,18 +54,18 @@ const toList = (s) =>
 // by the word on the chip. The label is what an elder reads; the value is
 // what the enum accepts. Sending the label 400s the whole save (D2-01).
 const GENDERS = [
-  { value: 'MALE', label: 'Male' },
-  { value: 'FEMALE', label: 'Female' },
-  { value: 'OTHER', label: 'Other' },
+  { value: 'MALE', get label() { return tr('Male'); } },
+  { value: 'FEMALE', get label() { return tr('Female'); } },
+  { value: 'OTHER', get label() { return tr('Other'); } },
 ];
 
 // Elders answer this with ONE choice, never a typed list: the backend field is
 // the LookingForType enum (FRIENDSHIP | HELP | BOTH) and /profile/me returns it
 // as a bare string. Labels are the plain words an elder would use.
 const LOOKING_FOR = [
-  { value: 'FRIENDSHIP', label: 'Friendship' },
-  { value: 'HELP', label: 'Help with things' },
-  { value: 'BOTH', label: 'Both' },
+  { value: 'FRIENDSHIP', get label() { return tr('Friendship'); } },
+  { value: 'HELP', get label() { return tr('Help with things'); } },
+  { value: 'BOTH', get label() { return tr('Both'); } },
 ];
 const DEFAULT_LOOKING_FOR = 'BOTH';
 
@@ -237,7 +238,7 @@ export default function ProfileEdit() {
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        showToast('Towinly needs photo access. You can allow it in Settings.', 'error');
+        showToast(tr('Towinly needs photo access. You can allow it in Settings.'), 'error');
         return null;
       }
       const picked = await ImagePicker.launchImageLibraryAsync({
@@ -248,7 +249,7 @@ export default function ProfileEdit() {
       if (picked.canceled || !picked.assets?.length) return null;
       return picked.assets[0];
     } catch {
-      showToast('Could not open your photos. Please try again.', 'error');
+      showToast(tr('Could not open your photos. Please try again.'), 'error');
       return null;
     } finally {
       pickingRef.current = false;
@@ -268,9 +269,9 @@ export default function ProfileEdit() {
     try {
       await updateProfilePhoto({ file });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
-      showToast('Photo updated.', 'success');
+      showToast(tr('Photo updated.'), 'success');
     } catch (err) {
-      showToast(friendlyWriteError(err, 'Could not upload the photo. Please try again.'), 'error');
+      showToast(friendlyWriteError(err, tr('Could not upload the photo. Please try again.')), 'error');
     } finally {
       setUploadingPhoto(false);
     }
@@ -289,9 +290,9 @@ export default function ProfileEdit() {
     try {
       await submitIdPhoto({ file });
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
-      showToast('ID uploaded. Verification is pending review.', 'success');
+      showToast(tr('ID uploaded. Verification is pending review.'), 'success');
     } catch (err) {
-      showToast(friendlyWriteError(err, 'Could not upload the ID. Please try again.'), 'error');
+      showToast(friendlyWriteError(err, tr('Could not upload the ID. Please try again.')), 'error');
     } finally {
       setUploadingId(false);
     }
@@ -368,14 +369,14 @@ export default function ProfileEdit() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile-me'] });
-      showToast('Profile saved.', 'success');
+      showToast(tr('Profile saved.'), 'success');
       router.back();
     },
     onError: (err) => {
       // A DOB parse error or a blocked-word error is already shown inline next
       // to its own field; a toast on top would just repeat it.
       if (err?.isDobError || err?.isBioError) return;
-      showToast(friendlyWriteError(err, 'Could not save right now. Please try again.'), 'error');
+      showToast(friendlyWriteError(err, tr('Could not save right now. Please try again.')), 'error');
     },
   });
 
@@ -447,9 +448,9 @@ export default function ProfileEdit() {
   // failure. The cached profile normally makes both invisible.
   if (!me) {
     return (
-      <Screen back title="Edit Profile">
+      <Screen back title={tr('Edit Profile')}>
         {meFailed ? (
-          <LoadError what="your profile" onRetry={refetchMe} />
+          <LoadError what={tr('your profile')} onRetry={refetchMe} />
         ) : (
           <View testID="profile-edit-loading" style={{ marginTop: spacing[2] }}>
             <SkeletonCard lines={6} />
@@ -460,7 +461,7 @@ export default function ProfileEdit() {
   }
 
   return (
-    <Screen back title="Edit Profile" scroll={false} keyboard contentStyle={{ padding: 0 }}>
+    <Screen back title={tr('Edit Profile')} scroll={false} keyboard contentStyle={{ padding: 0 }}>
       <ScrollView
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[6] }}
@@ -470,7 +471,7 @@ export default function ProfileEdit() {
           <Avatar name={me?.name} uri={me?.photoUrl} size={72} />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Change photo"
+            accessibilityLabel={tr('Change photo')}
             accessibilityState={{ busy: uploadingPhoto }}
             onPress={changePhoto}
             disabled={uploadingPhoto}
@@ -496,14 +497,14 @@ export default function ProfileEdit() {
               maxFontSizeMultiplier={fontScaleCaps.body}
               style={{ fontSize: text.sm, fontWeight: '600', color: t.blueDeep }}
             >
-              {uploadingPhoto ? 'Uploading…' : 'Change photo'}
+              {uploadingPhoto ? tr('Uploading…') : tr('Change photo')}
             </Text>
           </Pressable>
         </View>
 
-        <SectionTitle>About you</SectionTitle>
+        <SectionTitle>{tr('About you')}</SectionTitle>
         <Input
-          label="Full name"
+          label={tr('Full name')}
           value={form.name}
           onChangeText={set('name')}
           autoCapitalize="words"
@@ -516,42 +517,42 @@ export default function ProfileEdit() {
         />
         <Input
           ref={dobRef}
-          label="Date of birth"
+          label={tr('Date of birth')}
           value={form.dateOfBirth}
           onChangeText={setDateOfBirth}
           error={dobError}
-          helper="Any way you like: 1953-05-14 or 14 May 1953. Only your age shows to others."
+          helper={tr('Any way you like: 1953-05-14 or 14 May 1953. Only your age shows to others.')}
           autoCapitalize="none"
           textContentType="birthdate"
           autoComplete="birthdate-full"
           style={FIELD_GAP}
         />
         <Input
-          label="About you"
+          label={tr('About you')}
           value={form.bio}
           onChangeText={setBio}
           error={bioError}
           multiline
           numberOfLines={4}
           inputStyle={BIO_INPUT_STYLE}
-          helper="Shown to helpers before you connect."
+          helper={tr('Shown to helpers before you connect.')}
           style={FIELD_GAP}
         />
         <Input
-          label="Occupation"
+          label={tr('Occupation')}
           value={form.occupation}
           onChangeText={set('occupation')}
-          helper={isHelper ? 'What you do or study.' : 'What you did or still do.'}
+          helper={isHelper ? tr('What you do or study.') : tr('What you did or still do.')}
           textContentType="jobTitle"
           autoComplete="organization-title"
           style={FIELD_GAP}
         />
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate, marginBottom: 8 }}>
-          Sex (optional)
+          {tr('Sex (optional)')}
         </Text>
         <View
           accessibilityRole="radiogroup"
-          accessibilityLabel="Sex (optional)"
+          accessibilityLabel={tr('Sex (optional)')}
           style={{ flexDirection: 'row', gap: spacing[2], marginBottom: spacing[4] }}
         >
           {GENDERS.map(({ value, label }) => (
@@ -565,22 +566,22 @@ export default function ProfileEdit() {
           ))}
         </View>
 
-        <SectionTitle>{isHelper ? 'How you help' : 'What you enjoy'}</SectionTitle>
+        <SectionTitle>{isHelper ? tr('How you help') : tr('What you enjoy')}</SectionTitle>
         {/* Chips, not comma bookkeeping (deferred rulebook item): each entry
             is a removable pill; return or a typed comma adds the next one. */}
         <ChipsField
-          label={isHelper ? 'What I can help with' : 'My interests'}
+          label={isHelper ? tr('What I can help with') : tr('My interests')}
           value={form.tags}
           onChangeText={set('tags')}
-          helper='Type one, like "gardening", then press return. Tap a pill to remove it.'
+          helper={tr('Type one, like "gardening", then press return. Tap a pill to remove it.')}
           style={FIELD_GAP}
         />
         {isHelper ? (
           <ChipsField
-            label="My hobbies"
+            label={tr('My hobbies')}
             value={form.extraTags}
             onChangeText={set('extraTags')}
-            helper="Things you love doing. One at a time, press return after each."
+            helper={tr('Things you love doing. One at a time, press return after each.')}
             style={FIELD_GAP}
           />
         ) : (
@@ -588,11 +589,11 @@ export default function ProfileEdit() {
           // to the enum field and blanked the screen on the way back in.
           <View style={FIELD_GAP}>
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink, marginBottom: 8 }}>
-              What I&apos;m looking for
+              {tr("What I'm looking for")}
             </Text>
             <View
               accessibilityRole="radiogroup"
-              accessibilityLabel="What I'm looking for"
+              accessibilityLabel={tr("What I'm looking for")}
               style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}
             >
               {LOOKING_FOR.map(({ value, label }) => (
@@ -608,19 +609,19 @@ export default function ProfileEdit() {
           </View>
         )}
         <ChipsField
-          label="Languages I speak"
+          label={tr('Languages I speak')}
           value={form.languages}
           onChangeText={set('languages')}
-          helper="One language at a time, press return after each."
+          helper={tr('One language at a time, press return after each.')}
           style={FIELD_GAP}
         />
 
-        <SectionTitle>How to reach you</SectionTitle>
+        <SectionTitle>{tr('How to reach you')}</SectionTitle>
         <Input
-          label="My town or city"
+          label={tr('My town or city')}
           value={form.city}
           onChangeText={set('city')}
-          helper="Used only to match you with people nearby."
+          helper={tr('Used only to match you with people nearby.')}
           autoCapitalize="words"
           textContentType="addressCity"
           autoComplete="postal-address-locality"
@@ -646,13 +647,13 @@ export default function ProfileEdit() {
         ) : null}
         <Input
           ref={phoneRef}
-          label="Phone number"
+          label={tr('Phone number')}
           value={form.phone}
           onChangeText={set('phone')}
           keyboardType="phone-pad"
           textContentType="telephoneNumber"
           autoComplete="tel"
-          helper={`Only shared after both people reach the ${FULL_STAGES[PHONE_STAGE]} trust stage.`}
+          helper={tr('Only shared after both people reach the {PHONE_STAGE} trust stage.', { PHONE_STAGE: tr(FULL_STAGES[PHONE_STAGE]) })}
           returnKeyType="next"
           submitBehavior="submit"
           onSubmitEditing={focusFacebook}
@@ -660,7 +661,7 @@ export default function ProfileEdit() {
         />
         <Input
           ref={facebookRef}
-          label="Facebook link (optional)"
+          label={tr('Facebook link (optional)')}
           value={form.facebookUrl}
           onChangeText={set('facebookUrl')}
           autoCapitalize="none"
@@ -670,7 +671,7 @@ export default function ProfileEdit() {
           style={FIELD_GAP}
         />
         <Input
-          label="Instagram link (optional)"
+          label={tr('Instagram link (optional)')}
           value={form.instagramUrl}
           onChangeText={set('instagramUrl')}
           autoCapitalize="none"
@@ -678,7 +679,7 @@ export default function ProfileEdit() {
           style={FIELD_GAP}
         />
 
-        <SectionTitle>ID verification</SectionTitle>
+        <SectionTitle>{tr('ID verification')}</SectionTitle>
         <View
           style={{
             backgroundColor: t.canvas,
@@ -691,12 +692,12 @@ export default function ProfileEdit() {
         >
           <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 21 }}>
             {me?.idVerified
-              ? 'Your ID is verified. It earns profile trust points.'
-              : 'A one-time ID check earns profile trust points. A person reviews it; your ID is never shown to others.'}
+              ? tr('Your ID is verified. It earns profile trust points.')
+              : tr('A one-time ID check earns profile trust points. A person reviews it; your ID is never shown to others.')}
           </Text>
           {!me?.idVerified ? (
             <Button
-              title={uploadingId ? 'Uploading…' : 'Upload an ID photo'}
+              title={uploadingId ? tr('Uploading…') : tr('Upload an ID photo')}
               variant="secondary"
               onPress={uploadId}
               loading={uploadingId}
@@ -709,7 +710,7 @@ export default function ProfileEdit() {
             Managing happens on /family; this card only explains and links. */}
         {isElder ? (
           <>
-            <SectionTitle>My Family</SectionTitle>
+            <SectionTitle>{tr('My Family')}</SectionTitle>
             <View
               style={{
                 backgroundColor: t.canvas,
@@ -721,11 +722,10 @@ export default function ProfileEdit() {
               }}
             >
               <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 21 }}>
-                Link your family so they can see you're safe. They only see the friendships you
-                choose to share, and you can remove anyone at any time.
+                {tr("Link your family so they can see you're safe. They only see the friendships you choose to share, and you can remove anyone at any time.")}
               </Text>
               <Button
-                title="Manage My Family"
+                title={tr('Manage My Family')}
                 variant="secondary"
                 onPress={() => router.push('/family')}
                 style={{ marginTop: 12 }}
@@ -747,13 +747,13 @@ export default function ProfileEdit() {
         }}
       >
         <Button
-          title={save.isPending ? 'Saving…' : 'Save Changes'}
+          title={save.isPending ? tr('Saving…') : tr('Save Changes')}
           variant="primary"
           onPress={() => save.mutate()}
           loading={save.isPending}
         />
         <Button
-          title="Cancel"
+          title={tr('Cancel')}
           variant="text"
           onPress={async () => {
             // A filled form must never vanish on one silent tap (rulebook:
@@ -763,10 +763,10 @@ export default function ProfileEdit() {
               JSON.stringify(form) !== JSON.stringify(initialFormRef.current);
             if (!dirty) return router.back();
             const ok = await confirm({
-              title: 'Discard your changes?',
-              message: 'Nothing you typed here will be saved.',
-              cancelLabel: 'Keep editing',
-              confirmLabel: 'Discard changes',
+              title: tr('Discard your changes?'),
+              message: tr('Nothing you typed here will be saved.'),
+              cancelLabel: tr('Keep editing'),
+              confirmLabel: tr('Discard changes'),
               destructive: true,
             });
             if (ok) router.back();

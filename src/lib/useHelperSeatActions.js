@@ -12,6 +12,7 @@ import { useToast } from '../context/ToastContext';
 import { markSeen } from './seenIds';
 import { seenKey } from './storageKeys';
 import { TRUST_STEPS_CATEGORY, stepNewsToken } from './trustStepBadges';
+import { tr } from '../i18n';
 
 /**
  * Trust-step actions for an elder looking at their helpers.
@@ -44,8 +45,8 @@ export default function useHelperSeatActions() {
       const c = connOf(connectionId);
       showToast(
         c && !c.confirmedByOther
-          ? `Step confirmed. Waiting for ${c.otherUserName} to agree too.`
-          : 'You both agreed. One step up the ladder!',
+          ? tr('Step confirmed. Waiting for {otherUserName} to agree too.', { otherUserName: c.otherUserName })
+          : tr('You both agreed. One step up the ladder!'),
         'success'
       );
       // Starting the next step is the elder's move: the news badge for this
@@ -54,17 +55,17 @@ export default function useHelperSeatActions() {
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not confirm right now. Please try again.')), 'error'),
   });
 
   const resume = useMutation({
     mutationFn: resumeTrustSteps,
     onSuccess: () => {
-      showToast('Welcome back. Trust steps and messages are on again.', 'success');
+      showToast(tr('Welcome back. Trust steps and messages are on again.'), 'success');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not resume right now. Please try again.')), 'error'),
   });
 
   // Pausing is reversible on the same connection id, so the way back rides in
@@ -72,23 +73,23 @@ export default function useHelperSeatActions() {
   const pause = useMutation({
     mutationFn: pauseTrustSteps,
     onSuccess: (_r, connectionId) => {
-      showToast('Paused. You can resume any time.', 'info', {
-        actionLabel: 'Undo',
+      showToast(tr('Paused. You can resume any time.'), 'info', {
+        actionLabel: tr('Undo'),
         onAction: () => resume.mutate(connectionId),
       });
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not pause right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not pause right now. Please try again.')), 'error'),
   });
 
   /** Asks, then starts the next trust step (only the elder can begin one). */
   const startStep = async (card) => {
     const ok = await askConfirm({
-      title: 'Start the next step?',
-      message: `Trust grows only when BOTH of you agree. ${card.customerName} will get a tap to accept.`,
-      cancelLabel: 'Not yet',
-      confirmLabel: 'Start',
+      title: tr('Start the next step?'),
+      message: tr('Trust grows only when BOTH of you agree. {customerName} will get a tap to accept.', { customerName: card.customerName }),
+      cancelLabel: tr('Not yet'),
+      confirmLabel: tr('Start'),
     });
     if (ok) confirm.mutate(card.connectionId);
   };
@@ -96,10 +97,10 @@ export default function useHelperSeatActions() {
   /** Asks first (a mis-tap silences a friendship), then pauses; `onDone` runs once paused. */
   const takeBreak = async (card, onDone) => {
     const ok = await askConfirm({
-      title: 'Take a break?',
-      message: `Trust steps and messages with ${card.customerName} pause until either of you resumes. Nothing is lost.`,
-      cancelLabel: 'Not now',
-      confirmLabel: 'Take a break',
+      title: tr('Take a break?'),
+      message: tr('Trust steps and messages with {customerName} pause until either of you resumes. Nothing is lost.', { customerName: card.customerName }),
+      cancelLabel: tr('Not now'),
+      confirmLabel: tr('Take a break'),
     });
     if (ok) pause.mutate(card.connectionId, { onSuccess: onDone });
   };

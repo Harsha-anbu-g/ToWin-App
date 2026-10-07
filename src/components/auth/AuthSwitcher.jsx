@@ -4,14 +4,15 @@
 import { Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function AuthSwitcher({ active }) {
   const { t, spacing, radius, text } = useTheme();
   const router = useRouter();
 
   const segments = [
-    { key: 'login', label: 'Log in', href: '/(auth)/login' },
-    { key: 'register', label: 'Create account', href: '/(auth)/register' },
+    { key: 'login', label: tr('Log in'), href: '/(auth)/login' },
+    { key: 'register', label: tr('Create account'), href: '/(auth)/register' },
   ];
 
   return (

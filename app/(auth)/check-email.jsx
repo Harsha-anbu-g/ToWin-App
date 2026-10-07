@@ -11,6 +11,8 @@ import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useToast } from '../../src/context/ToastContext';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
+import emphasize from '../../src/i18n/emphasize';
 
 export default function CheckEmail() {
   const { t, spacing, radius, text, fontFamily } = useTheme();
@@ -23,8 +25,8 @@ export default function CheckEmail() {
     if (!email) {
       // The error names the fix AND carries the action (rulebook: recovery in
       // place, never a dead-end toast).
-      showToast('Please sign up again to get a new link.', 'error', {
-        actionLabel: 'Sign up',
+      showToast(tr('Please sign up again to get a new link.'), 'error', {
+        actionLabel: tr('Sign up'),
         onAction: () => router.replace('/(auth)/register'),
       });
       return;
@@ -32,9 +34,9 @@ export default function CheckEmail() {
     setSending(true);
     try {
       await resendSignupEmail({ email });
-      showToast('Verification email sent. Check your inbox.', 'success');
+      showToast(tr('Verification email sent. Check your inbox.'), 'success');
     } catch {
-      showToast('Could not resend right now. Try again shortly.', 'error');
+      showToast(tr('Could not resend right now. Try again shortly.'), 'error');
     } finally {
       setSending(false);
     }
@@ -53,7 +55,7 @@ export default function CheckEmail() {
             textAlign: 'center',
           }}
         >
-          Confirm your email
+          {tr('Confirm your email')}
         </Text>
         <Text
           style={{
@@ -64,8 +66,8 @@ export default function CheckEmail() {
             lineHeight: 26,
           }}
         >
-          We sent a confirmation link to{' '}
-          {email ? <Text style={{ fontWeight: '600', color: t.ink }}>{email}</Text> : 'your email'}.
+          {tr('We sent a confirmation link to')}{' '}
+          {email ? <Text style={{ fontWeight: '600', color: t.ink }}>{email}</Text> : tr('your email')}.
         </Text>
         <Text
           style={{
@@ -76,7 +78,7 @@ export default function CheckEmail() {
             lineHeight: 26,
           }}
         >
-          Open it to finish creating your account, then come back and log in.
+          {tr('Open it to finish creating your account, then come back and log in.')}
         </Text>
 
         <View
@@ -90,22 +92,22 @@ export default function CheckEmail() {
           }}
         >
           <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21 }}>
-            <Text style={{ fontWeight: '700' }}>Can't find it?</Text> Please check your{' '}
-            <Text style={{ fontWeight: '700' }}>Spam</Text> or <Text style={{ fontWeight: '700' }}>Junk</Text>{' '}
-            folder. The Towinly email often lands there. If you find it, mark it "Not spam" so future
-            emails reach your inbox.
+            {emphasize(
+              tr('*Can\'t find it?* Please check your *Spam* or *Junk* folder. The Towinly email often lands there. If you find it, mark it "Not spam" so future emails reach your inbox.'),
+              { fontWeight: '700' }
+            )}
           </Text>
         </View>
 
         <Button
-          title={sending ? 'Sending…' : 'Resend email'}
+          title={sending ? tr('Sending…') : tr('Resend email')}
           variant="primary"
           onPress={resend}
           loading={sending}
           style={{ marginTop: spacing[6] }}
         />
         <TextLink
-          label="Back to log in"
+          label={tr('Back to log in')}
           onPress={() => router.replace('/(auth)/login')}
           style={{ marginTop: spacing[2] }}
         />

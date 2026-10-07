@@ -14,6 +14,7 @@ import Screen from '../../../src/components/ui/Screen';
 import SkeletonCard from '../../../src/components/ui/Skeleton';
 import useFamilyMemberActions from '../../../src/lib/useFamilyMemberActions';
 import { useTheme } from '../../../src/theme/ThemeContext';
+import { tr } from '../../../src/i18n';
 
 export default function FamilyMemberPage() {
   const { linkId } = useLocalSearchParams();
@@ -30,14 +31,14 @@ export default function FamilyMemberPage() {
 
   if (!link) {
     return (
-      <Screen back title="Family" onRefresh={() => refetch()}>
+      <Screen back title={tr('Family')} onRefresh={() => refetch()}>
         {isLoading ? (
           <SkeletonCard lines={3} />
         ) : isError ? (
-          <LoadError what="this family member" onRetry={refetch} />
+          <LoadError what={tr('this family member')} onRetry={refetch} />
         ) : (
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-            This family member is not here any more.
+            {tr('This family member is not here any more.')}
           </Text>
         )}
       </Screen>
@@ -52,7 +53,7 @@ export default function FamilyMemberPage() {
 
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[3] }}>
         <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-          {link.relationship || 'Family member'}
+          {link.relationship || tr('Family member')}
         </Text>
         {link.isPrimary ? (
           // A label, not a button — the trust token marks the one main
@@ -67,7 +68,7 @@ export default function FamilyMemberPage() {
               paddingHorizontal: 14,
             }}
           >
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>Main contact</Text>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold }}>{tr('Main contact')}</Text>
           </View>
         ) : null}
       </View>
@@ -75,7 +76,7 @@ export default function FamilyMemberPage() {
       <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
         {/* Private family chat (FAM-510): the link is the permission. */}
         <ActionChip
-          label={chatOpening ? 'Opening…' : 'Message'}
+          label={chatOpening ? tr('Opening…') : tr('Message')}
           tonal
           disabled={chatOpening}
           onPress={() => openChat(link)}
@@ -83,14 +84,14 @@ export default function FamilyMemberPage() {
         />
         {!link.isPrimary ? (
           <ActionChip
-            label="Make main contact"
+            label={tr('Make main contact')}
             disabled={promoting}
             onPress={() => makePrimary(link.id)}
             style={{ flex: 1 }}
           />
         ) : null}
         <ActionChip
-          label="Remove"
+          label={tr('Remove')}
           destructive
           disabled={removing}
           onPress={() => {

@@ -5,6 +5,7 @@ import { Text, View } from 'react-native';
 import { announce } from '../lib/announce';
 import useIsOffline from '../lib/useIsOffline';
 import { useTheme } from '../theme/ThemeContext';
+import { tr } from '../i18n';
 
 const MESSAGE = "You're offline. We'll retry as soon as you're back.";
 
@@ -16,7 +17,7 @@ export default function OfflineBanner() {
   // readers need an explicit announcement so elders hear that the network
   // dropped (announce() picks the right mechanism per platform).
   useEffect(() => {
-    if (offline) announce(MESSAGE);
+    if (offline) announce(tr(MESSAGE));
   }, [offline]);
 
   if (!offline) return null;
@@ -33,7 +34,7 @@ export default function OfflineBanner() {
         paddingHorizontal: spacing[4],
       }}
     >
-      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>{MESSAGE}</Text>
+      <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>{tr(MESSAGE)}</Text>
     </View>
   );
 }

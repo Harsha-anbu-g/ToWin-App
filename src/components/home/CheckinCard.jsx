@@ -24,6 +24,7 @@ import Button from '../ui/Button';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import TextLink from '../ui/TextLink';
+import { tr } from '../../i18n';
 
 /**
  * Who today's check-in reaches — directly under the button, because it is the
@@ -48,9 +49,9 @@ function FamilyNote({ names, checkedIn }) {
           marginTop: 10,
         }}
       >
-        <TextLink label="Add your family" onPress={() => router.push('/family')} />
+        <TextLink label={tr('Add your family')} onPress={() => router.push('/family')} />
         <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 22 }}>
-          and they will see you checked in.
+          {tr('and they will see you checked in.')}
         </Text>
       </View>
     );
@@ -68,7 +69,7 @@ function FamilyNote({ names, checkedIn }) {
         marginTop: 10,
       }}
     >
-      {checkedIn ? `${label} can see you checked in.` : `${label} will see this.`}
+      {checkedIn ? tr('{label} can see you checked in.', { label }) : tr('{label} will see this.', { label })}
     </Text>
   );
 }
@@ -82,7 +83,7 @@ function WeekStrip({ week }) {
           key={i}
           accessible
           accessibilityLabel={`${d.label}: ${
-            d.done ? 'checked in' : d.today ? 'today' : d.future ? 'upcoming' : 'missed'
+            d.done ? tr('checked in') : d.today ? 'today' : d.future ? 'upcoming' : 'missed'
           }`}
           style={{ flex: 1, alignItems: 'center', gap: 5 }}
         >
@@ -170,7 +171,7 @@ export default function CheckinCard() {
       }
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not check in right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not check in right now. Please try again.')), 'error'),
   });
 
   const done = streak?.alreadyCheckedIn;
@@ -192,7 +193,7 @@ export default function CheckinCard() {
         <SkeletonCard lines={3} />
       ) : isError ? (
         // A failed fetch must not show "0 days in a row" — that reads as a broken streak
-        <LoadError bare what="your check-in" onRetry={refetch} />
+        <LoadError bare what={tr('your check-in')} onRetry={refetch} />
       ) : (
         <>
           {/* The reason, before the score: who this one tap reassures. */}
@@ -206,7 +207,7 @@ export default function CheckinCard() {
               letterSpacing: -0.5,
             }}
           >
-            {done ? "Your family knows you're alright today." : "Let your family know you're alright."}
+            {done ? tr("Your family knows you're alright today.") : tr("Let your family know you're alright.")}
           </Text>
 
           <View>
@@ -223,13 +224,13 @@ export default function CheckinCard() {
                 <Check size={16} color={t.greenDeep} strokeWidth={2.5} />
                 <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
                   {justCheckedIn
-                    ? `Day ${current} . See you tomorrow`
-                    : 'Checked in for today'}
+                    ? tr('Day {current} . See you tomorrow', { current })
+                    : tr('Checked in for today')}
                 </Text>
               </View>
             ) : (
               <Button
-                title={checkin.isPending ? 'Checking in…' : "I'm here today"}
+                title={checkin.isPending ? tr('Checking in…') : tr("I'm here today")}
                 variant="primary"
                 onPress={() => checkin.mutate()}
                 loading={checkin.isPending}
@@ -253,7 +254,7 @@ export default function CheckinCard() {
               {current}
             </Animated.Text>
             <Text style={{ fontSize: type.body, color: t.inkSlate }}>
-              {current === 1 ? 'day in a row' : 'days in a row'}
+              {current === 1 ? tr('day in a row') : tr('days in a row')}
             </Text>
           </View>
 
@@ -263,7 +264,7 @@ export default function CheckinCard() {
               once there is something to be proud of. */}
           {streak?.longestStreak > 0 && (
             <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>
-              Best streak: {streak.longestStreak} {streak.longestStreak === 1 ? 'day' : 'days'}
+              {tr('Best streak: {longestStreak}', { longestStreak: streak.longestStreak })} {streak.longestStreak === 1 ? tr('day') : tr('days')}
             </Text>
           )}
         </>

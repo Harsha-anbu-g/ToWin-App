@@ -14,6 +14,7 @@ import { reportUser } from '../api/safety';
 import { useConfirm } from '../context/ConfirmContext';
 import { useToast } from '../context/ToastContext';
 import { blockUser, unblockUser } from './blockList';
+import { tr } from '../i18n';
 
 /** The reasons offered for a report. More than three, so never an Alert. */
 export const REPORT_REASONS = ['Unsafe behavior', 'Harassment', 'Scam or fraud', 'Something else'];
@@ -59,7 +60,7 @@ export default function useSafetyActions({
   const [reportingReason, setReportingReason] = useState(null);
   const [blocking, setBlocking] = useState(false);
 
-  const who = personName ?? 'this person';
+  const who = personName ?? tr('this person');
 
   const sendReport = useCallback(
     async (reason) => {
@@ -67,12 +68,12 @@ export default function useSafetyActions({
       try {
         await reportUser(personId, reason);
         setReportOpen(false);
-        showToast('Report sent. Thank you for keeping Towinly safe.', 'success');
+        showToast(tr('Report sent. Thank you for keeping Towinly safe.'), 'success');
       } catch (err) {
         // friendlyWriteError, not a bare sentence: the profile screen has
         // always used it here, and it is what turns a blocked or offline
         // server answer into words the person can act on.
-        showToast(friendlyWriteError(err, 'Could not send the report. Please try again.'), 'error');
+        showToast(friendlyWriteError(err, tr('Could not send the report. Please try again.')), 'error');
       } finally {
         setReportingReason(null);
       }
@@ -88,9 +89,9 @@ export default function useSafetyActions({
     async function run() {
       try {
         await endConnection();
-        showToast(BLOCK_DONE, 'info');
+        showToast(tr(BLOCK_DONE), 'info');
       } catch {
-        showToast(BLOCK_HALF_DONE, 'error', { actionLabel: 'Try again', onAction: run });
+        showToast(tr(BLOCK_HALF_DONE), 'error', { actionLabel: tr('Try again'), onAction: run });
       }
     },
     [endConnection, showToast]
@@ -102,11 +103,11 @@ export default function useSafetyActions({
       await blockUser(signedInUserId, { id: personId, name: personName ?? '' });
       queryClient.invalidateQueries({ queryKey: ['block-list'] });
       if (connectionActive) await endConnectionForBlock();
-      else showToast(BLOCK_DONE, 'info');
+      else showToast(tr(BLOCK_DONE), 'info');
       onBlocked?.();
     } catch {
       // The device list itself would not save, so nothing was blocked at all.
-      showToast('Could not block right now. Please try again.', 'error');
+      showToast(tr('Could not block right now. Please try again.'), 'error');
     } finally {
       setBlocking(false);
     }
@@ -129,8 +130,9 @@ export default function useSafetyActions({
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          title: REPORT_TITLE,
-          options: [...REPORT_REASONS, NEVER_MIND],
+          title: tr(REPORT_TITLE),
+          // Shown translated; the English reason is what is sent (sendReport below).
+          options: [...REPORT_REASONS.map((reason) => tr(reason)), tr(NEVER_MIND)],
           cancelButtonIndex: REPORT_REASONS.length,
         },
         (i) => {
@@ -144,12 +146,13 @@ export default function useSafetyActions({
 
   const confirmBlock = useCallback(async () => {
     const ok = await confirm({
-      title: `Block ${who}?`,
-      message:
+      title: tr('Block {who}?', { who }),
+      message: tr(
         "You won't see their help requests or messages anymore, and any friendship ends. " +
-        'It follows you to every phone you sign in on. ' +
-        'You can change your mind later in Profile → Blocked people.',
-      confirmLabel: 'Block',
+          'It follows you to every phone you sign in on. ' +
+          'You can change your mind later in Profile → Blocked people.'
+      ),
+      confirmLabel: tr('Block'),
       destructive: true,
     });
     if (ok) doBlock();
@@ -159,10 +162,10 @@ export default function useSafetyActions({
     try {
       await unblockUser(signedInUserId, personId);
       queryClient.invalidateQueries({ queryKey: ['block-list'] });
-      showToast('Unblocked.', 'info');
+      showToast(tr('Unblocked.'), 'info');
     } catch {
       // The server did not agree, so nothing changed: say so, never pretend.
-      showToast('Could not unblock right now. Please try again.', 'error');
+      showToast(tr('Could not unblock right now. Please try again.'), 'error');
     }
   }, [personId, queryClient, showToast, signedInUserId]);
 

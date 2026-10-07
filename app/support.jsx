@@ -18,6 +18,7 @@ import { useToast } from '../src/context/ToastContext';
 import { announce } from '../src/lib/announce';
 import { SUPPORT_PAGE, supportContactEmail, supportMailto } from '../src/data/supportPage';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function Support() {
   const { t, spacing, text } = useTheme();
@@ -45,7 +46,7 @@ export default function Support() {
       )
       .catch(() => {
         say(SUPPORT_PAGE.noMailApp(email));
-        showToast(`Write to ${email} and tell us what happened.`, 'info');
+        showToast(tr('Write to {email} and tell us what happened.', { email }), 'info');
       });
 
   return (
@@ -73,13 +74,13 @@ export default function Support() {
           <Button
             title={SUPPORT_PAGE.actionLabel}
             onPress={writeToUs}
-            accessibilityHint={`Starts a message to ${email} asking for help`}
+            accessibilityHint={tr('Starts a message to {email} asking for help', { email })}
           />
           <Text
             selectable
             style={{ fontSize: text.sm, color: t.inkSlate2, lineHeight: 24, textAlign: 'center' }}
           >
-            {`Or write to ${email} yourself.`}
+            {tr('Or write to {email} yourself.', { email })}
           </Text>
 
           {outcome ? (

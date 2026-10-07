@@ -26,6 +26,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
 import TextLink from './TextLink';
+import { tr } from '../../i18n';
 
 /** How far the finger travels down before letting go reloads. */
 export const PULL_THRESHOLD = 72;
@@ -75,7 +76,7 @@ function WebPull({ refreshing, onRefresh, style, children }) {
         <View
           testID="web-pull-band"
           accessible
-          accessibilityLabel="Refreshing"
+          accessibilityLabel={tr('Refreshing')}
           style={{ height: BAND_HEIGHT, alignItems: 'center', justifyContent: 'center' }}
         >
           <ActivityIndicator color={t.blue} />
@@ -113,7 +114,7 @@ export default function RefreshControl(props) {
     return (
       <View style={style}>
         <TextLink
-          label={refreshing ? 'Refreshing…' : 'Refresh'}
+          label={refreshing ? tr('Refreshing…') : tr('Refresh')}
           disabled={refreshing}
           onPress={onRefresh}
         />

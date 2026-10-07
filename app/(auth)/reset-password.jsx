@@ -12,6 +12,7 @@ import PasswordInput from '../../src/components/ui/PasswordInput';
 import Screen from '../../src/components/ui/Screen';
 import TextLink from '../../src/components/ui/TextLink';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 export default function ResetPassword() {
   const { t, spacing, text, fontFamily } = useTheme();
@@ -45,8 +46,8 @@ export default function ResetPassword() {
 
   const submit = async () => {
     const errs = {};
-    if (pw.length < 8) errs.pw = 'Password must be at least 8 characters';
-    if (!errs.pw && pw !== confirm) errs.confirm = 'Passwords do not match';
+    if (pw.length < 8) errs.pw = tr('Password must be at least 8 characters');
+    if (!errs.pw && pw !== confirm) errs.confirm = tr('Passwords do not match');
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
@@ -60,7 +61,7 @@ export default function ResetPassword() {
       setFieldErrors({
         confirm: friendlyAuthError(
           err,
-          err?.response?.data?.message || 'This reset link is invalid or has expired.'
+          err?.response?.data?.message || tr('This reset link is invalid or has expired.')
         ),
       });
     } finally {
@@ -73,11 +74,11 @@ export default function ResetPassword() {
       <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
         <Card>
           <Text accessibilityRole="header" style={{ ...heading, textAlign: 'center' }}>
-            Invalid link
+            {tr('Invalid link')}
           </Text>
-          <Text style={centerBody}>This reset link is missing its token.</Text>
+          <Text style={centerBody}>{tr('This reset link is missing its token.')}</Text>
           <Button
-            title="Request a new link"
+            title={tr('Request a new link')}
             variant="primary"
             onPress={() => router.replace('/(auth)/forgot-password')}
             style={{ marginTop: spacing[6] }}
@@ -92,11 +93,11 @@ export default function ResetPassword() {
       <Screen scroll={false} contentStyle={{ justifyContent: 'center' }}>
         <Card>
           <Text accessibilityRole="header" style={{ ...heading, textAlign: 'center' }}>
-            Password updated
+            {tr('Password updated')}
           </Text>
-          <Text style={centerBody}>You can now log in with your new password.</Text>
+          <Text style={centerBody}>{tr('You can now log in with your new password.')}</Text>
           <Button
-            title="Go to log in"
+            title={tr('Go to log in')}
             variant="primary"
             onPress={() => router.replace('/(auth)/login')}
             style={{ marginTop: spacing[6] }}
@@ -112,10 +113,10 @@ export default function ResetPassword() {
     <Screen keyboard contentStyle={{ flexGrow: 1, justifyContent: 'center' }}>
       <Card>
         <Text accessibilityRole="header" style={heading}>
-          Choose a new password
+          {tr('Choose a new password')}
         </Text>
         <PasswordInput
-          label="New password (at least 8 characters)"
+          label={tr('New password (at least 8 characters)')}
           value={pw}
           onChangeText={onPw}
           error={fieldErrors.pw}
@@ -128,7 +129,7 @@ export default function ResetPassword() {
         />
         <PasswordInput
           ref={confirmRef}
-          label="Re-enter new password"
+          label={tr('Re-enter new password')}
           value={confirm}
           onChangeText={onConfirm}
           error={fieldErrors.confirm}
@@ -141,13 +142,13 @@ export default function ResetPassword() {
           style={{ marginBottom: spacing[5] }}
         />
         <Button
-          title={loading ? 'Saving…' : 'Update password'}
+          title={loading ? tr('Saving…') : tr('Update password')}
           variant="primary"
           onPress={submit}
           loading={loading}
         />
         <TextLink
-          label="Back to log in"
+          label={tr('Back to log in')}
           onPress={() => router.replace('/(auth)/login')}
           style={{ marginTop: spacing[2] }}
         />
