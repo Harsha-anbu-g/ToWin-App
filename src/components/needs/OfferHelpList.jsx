@@ -27,6 +27,7 @@ import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
 import { useApplyMutations } from '../../lib/useApplyMutations';
+import { tr } from '../../i18n';
 
 const RADIUS_STEPS = [5, 10, 25, 50, 100];
 
@@ -94,7 +95,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
           {descLong ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={descExpanded ? 'Show less of the request' : 'Read the full request'}
+              accessibilityLabel={descExpanded ? tr('Show less of the request') : tr('Read the full request')}
               onPress={() => setDescExpanded((v) => !v)}
               hitSlop={8}
               style={({ pressed }) => ({
@@ -104,7 +105,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
               })}
             >
               <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>
-                {descExpanded ? 'Show less' : 'Read more'}
+                {descExpanded ? tr('Show less') : tr('Read more')}
               </Text>
             </Pressable>
           ) : null}
@@ -128,10 +129,10 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
             }}
           >
             <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: t.red }} />
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.redDeep }}>Urgent</Text>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.redDeep }}>{tr('Urgent')}</Text>
           </View>
         ) : null}
-        {completed ? <Pill label="Completed" tone="green" /> : null}
+        {completed ? <Pill label={tr('Completed')} tone="green" /> : null}
       </View>
 
       {/* The poster's name is a real 44pt box, not a Text inside a Text:
@@ -153,8 +154,8 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
       >
         <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
           {distance ? `${distance} · ` : ''}
-          {when ? `Posted ${when}` : 'Posted'}
-          {need.elderName ? ' by ' : ''}
+          {when ? tr('Posted {when}', { when }) : tr('Posted')}
+          {need.elderName ? tr(' by ') : ''}
         </Text>
         {need.elderName && need.elderId ? (
           // button, not link: this opens the elder's profile inside the app,
@@ -163,7 +164,7 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
           // PostedHelpList.
           <Pressable
             accessibilityRole="button"
-            accessibilityHint={`Opens ${need.elderName}'s profile`}
+            accessibilityHint={tr("Opens {elderName}'s profile", { elderName: need.elderName })}
             onPress={() => router.push(`/user/${need.elderId}`)}
             style={({ pressed }) => ({
               minHeight: 44,
@@ -197,37 +198,37 @@ const NeedCard = memo(function NeedCard({ need, onApply, onWithdraw, applyingId 
         // HelperDashboard parity; owner call 2026-08-28). Gold, the trust
         // colour, the same line the elder and the family see.
         <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.trustGold, lineHeight: 20, marginTop: 4 }}>
-          {`Asked by ${need.actedByName}${need.elderName ? `, for ${need.elderName}` : ''}`}
+          {(need.elderName ? tr('Asked by {actedByName}, for {elderName}', { actedByName: need.actedByName, elderName: need.elderName }) : tr('Asked by {actedByName}', { actedByName: need.actedByName }))}
         </Text>
       ) : null}
 
       {completed ? null : mine === 'PENDING' ? (
         <View style={{ marginTop: 12 }}>
-          <Pill label="Waiting to hear back" />
+          <Pill label={tr('Waiting to hear back')} />
           <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 19, marginTop: 8 }}>
-            The elder reviews all helpers and picks one.
+            {tr('The elder reviews all helpers and picks one.')}
           </Text>
           {/* No confirm (rulebook: undo over confirmation) — withdrawing is
               reversible in one tap: the Offer button reappears right here. */}
           <ActionChip
-            label="Withdraw my offer"
+            label={tr('Withdraw my offer')}
             onPress={() => onWithdraw(need.id)}
             style={{ marginTop: 8, alignSelf: 'flex-start' }}
           />
         </View>
       ) : mine === 'ACCEPTED' ? (
         <View style={{ marginTop: 12 }}>
-          <Pill label="You're helping" tone="green" />
+          <Pill label={tr("You're helping")} tone="green" />
         </View>
       ) : mine === 'DECLINED' ? (
         <View style={{ marginTop: 12 }}>
-          <Pill label="Not this time" />
+          <Pill label={tr('Not this time')} />
         </View>
       ) : (
         <Button
           // Tonal, not filled — this card repeats for every open request, so a
           // filled button here would mean several "primaries" on one screen.
-          title="Offer to Help"
+          title={tr('Offer to Help')}
           variant="secondary"
           size="small"
           onPress={() => onApply(need.id)}
@@ -325,13 +326,13 @@ export default function OfferHelpList() {
   // make once it has one: without a position the server cannot filter by
   // distance and every row comes back with distanceKm null.
   const radiusLine = hasPosition
-    ? `Showing needs within ${radiusKm} km of you`
-    : 'Showing every open request';
-  const availableLabel = hasPosition ? 'open requests near you' : 'open requests';
+    ? tr('Showing needs within {radiusKm} km of you', { radiusKm })
+    : tr('Showing every open request');
+  const availableLabel = hasPosition ? tr('open requests near you') : tr('open requests');
   // "Try a wider distance" points at a pill that cannot widen anything yet.
   const availableEmpty = hasPosition
-    ? `No open needs within ${radiusKm} km right now. Try a wider distance, or check back soon.`
-    : 'No open requests right now. Check back soon.';
+    ? tr('No open needs within {radiusKm} km right now. Try a wider distance, or check back soon.', { radiusKm })
+    : tr('No open requests right now. Check back soon.');
 
   const available = open.filter((n) => !n.myApplicationStatus);
   const applied = applications.filter((n) => n.status !== 'COMPLETED' && n.status !== 'CANCELLED');
@@ -387,13 +388,13 @@ export default function OfferHelpList() {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
           >
-            Offer Help
+            {tr('Offer Help')}
           </Text>
           <SegmentedControl
             segments={[
-              { key: 'available', label: 'Available', count: available.length },
-              { key: 'applied', label: 'Applied', count: applied.length },
-              { key: 'done', label: 'Completed', count: completed.length },
+              { key: 'available', label: tr('Available'), count: available.length },
+              { key: 'applied', label: tr('Applied'), count: applied.length },
+              { key: 'done', label: tr('Completed'), count: completed.length },
             ]}
             value={seg}
             onChange={setSeg}
@@ -424,7 +425,7 @@ export default function OfferHelpList() {
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={`Distance ${radiusKm} kilometres, tap to change`}
+                accessibilityLabel={tr('Distance {radiusKm} kilometres, tap to change', { radiusKm })}
                 onPress={() => setRadiusIdx((i) => (i + 1) % RADIUS_STEPS.length)}
                 style={({ pressed }) => ({
                   // A real 44pt box, not 30 propped up by hitSlop: the web build
@@ -443,7 +444,7 @@ export default function OfferHelpList() {
                 })}
               >
                 <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}>
-                  {radiusKm} km
+                  {tr('{radiusKm} km', { radiusKm })}
                 </Text>
               </Pressable>
             </View>
@@ -463,7 +464,7 @@ export default function OfferHelpList() {
             // that would actually fix it — name the failure instead.
             <LoadError
               bare
-              what={seg === 'available' ? availableLabel : 'your offers'}
+              what={seg === 'available' ? availableLabel : tr('your offers')}
               onRetry={seg === 'available' ? refetchFeed : refetchApps}
             />
           ) : (
@@ -472,14 +473,14 @@ export default function OfferHelpList() {
                 {seg === 'available'
                   ? availableEmpty
                   : seg === 'applied'
-                    ? "You haven't offered to help yet."
-                    : 'No completed help yet. It will show here.'}
+                    ? tr("You haven't offered to help yet.")
+                    : tr('No completed help yet. It will show here.')}
               </Text>
               {/* A real starter action — never "open the Available tab"
                   (rulebook: empty states carry their own action). */}
               {seg === 'applied' ? (
                 <Button
-                  title="Browse needs near you"
+                  title={tr('Browse needs near you')}
                   variant="secondary"
                   onPress={() => setSeg('available')}
                   style={{ marginTop: spacing[4] }}

@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { Eye, EyeOff } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
 import Input from './Input';
+import { tr } from '../../i18n';
 
 // textContentType defaults to 'password' so iOS offers the saved credential;
 // call sites override with 'newPassword' (set-a-new-one forms) or 'none'
@@ -27,7 +28,7 @@ export default function PasswordInput({
       rightSlot={
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={shown ? 'Hide password' : 'Show password'}
+          accessibilityLabel={shown ? tr('Hide password') : tr('Show password')}
           onPress={() => setShown((v) => !v)}
           android_ripple={pressRipple}
           hitSlop={4}

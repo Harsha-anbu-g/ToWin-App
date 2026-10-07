@@ -2,6 +2,7 @@
 // Build the Monday–Sunday week containing today, marking which days fall inside
 // the current consecutive streak. Derived from currentStreak + lastCheckinDate
 // since the backend keeps no per-day history.
+import { tr } from '../i18n';
 export function buildWeek(streak, now = new Date()) {
   const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const today = new Date(now);
@@ -55,7 +56,7 @@ export function computeAge(dobStr, now = new Date()) {
 
 export function greeting(now = new Date()) {
   const h = now.getHours();
-  if (h < 12) return 'Good morning';
-  if (h < 18) return 'Good afternoon';
-  return 'Good evening';
+  if (h < 12) return tr('Good morning');
+  if (h < 18) return tr('Good afternoon');
+  return tr('Good evening');
 }

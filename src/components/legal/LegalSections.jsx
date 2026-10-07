@@ -13,6 +13,7 @@ import { Linking, Pressable, Text, View } from 'react-native';
 import { useToast } from '../../context/ToastContext';
 import { LEGAL_LINK_FALLBACK } from '../../data/legalContent';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 /**
  * @param {{ sections: {h: string, p: string, link?: {label: string, url: string}}[] }} props
@@ -37,7 +38,7 @@ export default function LegalSections({ sections }) {
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={s.link.label}
-          accessibilityHint="Opens the account deletion page in your browser"
+          accessibilityHint={tr('Opens the account deletion page in your browser')}
           onPress={() =>
             Linking.openURL(s.link.url).catch(() =>
               showToast(LEGAL_LINK_FALLBACK(s.link.url), 'error')

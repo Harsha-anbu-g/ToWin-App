@@ -16,6 +16,7 @@ import { useToast } from '../../context/ToastContext';
 import { isInheritable } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import ActionChip from '../ui/ActionChip';
+import { tr } from '../../i18n';
 
 export default function FamilyHelperConnect({
   helper,
@@ -29,7 +30,7 @@ export default function FamilyHelperConnect({
   const router = useRouter();
 
   const firstName = (helper.helperName || '').split(' ')[0];
-  const parent = elderName || 'your parent';
+  const parent = elderName || tr('your parent');
 
   // Which named api function each standing action runs; the mutation's
   // variables still carry the toast words and the undo, exactly as before.
@@ -42,18 +43,18 @@ export default function FamilyHelperConnect({
   const call = useMutation({
     mutationFn: ({ act, connectionId }) => STANDING_ACTIONS[act](connectionId),
     onSuccess: (_r, { okMessage, undo }) => {
-      if (okMessage) showToast(okMessage, 'success', undo ? { actionLabel: 'Undo', onAction: undo } : {});
+      if (okMessage) showToast(okMessage, 'success', undo ? { actionLabel: tr('Undo'), onAction: undo } : {});
       onChanged?.();
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'That didn’t work. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('That didn’t work. Please try again.'), 'error'),
   });
 
   const openChat = useMutation({
     mutationFn: () => openFamilyStandingChat(standing.standingConnectionId),
     onSuccess: (chatId) => router.push(`/chat/${chatId}`),
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Could not open the chat. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Could not open the chat. Please try again.'), 'error'),
   });
 
   const busy = call.isPending || openChat.isPending;
@@ -62,8 +63,7 @@ export default function FamilyHelperConnect({
   if (!isInheritable(helper)) {
     return (
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: spacing[3] }}>
-        Family chat opens when {parent} and {firstName} reach Messaging. They&apos;re still at the
-        first step.
+        {tr("Family chat opens when {parent} and {firstName} reach Messaging. They're still at the first step.", { parent, firstName })}
       </Text>
     );
   }
@@ -85,17 +85,17 @@ export default function FamilyHelperConnect({
         }}
       >
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20 }}>
-          You removed this connection.
+          {tr('You removed this connection.')}
         </Text>
         <ActionChip
-          label="Bring it back"
+          label={tr('Bring it back')}
           tonal
           disabled={busy}
           onPress={() =>
             call.mutate({
               act: 'resume',
               connectionId: helper.connectionId,
-              okMessage: 'Connection restored.',
+              okMessage: tr('Connection restored.'),
             })
           }
         />
@@ -107,17 +107,17 @@ export default function FamilyHelperConnect({
     return (
       <View style={{ marginTop: spacing[3] }}>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20 }}>
-          You paused this chat. Neither of you can send messages until you resume it.
+          {tr('You paused this chat. Neither of you can send messages until you resume it.')}
         </Text>
         <ActionChip
-          label="Resume"
+          label={tr('Resume')}
           tonal
           disabled={busy}
           onPress={() =>
             call.mutate({
               act: 'resume',
               connectionId: standing.standingConnectionId,
-              okMessage: 'Chat resumed.',
+              okMessage: tr('Chat resumed.'),
             })
           }
           style={{ marginTop: spacing[2], alignSelf: 'flex-start' }}
@@ -141,19 +141,19 @@ export default function FamilyHelperConnect({
     call.mutate({
       act: 'revoke',
       connectionId: standing.standingConnectionId,
-      okMessage: 'Connection removed.',
+      okMessage: tr('Connection removed.'),
       undo: () =>
         call.mutate({
           act: 'resume',
           connectionId: helper.connectionId,
-          okMessage: 'Connection restored.',
+          okMessage: tr('Connection restored.'),
         }),
     });
 
   return (
     <View style={{ marginTop: spacing[3] }}>
       <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.greenDeep, lineHeight: 20 }}>
-        You hold {parent}&apos;s trust with {firstName}. You can message them directly.
+        {tr("You hold {parent}'s trust with {firstName}. You can message them directly.", { parent, firstName })}
       </Text>
       <View
         style={{
@@ -165,27 +165,26 @@ export default function FamilyHelperConnect({
         }}
       >
         <ActionChip
-          label={openChat.isPending ? 'Opening…' : `Message ${firstName}`}
+          label={openChat.isPending ? tr('Opening…') : tr('Message {firstName}', { firstName })}
           tonal
           disabled={busy}
           onPress={message}
         />
         <ActionChip
-          label="Pause"
+          label={tr('Pause')}
           disabled={busy}
           onPress={() =>
             call.mutate({
               act: 'pause',
               connectionId: standing.standingConnectionId,
-              okMessage: 'Chat paused.',
+              okMessage: tr('Chat paused.'),
             })
           }
         />
-        <ActionChip label="Remove" destructive disabled={busy} onPress={remove} />
+        <ActionChip label={tr('Remove')} destructive disabled={busy} onPress={remove} />
       </View>
       <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: spacing[2] }}>
-        {parent} always sees that you two can talk. If {parent} stops sharing this friendship, the
-        chat closes.
+        {tr('{parent} always sees that you two can talk. If {parent} stops sharing this friendship, the chat closes.', { parent })}
       </Text>
     </View>
   );

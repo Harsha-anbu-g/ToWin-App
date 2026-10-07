@@ -34,3 +34,8 @@ jest.mock('expo-splash-screen', () => ({
   hide: jest.fn(),
   setOptions: jest.fn(),
 }));
+
+// Every suite reads English unless it switches on purpose: the app follows the
+// phone's language, and a runner whose locale is French must not change what
+// the existing assertions see.
+require('./src/i18n').__setLanguageForTests('en');

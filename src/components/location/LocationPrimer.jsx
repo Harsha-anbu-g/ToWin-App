@@ -21,6 +21,7 @@ import Card from '../ui/Card';
 import TextLink from '../ui/TextLink';
 import { STATUS } from '../../lib/deviceLocation';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 // The three promises, said at the moment of asking rather than only in the
 // policy: a rounded area, never an address, never while the app is closed.
@@ -45,46 +46,40 @@ const SET_ACTION = 'Update my location';
 // broke when they said no (HCI 1, HCI 9).
 const CONTEXTS = {
   find: {
-    askTitle: 'See who is nearby',
-    why: 'Towinly can use your location to show how far away each person is, and to show only people within the distance you choose.',
-    refusedTitle: 'Distances are hidden',
-    refusedBody:
-      'Without your location we cannot tell you how far away anyone is. You can still see everyone below, and you can turn this on whenever you like.',
-    blockedLead: 'To show distances again, open Settings on your phone, find Towinly, and turn Location on.',
-    offClause: 'Towinly can show how far away each person is.',
-    stillWorks: 'Everyone below still shows without it.',
+    get askTitle() { return tr('See who is nearby'); },
+    get why() { return tr('Towinly can use your location to show how far away each person is, and to show only people within the distance you choose.'); },
+    get refusedTitle() { return tr('Distances are hidden'); },
+    get refusedBody() { return tr('Without your location we cannot tell you how far away anyone is. You can still see everyone below, and you can turn this on whenever you like.'); },
+    get blockedLead() { return tr('To show distances again, open Settings on your phone, find Towinly, and turn Location on.'); },
+    get offClause() { return tr('Towinly can show how far away each person is.'); },
+    get stillWorks() { return tr('Everyone below still shows without it.'); },
   },
   post: {
-    askTitle: 'Let helpers see how far away you are',
-    why: 'Towinly can use your location so helpers nearby see how far away you are, instead of the town you typed when you joined.',
-    refusedTitle: 'Helpers cannot see how far away you are',
-    refusedBody:
-      'Without your location your request shows the town you typed, so a helper on your street looks no closer than one across town. Helpers still see it, and you can turn this on whenever you like.',
-    blockedLead:
-      'To show helpers how far away you are, open Settings on your phone, find Towinly, and turn Location on.',
-    offClause: 'helpers nearby can see how far away you are.',
-    stillWorks: 'Your request still shows without it.',
+    get askTitle() { return tr('Let helpers see how far away you are'); },
+    get why() { return tr('Towinly can use your location so helpers nearby see how far away you are, instead of the town you typed when you joined.'); },
+    get refusedTitle() { return tr('Helpers cannot see how far away you are'); },
+    get refusedBody() { return tr('Without your location your request shows the town you typed, so a helper on your street looks no closer than one across town. Helpers still see it, and you can turn this on whenever you like.'); },
+    get blockedLead() { return tr('To show helpers how far away you are, open Settings on your phone, find Towinly, and turn Location on.'); },
+    get offClause() { return tr('helpers nearby can see how far away you are.'); },
+    get stillWorks() { return tr('Your request still shows without it.'); },
   },
   offer: {
-    askTitle: 'See how far away each request is',
-    why: 'Towinly can use your location to show how far away each request is, and to show only the requests within the distance you choose.',
-    refusedTitle: 'Distances are hidden',
-    refusedBody:
-      'Without your location we cannot tell you how far away a request is, and the distance you pick cannot be used. Every open request still shows, and you can turn this on whenever you like.',
-    blockedLead: 'To sort by distance, open Settings on your phone, find Towinly, and turn Location on.',
-    offClause: 'Towinly can show how far away each request is.',
-    stillWorks: 'Every open request still shows without it.',
+    get askTitle() { return tr('See how far away each request is'); },
+    get why() { return tr('Towinly can use your location to show how far away each request is, and to show only the requests within the distance you choose.'); },
+    get refusedTitle() { return tr('Distances are hidden'); },
+    get refusedBody() { return tr('Without your location we cannot tell you how far away a request is, and the distance you pick cannot be used. Every open request still shows, and you can turn this on whenever you like.'); },
+    get blockedLead() { return tr('To sort by distance, open Settings on your phone, find Towinly, and turn Location on.'); },
+    get offClause() { return tr('Towinly can show how far away each request is.'); },
+    get stillWorks() { return tr('Every open request still shows without it.'); },
   },
   profile: {
-    askTitle: 'Use your phone instead of a typed town',
-    why: 'Towinly can use your location to set where you are, instead of the middle of the town you type.',
-    refusedTitle: 'Your position comes from the town you type',
-    refusedBody:
-      'Without your location Towinly looks up the town in the box above and uses the middle of it. That still works, and you can turn this on whenever you like.',
-    blockedLead:
-      'To use your phone instead of a typed town, open Settings on your phone, find Towinly, and turn Location on.',
-    offClause: 'Towinly can set where you are from your phone.',
-    stillWorks: 'The town you type still works without it.',
+    get askTitle() { return tr('Use your phone instead of a typed town'); },
+    get why() { return tr('Towinly can use your location to set where you are, instead of the middle of the town you type.'); },
+    get refusedTitle() { return tr('Your position comes from the town you type'); },
+    get refusedBody() { return tr('Without your location Towinly looks up the town in the box above and uses the middle of it. That still works, and you can turn this on whenever you like.'); },
+    get blockedLead() { return tr('To use your phone instead of a typed town, open Settings on your phone, find Towinly, and turn Location on.'); },
+    get offClause() { return tr('Towinly can set where you are from your phone.'); },
+    get stillWorks() { return tr('The town you type still works without it.'); },
   },
 };
 
@@ -98,18 +93,18 @@ const copyFor = (context, status, canRefresh) => {
       // Only where the screen handed us a way to read again. The browse screens
       // pass none, so somebody with a position still sees no card there.
       return canRefresh
-        ? { title: SET_TITLE, body: `${PROMISE} Update it if you have moved.`, action: SET_ACTION }
+        ? { title: tr(SET_TITLE), body: tr('{promise} Update it if you have moved.', { promise: tr(PROMISE) }), action: tr(SET_ACTION) }
         : null;
     case STATUS.unknown:
-      return { title: c.askTitle, body: `${c.why} ${PROMISE}`, action: 'Use my location' };
+      return { title: c.askTitle, body: `${c.why} ${tr(PROMISE)}`, action: tr('Use my location') };
     case STATUS.refused:
-      return { title: c.refusedTitle, body: c.refusedBody, action: 'Use my location' };
+      return { title: c.refusedTitle, body: c.refusedBody, action: tr('Use my location') };
     case STATUS.blocked:
-      return { title: SETTINGS_TITLE, body: `${c.blockedLead} ${c.stillWorks}`, action: null };
+      return { title: tr(SETTINGS_TITLE), body: `${c.blockedLead} ${c.stillWorks}`, action: null };
     case STATUS.off:
       return {
-        title: PHONE_OFF_TITLE,
-        body: `Turn Location on in your phone settings and ${c.offClause} ${c.stillWorks}`,
+        title: tr(PHONE_OFF_TITLE),
+        body: tr('Turn Location on in your phone settings and {offClause} {stillWorks}', { offClause: c.offClause, stillWorks: c.stillWorks }),
         action: null,
       };
     // unsupported: nothing to say, so nothing is shown.
@@ -162,7 +157,7 @@ export default function LocationPrimer({
       </Text>
       {copy.action ? (
         <Button
-          title={busy ? 'Just a moment…' : copy.action}
+          title={busy ? tr('Just a moment…') : copy.action}
           onPress={onAction}
           variant={actionVariant}
           loading={busy}
@@ -173,7 +168,7 @@ export default function LocationPrimer({
       {/* Always dismissible: finding a friend must never be gated behind
           handing over a position (HCI 3). */}
       {onDismiss ? (
-        <TextLink label="Not now" muted onPress={onDismiss} style={{ marginTop: spacing[1] }} />
+        <TextLink label={tr('Not now')} muted onPress={onDismiss} style={{ marginTop: spacing[1] }} />
       ) : null}
     </Card>
   );

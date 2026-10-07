@@ -14,6 +14,7 @@ import {
   CalendarCheck,
   ChevronRight,
   FileText,
+  Globe,
   KeyRound,
   Lock,
   Mail,
@@ -45,6 +46,8 @@ import { switchToFullWebsite } from '../../src/lib/fullWebsite';
 import { isHapticsEnabled, setHapticsEnabled, subscribeHaptics } from '../../src/lib/haptics';
 import { MY_DATA, saveMyDataCopy } from '../../src/lib/myDataCopy';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { LANGUAGES, tr } from '../../src/i18n';
+import emphasize from '../../src/i18n/emphasize';
 
 function Stat({ value, label, gold }) {
   const { t, type } = useTheme();
@@ -115,7 +118,7 @@ function Row({ icon: Icon, label, onPress, right, destructive, divider, a11yRole
 }
 
 export default function ProfileScreen() {
-  const { t, spacing, text, type, fontFamily, mode, toggle } = useTheme();
+  const { t, spacing, text, type, fontFamily, mode, toggle, lang } = useTheme();
   const { user, logout } = useAuth();
   // Same seat guards the old Menu drawer used for these surfaces.
   const isElder = user?.role === 'ELDER' || user?.role === 'BOTH';
@@ -170,30 +173,30 @@ export default function ProfileScreen() {
   const deleteAccount = useMutation({
     mutationFn: deleteMyAccount,
     onSuccess: async () => {
-      showToast('Your account has been deleted.', 'info');
+      showToast(tr('Your account has been deleted.'), 'info');
       await logout();
     },
-    onError: () => showToast('Could not delete the account right now. Please try again.', 'error'),
+    onError: () => showToast(tr('Could not delete the account right now. Please try again.'), 'error'),
   });
 
   // Two gates, deliberately. Sequential awaits rather than a nested callback:
   // same two-stage protection, but it reads top-to-bottom and works on web.
   const confirmDelete = async () => {
     const first = await confirm({
-      title: 'Delete your account?',
+      title: tr('Delete your account?'),
       message:
-        'This permanently removes your profile, friendships, messages, and requests. It cannot be undone.',
-      cancelLabel: 'Keep my account',
+        tr('This permanently removes your profile, friendships, messages, and requests. It cannot be undone.'),
+      cancelLabel: tr('Keep my account'),
       // A verb naming the consequence — never a bare "Continue" (rulebook).
-      confirmLabel: 'Delete my account',
+      confirmLabel: tr('Delete my account'),
       destructive: true,
     });
     if (!first) return;
 
     const second = await confirm({
-      title: 'Are you absolutely sure?',
-      message: 'There is no way back after this.',
-      confirmLabel: 'Delete forever',
+      title: tr('Are you absolutely sure?'),
+      message: tr('There is no way back after this.'),
+      confirmLabel: tr('Delete forever'),
       destructive: true,
     });
     if (second) deleteAccount.mutate();
@@ -201,12 +204,12 @@ export default function ProfileScreen() {
 
   const confirmLogout = async () => {
     const ok = await confirm({
-      title: 'Log out?',
+      title: tr('Log out?'),
       message:
-        'You will need your username and password to get back in. If you are not sure you have them, stay logged in.',
-      cancelLabel: 'Stay logged in',
+        tr('You will need your username and password to get back in. If you are not sure you have them, stay logged in.'),
+      cancelLabel: tr('Stay logged in'),
       // A verb naming the consequence, never a bare "Continue" (rulebook).
-      confirmLabel: 'Log out',
+      confirmLabel: tr('Log out'),
     });
     if (ok) logout();
   };
@@ -247,12 +250,12 @@ export default function ProfileScreen() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 28, color: t.ink, letterSpacing: -0.5 }}
       >
-        Profile
+        {tr('Profile')}
       </Text>
 
       {profileFailed ? (
         // Without this, a dropped network leaves the name on "…" forever
-        <LoadError what="your profile" onRetry={refetchProfile} style={{ marginTop: spacing[3] }} />
+        <LoadError what={tr('your profile')} onRetry={refetchProfile} style={{ marginTop: spacing[3] }} />
       ) : null}
 
       {/* Identity card (3h): 56px avatar, serif name, city, hairline Edit pill */}
@@ -266,17 +269,17 @@ export default function ProfileScreen() {
             <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 1 }}>
               {profile?.city ??
                 (user?.role === 'BOTH'
-                  ? 'Elder & Helper'
+                  ? tr('Elder & Helper')
                   : user?.role === 'HELPER'
-                    ? 'Helper'
+                    ? tr('Helper')
                     : user?.role === 'FAMILY'
-                      ? 'Family member'
-                      : 'Elder')}
+                      ? tr('Family member')
+                      : tr('Elder'))}
             </Text>
           </View>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Edit profile"
+            accessibilityLabel={tr('Edit profile')}
             onPress={() => router.push('/profile-edit')}
             style={({ pressed }) => ({
               // minHeight, not height — the label has to grow at 200% text
@@ -293,7 +296,7 @@ export default function ProfileScreen() {
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>Edit</Text>
+            <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.ink }}>{tr('Edit')}</Text>
           </Pressable>
         </View>
         <View
@@ -305,11 +308,11 @@ export default function ProfileScreen() {
             borderTopColor: t.hairline,
           }}
         >
-          <Stat value={trust ? Math.round(trust.totalScore) : undefined} label="trust" gold />
-          <Stat value={connectionsFailed ? undefined : friendsCount} label="friends" />
+          <Stat value={trust ? Math.round(trust.totalScore) : undefined} label={tr('trust')} gold />
+          <Stat value={connectionsFailed ? undefined : friendsCount} label={tr('friends')} />
           <Stat
             value={streakFailed ? undefined : (streak?.currentStreak ?? undefined)}
-            label="day streak"
+            label={tr('day streak')}
           />
         </View>
       </Card>
@@ -324,18 +327,18 @@ export default function ProfileScreen() {
           {isHelper ? (
             <Row
               icon={Briefcase}
-              label="My offers & jobs"
+              label={tr('My offers & jobs')}
               onPress={() => router.push('/my-jobs')}
               divider
             />
           ) : null}
           {!isFamily ? (
-            <Row icon={CalendarCheck} label="Daily check-in" onPress={() => router.push('/checkin')} divider={isElder} />
+            <Row icon={CalendarCheck} label={tr('Daily check-in')} onPress={() => router.push('/checkin')} divider={isElder} />
           ) : null}
           {isElder ? (
             <>
-              <Row icon={Users} label="My Family" onPress={() => router.push('/family')} divider />
-              <Row icon={Archive} label="My boxes" onPress={() => router.push('/pass-on')} />
+              <Row icon={Users} label={tr('My Family')} onPress={() => router.push('/family')} divider />
+              <Row icon={Archive} label={tr('My boxes')} onPress={() => router.push('/pass-on')} />
             </>
           ) : null}
         </Card>
@@ -351,27 +354,41 @@ export default function ProfileScreen() {
           icon={() => <ShieldCheck size={18} color={t.trustGold} strokeWidth={1.8} />}
           label={
             <Text>
-              <Text style={{ color: t.trustGold, fontWeight: '600' }}>Trust</Text> Score
+              {emphasize(tr('*Trust* Score'), { color: t.trustGold, fontWeight: '600' })}
             </Text>
           }
           onPress={() => router.push('/trust')}
           divider
         />
-        <Row icon={() => <TortoiseMark size={18} />} label="Peekaboo" onPress={() => router.push('/game')} divider />
-        <Row icon={BookOpen} label="Guide" onPress={() => router.push('/guide')} divider />
+        <Row icon={() => <TortoiseMark size={18} />} label={tr('Peekaboo')} onPress={() => router.push('/game')} divider />
+        <Row icon={BookOpen} label={tr('Guide')} onPress={() => router.push('/guide')} divider />
         {/* The same page App Store Connect's Support URL points at. A reviewer
             reaches it by address; everyone else needs it here, because a person
             who cannot work something out does not go looking for a URL. */}
-        <Row icon={Mail} label="Get help" onPress={() => router.push('/support')} divider />
+        <Row icon={Mail} label={tr('Get help')} onPress={() => router.push('/support')} divider />
+        <Row
+          icon={Globe}
+          label={tr('Language')}
+          onPress={() => router.push('/language')}
+          divider
+          right={
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Text style={{ fontSize: type.meta, color: t.inkSlate }}>
+                {LANGUAGES.find((l) => l.code === lang)?.label}
+              </Text>
+              <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
+            </View>
+          }
+        />
         <Row
           icon={Moon}
-          label="Night mode"
+          label={tr('Night mode')}
           divider
           right={
             // The switch IS the control (owner call 2026-08-17: Apple feel —
             // the hand-off row-tap gave none of the native press response).
             <Switch
-              accessibilityLabel="Night mode"
+              accessibilityLabel={tr('Night mode')}
               value={mode === 'dark'}
               onValueChange={toggle}
               trackColor={{ false: t.slateSoft, true: t.blue }}
@@ -386,11 +403,11 @@ export default function ProfileScreen() {
         {Platform.OS === 'web' ? null : (
           <Row
             icon={Vibrate}
-            label="Vibration feedback"
+            label={tr('Vibration feedback')}
             divider
             right={
               <Switch
-                accessibilityLabel="Vibration feedback"
+                accessibilityLabel={tr('Vibration feedback')}
                 value={hapticsOn}
                 onValueChange={(next) => setHapticsEnabled(next)}
                 trackColor={{ false: t.slateSoft, true: t.blue }}
@@ -403,21 +420,21 @@ export default function ProfileScreen() {
             and burns the channel Delete-account needs (rulebook). */}
         <Row
           icon={PhoneCall}
-          label="Emergency contacts"
+          label={tr('Emergency contacts')}
           onPress={() => router.push('/emergency-contacts')}
         />
       </Card>
 
       {/* Everything quieter lives below the fold */}
       <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
-        <Row icon={KeyRound} label="Change password" onPress={() => router.push('/change-password')} divider />
-        <Row icon={MessageSquareHeart} label="Share feedback" onPress={() => router.push('/feedback')} divider />
-        <Row icon={UserX} label="Blocked people" onPress={() => router.push('/blocked')} divider />
+        <Row icon={KeyRound} label={tr('Change password')} onPress={() => router.push('/change-password')} divider />
+        <Row icon={MessageSquareHeart} label={tr('Share feedback')} onPress={() => router.push('/feedback')} divider />
+        <Row icon={UserX} label={tr('Blocked people')} onPress={() => router.push('/blocked')} divider />
         {/* Lock, not the shield-check: that glyph means trust on this screen. */}
-        <Row icon={Lock} label="Privacy policy" onPress={() => router.push('/privacy')} divider />
+        <Row icon={Lock} label={tr('Privacy policy')} onPress={() => router.push('/privacy')} divider />
         <Row
           icon={FileText}
-          label="Terms of service"
+          label={tr('Terms of service')}
           onPress={() => router.push('/terms')}
           divider={Platform.OS === 'web'}
         />
@@ -425,7 +442,7 @@ export default function ProfileScreen() {
             a way back to it (HCI 3). Invisible in the store apps, where there
             is nothing to switch to. */}
         {Platform.OS === 'web' ? (
-          <Row icon={Monitor} label="Use the full website" onPress={switchToFullWebsite} />
+          <Row icon={Monitor} label={tr('Use the full website')} onPress={switchToFullWebsite} />
         ) : null}
       </Card>
 
@@ -435,7 +452,7 @@ export default function ProfileScreen() {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
           >
-            What friends say about me
+            {tr('What friends say about me')}
           </Text>
           {myReviews.slice(0, 3).map((r, i) => (
             <View
@@ -448,7 +465,7 @@ export default function ProfileScreen() {
               }}
             >
               <Text
-                accessibilityLabel={`${Math.round(r.rating ?? 0)} out of 5 stars`}
+                accessibilityLabel={tr('{round} out of 5 stars', { round: Math.round(r.rating ?? 0) })}
                 style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}
               >
                 {'★'.repeat(Math.round(r.rating ?? 0))}
@@ -469,7 +486,7 @@ export default function ProfileScreen() {
       <Card style={{ marginTop: spacing[6] }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Account and data"
+          accessibilityLabel={tr('Account and data')}
           accessibilityState={{ expanded: accountOpen }}
           onPress={() => setAccountOpen((v) => !v)}
           style={({ pressed }) => ({
@@ -479,7 +496,7 @@ export default function ProfileScreen() {
             opacity: pressed ? 0.6 : 1,
           })}
         >
-          <Text style={{ flex: 1, fontSize: text.base, color: t.ink }}>Account and data</Text>
+          <Text style={{ flex: 1, fontSize: text.base, color: t.ink }}>{tr('Account and data')}</Text>
           <ChevronRight
             size={18}
             color={t.inkFaint2}
@@ -490,9 +507,9 @@ export default function ProfileScreen() {
 
         {accountOpen ? (
           <View style={{ marginTop: spacing[3], gap: spacing[3] }}>
-            <Button title="Send me a copy of my data" variant="text" loading={exporting} onPress={exportData} />
+            <Button title={tr('Send me a copy of my data')} variant="text" loading={exporting} onPress={exportData} />
             <Button
-              title={deleteAccount.isPending ? 'Deleting…' : 'Delete my account'}
+              title={deleteAccount.isPending ? tr('Deleting…') : tr('Delete my account')}
               variant="destructive"
               onPress={confirmDelete}
               loading={deleteAccount.isPending}
@@ -510,7 +527,7 @@ export default function ProfileScreen() {
           the fold above; this is one, because logging out is recoverable for
           anyone who has their password. */}
       <Button
-        title="Log out"
+        title={tr('Log out')}
         variant="secondary"
         onPress={confirmLogout}
         style={{ marginTop: spacing[6] }}

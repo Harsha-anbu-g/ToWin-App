@@ -9,6 +9,7 @@
 import axios from 'axios';
 import { API_BASE_URL } from './config';
 import { attachIdempotencyKey, settleIdempotencyKey } from '../lib/idempotency';
+import { currentLanguage, tr } from '../i18n';
 
 let getToken = () => null;
 let onSessionExpired = () => {};
@@ -37,6 +38,8 @@ const api = axios.create({ baseURL: API_BASE_URL, timeout: REQUEST_TIMEOUT_MS })
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // The server can answer in the language the person reads the app in.
+  config.headers['Accept-Language'] = currentLanguage();
   // Writes carry an Idempotency-Key. On a weak signal the 15 second timeout can
   // fire after the server already saved the message; the "tap to try again"
   // retry then reuses the key and gets the first answer back instead of a copy.
@@ -68,7 +71,7 @@ api.interceptors.response.use(
 //   onError: (err) => showToast(friendlyWriteError(err, 'Could not …'), 'error')
 export const friendlyWriteError = (error, fallback) =>
   error?.response?.status === 403
-    ? 'Please verify your email first. Check your inbox for the link, then try again.'
+    ? tr('Please verify your email first. Check your inbox for the link, then try again.')
     : fallback;
 
 /**
@@ -90,15 +93,15 @@ export const friendlyAuthError = (error, refusalMessage) => {
   const res = error?.response;
   // Nothing came back. The credentials were never checked, so never say they
   // are wrong. Same sentence forgot-password.jsx already uses.
-  if (!res) return 'Check your connection and try again.';
+  if (!res) return tr('Check your connection and try again.');
   if (res.status === 429) {
-    return res.data?.message || 'Too many attempts. Please try again later.';
+    return res.data?.message || tr('Too many attempts. Please try again later.');
   }
   // A server fault is not a wrong password. Saying so sends the person off to
   // reset something that works.
-  if (res.status >= 500) return 'Something is wrong on our side. Please try again in a minute.';
+  if (res.status >= 500) return tr('Something is wrong on our side. Please try again in a minute.');
   if (res.status === 400 || res.status === 401) return refusalMessage;
-  return res.data?.message || 'Something went wrong. Please try again.';
+  return res.data?.message || tr('Something went wrong. Please try again.');
 };
 
 /**

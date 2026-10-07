@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import TortoiseMark from '../TortoiseMark';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function PeekabooRow() {
   const { t, radius, spacing, type } = useTheme();
@@ -12,7 +13,7 @@ export default function PeekabooRow() {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Peekaboo. A quiet minute with the tortoise. Play"
+      accessibilityLabel={tr('Peekaboo. A quiet minute with the tortoise. Play')}
       onPress={() => router.push('/game')}
       style={({ pressed }) => ({
         backgroundColor: t.canvas,
@@ -30,9 +31,9 @@ export default function PeekabooRow() {
     >
       <TortoiseMark size={34} />
       <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>Peekaboo</Text>
+        <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{tr('Peekaboo')}</Text>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 1 }}>
-          A quiet minute with the tortoise
+          {tr('A quiet minute with the tortoise')}
         </Text>
       </View>
       <View
@@ -49,7 +50,7 @@ export default function PeekabooRow() {
           justifyContent: 'center',
         }}
       >
-        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Play</Text>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{tr('Play')}</Text>
       </View>
     </Pressable>
   );

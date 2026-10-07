@@ -34,6 +34,7 @@ import SegmentedControl from '../ui/SegmentedControl';
 import SwipeSegments from '../ui/SwipeSegments';
 import LoadError from '../ui/LoadError';
 import SkeletonCard from '../ui/Skeleton';
+import { tr } from '../../i18n';
 
 // Helpers who offered on a request and are still waiting for an answer. An
 // OPEN request's applications are all pending: the moment one is accepted the
@@ -65,7 +66,7 @@ const NeedCard = memo(function NeedCard({
   const acceptedHelper =
     need.status !== 'OPEN' ? applicants.find((a) => a.status === 'ACCEPTED') : null;
   const meta = [catLabel(need.category), need.urgency === 'URGENT' ? 'Urgent' : 'Normal',
-    need.createdAt ? `posted ${timeAgo(need.createdAt)}` : null,
+    need.createdAt ? tr('posted {timeAgo}', { timeAgo: timeAgo(need.createdAt) }) : null,
     need.status === 'CANCELLED' ? 'Cancelled' : null].filter(Boolean).join(' · ');
   // The folded In Progress row says WHO and where trust stands, without a
   // touch: that pair is the whole point of the segment.
@@ -79,7 +80,7 @@ const NeedCard = memo(function NeedCard({
   // ElderDashboard parity; owner call 2026-08-28: "if the help is posted by
   // family it should show it to the elder"). The backend files the request
   // under the elder and only names the writer (NeedResponse.actedByName).
-  const askedBy = need.actedByName ? `Asked by ${need.actedByName}, for you` : null;
+  const askedBy = need.actedByName ? tr('Asked by {actedByName}, for you', { actedByName: need.actedByName }) : null;
 
   return (
     // A plain row, hairline-separated, the same line the My Helpers rows draw
@@ -161,7 +162,7 @@ const NeedCard = memo(function NeedCard({
           {acceptedHelper ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`View ${acceptedHelper.helperName}'s profile`}
+              accessibilityLabel={tr("View {helperName}'s profile", { helperName: acceptedHelper.helperName })}
               onPress={() => router.push(`/user/${acceptedHelper.helperId}`)}
               style={({ pressed }) => ({
                 flexDirection: 'row',
@@ -179,10 +180,10 @@ const NeedCard = memo(function NeedCard({
                 </Text>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>
                   {need.status !== 'ASSIGNED'
-                    ? 'Helped you with this.'
+                    ? tr('Helped you with this.')
                     : helperTrust
-                      ? `${helperTrust.word} · Stage ${helperTrust.stageNo} of 7, ${helperTrust.stageName}. Tap to see their profile.`
-                      : 'Is helping you with this. Tap to see their profile.'}
+                      ? tr('{word} · Stage {stageNo} of 7, {stageName}. Tap to see their profile.', { word: helperTrust.word, stageNo: helperTrust.stageNo, stageName: helperTrust.stageName })
+                      : tr('Is helping you with this. Tap to see their profile.')}
                 </Text>
               </View>
               <ChevronRight size={16} color={t.inkFaint2} strokeWidth={2} />
@@ -203,7 +204,7 @@ const NeedCard = memo(function NeedCard({
                       reviews), the same link helpers get to elders. */}
                   <Pressable
                     accessibilityRole="button"
-                    accessibilityLabel={`View ${app.helperName}'s profile`}
+                    accessibilityLabel={tr("View {helperName}'s profile", { helperName: app.helperName })}
                     onPress={() => router.push(`/user/${app.helperId}`)}
                     hitSlop={6}
                     style={({ pressed }) => ({
@@ -229,7 +230,7 @@ const NeedCard = memo(function NeedCard({
                     </View>
                   </Pressable>
                   <Button
-                    title="Accept"
+                    title={tr('Accept')}
                     variant="secondary"
                     loading={acceptingHelperId === app.helperId}
                     onPress={() => onAccept(need, app)}
@@ -254,7 +255,7 @@ const NeedCard = memo(function NeedCard({
             >
               {need.status === 'ASSIGNED' ? (
                 <Button
-                  title="Mark completed"
+                  title={tr('Mark completed')}
                   variant="secondary"
                   size="small"
                   loading={completing}
@@ -263,7 +264,7 @@ const NeedCard = memo(function NeedCard({
               ) : null}
               {need.status === 'OPEN' ? (
                 <Button
-                  title="Remove"
+                  title={tr('Remove')}
                   variant="text"
                   size="small"
                   loading={removing}
@@ -355,7 +356,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const accept = useMutation({
     mutationFn: ({ needId, helperId }) => acceptHelper({ needId, helperId }),
     onSuccess: () => {
-      showToast('Helper accepted. They can now message you.', 'success');
+      showToast(tr('Helper accepted. They can now message you.'), 'success');
       refresh();
       // Accepting also opens the connection that carries the chat (server:
       // NeedService.acceptHelper), which is why the web dashboard reloads both
@@ -366,25 +367,25 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not accept right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not accept right now. Please try again.')), 'error'),
   });
   const complete = useMutation({
     mutationFn: (needId) => completeHelpRequest(needId),
     onSuccess: () => {
-      showToast('Marked as completed. Well done!', 'success');
+      showToast(tr('Marked as completed. Well done!'), 'success');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not mark completed. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not mark completed. Please try again.')), 'error'),
   });
   const remove = useMutation({
     mutationFn: (needId) => removeHelpRequest(needId),
     onSuccess: () => {
-      showToast('Request removed.', 'success');
+      showToast(tr('Request removed.'), 'success');
       refresh();
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not remove it. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not remove it. Please try again.')), 'error'),
   });
 
   // The row clamps long applications to 2 lines — the confirm dialog carries
@@ -397,12 +398,12 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const confirmAccept = useCallback(
     async (need, app) => {
       const ok = await confirm({
-        title: 'Accept this helper?',
+        title: tr('Accept this helper?'),
         message:
-          `${app.helperName} will be your helper for "${need.title}".` +
-          (app.message ? `\n\nTheir message:\n“${app.message}”` : ''),
-        cancelLabel: 'Not now',
-        confirmLabel: 'Accept',
+          tr('{helperName} will be your helper for "{title}".', { helperName: app.helperName, title: need.title }) +
+          (app.message ? tr('\n\nTheir message:\n“{message}”', { message: app.message }) : ''),
+        cancelLabel: tr('Not now'),
+        confirmLabel: tr('Accept'),
       });
       if (ok) acceptMutate({ needId: need.id, helperId: app.helperId });
     },
@@ -411,11 +412,11 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const confirmComplete = useCallback(
     async (need) => {
       const ok = await confirm({
-        title: 'Mark as completed?',
-        message: `"${need.title}" will move to your finished requests.`,
-        cancelLabel: 'Not yet',
+        title: tr('Mark as completed?'),
+        message: tr('"{title}" will move to your finished requests.', { title: need.title }),
+        cancelLabel: tr('Not yet'),
         // A verb, not an adjective (rulebook alert-button audit).
-        confirmLabel: 'Mark completed',
+        confirmLabel: tr('Mark completed'),
       });
       if (ok) completeMutate(need.id);
     },
@@ -424,10 +425,10 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
   const confirmRemove = useCallback(
     async (need) => {
       const ok = await confirm({
-        title: 'Remove this request?',
-        message: `"${need.title}" will be taken down. This cannot be undone.`,
-        cancelLabel: 'Keep it',
-        confirmLabel: 'Remove',
+        title: tr('Remove this request?'),
+        message: tr('"{title}" will be taken down. This cannot be undone.', { title: need.title }),
+        cancelLabel: tr('Keep it'),
+        confirmLabel: tr('Remove'),
         destructive: true,
       });
       if (ok) removeMutate(need.id);
@@ -534,9 +535,9 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
             // "remove the numbers in the top". The offers badge that rode
             // Waiting beside its count (2026-08-26) is gone: two numbers on one
             // chip read as an error (owner report 2026-08-28).
-            { key: 'open', label: 'Waiting', count: looking.length },
-            { key: 'progress', label: 'In Progress', count: inProgress.length },
-            { key: 'done', label: 'Completed', count: finished.length },
+            { key: 'open', label: tr('Waiting'), count: looking.length },
+            { key: 'progress', label: tr('In Progress'), count: inProgress.length },
+            { key: 'done', label: tr('Completed'), count: finished.length },
           ]}
           value={seg}
           onChange={setSeg}
@@ -553,7 +554,7 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
         isLoading ? (
           <SkeletonCard />
         ) : isError ? (
-          <LoadError what="your requests" onRetry={refetch} style={{ marginTop: 14 }} />
+          <LoadError what={tr('your requests')} onRetry={refetch} style={{ marginTop: 14 }} />
         ) : query.trim() && inSegment.length > 0 ? (
           // A search that finds nothing says so, and never borrows the
           // segment's own "nothing here yet" starter.
@@ -562,10 +563,10 @@ export default function PostedHelpList({ initialSegment = 'open' }) {
           <View style={{ paddingVertical: 24 }}>
             <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
               {seg === 'open'
-                ? 'Nothing here yet. Ask your neighbors for a hand. It takes a minute.'
+                ? tr('Nothing here yet. Ask your neighbors for a hand. It takes a minute.')
                 : seg === 'progress'
-                  ? 'No requests in progress. When you accept a helper, it moves here.'
-                  : 'No completed requests yet.'}
+                  ? tr('No requests in progress. When you accept a helper, it moves here.')
+                  : tr('No completed requests yet.')}
             </Text>
             {/* A real starter action — never "tap the blue button below"
                 (rulebook: no color-and-position references; empty states carry

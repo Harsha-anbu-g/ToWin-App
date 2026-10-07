@@ -18,6 +18,7 @@ import { useConfirm } from '../src/context/ConfirmContext';
 import { useToast } from '../src/context/ToastContext';
 import { getBlocked, unblockUser } from '../src/lib/blockList';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function BlockedPeople() {
   const { t, spacing, text } = useTheme();
@@ -37,10 +38,10 @@ export default function BlockedPeople() {
     try {
       await unblockUser(user?.userId, person.id);
       queryClient.invalidateQueries({ queryKey: ['block-list'] });
-      showToast(`${person.name || 'They'} can appear again.`, 'info');
+      showToast(person.name ? tr('{value} can appear again.', { value: person.name }) : tr('They can appear again.'), 'info');
     } catch {
       // The server did not agree, so the block stands: say so, never pretend.
-      showToast('Could not unblock right now. Please try again.', 'error');
+      showToast(tr('Could not unblock right now. Please try again.'), 'error');
     }
   };
 
@@ -48,27 +49,25 @@ export default function BlockedPeople() {
   // verbs, never Yes/No (rulebook).
   const confirmUnblock = async (person) => {
     const ok = await confirm({
-      title: `Unblock ${person.name || 'this person'}?`,
-      message: 'Their profile, requests, and messages can appear for you again.',
-      cancelLabel: 'Keep blocked',
-      confirmLabel: 'Unblock',
+      title: tr('Unblock {value}?', { value: person.name || tr('this person') }),
+      message: tr('Their profile, requests, and messages can appear for you again.'),
+      cancelLabel: tr('Keep blocked'),
+      confirmLabel: tr('Unblock'),
     });
     if (ok) doUnblock(person);
   };
 
   return (
-    <Screen back title="Blocked people" onRefresh={refetch}>
+    <Screen back title={tr('Blocked people')} onRefresh={refetch}>
       {isLoading ? (
         <SkeletonCard lines={2} />
       ) : isError ? (
         // Never claim the block list is empty when it merely failed to load.
-        <LoadError what="your blocked list" onRetry={refetch} />
+        <LoadError what={tr('your blocked list')} onRetry={refetch} />
       ) : list.length === 0 ? (
         <Card>
           <Text style={{ fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
-            You haven't blocked anyone. If someone ever makes you uncomfortable, open their
-            profile and choose "Block this person". Their requests and messages will
-            disappear for you.
+            {tr('You haven\'t blocked anyone. If someone ever makes you uncomfortable, open their profile and choose "Block this person". Their requests and messages will disappear for you.')}
           </Text>
         </Card>
       ) : (
@@ -87,10 +86,10 @@ export default function BlockedPeople() {
             >
               <Avatar name={person.name} size={44} />
               <Text style={{ flex: 1, fontSize: text.base, color: t.ink }}>
-                {person.name || 'Someone'}
+                {person.name || tr('Someone')}
               </Text>
               <ActionChip
-                label="Unblock"
+                label={tr('Unblock')}
                 onPress={() => confirmUnblock(person)}
               />
             </View>

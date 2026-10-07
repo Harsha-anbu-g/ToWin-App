@@ -36,6 +36,7 @@ import AddParentForm from './AddParentForm';
 import FamilyAlertsFeed from './FamilyAlertsFeed';
 // Rows moved to FamilyRows (FAM-403) — the elder's My Family screen shares them.
 import { LinkRow, SectionHeading } from './FamilyRows';
+import { tr } from '../../i18n';
 
 export default function FamilyHomePanel({ addingParent, onAddingParentChange }) {
   const { t, spacing, radius, type, fontFamily } = useTheme();
@@ -77,25 +78,25 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
   const respond = useMutation({
     mutationFn: ({ id, accept }) => respondToFamilyRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
-      showToast(accept ? "You're now linked as their family." : 'Request declined.', 'success');
+      showToast(accept ? tr("You're now linked as their family.") : tr('Request declined.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
       queryClient.invalidateQueries({ queryKey: ['family-alerts'] });
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Something went wrong. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Something went wrong. Please try again.'), 'error'),
   });
 
   const cancel = useMutation({
     mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
-      showToast('Request cancelled.', 'success');
+      showToast(tr('Request cancelled.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
     },
     onError: (err) =>
       showToast(
-        err?.response?.data?.message || 'Could not cancel the request. Please try again.',
+        err?.response?.data?.message || tr('Could not cancel the request. Please try again.'),
         'error'
       ),
   });
@@ -111,7 +112,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
-        My Parents
+        {tr('My Parents')}
       </Text>
 
       {adding ? <AddParentForm onClose={() => setAdding(false)} /> : null}
@@ -124,10 +125,10 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
       {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}
       <SegmentedControl
         segments={[
-          { key: 'parents', label: 'Parents' },
+          { key: 'parents', label: tr('Parents') },
           // People waiting on my yes ride the chip as a badge, no count: the
           // Messages-chip grammar, one number per chip (owner 2026-08-28).
-          { key: 'requests', label: 'Requests', badge: incoming.length, badgeNoun: 'waiting' },
+          { key: 'requests', label: tr('Requests'), badge: incoming.length, badgeNoun: 'waiting' },
         ]}
         value={seg}
         onChange={setSeg}
@@ -141,7 +142,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
             <SkeletonCard lines={3} />
           </View>
         ) : isError ? (
-          <LoadError what="your family" onRetry={refetch} style={{ marginTop: spacing[5] }} />
+          <LoadError what={tr('your family')} onRetry={refetch} style={{ marginTop: spacing[5] }} />
         ) : query.trim() && nothingShown ? (
           <SearchMiss query={query} />
         ) : seg === 'parents' ? (
@@ -158,7 +159,7 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
               }}
             >
               <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-                No parent linked yet
+                {tr('No parent linked yet')}
               </Text>
               <Text
                 style={{
@@ -169,14 +170,14 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
                   textAlign: 'center',
                 }}
               >
-                They must accept before you're linked.
+                {tr("They must accept before you're linked.")}
               </Text>
               {/* The empty state carries its own starter action — never
                   "the control is above" (rulebook). Quiet: the form's Send
                   request is the surface's one filled primary. */}
               {!adding ? (
                 <Button
-                  title="Add your parent"
+                  title={tr('Add your parent')}
                   variant="secondary"
                   onPress={() => setAdding(true)}
                   style={{ marginTop: spacing[4], alignSelf: 'stretch' }}
@@ -201,31 +202,32 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
           )
         ) : incoming.length + outgoing.length === 0 ? (
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 24, paddingVertical: spacing[4] }}>
-            No requests right now. When you add a parent, or a parent adds you, it waits here until
-            someone says yes.
+            {tr('No requests right now. When you add a parent, or a parent adds you, it waits here until someone says yes.')}
           </Text>
         ) : (
           <>
             {shownIncoming.length > 0 ? (
               <View>
-                <SectionHeading>They added you as family</SectionHeading>
+                <SectionHeading>{tr('They added you as family')}</SectionHeading>
                 {shownIncoming.map((r, i) => (
                   <LinkRow
                     key={r.id}
                     name={r.otherUserName}
-                    line={`wants you as their family here${r.relationship ? ` (as their ${r.relationship.toLowerCase()})` : ''}. It's your choice.`}
+                    line={r.relationship
+                      ? tr("wants you as their family here (as their {relationship}). It's your choice.", { relationship: r.relationship.toLowerCase() })
+                      : tr("wants you as their family here. It's your choice.")}
                     first={i === 0}
                   >
                     <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
                       <ActionChip
-                        label={respondingTo === r.id ? 'Accepting…' : 'Accept'}
+                        label={respondingTo === r.id ? tr('Accepting…') : tr('Accept')}
                         tonal
                         disabled={respondingTo === r.id}
                         onPress={() => respond.mutate({ id: r.id, accept: true })}
                         style={{ flex: 1 }}
                       />
                       <ActionChip
-                        label="Not now"
+                        label={tr('Not now')}
                         disabled={respondingTo === r.id}
                         onPress={() => respond.mutate({ id: r.id, accept: false })}
                         style={{ flex: 1 }}
@@ -238,16 +240,16 @@ export default function FamilyHomePanel({ addingParent, onAddingParentChange }) 
 
             {shownOutgoing.length > 0 ? (
               <View>
-                <SectionHeading>Requests you sent</SectionHeading>
+                <SectionHeading>{tr('Requests you sent')}</SectionHeading>
                 {shownOutgoing.map((r, i) => (
                   <LinkRow
                     key={r.id}
                     name={r.otherUserName}
-                    line={`Waiting for ${r.otherUserName} to accept. Only they can say yes. You can cancel any time.`}
+                    line={tr('Waiting for {otherUserName} to accept. Only they can say yes. You can cancel any time.', { otherUserName: r.otherUserName })}
                     first={i === 0}
                   >
                     <ActionChip
-                      label="Cancel request"
+                      label={tr('Cancel request')}
                       disabled={cancelling === r.id}
                       onPress={() => cancel.mutate(r.id)}
                       style={{ marginTop: spacing[3] }}

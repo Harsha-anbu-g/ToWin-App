@@ -13,12 +13,13 @@ import { useToast } from '../../context/ToastContext';
 import { TRUSTED_STAGE, stageIndexOf } from '../../lib/trustStages';
 import { useTheme } from '../../theme/ThemeContext';
 import Button from '../ui/Button';
+import { tr } from '../../i18n';
 
 export default function FamilyTrustAdvance({ helper, elderName, onChanged }) {
   const { t, spacing, type } = useTheme();
   const { showToast } = useToast();
 
-  const parent = elderName || 'your parent';
+  const parent = elderName || tr('your parent');
   const firstName = (helper?.helperName || 'them').split(' ')[0];
   // Inline confirm (rulebook): advancing someone ELSE's ladder in their name
   // is irreversible — one silent tap must never do it.
@@ -29,12 +30,12 @@ export default function FamilyTrustAdvance({ helper, elderName, onChanged }) {
     // seats, so the server works out whose seat this caller may take.
     mutationFn: () => confirmTrustStep(helper.connectionId),
     onSuccess: () => {
-      showToast(`Step taken for ${parent}. ${firstName} will see you moved it.`, 'success');
+      showToast(tr('Step taken for {parent}. {firstName} will see you moved it.', { parent, firstName }), 'success');
       onChanged?.();
     },
     onError: (err) =>
       showToast(
-        err?.response?.data?.message || 'Could not move that step. Please try again.',
+        err?.response?.data?.message || tr('Could not move that step. Please try again.'),
         'error'
       ),
   });
@@ -47,19 +48,19 @@ export default function FamilyTrustAdvance({ helper, elderName, onChanged }) {
       {confirming ? (
         <View style={{ gap: spacing[2] }}>
           <Text style={{ fontSize: type.body, color: t.ink, lineHeight: 22 }}>
-            Take {parent}&apos;s next step with {firstName}? The step counts as theirs.
+            {tr("Take {parent}'s next step with {firstName}? The step counts as theirs.", { parent, firstName })}
           </Text>
           <Button
-            title={advance.isPending ? 'Moving…' : `Yes, move it for ${parent}`}
+            title={advance.isPending ? tr('Moving…') : tr('Yes, move it for {parent}', { parent })}
             variant="secondary"
             onPress={() => advance.mutate()}
             disabled={advance.isPending}
           />
-          <Button title="Not now" variant="text" onPress={() => setConfirming(false)} />
+          <Button title={tr('Not now')} variant="text" onPress={() => setConfirming(false)} />
         </View>
       ) : (
         <Button
-          title={`Move the next step forward for ${parent}`}
+          title={tr('Move the next step forward for {parent}', { parent })}
           variant="secondary"
           onPress={() => setConfirming(true)}
         />
@@ -72,7 +73,7 @@ export default function FamilyTrustAdvance({ helper, elderName, onChanged }) {
           marginTop: spacing[2],
         }}
       >
-        The step counts as {parent}&apos;s. {firstName} sees that you took it for them.
+        {tr("The step counts as {parent}'s. {firstName} sees that you took it for them.", { parent, firstName })}
       </Text>
     </View>
   );

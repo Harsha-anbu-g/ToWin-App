@@ -23,6 +23,7 @@ import Screen from '../src/components/ui/Screen';
 import SkeletonCard from '../src/components/ui/Skeleton';
 import { useToast } from '../src/context/ToastContext';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function ChangePassword() {
   const { t, spacing, text, fontFamily } = useTheme();
@@ -70,27 +71,27 @@ export default function ChangePassword() {
     // The website's required attribute blocks an empty current password in
     // the browser; this guard is that same wall, so an empty currentPassword
     // never reaches the server.
-    if (!settingFirst && !current) errs.current = 'Enter your current password.';
-    if (next.length < 8) errs.next = 'New password must be at least 8 characters.';
-    if (!errs.next && next !== confirm) errs.confirm = 'New passwords do not match.';
+    if (!settingFirst && !current) errs.current = tr('Enter your current password.');
+    if (next.length < 8) errs.next = tr('New password must be at least 8 characters.');
+    if (!errs.next && next !== confirm) errs.confirm = tr('New passwords do not match.');
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
     setLoading(true);
     try {
       if (settingFirst) {
         await setPassword({ newPassword: next });
-        showToast('Password set. Next time you can sign in with your username and password, or with Google.', 'success');
+        showToast(tr('Password set. Next time you can sign in with your username and password, or with Google.'), 'success');
       } else {
         await changePassword({ currentPassword: current, newPassword: next });
-        showToast('Password changed. You can use your new password next time you sign in.', 'success');
+        showToast(tr('Password changed. You can use your new password next time you sign in.'), 'success');
       }
       router.back();
     } catch (err) {
       const message = err?.response?.data?.message;
       setFieldErrors(
         settingFirst
-          ? { next: message || 'Could not set password.' }
-          : { current: message || 'Could not change the password. Check your current one.' }
+          ? { next: message || tr('Could not set password.') }
+          : { current: message || tr('Could not change the password. Check your current one.') }
       );
     } finally {
       setLoading(false);
@@ -100,7 +101,7 @@ export default function ChangePassword() {
   return (
     <Screen
       back
-      title={hasPassword === null ? '' : settingFirst ? 'Set a password' : 'Change password'}
+      title={hasPassword === null ? '' : settingFirst ? tr('Set a password') : tr('Change password')}
       keyboard
       contentStyle={{ flexGrow: 1, justifyContent: 'center' }}
     >
@@ -121,7 +122,7 @@ export default function ChangePassword() {
               marginBottom: settingFirst ? spacing[2] : spacing[4],
             }}
           >
-            {settingFirst ? 'Choose your first password' : 'Choose a new password'}
+            {settingFirst ? tr('Choose your first password') : tr('Choose a new password')}
           </Text>
           {settingFirst && (
             <Text
@@ -132,13 +133,12 @@ export default function ChangePassword() {
                 marginBottom: spacing[4],
               }}
             >
-              Choose a password so you can also sign in with your username. Signing in with
-              Google will keep working.
+              {tr('Choose a password so you can also sign in with your username. Signing in with Google will keep working.')}
             </Text>
           )}
           {!settingFirst && (
             <PasswordInput
-              label="Current password"
+              label={tr('Current password')}
               value={current}
               onChangeText={onCurrent}
               error={fieldErrors.current}
@@ -152,7 +152,7 @@ export default function ChangePassword() {
           )}
           <PasswordInput
             ref={nextRef}
-            label="New password (at least 8 characters)"
+            label={tr('New password (at least 8 characters)')}
             value={next}
             onChangeText={onNext}
             error={fieldErrors.next}
@@ -165,7 +165,7 @@ export default function ChangePassword() {
           />
           <PasswordInput
             ref={confirmRef}
-            label="Re-enter new password"
+            label={tr('Re-enter new password')}
             value={confirm}
             onChangeText={onConfirm}
             error={fieldErrors.confirm}
@@ -178,7 +178,7 @@ export default function ChangePassword() {
             style={{ marginBottom: spacing[5] }}
           />
           <Button
-            title={loading ? 'Saving…' : settingFirst ? 'Set password' : 'Update password'}
+            title={loading ? tr('Saving…') : settingFirst ? tr('Set password') : tr('Update password')}
             variant="primary"
             onPress={submit}
             loading={loading}

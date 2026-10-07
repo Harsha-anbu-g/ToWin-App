@@ -2,6 +2,7 @@
 // (DESIGN.md: gold is reserved for trust; sky-blue is reserved for actions).
 import { Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function TrustBadge({ score, label = 'trust', style }) {
   const { t, spacing, radius, text, fontScaleCaps } = useTheme();
@@ -11,7 +12,7 @@ export default function TrustBadge({ score, label = 'trust', style }) {
       // isAccessibilityElement to false), so the chip read as a bare number
       // beside a bare word. The chip is one idea, so collapsing it is right.
       accessible
-      accessibilityLabel={`Trust score ${score}`}
+      accessibilityLabel={tr('Trust score {score}', { score })}
       style={[
         {
           flexDirection: 'row',

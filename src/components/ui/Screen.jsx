@@ -10,6 +10,7 @@ import { ArrowLeft } from '../icons';
 import { useTheme } from '../../theme/ThemeContext';
 import KeyboardAvoider from './KeyboardAvoider';
 import RefreshControl from './RefreshControl';
+import { tr } from '../../i18n';
 
 export default function Screen({
   children,
@@ -79,7 +80,7 @@ export default function Screen({
           {back ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Back"
+              accessibilityLabel={tr('Back')}
               onPress={goBack}
               android_ripple={pressRipple}
               hitSlop={8}

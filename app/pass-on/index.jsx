@@ -46,7 +46,7 @@ import {
   ANYONE_CHECK,
   LETTERS,
   NOT_A_WILL,
-  PAGE_LEAD,
+  pageLead,
   SEALED_BOX,
   SEALED_ITEMS,
   SETUP,
@@ -57,11 +57,12 @@ import {
 import { objectionableError } from '../../src/lib/contentFilter';
 import { herFamilyList, peopleSheKnows } from '../../src/lib/passOnPeople';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 const TABS = [
-  { key: 'stories', label: 'Story box' },
-  { key: 'letters', label: 'Letter box' },
-  { key: 'sealed', label: 'Sealed box' },
+  { key: 'stories', get label() { return tr('Story box'); } },
+  { key: 'letters', get label() { return tr('Letter box'); } },
+  { key: 'sealed', get label() { return tr('Sealed box'); } },
 ];
 
 /**
@@ -353,10 +354,10 @@ export default function PassOn() {
       if (editing) await updatePassOnItem({ itemId: editing.id, changes: payload });
       else await createPassOnItem(payload);
       setWriting(null);
-      showToast(payload.kind === 'LETTER' ? 'Your letter is saved.' : 'Your story is saved.', 'success');
+      showToast(payload.kind === 'LETTER' ? tr('Your letter is saved.') : tr('Your story is saved.'), 'success');
       await reload();
     } catch (err) {
-      showToast(err?.response?.data?.message || 'We could not save that. Please try again.', 'error');
+      showToast(err?.response?.data?.message || tr('We could not save that. Please try again.'), 'error');
     } finally {
       setSaving(false);
     }
@@ -373,11 +374,11 @@ export default function PassOn() {
     if (!ok) return;
     try {
       await deletePassOnItem(item.id);
-      showToast('Taken down.', 'success');
+      showToast(tr('Taken down.'), 'success');
       await reload();
     } catch (err) {
       showToast(
-        err?.response?.data?.message || 'We could not take that down. Please try again.',
+        err?.response?.data?.message || tr('We could not take that down. Please try again.'),
         'error'
       );
     }
@@ -461,8 +462,8 @@ export default function PassOn() {
   }
 
   return (
-    <Screen back keyboard title="What I pass on" onRefresh={reload} contentStyle={{ gap: spacing[4] }}>
-      <Text style={{ fontSize: text.sm, color: t.ink3, lineHeight: 24 }}>{PAGE_LEAD}</Text>
+    <Screen back keyboard title={tr('What I pass on')} onRefresh={reload} contentStyle={{ gap: spacing[4] }}>
+      <Text style={{ fontSize: text.sm, color: t.ink3, lineHeight: 24 }}>{pageLead()}</Text>
 
       <NotAWillPrimer />
 
@@ -496,7 +497,7 @@ export default function PassOn() {
             />
           )}
 
-          {mineFailed ? <LoadError what="your stories" onRetry={refetchMine} /> : null}
+          {mineFailed ? <LoadError what={tr('your stories')} onRetry={refetchMine} /> : null}
           {isLoading && !mine ? <SkeletonCard lines={3} /> : null}
           {!isLoading && !mineFailed && stories.length === 0 && !writingHere('STORY') ? (
             <Empty>{STORY_BOX.empty}</Empty>
@@ -549,7 +550,7 @@ export default function PassOn() {
             // The picker inside the form would hold nobody and her Save could
             // never pass, so the way in waits for the retry rather than
             // telling her she has nobody left to write to.
-            <LoadError what="the people you can write to" onRetry={retryPeople} />
+            <LoadError what={tr('the people you can write to')} onRetry={retryPeople} />
           ) : (
             <Button
               title={LETTERS.start}
@@ -558,7 +559,7 @@ export default function PassOn() {
             />
           )}
 
-          {mineFailed ? <LoadError what="your letters" onRetry={refetchMine} /> : null}
+          {mineFailed ? <LoadError what={tr('your letters')} onRetry={refetchMine} /> : null}
           {isLoading && !mine ? <SkeletonCard lines={3} /> : null}
           {!isLoading && !mineFailed && letters.length === 0 && !writingHere('LETTER') ? (
             <Empty>{LETTERS.empty}</Empty>
@@ -589,13 +590,13 @@ export default function PassOn() {
               holds a key once she has. A failed or pending setup fetch says
               so honestly first (UX-706): without this, a network drop wore
               the teaching card and Start led nowhere. */}
-          {setupFailed ? <LoadError what="your Sealed box" onRetry={refetchSetup} /> : null}
+          {setupFailed ? <LoadError what={tr('your Sealed box')} onRetry={refetchSetup} /> : null}
           {setupLoading && !setup ? <SkeletonCard lines={3} /> : null}
           {settingUp && setup ? (
             familyUnknown ? (
               // Step one would otherwise say "You need at least three people
               // on your family list first" to an elder who has five.
-              <LoadError what="your family list" onRetry={refetchLinks} />
+              <LoadError what={tr('your family list')} onRetry={refetchLinks} />
             ) : (
               <SealedSetup
                 family={family}
@@ -616,7 +617,7 @@ export default function PassOn() {
             sealedUnknown ? (
               // A first-load failure (nothing cached) says so honestly; a
               // failed refetch with a good list still on hand keeps the list.
-              <LoadError what="your sealed items" onRetry={refetchSealed} />
+              <LoadError what={tr('your sealed items')} onRetry={refetchSealed} />
             ) : (
               <SealedItems
                 items={sealedItems}
@@ -633,7 +634,7 @@ export default function PassOn() {
             keysUnknown ? (
               // An armed box always has Keyholders, so an empty list here is
               // the fetch failing — never "nobody is holding a key".
-              <LoadError what="your keyholders" onRetry={refetchKeys} />
+              <LoadError what={tr('your keyholders')} onRetry={refetchKeys} />
             ) : (
               <SealedKeyholders
                 setup={setup}

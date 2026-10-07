@@ -29,6 +29,7 @@ import { filterBlocked, getBlocked } from '../../src/lib/blockList';
 import { centerActionFor } from '../../src/lib/roles';
 import { filterByQuery } from '../../src/lib/searchFilter';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 // How often the open inbox asks for new rows. Cheap on the server (three
 // grouped queries for the whole page) and only while the tab is on screen.
@@ -64,24 +65,24 @@ const DEFAULT_TAB_ORDER = ['elders', 'helpers', 'friends', 'groups', 'family'];
 // two describe a condition rather than a destination, so they stay as they are.
 const EMPTY_TAB_COPY = {
   groups: {
-    text: 'No group chats yet. When a friendship is shared with family, its updates will show here.',
+    get text() { return tr('No group chats yet. When a friendship is shared with family, its updates will show here.'); },
   },
   elders: {
-    text: 'No chats with elders yet. A chat opens when you offer to help with a request.',
-    actionLabel: 'Offer help',
+    get text() { return tr('No chats with elders yet. A chat opens when you offer to help with a request.'); },
+    get actionLabel() { return tr('Offer help'); },
     href: '/(tabs)/action',
   },
   helpers: {
-    text: 'No chats with helpers yet. A chat opens when someone offers to help, or when you become friends.',
-    actionLabel: 'Find friends',
+    get text() { return tr('No chats with helpers yet. A chat opens when someone offers to help, or when you become friends.'); },
+    get actionLabel() { return tr('Find friends'); },
     href: '/friends',
   },
   family: {
-    text: 'No family chats yet. When a family member joins you here, your chat with them will show up.',
+    get text() { return tr('No family chats yet. When a family member joins you here, your chat with them will show up.'); },
   },
   friends: {
-    text: 'No friends to chat with yet. Find people like you on Add Friends.',
-    actionLabel: 'Find friends',
+    get text() { return tr('No friends to chat with yet. Find people like you on Add Friends.'); },
+    get actionLabel() { return tr('Find friends'); },
     href: '/friends',
   },
 };
@@ -107,7 +108,7 @@ const GroupThreadRow = memo(function GroupThreadRow({ id, title }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Group: ${title}`}
+      accessibilityLabel={tr('Group: {title}', { title })}
       onPress={() => router.push(`/chat/${id}?channel=family`)}
       style={({ pressed }) => ({
         flexDirection: 'row',
@@ -135,7 +136,7 @@ const GroupThreadRow = memo(function GroupThreadRow({ id, title }) {
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 16, fontWeight: '600', color: t.ink }}>{title}</Text>
         <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
-          Group chat. Everyone sharing it reads along
+          {tr('Group chat. Everyone sharing it reads along')}
         </Text>
       </View>
       <ChevronRight size={18} color={t.inkFaint2} strokeWidth={1.8} />
@@ -149,7 +150,7 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`Chat with ${conn.otherUserName}`}
+      accessibilityLabel={tr('Chat with {otherUserName}', { otherUserName: conn.otherUserName })}
       onPress={() => router.push(`/chat/${conn.id}`)}
       style={({ pressed }) => ({
         flexDirection: 'row',
@@ -203,7 +204,7 @@ const ConversationRow = memo(function ConversationRow({ conn }) {
             marginTop: 2,
           }}
         >
-          {conn.lastMessagePreview || conn.otherUserContext || 'Say hello'}
+          {conn.lastMessagePreview || conn.otherUserContext || tr('Say hello')}
         </Text>
       </View>
       {conn.unreadCount > 0 ? (
@@ -313,7 +314,7 @@ export default function MessagesInbox() {
   );
   const ownThreads = active
     .filter((c) => c.sharedWithFamily)
-    .map((c) => ({ id: c.id, title: `You & ${c.otherUserName}` }));
+    .map((c) => ({ id: c.id, title: tr('You & {otherUserName}', { otherUserName: c.otherUserName }) }));
   const groupThreads = [...journeyThreads, ...ownThreads.filter(
     (o) => !journeyThreads.some((j) => j.id === o.id)
   )];
@@ -409,7 +410,7 @@ export default function MessagesInbox() {
               accessibilityRole="header"
               style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5, marginBottom: spacing[4] }}
             >
-              Messages
+              {tr('Messages')}
             </Text>
             {settled && hasAnyConversation ? (
               <SearchField value={query} onChangeText={setQuery} style={{ marginBottom: spacing[3] }} />
@@ -432,17 +433,17 @@ export default function MessagesInbox() {
             <SkeletonCard lines={3} />
           ) : isError ? (
             // Never dress a network failure up as "no conversations yet"
-            <LoadError what="your conversations" onRetry={refetch} />
+            <LoadError what={tr('your conversations')} onRetry={refetch} />
           ) : !hasAnyConversation ? (
             <View style={{ paddingVertical: spacing[6] }}>
               <Text
                 accessibilityRole="header"
                 style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
               >
-                No conversations yet
+                {tr('No conversations yet')}
               </Text>
               <Text style={{ marginTop: spacing[2], fontSize: text.base, lineHeight: 27, color: t.inkSlate }}>
-                Chats open up once you're friends with someone, or when help is offered on a request.
+                {tr("Chats open up once you're friends with someone, or when help is offered on a request.")}
               </Text>
               {/* Both doors, not one (owner call 2026-08-28: "post a new help
                   or find friends, both button"). The role's own verb leads,
@@ -459,7 +460,7 @@ export default function MessagesInbox() {
               ) : null}
               {user?.role !== 'FAMILY' ? (
                 <Button
-                  title="Find friends"
+                  title={tr('Find friends')}
                   variant="secondary"
                   onPress={() => router.push('/friends')}
                   style={{ marginTop: spacing[3] }}
@@ -474,7 +475,7 @@ export default function MessagesInbox() {
           ) : currentTab === 'groups' && journeyError ? (
             // Same rule as the main list one branch up: a dropped request is
             // never dressed up as "no group chats yet".
-            <LoadError what="your group chats" onRetry={refetchJourney} />
+            <LoadError what={tr('your group chats')} onRetry={refetchJourney} />
           ) : (
             <View
               style={{

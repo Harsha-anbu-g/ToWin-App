@@ -33,6 +33,7 @@ import { useReducedMotion } from '../../lib/useReducedMotion';
 import { DURATION, EASE } from '../../theme/motion';
 import { useTheme } from '../../theme/ThemeContext';
 import TortoiseMark from '../TortoiseMark';
+import { tr } from '../../i18n';
 
 function Row({ icon: Icon, label, sublabel, onPress, first }) {
   const { t, spacing, text, pressRipple } = useTheme();
@@ -163,7 +164,7 @@ export default function MenuSheet({ visible, onClose }) {
     >
       {/* Scrim — tap anywhere outside the drawer to close */}
       <Animated.View {...shield} style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: t.scrim, opacity: scrim }}>
-        <Pressable testID="menu-scrim" accessibilityLabel="Close menu" onPress={close} style={{ flex: 1 }} />
+        <Pressable testID="menu-scrim" accessibilityLabel={tr('Close menu')} onPress={close} style={{ flex: 1 }} />
       </Animated.View>
 
       <Animated.View
@@ -195,11 +196,11 @@ export default function MenuSheet({ visible, onClose }) {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: text.xl, color: t.ink, letterSpacing: -0.5 }}
           >
-            Menu
+            {tr('Menu')}
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close menu"
+            accessibilityLabel={tr('Close menu')}
             onPress={close}
             android_ripple={pressRipple}
             hitSlop={8}
@@ -226,18 +227,18 @@ export default function MenuSheet({ visible, onClose }) {
             // The one surface with no tab of its own — /my-jobs would be
             // unreachable without this row (orphan fix, kept on purpose).
             <Group>
-              <Row first icon={Briefcase} label="My offers & jobs" sublabel="Where your offers stand" onPress={() => go('/my-jobs')} />
+              <Row first icon={Briefcase} label={tr('My offers & jobs')} sublabel={tr('Where your offers stand')} onPress={() => go('/my-jobs')} />
             </Group>
           ) : null}
 
           <Group>
-            <Row first icon={() => <TortoiseMark size={24} />} label="Trust Score" sublabel="Your points and tier" onPress={() => go('/trust')} />
+            <Row first icon={() => <TortoiseMark size={24} />} label={tr('Trust Score')} sublabel={tr('Your points and tier')} onPress={() => go('/trust')} />
             {/* FAMILY has no streaks (home.jsx never fetches them) — a
                 check-in row would open a surface the role doesn't have. */}
             {!isFamily ? (
-              <Row icon={CalendarCheck} label="Daily check-in" sublabel="Your streak, day by day" onPress={() => go('/checkin')} />
+              <Row icon={CalendarCheck} label={tr('Daily check-in')} sublabel={tr('Your streak, day by day')} onPress={() => go('/checkin')} />
             ) : null}
-            <Row icon={Puzzle} label="Peekaboo" sublabel="A quiet minute with the tortoise" onPress={() => go('/game')} />
+            <Row icon={Puzzle} label={tr('Peekaboo')} sublabel={tr('A quiet minute with the tortoise')} onPress={() => go('/game')} />
           </Group>
 
           <Group>
@@ -245,14 +246,14 @@ export default function MenuSheet({ visible, onClose }) {
               <>
                 {/* Elder seat only (web ElderOnly guard on /family) — helpers
                     and FAMILY users have no family circle to manage. */}
-                <Row first icon={Users} label="My Family" sublabel="Family who can see you're safe" onPress={() => go('/family')} />
+                <Row first icon={Users} label={tr('My Family')} sublabel={tr("Family who can see you're safe")} onPress={() => go('/family')} />
                 {/* The way in to What I pass on (web: "My boxes" beside
                     Messages in the top bar). Elder seat only, like the page. */}
-                <Row icon={Archive} label="My boxes" sublabel="Stories, letters, and your sealed box" onPress={() => go('/pass-on')} />
-                <Row icon={PhoneCall} label="Emergency contacts" sublabel="People to call if something happens" onPress={() => go('/emergency-contacts')} />
+                <Row icon={Archive} label={tr('My boxes')} sublabel={tr('Stories, letters, and your sealed box')} onPress={() => go('/pass-on')} />
+                <Row icon={PhoneCall} label={tr('Emergency contacts')} sublabel={tr('People to call if something happens')} onPress={() => go('/emergency-contacts')} />
               </>
             ) : null}
-            <Row first={!isElder} icon={BookOpen} label="Guide" sublabel="How Towinly works" onPress={() => go('/guide')} />
+            <Row first={!isElder} icon={BookOpen} label={tr('Guide')} sublabel={tr('How Towinly works')} onPress={() => go('/guide')} />
           </Group>
 
           {/* Logout lives in the menu for every seat — elder, helper and
@@ -262,14 +263,14 @@ export default function MenuSheet({ visible, onClose }) {
             <Row
               first
               icon={LogOut}
-              label="Log out"
-              sublabel="Sign out of Towinly"
+              label={tr('Log out')}
+              sublabel={tr('Sign out of Towinly')}
               onPress={async () => {
                 const ok = await confirm({
-                  title: 'Log out?',
-                  message: 'You can sign back in any time.',
-                  cancelLabel: 'Stay signed in',
-                  confirmLabel: 'Log out',
+                  title: tr('Log out?'),
+                  message: tr('You can sign back in any time.'),
+                  cancelLabel: tr('Stay signed in'),
+                  confirmLabel: tr('Log out'),
                   destructive: true,
                 });
                 if (!ok) return;

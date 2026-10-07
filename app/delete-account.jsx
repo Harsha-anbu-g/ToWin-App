@@ -30,6 +30,7 @@ import {
   deletionMailto,
 } from '../src/data/deleteAccountPage';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function DeleteAccount() {
   const { t, spacing, text } = useTheme();
@@ -66,7 +67,7 @@ export default function DeleteAccount() {
       )
       .catch(() => {
         say(DELETE_ACCOUNT_PAGE.noMailApp(email));
-        showToast(`Write to ${email} and ask us to delete your account.`, 'info');
+        showToast(tr('Write to {email} and ask us to delete your account.', { email }), 'info');
       });
 
 
@@ -95,13 +96,13 @@ export default function DeleteAccount() {
           <Button
             title={DELETE_ACCOUNT_PAGE.actionLabel}
             onPress={writeToUs}
-            accessibilityHint={`Starts a message to ${email} asking for your account to be deleted`}
+            accessibilityHint={tr('Starts a message to {email} asking for your account to be deleted', { email })}
           />
           <Text
             selectable
             style={{ fontSize: text.sm, color: t.inkSlate2, lineHeight: 24, textAlign: 'center' }}
           >
-            {`Or write to ${email} yourself.`}
+            {tr('Or write to {email} yourself.', { email })}
           </Text>
 
           {/* The visible result of the press, held on the page so it is still

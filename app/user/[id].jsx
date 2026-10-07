@@ -34,6 +34,7 @@ import useSafetyActions, {
   NEVER_MIND,
 } from '../../src/lib/useSafetyActions';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 function ChipRow({ items }) {
   const { t, radius, type, spacing } = useTheme();
@@ -119,12 +120,12 @@ export default function UserProfile() {
   const request = useMutation({
     mutationFn: () => sendConnectionRequest(id),
     onSuccess: () => {
-      showToast('Friend request sent!', 'success');
+      showToast(tr('Friend request sent!'), 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
       showToast(
-        friendlyWriteError(err, err?.response?.data?.message || 'Could not send the request. Please try again.'),
+        friendlyWriteError(err, err?.response?.data?.message || tr('Could not send the request. Please try again.')),
         'error'
       ),
   });
@@ -134,20 +135,20 @@ export default function UserProfile() {
   const endFriendship = useMutation({
     mutationFn: () => endConnection(conn.id),
     onSuccess: (_data, variables) => {
-      if (!variables?.quiet) showToast('Friendship ended.', 'info');
+      if (!variables?.quiet) showToast(tr('Friendship ended.'), 'info');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (_err, variables) => {
-      if (!variables?.quiet) showToast('Could not do that right now. Please try again.', 'error');
+      if (!variables?.quiet) showToast(tr('Could not do that right now. Please try again.'), 'error');
     },
   });
 
   const confirmEnd = async () => {
     const ok = await confirm({
-      title: 'End this friendship?',
-      message: `You and ${profile?.name ?? 'this person'} will no longer be connected. This cannot be undone.`,
-      cancelLabel: 'Keep friendship',
-      confirmLabel: 'End it',
+      title: tr('End this friendship?'),
+      message: tr('You and {value} will no longer be connected. This cannot be undone.', { value: profile?.name ?? tr('this person') }),
+      cancelLabel: tr('Keep friendship'),
+      confirmLabel: tr('End it'),
       destructive: true,
     });
     if (ok) endFriendship.mutate();
@@ -174,30 +175,30 @@ export default function UserProfile() {
   });
 
   return (
-    <Screen back title={profile?.name ?? 'Profile'} onRefresh={reload}>
+    <Screen back title={profile?.name ?? tr('Profile')} onRefresh={reload}>
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (
         // Network failure gets a retry — the old copy promised a pull-to-
         // refresh this screen never had (rulebook: never name an affordance
         // that doesn't exist).
-        <LoadError what="this profile" onRetry={refetch} />
+        <LoadError what={tr('this profile')} onRetry={refetch} />
       ) : !profile ? (
         <Card>
           <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate }}>
-            This profile is no longer available.
+            {tr('This profile is no longer available.')}
           </Text>
-          <Button title="Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing[5] }} />
+          <Button title={tr('Back')} variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing[5] }} />
         </Card>
       ) : userIsBlocked ? (
         <Card>
           <Text style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}>
-            You've blocked {profile.name}
+            {tr("You've blocked {name}", { name: profile.name })}
           </Text>
           <Text style={{ fontSize: text.base, lineHeight: 26, color: t.inkSlate, marginTop: spacing[2] }}>
-            You won't see their help requests or messages. If this was a mistake, you can undo it.
+            {tr("You won't see their help requests or messages. If this was a mistake, you can undo it.")}
           </Text>
-          <Button title="Unblock" variant="secondary" onPress={unblock} style={{ marginTop: spacing[5] }} />
+          <Button title={tr('Unblock')} variant="secondary" onPress={unblock} style={{ marginTop: spacing[5] }} />
         </Card>
       ) : (
         <>
@@ -222,7 +223,7 @@ export default function UserProfile() {
             {profile.role === 'ELDER' || profile.role === 'BOTH' ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={FROM_PAGE.linkFromProfile(profile.name || 'this person')}
+                accessibilityLabel={FROM_PAGE.linkFromProfile(profile.name || tr('this person'))}
                 onPress={() => router.push(`/passed-on/${id}`)}
                 style={({ pressed }) => ({
                   flexDirection: 'row',
@@ -248,7 +249,7 @@ export default function UserProfile() {
                 </View>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ fontSize: text.sm, fontWeight: '600', color: t.blueDeep }}>
-                    {FROM_PAGE.linkFromProfile(profile.name || 'this person')}
+                    {FROM_PAGE.linkFromProfile(profile.name || tr('this person'))}
                   </Text>
                   <Text style={{ fontSize: type.meta, color: t.inkSlate, marginTop: 2 }}>
                     {FROM_PAGE.linkBlurb}
@@ -269,23 +270,23 @@ export default function UserProfile() {
             <View style={{ gap: spacing[3], marginTop: spacing[5] }}>
               {connUnknown ? (
                 connsFailed ? (
-                  <LoadError bare what="your friendships" onRetry={refetchConns} />
+                  <LoadError bare what={tr('your friendships')} onRetry={refetchConns} />
                 ) : (
                   <SkeletonCard lines={1} />
                 )
               ) : conn?.status === 'ACTIVE' ? (
                 <Button
-                  title="Message"
+                  title={tr('Message')}
                   variant="primary"
                   onPress={() => router.push(`/chat/${conn.id}`)}
                 />
               ) : conn?.status === 'PENDING' ? (
                 <Text style={{ fontSize: text.sm, color: t.inkSlate, textAlign: 'center' }}>
-                  Friend request pending
+                  {tr('Friend request pending')}
                 </Text>
               ) : (
                 <Button
-                  title={request.isPending ? 'Sending…' : 'Add as friend'}
+                  title={request.isPending ? tr('Sending…') : tr('Add as friend')}
                   variant="primary"
                   onPress={() => request.mutate()}
                   loading={request.isPending}
@@ -300,7 +301,7 @@ export default function UserProfile() {
                 accessibilityRole="header"
                 style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
               >
-                What others say
+                {tr('What others say')}
               </Text>
               {reviews.map((r, i) => (
                 <View
@@ -313,7 +314,7 @@ export default function UserProfile() {
                   }}
                 >
                   <Text
-                    accessibilityLabel={`${Math.round(r.rating ?? 0)} out of 5 stars`}
+                    accessibilityLabel={tr('{round} out of 5 stars', { round: Math.round(r.rating ?? 0) })}
                     style={{ fontSize: text.sm, color: t.trustGold, fontWeight: '600' }}
                   >
                     {'★'.repeat(Math.round(r.rating ?? 0))}
@@ -327,7 +328,7 @@ export default function UserProfile() {
                       outright, and the word says who wrote this to a screen reader
                       as well as to the eye. */}
                   {r.reviewerName ? (
-                    <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 4 }}>by {r.reviewerName}</Text>
+                    <Text style={{ fontSize: text.sm, color: t.inkSlate, marginTop: 4 }}>{tr('by {reviewerName}', { reviewerName: r.reviewerName })}</Text>
                   ) : null}
                 </View>
               ))}
@@ -342,29 +343,29 @@ export default function UserProfile() {
                 accessibilityRole="header"
                 style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
               >
-                {REPORT_TITLE}
+                {tr(REPORT_TITLE)}
               </Text>
               <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
                 {REPORT_REASONS.map((reason) => (
                   <ActionChip
                     key={reason}
-                    label={reportingReason === reason ? 'Sending…' : reason}
+                    label={reportingReason === reason ? tr('Sending…') : tr(reason)}
                     disabled={reporting}
                     onPress={() => sendReport(reason)}
                   />
                 ))}
-                <ActionChip label={NEVER_MIND} onPress={closeReport} />
+                <ActionChip label={tr(NEVER_MIND)} onPress={closeReport} />
               </View>
             </Card>
           ) : null}
 
           <View style={{ gap: spacing[3], marginTop: spacing[5] }}>
             {conn?.status === 'ACTIVE' ? (
-              <Button title="End friendship" variant="destructive" onPress={confirmEnd} />
+              <Button title={tr('End friendship')} variant="destructive" onPress={confirmEnd} />
             ) : null}
-            <Button title={REPORT_ACTION} variant="text" onPress={pickReportReason} />
+            <Button title={tr(REPORT_ACTION)} variant="text" onPress={pickReportReason} />
             <Button
-              title={blocking ? 'Blocking…' : BLOCK_ACTION}
+              title={blocking ? tr('Blocking…') : tr(BLOCK_ACTION)}
               variant="destructive"
               onPress={confirmBlock}
               loading={blocking}

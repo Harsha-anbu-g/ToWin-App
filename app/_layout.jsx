@@ -17,6 +17,7 @@ import LiveRegion from '../src/components/ui/LiveRegion';
 import { ErrorFallback } from '../src/components/AppErrorBoundary';
 import SplashRelease from '../src/components/SplashRelease';
 import { holdSplash } from '../src/lib/splash';
+import { loadLanguagePreference } from '../src/i18n';
 
 // expo-router looks for an `ErrorBoundary` export on a route module and wraps
 // that route in <Try catch={ErrorBoundary}> (useScreens.js). Exporting it from
@@ -120,6 +121,8 @@ export default function RootLayout() {
     // The saved "Vibration feedback" choice must be in force before the first
     // toast can fire a haptic (rulebook §11: the off switch is absolute).
     loadHapticsPreference();
+    // A language picked earlier on this phone wins over the phone's own setting.
+    loadLanguagePreference();
     // Web only: registered from here rather than an inline <script> in the
     // shell, because the website's CSP (shared domain) allows no inline script.
     registerServiceWorker();

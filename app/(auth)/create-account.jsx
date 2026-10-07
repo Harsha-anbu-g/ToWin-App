@@ -27,6 +27,7 @@ import { parseFlexibleDate } from '../../src/lib/flexibleDate';
 import { EMAIL_RE, pwdStrength, sanitizeUsername, USERNAME_RE } from '../../src/lib/password';
 import { useTheme } from '../../src/theme/ThemeContext';
 import { spacing } from '../../src/theme/tokens';
+import { tr } from '../../src/i18n';
 
 const STRENGTH_LABELS = ['', 'Weak', 'Fair', 'Good', 'Strong'];
 
@@ -136,24 +137,24 @@ export default function CreateAccount() {
     setError('');
     const errs = {};
     if (!USERNAME_RE.test(form.username))
-      errs.username = 'Username must be 3-20 characters: lowercase letters, numbers, underscores only';
-    if (!EMAIL_RE.test(form.email)) errs.email = 'Enter a valid email address';
-    if (form.password.length < 8) errs.password = 'Password must be at least 8 characters';
-    if (form.confirmPassword !== form.password) errs.confirmPassword = 'Passwords do not match';
+      errs.username = tr('Username must be 3-20 characters: lowercase letters, numbers, underscores only');
+    if (!EMAIL_RE.test(form.email)) errs.email = tr('Enter a valid email address');
+    if (form.password.length < 8) errs.password = tr('Password must be at least 8 characters');
+    if (form.confirmPassword !== form.password) errs.confirmPassword = tr('Passwords do not match');
 
     // Age gate. parseFlexibleDate returns null for empty, { error } for an
     // impossible date, or { value } as YYYY-MM-DD.
     const parsedDob = parseFlexibleDate(form.dateOfBirth);
     let dateOfBirth = '';
     if (!parsedDob) {
-      errs.dateOfBirth = 'Enter your date of birth';
+      errs.dateOfBirth = tr('Enter your date of birth');
     } else if (parsedDob.error) {
       errs.dateOfBirth = parsedDob.error;
     } else {
       const age = yearsOld(parsedDob.value);
-      if (age < 0) errs.dateOfBirth = 'That date is in the future, please check it.';
-      else if (age > MAX_AGE) errs.dateOfBirth = 'Please check the year you typed.';
-      else if (age < MIN_AGE) errs.dateOfBirth = `You have to be ${MIN_AGE} or over to join Towinly.`;
+      if (age < 0) errs.dateOfBirth = tr('That date is in the future, please check it.');
+      else if (age > MAX_AGE) errs.dateOfBirth = tr('Please check the year you typed.');
+      else if (age < MIN_AGE) errs.dateOfBirth = tr('You have to be {MIN_AGE} or over to join Towinly.', { MIN_AGE });
       else dateOfBirth = parsedDob.value;
     }
 
@@ -167,7 +168,7 @@ export default function CreateAccount() {
       await registerAccount({ username, email, password, role: role.value, dateOfBirth });
       router.replace({ pathname: '/(auth)/check-email', params: { email } });
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || tr('Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -206,7 +207,7 @@ export default function CreateAccount() {
           accessibilityRole="header"
           style={{ fontFamily: fontFamily.display, fontSize: type.title, color: t.ink, letterSpacing: -0.5 }}
         >
-          Create your account.
+          {tr('Create your account.')}
         </Text>
         {/* The answer from the previous page, named back so nobody fills a
             form as the wrong person (HCI 6, recognition), with the way to
@@ -222,9 +223,9 @@ export default function CreateAccount() {
           }}
         >
           <Text style={{ fontSize: type.body, color: t.ink3, lineHeight: 24 }}>
-            {`You're joining as ${role.noun}.`}
+            {tr("You're joining as {noun}.", { noun: role.noun })}
           </Text>
-          <TextLink label="Change" onPress={changeRole} />
+          <TextLink label={tr('Change')} onPress={changeRole} />
         </View>
 
         {error ? (
@@ -262,13 +263,13 @@ export default function CreateAccount() {
         ) : null}
 
         {/* Google first (website parity) — web build only, nothing in stores. */}
-        <GoogleLoginButton label="Continue with Google" dividerLabel="or sign up with username" />
+        <GoogleLoginButton label={tr('Continue with Google')} dividerLabel={tr('or sign up with username')} />
 
         {/* No helper line under Username, Email, Date of birth or Password
             (owner call 2026-08-28: "remove those descriptions"). Each rule is
             still stated the moment it is broken, in the field's own error. */}
         <Input
-          label="Username"
+          label={tr('Username')}
           icon={UserRound}
           value={form.username}
           onChangeText={setUsername}
@@ -285,7 +286,7 @@ export default function CreateAccount() {
 
         <Input
           ref={emailRef}
-          label="Email"
+          label={tr('Email')}
           icon={Mail}
           value={form.email}
           onChangeText={setEmail}
@@ -306,7 +307,7 @@ export default function CreateAccount() {
             "May 14, 1953" and "1953-05-14" alike. */}
         <Input
           ref={dobRef}
-          label="Date of birth"
+          label={tr('Date of birth')}
           icon={CalendarCheck}
           value={form.dateOfBirth}
           onChangeText={setDateOfBirth}
@@ -327,7 +328,7 @@ export default function CreateAccount() {
             spreads the rest, ref included, straight through to Input. */}
         <PasswordInput
           ref={passwordRef}
-          label="Password"
+          label={tr('Password')}
           icon={Lock}
           value={form.password}
           onChangeText={setPassword}
@@ -362,7 +363,7 @@ export default function CreateAccount() {
 
         <PasswordInput
           ref={confirmRef}
-          label="Re-enter password"
+          label={tr('Re-enter password')}
           icon={Lock}
           value={form.confirmPassword}
           onChangeText={setConfirmPassword}
@@ -377,7 +378,7 @@ export default function CreateAccount() {
           /* greenDeep at body size: the web's MATCH_GREEN measured 2.93:1 at
              13px, so the one line confirming the two passwords agree was the
              hardest thing on the page to read. */
-          <Text style={{ fontSize: type.body, color: t.greenDeep, marginTop: spacing[1] }}>Passwords match</Text>
+          <Text style={{ fontSize: type.body, color: t.greenDeep, marginTop: spacing[1] }}>{tr('Passwords match')}</Text>
         ) : null}
 
         {/* Terms agreement — submit stays disabled until checked (HCI rule 5).
@@ -387,7 +388,7 @@ export default function CreateAccount() {
         <Pressable
           accessibilityRole="checkbox"
           accessibilityState={{ checked: agreed }}
-          accessibilityLabel="I agree to the Terms of Service and Privacy Policy"
+          accessibilityLabel={tr('I agree to the Terms of Service and Privacy Policy')}
           onPress={() => setAgreed((v) => !v)}
           hitSlop={{ top: 6, bottom: 6 }}
           style={({ pressed }) => ({
@@ -421,7 +422,7 @@ export default function CreateAccount() {
             {agreed ? <Check size={15} color={t.actionInk} strokeWidth={3} /> : null}
           </View>
           <Text style={{ flex: 1, fontSize: type.body, color: t.ink3, lineHeight: 24 }}>
-            I agree to the Terms of Service and Privacy Policy
+            {tr('I agree to the Terms of Service and Privacy Policy')}
           </Text>
         </Pressable>
         {/* Indented under the checkbox label so it reads as belonging to that
@@ -434,7 +435,7 @@ export default function CreateAccount() {
             pressed state and the Android ripple (audit 2026-08-19). */}
         <View style={{ alignItems: 'flex-start', marginLeft: CHECKBOX_SIZE + spacing[3] }}>
           <TextLink
-            label="Read the Terms and Privacy Policy"
+            label={tr('Read the Terms and Privacy Policy')}
             onPress={() => setLegalOpen(true)}
             style={{ alignSelf: 'flex-start', paddingHorizontal: 0 }}
           />
@@ -444,17 +445,17 @@ export default function CreateAccount() {
             accessibility hint (rulebook: a greyed button must explain itself). */}
         {!agreed ? (
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 24, marginTop: spacing[4] }}>
-            Agree to the terms above to continue.
+            {tr('Agree to the terms above to continue.')}
           </Text>
         ) : null}
         <Button
-          title={loading ? 'Creating account…' : 'Create Account'}
+          title={loading ? tr('Creating account…') : tr('Create Account')}
           variant="primary"
           onPress={handleSubmit}
           loading={loading}
           disabled={!agreed}
           style={{ marginTop: spacing[3] }}
-          accessibilityHint={agreed ? 'Creates your Towinly account' : 'Agree to the terms first'}
+          accessibilityHint={agreed ? tr('Creates your Towinly account') : tr('Agree to the terms first')}
         />
 
         <View
@@ -465,8 +466,8 @@ export default function CreateAccount() {
             marginTop: spacing[8],
           }}
         >
-          <Text style={{ fontSize: type.body, color: t.ink3 }}>Already have an account? </Text>
-          <TextLink label="Log in" onPress={() => router.push('/(auth)/login')} />
+          <Text style={{ fontSize: type.body, color: t.ink3 }}>{tr('Already have an account?')}{' '}</Text>
+          <TextLink label={tr('Log in')} onPress={() => router.push('/(auth)/login')} />
         </View>
 
         {/* Demo accounts live quietly under the form, not above it — hidden in
@@ -475,7 +476,7 @@ export default function CreateAccount() {
       </View>
 
       <LegalModal
-        title="Terms and Privacy Policy"
+        title={tr('Terms and Privacy Policy')}
         sections={LEGAL_SECTIONS}
         visible={legalOpen}
         onClose={() => setLegalOpen(false)}

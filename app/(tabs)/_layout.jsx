@@ -53,6 +53,7 @@ import { useUnseenTokens } from '../../src/lib/seenIds';
 import { TRUST_STEPS_CATEGORY, isStepNewsPending, peopleWithNews, stepNewsTokens, stepsAwaitingMe } from '../../src/lib/trustStepBadges';
 import { offersWaitingCount } from '../../src/lib/offersWaiting';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 // `count` renders the badge ourselves instead of via tabBarBadge: the library's
 // Badge Text exposes no maxFontSizeMultiplier, so at large OS text an uncapped
@@ -116,8 +117,8 @@ const tabIcon = (Icon, count) =>
 // the ", tab" the library only adds to plain string labels; Android announces
 // the role natively, and with no count the default children reading is right.
 function tabA11yLabel(label, count = 0, noun = '') {
-  const withCount = count > 0 ? `${label}, ${count} ${noun}` : label;
-  if (Platform.OS === 'ios') return `${withCount}, tab`;
+  const withCount = count > 0 ? tr('{label}, {count} {noun}', { label, count, noun: tr(noun) }) : label;
+  if (Platform.OS === 'ios') return tr('{label}, tab', { label: withCount });
   return count > 0 ? withCount : undefined;
 }
 
@@ -469,10 +470,10 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="posted-help"
         options={{
-          title: 'Posted Help',
+          title: tr('Posted Help'),
           tabBarIcon: tabIcon(FileText, applicantsBadge),
           href: second?.name === 'posted-help' ? undefined : null,
-          tabBarAccessibilityLabel: tabA11yLabel('Posted Help', applicantsBadge, 'waiting'),
+          tabBarAccessibilityLabel: tabA11yLabel(tr('Posted Help'), applicantsBadge, 'waiting'),
         }}
       />
       {/* Old helper second tab — the hub moved to slot one; route redirects */}
@@ -504,17 +505,17 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="messages"
         options={{
-          title: 'Messages',
+          title: tr('Messages'),
           tabBarIcon: tabIcon(MessageCircle, unread),
-          tabBarAccessibilityLabel: tabA11yLabel('Messages', unread, 'unread'),
+          tabBarAccessibilityLabel: tabA11yLabel(tr('Messages'), unread, 'unread'),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: tr('Profile'),
           tabBarIcon: tabIcon(UserRound),
-          tabBarAccessibilityLabel: tabA11yLabel('Profile'),
+          tabBarAccessibilityLabel: tabA11yLabel(tr('Profile')),
         }}
       />
     </Tabs>

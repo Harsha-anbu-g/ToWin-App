@@ -12,6 +12,7 @@
 // `needs` from /needs/mine (elder) or /needs/applications (helper, seat:
 // 'helper' — the same line on My Elders, owner call 2026-08-26 "do the same
 // for the helper").
+import { tr } from '../i18n';
 
 /** The day the ladder started, the way a person would say it ("25 Aug 2026"). */
 export function formatSince(iso) {
@@ -57,11 +58,11 @@ export function trustOriginLine(conn, needs, options) {
   const { kind, title, since } = trustOrigin(conn, needs, options);
   const why =
     kind === 'helping'
-      ? `Helping with “${title}”`
+      ? tr('Helping with “{title}”', { title })
       : kind === 'helped'
-        ? `Helped with “${title}”`
+        ? tr('Helped with “{title}”', { title })
         : kind === 'request'
-          ? 'Started from a help request'
+          ? tr('Started from a help request')
           : 'Friends';
-  return since ? `${why} · since ${since}` : why;
+  return since ? tr('{why} · since {since}', { why, since }) : why;
 }

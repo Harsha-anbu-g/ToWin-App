@@ -10,16 +10,17 @@
 // Read twice on the role page: as the visible question and as the header a
 // screen reader lands on. One constant so a reworded question cannot leave
 // the two saying different things.
+import { tr } from '../i18n';
 export const SIGNUP_ROLE_PROMPT = 'Who are you joining as?';
 
 export const SIGNUP_ROLES = [
-  { value: 'ELDER', label: 'Elder', desc: 'Looking for friends or help', noun: 'an elder' },
-  { value: 'HELPER', label: 'Helper', desc: 'Want to help others', noun: 'a helper' },
+  { value: 'ELDER', get label() { return tr('Elder'); }, get desc() { return tr('Looking for friends or help'); }, get noun() { return tr('an elder'); } },
+  { value: 'HELPER', get label() { return tr('Helper'); }, get desc() { return tr('Want to help others'); }, get noun() { return tr('a helper'); } },
   {
     value: 'FAMILY',
-    label: "I'm here for a family member",
-    desc: "You'll link to your parent inside the app after you sign up.",
-    noun: 'a family member',
+    get label() { return tr("I'm here for a family member"); },
+    get desc() { return tr("You'll link to your parent inside the app after you sign up."); },
+    get noun() { return tr('a family member'); },
   },
 ];
 

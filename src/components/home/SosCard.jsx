@@ -8,6 +8,7 @@ import Button from '../ui/Button';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export default function SosCard() {
   const { t, spacing, radius, text } = useTheme();
@@ -16,15 +17,15 @@ export default function SosCard() {
 
   const sos = useMutation({
     mutationFn: sendSos,
-    onSuccess: () => showToast('SOS sent to all emergency contacts.', 'success'),
-    onError: () => showToast('Failed to send SOS. Please call your contacts directly.', 'error'),
+    onSuccess: () => showToast(tr('SOS sent to all emergency contacts.'), 'success'),
+    onError: () => showToast(tr('Failed to send SOS. Please call your contacts directly.'), 'error'),
   });
 
   const confirmSos = async () => {
     const ok = await confirm({
-      title: 'Send SOS?',
-      message: 'This immediately alerts all of your emergency contacts that you need help.',
-      confirmLabel: 'Send SOS',
+      title: tr('Send SOS?'),
+      message: tr('This immediately alerts all of your emergency contacts that you need help.'),
+      confirmLabel: tr('Send SOS'),
       destructive: true,
     });
     if (ok) sos.mutate();
@@ -40,12 +41,12 @@ export default function SosCard() {
         padding: spacing[5],
       }}
     >
-      <Text style={{ fontSize: text.base, fontWeight: '600', color: t.redDeep }}>Emergency</Text>
+      <Text style={{ fontSize: text.base, fontWeight: '600', color: t.redDeep }}>{tr('Emergency')}</Text>
       <Text style={{ fontSize: text.sm, color: t.inkSlate, lineHeight: 21, marginTop: 4 }}>
-        Sends an alert to your emergency contacts right away.
+        {tr('Sends an alert to your emergency contacts right away.')}
       </Text>
       <Button
-        title={sos.isPending ? 'Sending…' : 'Send SOS'}
+        title={sos.isPending ? tr('Sending…') : tr('Send SOS')}
         variant="destructive"
         onPress={confirmSos}
         loading={sos.isPending}

@@ -38,6 +38,7 @@ import { useToast } from '../../src/context/ToastContext';
 import { POWERS } from '../../src/lib/familyPowers';
 import { SHARING_GIVES } from '../../src/lib/sharingGives';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 const FAMILY_MAX = 5;
 
@@ -111,12 +112,12 @@ export default function MyFamilyScreen() {
   const respond = useMutation({
     mutationFn: ({ id, accept }) => respondToFamilyRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
-      showToast(accept ? 'They are now part of your family here.' : 'Request declined.', 'success');
+      showToast(accept ? tr('They are now part of your family here.') : tr('Request declined.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Something went wrong. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Something went wrong. Please try again.'), 'error'),
   });
 
   // Consent flow: the elder answers an ask. A yes is the same decision as
@@ -124,22 +125,22 @@ export default function MyFamilyScreen() {
   const respondToAsk = useMutation({
     mutationFn: ({ id, accept }) => respondToPowerRequest({ requestId: id, accept }),
     onSuccess: (_r, { accept }) => {
-      showToast(accept ? 'Done. They can do this for you now.' : 'Okay. Nothing changes.', 'success');
+      showToast(accept ? tr('Done. They can do this for you now.') : tr('Okay. Nothing changes.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
     },
     onError: (err) =>
-      showToast(err?.response?.data?.message || 'Something went wrong. Please try again.', 'error'),
+      showToast(err?.response?.data?.message || tr('Something went wrong. Please try again.'), 'error'),
   });
 
   const cancel = useMutation({
     mutationFn: (id) => removeFamilyLink(id),
     onSuccess: () => {
-      showToast('Request cancelled.', 'success');
+      showToast(tr('Request cancelled.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['family-links'] });
     },
     onError: (err) =>
       showToast(
-        err?.response?.data?.message || 'Could not cancel the request. Please try again.',
+        err?.response?.data?.message || tr('Could not cancel the request. Please try again.'),
         'error'
       ),
   });
@@ -175,7 +176,7 @@ export default function MyFamilyScreen() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 26, color: t.ink, letterSpacing: -0.5 }}
       >
-        My Family
+        {tr('My Family')}
         {family ? (
           <Text style={{ fontSize: type.body, color: t.inkSlate, fontVariant: ['tabular-nums'] }}>
             {` (${seatCount}/${FAMILY_MAX})`}
@@ -185,14 +186,14 @@ export default function MyFamilyScreen() {
 
       <SegmentedControl
         segments={[
-          { key: 'controls', label: 'Controls' },
+          { key: 'controls', label: tr('Controls') },
           {
             key: 'members',
-            label: 'My family',
+            label: tr('My family'),
             // Things waiting on the elder's answer — asks and join requests.
             count: powerAsks.length + incoming.length || null,
           },
-          { key: 'how', label: 'How it works' },
+          { key: 'how', label: tr('How it works') },
         ]}
         value={tab}
         onChange={setTab}
@@ -204,7 +205,7 @@ export default function MyFamilyScreen() {
           <SkeletonCard lines={3} />
         </View>
       ) : isError ? (
-        <LoadError what="your family" onRetry={refetch} style={{ marginTop: spacing[5] }} />
+        <LoadError what={tr('your family')} onRetry={refetch} style={{ marginTop: spacing[5] }} />
       ) : null}
 
       {/* Swiping the pane steps the segments, iOS-style (owner call
@@ -217,13 +218,13 @@ export default function MyFamilyScreen() {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
           >
-            How family works here
+            {tr('How family works here')}
           </Text>
           {PROMISES.map((p) => (
             <View key={p} style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[2] }}>
               <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>•</Text>
               <Text style={{ flex: 1, fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-                {p}
+                {tr(p)}
               </Text>
             </View>
           ))}
@@ -236,8 +237,7 @@ export default function MyFamilyScreen() {
               marginTop: spacing[3],
             }}
           >
-            Family connected gives you +1 trust point. One point total, however many family
-            members you add (up to 5 people).
+            {tr('Family connected gives you +1 trust point. One point total, however many family members you add (up to 5 people).')}
           </Text>
         </View>
       ) : null}
@@ -251,27 +251,27 @@ export default function MyFamilyScreen() {
               the same decision. */}
           {powerAsks.length > 0 ? (
             <View>
-              <SectionHeading>They're asking you</SectionHeading>
+              <SectionHeading>{tr("They're asking you")}</SectionHeading>
               {powerAsks.map((a, i) => {
                 const p = POWERS.find((x) => x.key === a.power);
                 const name = a.link.otherUserName;
                 return (
                   <LinkRow
                     key={a.id}
-                    name={`${name} asks: ${p ? p.title.toLowerCase() : 'a new power'}`}
-                    line={`${p ? `If you say yes: ${p.on(name)} ` : ''}It's your choice, and you can turn it off again any time.`}
+                    name={tr('{name} asks: {power}', { name, power: p ? p.title.toLowerCase() : tr('a new power') })}
+                    line={(p ? tr('If you say yes: {consequence}', { consequence: p.on(name) }) + ' ' : '') + tr("It's your choice, and you can turn it off again any time.")}
                     first={i === 0}
                   >
                     <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
                       <ActionChip
-                        label="Yes"
+                        label={tr('Yes')}
                         tonal
                         disabled={answeringAsk === a.id}
                         onPress={() => respondToAsk.mutate({ id: a.id, accept: true })}
                         style={{ flex: 1 }}
                       />
                       <ActionChip
-                        label="Not now"
+                        label={tr('Not now')}
                         disabled={answeringAsk === a.id}
                         onPress={() => respondToAsk.mutate({ id: a.id, accept: false })}
                         style={{ flex: 1 }}
@@ -302,11 +302,11 @@ export default function MyFamilyScreen() {
               // never outrank the page title (rulebook hierarchy).
               style={{ fontFamily: fontFamily.display, fontSize: 20, color: t.ink }}
             >
-              People in your family
+              {tr('People in your family')}
             </Text>
             {canAdd && !showAddForm ? (
               <Button
-                title="+ Add a family member"
+                title={tr('+ Add a family member')}
                 onPress={() => setShowAddForm(true)}
                 style={{ minHeight: 44, paddingHorizontal: 16 }}
               />
@@ -317,8 +317,7 @@ export default function MyFamilyScreen() {
             <Text
               style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[3] }}
             >
-              You've reached the limit of 5 family members, counting open requests. Remove someone
-              or cancel a request to add another person.
+              {tr("You've reached the limit of 5 family members, counting open requests. Remove someone or cancel a request to add another person.")}
             </Text>
           ) : null}
 
@@ -326,24 +325,24 @@ export default function MyFamilyScreen() {
 
           {incoming.length > 0 ? (
             <View>
-              <SectionHeading>They want to join your family</SectionHeading>
+              <SectionHeading>{tr('They want to join your family')}</SectionHeading>
               {incoming.map((r, i) => (
                 <LinkRow
                   key={r.id}
                   name={r.otherUserName}
-                  line={`${r.relationship ? `${r.relationship} · ` : ''}wants to join as your family. It's your choice.`}
+                  line={(r.relationship ? `${r.relationship} · ` : '') + tr("wants to join as your family. It's your choice.")}
                   first={i === 0}
                 >
                   <View style={{ flexDirection: 'row', gap: spacing[3], marginTop: spacing[3] }}>
                     <ActionChip
-                      label="Accept"
+                      label={tr('Accept')}
                       tonal
                       disabled={respondingTo === r.id}
                       onPress={() => respond.mutate({ id: r.id, accept: true })}
                       style={{ flex: 1 }}
                     />
                     <ActionChip
-                      label="Not now"
+                      label={tr('Not now')}
                       disabled={respondingTo === r.id}
                       onPress={() => respond.mutate({ id: r.id, accept: false })}
                       style={{ flex: 1 }}
@@ -356,16 +355,16 @@ export default function MyFamilyScreen() {
 
           {outgoing.length > 0 ? (
             <View>
-              <SectionHeading>Requests you sent</SectionHeading>
+              <SectionHeading>{tr('Requests you sent')}</SectionHeading>
               {outgoing.map((r, i) => (
                 <LinkRow
                   key={r.id}
                   name={r.otherUserName}
-                  line={`${r.relationship ? `${r.relationship} · ` : ''}Waiting for ${r.otherUserName} to accept. Only they can say yes. You can cancel any time.`}
+                  line={(r.relationship ? `${r.relationship} · ` : '') + tr('Waiting for {otherUserName} to accept. Only they can say yes. You can cancel any time.', { otherUserName: r.otherUserName })}
                   first={i === 0}
                 >
                   <ActionChip
-                    label="Cancel request"
+                    label={tr('Cancel request')}
                     disabled={cancelling === r.id}
                     onPress={() => cancel.mutate(r.id)}
                     style={{ marginTop: spacing[3] }}
@@ -378,7 +377,7 @@ export default function MyFamilyScreen() {
           {members.length === 0 ? (
             <View style={{ ...card, alignItems: 'center', marginTop: spacing[5] }}>
               <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-                No family linked yet
+                {tr('No family linked yet')}
               </Text>
               <Text
                 style={{
@@ -389,7 +388,7 @@ export default function MyFamilyScreen() {
                   textAlign: 'center',
                 }}
               >
-                Add up to 5 people. Each one must accept before they're linked to you.
+                {tr("Add up to 5 people. Each one must accept before they're linked to you.")}
               </Text>
             </View>
           ) : (
@@ -416,7 +415,7 @@ export default function MyFamilyScreen() {
         members.length === 0 ? (
           <View style={{ ...card, alignItems: 'center', marginTop: spacing[5] }}>
             <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-              Add a family member first
+              {tr('Add a family member first')}
             </Text>
             <Text
               style={{
@@ -427,21 +426,19 @@ export default function MyFamilyScreen() {
                 textAlign: 'center',
               }}
             >
-              Once someone is in your family, you choose here what they can see and what they can
-              do for you. Everything starts off.
+              {tr('Once someone is in your family, you choose here what they can see and what they can do for you. Everything starts off.')}
             </Text>
           </View>
         ) : (
           <View style={{ marginTop: spacing[5] }}>
             <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginBottom: spacing[4] }}>
-              Sharing is what your family can see. Act for me is what they can do. Both start off,
-              and only you can change them.
+              {tr('Sharing is what your family can see. Act for me is what they can do. Both start off, and only you can change them.')}
             </Text>
 
             <SegmentedControl
               segments={[
-                { key: 'watching', label: 'Sharing', count: sharedCount || null },
-                { key: 'acting', label: 'Act for me', count: actingCount || null },
+                { key: 'watching', label: tr('Sharing'), count: sharedCount || null },
+                { key: 'acting', label: tr('Act for me'), count: actingCount || null },
               ]}
               value={controlsTab}
               onChange={setControlsTab}
@@ -451,7 +448,7 @@ export default function MyFamilyScreen() {
             {controlsTab === 'watching' ? (
               friendshipsUnknown ? (
                 <LoadError
-                  what="your friendships"
+                  what={tr('your friendships')}
                   onRetry={refetchConnections}
                   style={{ marginTop: spacing[4] }}
                 />
@@ -460,15 +457,13 @@ export default function MyFamilyScreen() {
                   <Text
                     style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, textAlign: 'center' }}
                   >
-                    You have no friendships yet. Once you do, you choose here which ones your
-                    family can see.
+                    {tr('You have no friendships yet. Once you do, you choose here which ones your family can see.')}
                   </Text>
                 </View>
               ) : (
                 <View style={{ ...card, marginTop: spacing[4] }}>
                   <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginBottom: spacing[2] }}>
-                    Everyone in your family gets the friendships you turn on here. On a shared
-                    friendship they can:
+                    {tr('Everyone in your family gets the friendships you turn on here. On a shared friendship they can:')}
                   </Text>
                   {SHARING_GIVES.map((g) => (
                     <View key={g.key} style={{ flexDirection: 'row', gap: spacing[2], marginTop: spacing[1] }}>
@@ -479,7 +474,7 @@ export default function MyFamilyScreen() {
                     </View>
                   ))}
                   <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22, marginTop: spacing[3] }}>
-                    Turn a friendship off any time. Your family loses all of this straight away.
+                    {tr('Turn a friendship off any time. Your family loses all of this straight away.')}
                   </Text>
                   {connections.map((c) => (
                     <View key={c.id} style={{ marginTop: spacing[4] }}>
@@ -501,14 +496,14 @@ export default function MyFamilyScreen() {
               // cannot know what she shares, so we say that instead.
               friendshipsUnknown ? (
                 <LoadError
-                  what="your friendships"
+                  what={tr('your friendships')}
                   onRetry={refetchConnections}
                   style={{ marginTop: spacing[4] }}
                 />
               ) : !connections.some((c) => c.sharedWithFamily) ? (
                 <View style={{ ...card, alignItems: 'center', marginTop: spacing[4] }}>
                   <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
-                    Share a friendship first
+                    {tr('Share a friendship first')}
                   </Text>
                   <Text
                     style={{
@@ -519,8 +514,7 @@ export default function MyFamilyScreen() {
                       textAlign: 'center',
                     }}
                   >
-                    Your family can only act on a friendship you share with them. Turn on at least
-                    one friendship on the Sharing tab, then choose here what they may do for you.
+                    {tr('Your family can only act on a friendship you share with them. Turn on at least one friendship on the Sharing tab, then choose here what they may do for you.')}
                   </Text>
                 </View>
               ) : (
@@ -529,7 +523,7 @@ export default function MyFamilyScreen() {
                     <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>
                       {l.otherUserName}
                       <Text style={{ fontSize: type.meta, fontWeight: '400', color: t.inkSlate }}>
-                        {`  ${l.relationship || 'Family member'}`}
+                        {`  ${l.relationship || tr('Family member')}`}
                       </Text>
                     </Text>
                     <DelegatedPowerToggle

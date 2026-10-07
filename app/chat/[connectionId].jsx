@@ -34,6 +34,7 @@ import useSafetyActions, {
   REPORT_TITLE,
 } from '../../src/lib/useSafetyActions';
 import { useTheme } from '../../src/theme/ThemeContext';
+import { tr } from '../../src/i18n';
 
 // How often an open thread asks for new messages. A reply reaches the other
 // screen within this long even when no push arrives (web Messages.jsx polls
@@ -63,7 +64,7 @@ function ChatSkeleton() {
     <View
       testID="chat-skeleton"
       accessibilityRole="progressbar"
-      accessibilityLabel="Loading"
+      accessibilityLabel={tr('Loading')}
       // Un-flip inside the inverted list, same trick as LoadError above.
       style={{ transform: [{ scaleY: -1 }], gap: spacing[3] }}
     >
@@ -179,7 +180,7 @@ export default function ChatThread() {
   const openSafetyMenu = () => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
-        { options: [REPORT_ACTION, BLOCK_ACTION, NEVER_MIND], cancelButtonIndex: 2, destructiveButtonIndex: 1 },
+        { options: [tr(REPORT_ACTION), tr(BLOCK_ACTION), tr(NEVER_MIND)], cancelButtonIndex: 2, destructiveButtonIndex: 1 },
         (i) => {
           if (i === 0) pickReportReason();
           if (i === 1) confirmBlock();
@@ -208,7 +209,7 @@ export default function ChatThread() {
   // confirm, so the other side can never be waiting on an elder (owner call
   // 2026-08-17 — the elder's button always reads Start).
   const accepting = !actsAsElder && !!conn?.confirmedByOther;
-  const stepLabel = accepting ? 'Accept the next step' : 'Start the next step';
+  const stepLabel = accepting ? tr('Accept the next step') : tr('Start the next step');
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['messages', connectionId, channel],
@@ -256,7 +257,7 @@ export default function ChatThread() {
       // Screen-reader users sitting in an open thread get no visual cue that
       // a reply landed — announce it (skip the announcement on first open).
       if (!isFirstLoad) {
-        announce(`New message from ${conn?.otherUserName ?? 'your friend'}`);
+        announce(tr('New message from {value}', { value: conn?.otherUserName ?? tr('your friend') }));
       }
     }
   }, [messages, connectionId, user?.userId, queryClient, isFocused, conn?.otherUserName]);
@@ -293,7 +294,7 @@ export default function ChatThread() {
         setInput((cur) => (cur ? `${content} ${cur}` : content));
         queryClient.invalidateQueries({ queryKey: ['connections'] });
         showToast(
-          'Your trust level is too low to message yet. Take the next trust step together first.',
+          tr('Your trust level is too low to message yet. Take the next trust step together first.'),
           'error'
         );
         return;
@@ -301,7 +302,7 @@ export default function ChatThread() {
       // Every other failure marks the bubble in place with retry (UX-710) —
       // the message never silently vanishes and never overwrites the composer.
       setFailedSends((cur) => [{ id: `failed-${Date.now()}`, content }, ...cur]);
-      showToast(friendlyWriteError(err, "Message didn't send. Tap the message to try again."), 'error');
+      showToast(friendlyWriteError(err, tr("Message didn't send. Tap the message to try again.")), 'error');
     },
   });
 
@@ -313,15 +314,15 @@ export default function ChatThread() {
     onSuccess: () => {
       showToast(
         conn && !conn.confirmedByOther
-          ? `Step confirmed. Waiting for ${conn.otherUserName} to agree too.`
-          : 'You both agreed. One step up the ladder!',
+          ? tr('Step confirmed. Waiting for {otherUserName} to agree too.', { otherUserName: conn.otherUserName })
+          : tr('You both agreed. One step up the ladder!'),
         'success'
       );
       queryClient.invalidateQueries({ queryKey: ['trust-my-score'] });
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not confirm right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not confirm right now. Please try again.')), 'error'),
   });
 
   // askConfirm, not confirm — the same irreversible tap gets the same dialog
@@ -329,12 +330,12 @@ export default function ChatThread() {
   // friction).
   const confirmStepTap = async () => {
     const ok = await askConfirm({
-      title: accepting ? 'Accept the next step?' : 'Start the next step?',
+      title: accepting ? tr('Accept the next step?') : tr('Start the next step?'),
       message: accepting
-        ? `${conn.otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.`
-        : `Trust grows only when BOTH of you agree. ${conn.otherUserName} will get a tap to accept.`,
-      cancelLabel: 'Not yet',
-      confirmLabel: accepting ? 'Accept' : 'Start',
+        ? tr('{otherUserName} has asked to move one step up. Accepting climbs the ladder for both of you.', { otherUserName: conn.otherUserName })
+        : tr('Trust grows only when BOTH of you agree. {otherUserName} will get a tap to accept.', { otherUserName: conn.otherUserName }),
+      cancelLabel: tr('Not yet'),
+      confirmLabel: accepting ? tr('Accept') : tr('Start'),
     });
     if (ok) confirmStep.mutate();
   };
@@ -370,11 +371,11 @@ export default function ChatThread() {
   const resume = useMutation({
     mutationFn: () => resumeTrustSteps(connectionId),
     onSuccess: () => {
-      showToast('Welcome back. Trust steps and messages are on again.', 'success');
+      showToast(tr('Welcome back. Trust steps and messages are on again.'), 'success');
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (err) =>
-      showToast(friendlyWriteError(err, 'Could not resume right now. Please try again.'), 'error'),
+      showToast(friendlyWriteError(err, tr('Could not resume right now. Please try again.')), 'error'),
   });
 
   // The just-sent message must exist SOMEWHERE on screen while the server
@@ -452,10 +453,10 @@ export default function ChatThread() {
           }}
         >
           {item.failed
-            ? "Didn't send. Tap to try again."
+            ? tr("Didn't send. Tap to try again.")
             : item.sending
-              ? 'Sending…'
-              : `${timeLabel(item.createdAt)}${mine ? (item.seenAt ? ' · Seen' : ' · Sent') : ''}`}
+              ? tr('Sending…')
+              : `${timeLabel(item.createdAt)}${mine ? (item.seenAt ? tr(' · Seen') : tr(' · Sent')) : ''}`}
         </Text>
       </>
     );
@@ -478,7 +479,7 @@ export default function ChatThread() {
           // problem is shown (HCI rules 6 + 9).
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Didn't send: ${item.content}. Tap to try again.`}
+            accessibilityLabel={tr("Didn't send: {content}. Tap to try again.", { content: item.content })}
             onPress={() => retrySend(item)}
             style={({ pressed }) => ({ ...bubbleStyle, opacity: pressed ? 0.7 : 1 })}
           >
@@ -512,7 +513,7 @@ export default function ChatThread() {
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Back to messages"
+          accessibilityLabel={tr('Back to messages')}
           onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/messages'))}
           hitSlop={8}
           style={({ pressed }) => ({
@@ -527,7 +528,7 @@ export default function ChatThread() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${conn?.otherUserName ?? 'Friend'}'s profile`}
+          accessibilityLabel={tr("{value}'s profile", { value: conn?.otherUserName ?? tr('Friend') })}
           onPress={() => conn && router.push(`/user/${conn.otherUserId}`)}
           // The avatar row is 38px tall — hitSlop tops the target up to 44
           // effective without growing the header (UX-714 browser measure).
@@ -545,11 +546,11 @@ export default function ChatThread() {
             {/* The safety control takes width off this row, so a long name
                 truncates rather than wrapping the header onto two lines. */}
             <Text numberOfLines={1} style={{ fontSize: text.base, fontWeight: '600', color: t.ink }}>
-              {conn?.otherUserName ?? 'Chat'}
+              {conn?.otherUserName ?? tr('Chat')}
             </Text>
             {isFamilyChannel ? (
               <Text style={{ fontSize: text.xs, color: t.inkSlate, marginTop: 1 }}>
-                Family group. Everyone here reads along
+                {tr('Family group. Everyone here reads along')}
               </Text>
             ) : null}
           </View>
@@ -564,7 +565,7 @@ export default function ChatThread() {
         {conn && !isFamilyChannel ? (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={`Report or block ${conn.otherUserName ?? 'this person'}`}
+            accessibilityLabel={tr('Report or block {value}', { value: conn.otherUserName ?? tr('this person') })}
             onPress={openSafetyMenu}
             style={({ pressed }) => ({
               minWidth: 44,
@@ -585,21 +586,21 @@ export default function ChatThread() {
         <Card style={{ marginHorizontal: spacing[4], marginTop: spacing[3] }}>
           <View style={{ gap: spacing[3] }}>
             <ActionChip
-              label={REPORT_ACTION}
+              label={tr(REPORT_ACTION)}
               onPress={() => {
                 setMenuOpen(false);
                 pickReportReason();
               }}
             />
             <ActionChip
-              label={blocking ? 'Blocking…' : BLOCK_ACTION}
+              label={blocking ? tr('Blocking…') : tr(BLOCK_ACTION)}
               disabled={blocking}
               onPress={() => {
                 setMenuOpen(false);
                 confirmBlock();
               }}
             />
-            <ActionChip label={NEVER_MIND} onPress={() => setMenuOpen(false)} />
+            <ActionChip label={tr(NEVER_MIND)} onPress={() => setMenuOpen(false)} />
           </View>
         </Card>
       ) : null}
@@ -610,18 +611,18 @@ export default function ChatThread() {
             accessibilityRole="header"
             style={{ fontFamily: fontFamily.display, fontSize: text.lg, color: t.ink }}
           >
-            {REPORT_TITLE}
+            {tr(REPORT_TITLE)}
           </Text>
           <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
             {REPORT_REASONS.map((reason) => (
               <ActionChip
                 key={reason}
-                label={reportingReason === reason ? 'Sending…' : reason}
+                label={reportingReason === reason ? tr('Sending…') : tr(reason)}
                 disabled={reporting}
                 onPress={() => sendReport(reason)}
               />
             ))}
-            <ActionChip label={NEVER_MIND} onPress={closeReport} />
+            <ActionChip label={tr(NEVER_MIND)} onPress={closeReport} />
           </View>
         </Card>
       ) : null}
@@ -642,7 +643,7 @@ export default function ChatThread() {
             ) : isError ? (
               // A failed load must never masquerade as an empty chat (HCI rule 9)
               <LoadError
-                what="your messages"
+                what={tr('your messages')}
                 onRetry={refetch}
                 style={{ transform: [{ scaleY: -1 }] }} // un-flip inside the inverted list
               />
@@ -660,7 +661,7 @@ export default function ChatThread() {
                   lineHeight: 26,
                 }}
               >
-                Say hello. Every friendship starts with one message.
+                {tr('Say hello. Every friendship starts with one message.')}
               </Text>
             )
           }
@@ -681,7 +682,7 @@ export default function ChatThread() {
                 backgroundColor: t.canvas,
               }}
             >
-              <LoadError what="this friendship" onRetry={refetchConns} bare />
+              <LoadError what={tr('this friendship')} onRetry={refetchConns} bare />
             </View>
           ) : null
         ) : conn?.status === 'PAUSED' ? (
@@ -694,13 +695,13 @@ export default function ChatThread() {
             }}
           >
             <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
-              You two are on a break. Messages are paused.
+              {tr('You two are on a break. Messages are paused.')}
             </Text>
             {/* The action lives WHERE the state is announced — never "go find
                 Resume on another screen" (rulebook: recognition over recall). */}
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Resume this friendship"
+              accessibilityLabel={tr('Resume this friendship')}
               disabled={resume.isPending}
               onPress={() => resume.mutate()}
               style={({ pressed }) => ({
@@ -713,7 +714,7 @@ export default function ChatThread() {
               })}
             >
               <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep }}>
-                {resume.isPending ? 'Resuming…' : 'Resume'}
+                {resume.isPending ? tr('Resuming…') : tr('Resume')}
               </Text>
             </Pressable>
           </View>
@@ -727,7 +728,7 @@ export default function ChatThread() {
             }}
           >
             <Text style={{ fontSize: text.base, color: t.inkSlate, textAlign: 'center', lineHeight: 24 }}>
-              You're connected. Messages unlock at the next trust step.
+              {tr("You're connected. Messages unlock at the next trust step.")}
             </Text>
             {conn.confirmedByMe ? (
               <Text
@@ -739,7 +740,7 @@ export default function ChatThread() {
                   marginTop: spacing[1],
                 }}
               >
-                You've started the next step. Waiting for {conn.otherUserName} to accept.
+                {tr("You've started the next step. Waiting for {otherUserName} to accept.", { otherUserName: conn.otherUserName })}
               </Text>
             ) : actsAsElder || accepting ? (
               <Pressable
@@ -757,7 +758,7 @@ export default function ChatThread() {
                 })}
               >
                 <Text style={{ fontSize: text.base, fontWeight: '600', color: t.blueDeep }}>
-                  {confirmStep.isPending ? 'Confirming…' : stepLabel}
+                  {confirmStep.isPending ? tr('Confirming…') : stepLabel}
                 </Text>
               </Pressable>
             ) : (
@@ -770,7 +771,7 @@ export default function ChatThread() {
                   marginTop: spacing[1],
                 }}
               >
-                {conn.otherUserName} starts each trust step. You'll get a tap here to accept.
+                {tr("{otherUserName} starts each trust step. You'll get a tap here to accept.", { otherUserName: conn.otherUserName })}
               </Text>
             )}
           </View>
@@ -804,10 +805,10 @@ export default function ChatThread() {
           ) : null}
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: spacing[2] }}>
           <TextInput
-            accessibilityLabel="Message"
+            accessibilityLabel={tr('Message')}
             value={input}
             onChangeText={onChangeMessage}
-            placeholder="Write a message…"
+            placeholder={tr('Write a message…')}
             placeholderTextColor={t.ink4}
             // The iOS keyboard dresses to match the app's own opt-in night
             // mode (never the OS setting) — Apple polish, Towinly's rule.
@@ -829,7 +830,7 @@ export default function ChatThread() {
           />
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Send message"
+            accessibilityLabel={tr('Send message')}
             accessibilityState={{ disabled: !input.trim() || send.isPending }}
             disabled={!input.trim() || send.isPending}
             onPress={handleSend}

@@ -28,6 +28,7 @@ import SegmentedControl from '../ui/SegmentedControl';
 import SkeletonCard from '../ui/Skeleton';
 import SwipeSegments from '../ui/SwipeSegments';
 import PausedCard from './PausedCard';
+import { tr } from '../../i18n';
 
 // The row is the person alone, like a WhatsApp chat row, mirroring
 // HelperCard (owner call 2026-08-26: "do the same for the helper"). Touching
@@ -39,7 +40,7 @@ function ElderCard({ conn, scoreCard, divider }) {
   const router = useRouter();
   const stageIndex = scoreCard?.stageIndex ?? LEVEL_INDEX[conn.currentTrustLevel] ?? 0;
   const stageNo = Math.min(stageIndex + 1, 7);
-  const stageName = SHORT_STAGES[Math.min(stageIndex, 6)];
+  const stageName = tr(SHORT_STAGES[Math.min(stageIndex, 6)]);
   // The elder started the next step and it is waiting on me (owner call
   // 2026-08-28: "so they can accept"). Worn on the name and counted on the My
   // Elders tab until I accept; looking never clears it.
@@ -50,7 +51,7 @@ function ElderCard({ conn, scoreCard, divider }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View ${conn.otherUserName}'s profile`}
+          accessibilityLabel={tr("View {otherUserName}'s profile", { otherUserName: conn.otherUserName })}
           onPress={() => router.push(`/user/${conn.otherUserId}`)}
           hitSlop={6}
           style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
@@ -61,7 +62,7 @@ function ElderCard({ conn, scoreCard, divider }) {
             status from a screen reader (HCI rule 1). */}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`${conn.otherUserName}. Stage ${stageNo} of 7, ${stageName}${waitingOnMe ? '. 1 step waiting for you to accept' : ''}`}
+          accessibilityLabel={tr('{otherUserName}. Stage {stageNo} of 7, {stageName}', { otherUserName: conn.otherUserName, stageNo, stageName }) + (waitingOnMe ? tr('. 1 step waiting for you to accept') : '')}
           onPress={() => router.push(`/connection/${conn.id}`)}
           style={({ pressed }) => ({
             flex: 1,
@@ -146,7 +147,7 @@ export default function MyEldersPanel() {
         accessibilityRole="header"
         style={{ fontFamily: fontFamily.display, fontSize: 22, color: t.ink, letterSpacing: -0.5 }}
       >
-        My Elders
+        {tr('My Elders')}
       </Text>
 
       {anyone ? <SearchField value={query} onChangeText={setQuery} style={{ marginTop: 12 }} /> : null}
@@ -156,8 +157,8 @@ export default function MyEldersPanel() {
           // 2026-08-17) and matching the default segment.
           // No counts on these labels (owner call 2026-08-22, same rule as
           // MyHelpersPanel: no number near Building Trust / Trusted).
-          { key: 'building', label: 'Building Trust' },
-          { key: 'trusted', label: 'Trusted Elders' },
+          { key: 'building', label: tr('Building Trust') },
+          { key: 'trusted', label: tr('Trusted Elders') },
         ]}
         value={seg}
         onChange={setSeg}
@@ -169,7 +170,7 @@ export default function MyEldersPanel() {
       {isLoading ? (
         <SkeletonCard lines={4} />
       ) : isError ? (
-        <LoadError what="your elders" onRetry={refetch} style={{ marginTop: 16 }} />
+        <LoadError what={tr('your elders')} onRetry={refetch} style={{ marginTop: 16 }} />
       ) : query.trim() && shown.length === 0 && paused.length === 0 ? (
         // A search that finds nobody says so, and never borrows the empty
         // state below, whose doors are for someone with no one yet.
@@ -178,13 +179,13 @@ export default function MyEldersPanel() {
         <View style={{ backgroundColor: t.canvas, borderWidth: 1, borderColor: t.border, borderRadius: 16, padding: 14, marginTop: 12 }}>
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
             {seg === 'trusted'
-              ? 'No fully trusted elders yet. Every ladder ends here.'
-              : 'No connections yet. Find an elder nearby and say hello.'}
+              ? tr('No fully trusted elders yet. Every ladder ends here.')
+              : tr('No connections yet. Find an elder nearby and say hello.')}
           </Text>
           {/* Both doors (owner call 2026-08-28): the helper's own verb, worded
               as the centre button, then Find elders. */}
           <Button title={centerActionFor('HELPER').label} variant="secondary" onPress={() => router.push('/(tabs)/action')} style={{ marginTop: 16 }} />
-          <Button title="Find elders" variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 10 }} />
+          <Button title={tr('Find elders')} variant="secondary" onPress={() => router.push('/friends')} style={{ marginTop: 10 }} />
         </View>
       ) : (
         shown.map((conn, i) => (

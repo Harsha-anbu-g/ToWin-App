@@ -34,6 +34,7 @@ import { tabBarSpace } from '../lib/tabBarMetrics';
 import { grantAiConsent, hasAiConsent } from '../lib/aiConsent';
 import { useReducedMotion } from '../lib/useReducedMotion';
 import { useTheme } from '../theme/ThemeContext';
+import { tr } from '../i18n';
 
 const FALLBACK =
   "I couldn't answer just now. Please try again in a moment, or ask a real person through Share feedback in your Profile.";
@@ -87,12 +88,12 @@ function AskAiIntro({ onSpeak, onAsk }) {
           paddingVertical: spacing[3],
         }}
       >
-        <Text style={{ fontSize: type.body, lineHeight: 22, color: t.ink }}>{GREETING}</Text>
+        <Text style={{ fontSize: type.body, lineHeight: 22, color: t.ink }}>{tr(GREETING)}</Text>
       </View>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Read the greeting aloud"
-        onPress={() => onSpeak(GREETING)}
+        accessibilityLabel={tr('Read the greeting aloud')}
+        onPress={() => onSpeak(tr(GREETING))}
         android_ripple={pressRipple}
         style={({ pressed }) => ({
           flexDirection: 'row',
@@ -118,13 +119,13 @@ function AskAiIntro({ onSpeak, onAsk }) {
           maxFontSizeMultiplier={fontScaleCaps.body}
           style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
         >
-          Read aloud
+          {tr('Read aloud')}
         </Text>
       </Pressable>
 
       {/* Three suggested questions */}
       <View style={{ gap: 8, marginTop: spacing[5] }}>
-        {SUGGESTIONS.map((s) => (
+        {SUGGESTIONS.map((q) => tr(q)).map((s) => (
           <Pressable
             key={s}
             accessibilityRole="button"
@@ -187,7 +188,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
         >
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Read this answer aloud"
+            accessibilityLabel={tr('Read this answer aloud')}
             onPress={() => onSpeak(item.content)}
             android_ripple={pressRipple}
             hitSlop={{ left: 8, right: 8 }}
@@ -208,7 +209,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
               maxFontSizeMultiplier={fontScaleCaps.body}
               style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
             >
-              Read aloud
+              {tr('Read aloud')}
             </Text>
           </Pressable>
           {/* Google Play's AI-Generated Content policy requires an in-app way to
@@ -217,7 +218,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
               carries the answer into the feedback form instead. */}
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Report this answer"
+            accessibilityLabel={tr('Report this answer')}
             onPress={() => onReport(item.content)}
             android_ripple={pressRipple}
             hitSlop={{ left: 8, right: 8 }}
@@ -235,7 +236,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
               maxFontSizeMultiplier={fontScaleCaps.body}
               style={{ fontSize: type.meta, fontWeight: '600', color: t.inkSlate }}
             >
-              Report this answer
+              {tr('Report this answer')}
             </Text>
           </Pressable>
         </View>
@@ -291,16 +292,18 @@ export default function AskAiAssistant() {
   const ensureAiConsent = async () => {
     if (aiConsented) return true;
     const ok = await confirm({
-      title: 'Before your first question',
+      title: tr('Before your first question'),
       message:
-        "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
-        'Your question, this chat, and a short summary of your own Towinly activity ' +
-        '(like your first name and trust score) are shared with Groq. Your contact ' +
-        'details are never shared. The answers are written by a machine, so they can ' +
-        'be wrong. Every answer has a "Report this answer" button if one looks wrong ' +
-        'or upsetting. Is that okay?',
-      cancelLabel: 'Not now',
-      confirmLabel: "Yes, that's okay",
+        tr(
+          "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
+            'Your question, this chat, and a short summary of your own Towinly activity ' +
+            '(like your first name and trust score) are shared with Groq. Your contact ' +
+            'details are never shared. The answers are written by a machine, so they can ' +
+            'be wrong. Every answer has a "Report this answer" button if one looks wrong ' +
+            'or upsetting. Is that okay?'
+        ),
+      cancelLabel: tr('Not now'),
+      confirmLabel: tr("Yes, that's okay"),
     });
     if (!ok) return false;
     setAiConsented(true);
@@ -361,7 +364,7 @@ export default function AskAiAssistant() {
     setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'user', content: q }]);
     setThinking(true);
     // Screen readers get no visual "Thinking…" cue — say it, then say the reply.
-    announce('Thinking…');
+    announce(tr('Thinking…'));
     try {
       // askAssistant carries the 30s timeout (not the client default 15s):
       // a thoughtful Groq answer can outrun 15s under load, and a timeout
@@ -376,8 +379,8 @@ export default function AskAiAssistant() {
       // "Please try again" must not mean retyping — put the question back
       // unless the user already started typing a new one (HCI rule 9).
       setInput((cur) => cur || q);
-      setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: FALLBACK }]);
-      announce(FALLBACK);
+      setMessages((prev) => [...prev, { id: msgSeq.current++, role: 'assistant', content: tr(FALLBACK) }]);
+      announce(tr(FALLBACK));
     } finally {
       if (mounted.current) setThinking(false);
     }
@@ -408,7 +411,7 @@ export default function AskAiAssistant() {
   const listFooter = useMemo(
     () =>
       thinking ? (
-        <Text style={{ fontSize: text.sm, color: t.ink4, marginTop: spacing[2] }}>Thinking…</Text>
+        <Text style={{ fontSize: text.sm, color: t.ink4, marginTop: spacing[2] }}>{tr('Thinking…')}</Text>
       ) : null,
     [thinking, t, text, spacing]
   );
@@ -422,7 +425,7 @@ export default function AskAiAssistant() {
       {/* Wash pill FAB — tortoise + label, above the tab bar */}
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Ask AI, your Towinly helper"
+        accessibilityLabel={tr('Ask AI, your Towinly helper')}
         onPress={() => setOpen(true)}
         android_ripple={pressRipple}
         style={({ pressed }) => ({
@@ -480,7 +483,7 @@ export default function AskAiAssistant() {
           <BlurView intensity={30} tint={mode === 'dark' ? 'dark' : 'light'} style={GLASS_PILL} />
         ) : null}
         <Image source={mascot} style={{ width: 24, height: 24 }} resizeMode="contain" />
-        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Ask AI</Text>
+        <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{tr('Ask AI')}</Text>
       </Pressable>
 
       <Modal
@@ -514,7 +517,7 @@ export default function AskAiAssistant() {
           <Pressable
             testID="ask-ai-scrim"
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={tr('Close')}
             onPress={close}
             style={{ position: 'absolute', top: '-100%', left: 0, right: 0, bottom: 0, backgroundColor: t.scrim }}
           />
@@ -563,13 +566,13 @@ export default function AskAiAssistant() {
                   maxFontSizeMultiplier={fontScaleCaps.body}
                   style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.ink }}
                 >
-                  Ask AI
+                  {tr('Ask AI')}
                 </Text>
-                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>Your Towinly helper</Text>
+                <Text style={{ fontSize: type.caption, color: t.inkSlate }}>{tr('Your Towinly helper')}</Text>
               </View>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel="Close"
+                accessibilityLabel={tr('Close')}
                 onPress={close}
                 android_ripple={pressRipple}
                 hitSlop={8}
@@ -614,10 +617,10 @@ export default function AskAiAssistant() {
               >
                 <TextInput
                   ref={inputRef}
-                  accessibilityLabel="Your question"
+                  accessibilityLabel={tr('Your question')}
                   value={input}
                   onChangeText={setInput}
-                  placeholder="Type your question…"
+                  placeholder={tr('Type your question…')}
                   placeholderTextColor={t.ink4}
                   keyboardAppearance={mode === 'dark' ? 'dark' : 'light'}
                   multiline
@@ -635,7 +638,7 @@ export default function AskAiAssistant() {
                 />
                 <Pressable
                   accessibilityRole="button"
-                  accessibilityLabel="Send question"
+                  accessibilityLabel={tr('Send question')}
                   accessibilityState={{ disabled: !input.trim() || thinking }}
                   disabled={!input.trim() || thinking}
                   onPress={() => send(input)}

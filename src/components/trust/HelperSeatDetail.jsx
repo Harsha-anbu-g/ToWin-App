@@ -27,6 +27,7 @@ import LoadError from '../ui/LoadError';
 import Screen from '../ui/Screen';
 import SkeletonCard from '../ui/Skeleton';
 import TrustLadder from './TrustLadder';
+import { tr } from '../../i18n';
 
 const sameId = (a, b) => String(a) === String(b);
 
@@ -76,14 +77,14 @@ export default function HelperSeatDetail({ connectionId }) {
 
   if (!card) {
     return (
-      <Screen back title="Helper" onRefresh={refresh}>
+      <Screen back title={tr('Helper')} onRefresh={refresh}>
         {scoreLoading ? (
           <SkeletonCard lines={4} />
         ) : scoreFailed ? (
-          <LoadError what="this helper" onRetry={refetchScore} />
+          <LoadError what={tr('this helper')} onRetry={refetchScore} />
         ) : (
           <Text style={{ fontSize: type.body, color: t.inkSlate, lineHeight: 22 }}>
-            This friendship is not here any more.
+            {tr('This friendship is not here any more.')}
           </Text>
         )}
       </Screen>
@@ -91,8 +92,8 @@ export default function HelperSeatDetail({ connectionId }) {
   }
 
   const stageNo = Math.min(card.stageIndex + 1, 7);
-  const stageName = SHORT_STAGES[Math.min(card.stageIndex, 6)];
-  const next = SHORT_STAGES[Math.min(card.stageIndex + 1, 6)];
+  const stageName = tr(SHORT_STAGES[Math.min(card.stageIndex, 6)]);
+  const next = tr(SHORT_STAGES[Math.min(card.stageIndex + 1, 6)]);
   const originLine = conn ? trustOriginLine(conn, needsMine?.content) : null;
   const confirmedByMe = !!conn?.confirmedByMe;
   const confirmedByOther = !!conn?.confirmedByOther;
@@ -102,7 +103,7 @@ export default function HelperSeatDetail({ connectionId }) {
       {conn ? (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`View ${card.customerName}'s profile`}
+          accessibilityLabel={tr("View {customerName}'s profile", { customerName: card.customerName })}
           onPress={() => router.push(`/user/${conn.otherUserId}`)}
           hitSlop={6}
           style={({ pressed }) => ({ alignSelf: 'center', marginBottom: 16, opacity: pressed ? 0.6 : 1 })}
@@ -114,7 +115,7 @@ export default function HelperSeatDetail({ connectionId }) {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
-            Stage {stageNo} of 7 · {stageName}
+            {tr('Stage {stageNo} of 7 · {stageName}', { stageNo, stageName })}
           </Text>
           {/* Why this ladder exists and when it started (owner call
               2026-08-26): a friendship, or one of my posted requests by name. */}
@@ -122,10 +123,10 @@ export default function HelperSeatDetail({ connectionId }) {
             <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 2 }}>{originLine}</Text>
           ) : null}
         </View>
-        {conn ? <ActionChip label="Message" tonal onPress={() => router.push(`/chat/${card.connectionId}`)} /> : null}
+        {conn ? <ActionChip label={tr('Message')} tonal onPress={() => router.push(`/chat/${card.connectionId}`)} /> : null}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Trust score ${card.total} of ${card.totalMax}. Open your Trust Score page`}
+          accessibilityLabel={tr('Trust score {total} of {totalMax}. Open your Trust Score page', { total: card.total, totalMax: card.totalMax })}
           onPress={() => router.push('/trust')}
           hitSlop={10}
           style={({ pressed }) => ({
@@ -146,11 +147,11 @@ export default function HelperSeatDetail({ connectionId }) {
       <TrustLadder stageIndex={card.stageIndex} style={{ marginTop: 12 }} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
-        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>Connected</Text>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate }}>{tr('Connected')}</Text>
         {!atTop ? (
-          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>Next: {next}</Text>
+          <Text style={{ fontSize: type.meta, fontWeight: '600', color: t.blueDeep }}>{tr('Next: {next}', { next })}</Text>
         ) : null}
-        <Text style={{ fontSize: type.meta, color: t.trustGold }}>Trusted</Text>
+        <Text style={{ fontSize: type.meta, color: t.trustGold }}>{tr('Trusted')}</Text>
       </View>
 
       {atTop ? (
@@ -167,15 +168,15 @@ export default function HelperSeatDetail({ connectionId }) {
           }}
         >
           <Text style={{ fontFamily: fontFamily.display, fontSize: type.cardTitle, color: t.greenDeep }}>
-            Fully trusted
+            {tr('Fully trusted')}
           </Text>
           <Text style={{ fontSize: type.meta, color: t.greenDeep, lineHeight: 18, marginTop: 2 }}>
-            Seven steps, climbed together. The whole ladder is complete.
+            {tr('Seven steps, climbed together. The whole ladder is complete.')}
           </Text>
         </View>
       ) : confirmedByMe && !confirmedByOther ? (
         <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 12 }}>
-          You've started the next step. Waiting for {card.customerName} to accept.
+          {tr("You've started the next step. Waiting for {customerName} to accept.", { customerName: card.customerName })}
         </Text>
       ) : !connections ? (
         // Confirmed flags are unknown until ['connections'] resolves — a
@@ -185,7 +186,7 @@ export default function HelperSeatDetail({ connectionId }) {
         // Backend rule (TrustService): the elder STARTS every step and the
         // helper only accepts afterwards. Filled blue: the page's one action.
         <Button
-          title="Start the next step"
+          title={tr('Start the next step')}
           variant="primary"
           size="small"
           onPress={() => startStep(card)}
@@ -208,13 +209,13 @@ export default function HelperSeatDetail({ connectionId }) {
               style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 20, marginTop: 10 }}
             >
               {f.inherited
-                ? `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} can message ${f.helperName} through your shared trust.`
-                : `Your ${(f.relationship || 'family member').toLowerCase()} ${f.familyMemberName} and ${f.helperName} are talking.`}
+                ? tr('Your {relationship} {familyMemberName} can message {helperName} through your shared trust.', { relationship: (f.relationship || tr('family member')).toLowerCase(), familyMemberName: f.familyMemberName, helperName: f.helperName })
+                : tr('Your {relationship} {familyMemberName} and {helperName} are talking.', { relationship: (f.relationship || tr('family member')).toLowerCase(), familyMemberName: f.familyMemberName, helperName: f.helperName })}
             </Text>
           ))}
           {conn.sharedWithFamily ? (
             <ActionChip
-              label="Open the family group"
+              label={tr('Open the family group')}
               onPress={() => router.push(`/chat/${conn.id}?channel=family`)}
               style={{ marginTop: 8, alignSelf: 'flex-start' }}
             />
@@ -227,10 +228,10 @@ export default function HelperSeatDetail({ connectionId }) {
           Home where the paused card carries Resume. */}
       <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 }}>
         <Button
-          title="Take a break"
+          title={tr('Take a break')}
           variant="text"
           onPress={() => takeBreak(card, () => router.back())}
-          accessibilityHint="Pauses trust steps and messages with this person until either of you resumes"
+          accessibilityHint={tr('Pauses trust steps and messages with this person until either of you resumes')}
           style={{ paddingHorizontal: 0 }}
         />
       </View>

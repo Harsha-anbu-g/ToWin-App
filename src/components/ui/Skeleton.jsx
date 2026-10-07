@@ -3,6 +3,7 @@
 // (ui-ux-pro-max: progressive loading beats spinners for >1s operations.)
 import { View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 export function SkeletonLine({ width = '100%', height = 16, style }) {
   const { t, radius } = useTheme();
@@ -29,7 +30,7 @@ export function SkeletonLine({ width = '100%', height = 16, style }) {
 export default function SkeletonCard({ lines = 2 }) {
   const { spacing } = useTheme();
   return (
-    <View accessibilityLabel="Loading" accessibilityRole="progressbar">
+    <View accessibilityLabel={tr('Loading')} accessibilityRole="progressbar">
       <SkeletonLine width="45%" height={20} />
       {Array.from({ length: lines }).map((_, i) => (
         <SkeletonLine

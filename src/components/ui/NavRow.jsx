@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { Bell, ShieldCheck, UserRoundPlus, UserRoundSearch } from '../icons';
 import { Pressable, Text, View } from 'react-native';
 import { useTheme } from '../../theme/ThemeContext';
+import { tr } from '../../i18n';
 
 function IconTarget({ label, caption, captionColor, onPress, badgeCount, children }) {
   const { t, type, fontScaleCaps, pressRipple } = useTheme();
@@ -122,13 +123,13 @@ export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts
           letterSpacing: -0.4,
         }}
       >
-        Towinly
+        {tr('Towinly')}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: -8 }}>
         {/* FAMILY users have no discovery surface (family-in-trust 2026-07-19)
             — no handler, no button, instead of a dead target. */}
         {onAddFriends ? (
-          <IconTarget label="Add friends" caption="Friends" captionColor={t.blueDeep} onPress={onAddFriends}>
+          <IconTarget label={tr('Add friends')} caption={tr('Friends')} captionColor={t.blueDeep} onPress={onAddFriends}>
             <UserRoundSearch size={26} color={t.blueDeep} strokeWidth={1.8} />
           </IconTarget>
         ) : onAddParent ? (
@@ -136,7 +137,7 @@ export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts
           // Friends button holds, so all three hubs open the same way (owner
           // call 2026-08-28, elder as the base). The plus, not the magnifier:
           // a parent is named, never searched for.
-          <IconTarget label="Add parent" caption="Add parent" captionColor={t.blueDeep} onPress={onAddParent}>
+          <IconTarget label={tr('Add parent')} caption={tr('Add parent')} captionColor={t.blueDeep} onPress={onAddParent}>
             <UserRoundPlus size={26} color={t.blueDeep} strokeWidth={1.8} />
           </IconTarget>
         ) : null}
@@ -154,7 +155,7 @@ export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts
           // 2026-08-22: "the trust need a symbol") and the score keeps the
           // gold that is reserved for trust everywhere else.
           <IconTarget
-            label={`${trustScore} trust. Open your Trust Score page`}
+            label={tr('{trustScore} trust. Open your Trust Score page', { trustScore })}
             captionColor={t.trustGold}
             onPress={() => router.push('/trust')}
             caption={
@@ -174,7 +175,7 @@ export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts
                   maxFontSizeMultiplier={fontScaleCaps.chrome}
                   style={{ fontSize: type.caption, fontWeight: '600', color: t.trustGold }}
                 >
-                  trust
+                  {tr('trust')}
                 </Text>
               </View>
             }
@@ -184,8 +185,8 @@ export default function NavRow({ trustScore, onAddFriends, onAddParent, onAlerts
         ) : null}
         {onAlerts ? (
           <IconTarget
-            label={alertCount > 0 ? `Updates, ${alertCount} new` : 'Updates'}
-            caption="Updates"
+            label={alertCount > 0 ? tr('Updates, {alertCount} new', { alertCount }) : tr('Updates')}
+            caption={tr('Updates')}
             captionColor={t.inkSlate}
             onPress={onAlerts}
             badgeCount={alertCount}

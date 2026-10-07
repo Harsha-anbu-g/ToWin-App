@@ -17,6 +17,7 @@ import { useAuth } from '../src/context/AuthContext';
 import { markPromptedToday } from '../src/lib/checkinGate';
 import { KEYS } from '../src/lib/storageKeys';
 import { useTheme } from '../src/theme/ThemeContext';
+import { tr } from '../src/i18n';
 
 export default function Checkin() {
   const { spacing } = useTheme();
@@ -57,7 +58,7 @@ export default function Checkin() {
       // never a 13pt underline (rulebook).
       footer={
         <TextLink
-          label={done ? 'Take me home' : 'Not now, take me home'}
+          label={done ? tr('Take me home') : tr('Not now, take me home')}
           muted={!done}
           onPress={toHome}
         />
@@ -66,9 +67,9 @@ export default function Checkin() {
       <GreetingHeader />
       <FirstTimeCard
         flag={KEYS.checkinExplained}
-        title="What's a check-in?"
-        body="One tap on “I'm here today” tells your trusted people you're okay. Skipping a day is fine. It's a gentle signal, never a duty."
-        linkTitle="Read the Guide"
+        title={tr("What's a check-in?")}
+        body={tr("One tap on “I'm here today” tells your trusted people you're okay. Skipping a day is fine. It's a gentle signal, never a duty.")}
+        linkTitle={tr('Read the Guide')}
         onLink={() => router.push('/guide')}
       />
       <CheckinCard />
