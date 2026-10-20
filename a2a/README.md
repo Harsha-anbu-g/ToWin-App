@@ -7,7 +7,7 @@ Needs Node 22 or newer.
 ## Run
 
     cd App/a2a && npm install
-    TOWINLY_IDENTIFIER=you@example.com TOWINLY_PASSWORD=yourpassword node server.mjs
+    A2A_SERVER_KEY=$(openssl rand -hex 16) TOWINLY_IDENTIFIER=you@example.com TOWINLY_PASSWORD=yourpassword node server.mjs
 
 The card is at `http://localhost:7421/.well-known/agent-card.json` and messages go to `http://localhost:7421/a2a/v1`.
 
@@ -17,6 +17,8 @@ The card is at `http://localhost:7421/.well-known/agent-card.json` and messages 
 | `TOWINLY_TOKEN` | a ready token instead of the pair above |
 | `TOWINLY_API_BASE_URL` | optional; defaults to the live backend the app uses |
 | `A2A_PUBLIC_URL` | the URL other agents should use, when this machine is reachable from outside |
+| `A2A_SERVER_KEY` | required; every message must carry it as `Authorization: Bearer <key>` (the card says so) |
+| `A2A_HOST` | optional; default `127.0.0.1`, so the agent is not on the network unless you choose |
 | `A2A_PORT` | optional; default 7421 |
 
 ## What another agent gets
@@ -27,7 +29,7 @@ The helper can propose an action for the signed-in account, such as a check-in o
 
 ## Try it
 
-    curl -s localhost:7421/a2a/v1 -H 'Content-Type: application/json' -d '{
+    curl -s localhost:7421/a2a/v1 -H "Authorization: Bearer $A2A_SERVER_KEY" -H 'Content-Type: application/json' -d '{
       "jsonrpc": "2.0", "id": 1, "method": "SendMessage",
       "params": {"message": {"role": "ROLE_USER", "parts": [{"text": "How many stages does the trust journey have?"}], "messageId": "m1"}}
     }'

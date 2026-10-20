@@ -16,6 +16,8 @@ export function agentCard(env = process.env) {
     provider: { organization: 'Towinly', url: 'https://www.towinly.com' },
     version: '0.1.0',
     capabilities: { streaming: false, pushNotifications: false, extendedAgentCard: false },
+    securitySchemes: { bearer: { httpAuthSecurityScheme: { scheme: 'bearer', description: 'The A2A_SERVER_KEY the operator set' } } },
+    securityRequirements: [{ schemes: { bearer: { list: [] } } }],
     defaultInputModes: ['text/plain'],
     defaultOutputModes: ['text/plain'],
     skills: [

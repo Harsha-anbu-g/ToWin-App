@@ -6,6 +6,7 @@ import { createEmbedder, DEFAULT_MODEL } from './embed.mjs';
 import { handleEmbeddings } from './handler.mjs';
 
 const port = Number(process.env.EMBED_PORT || 7422);
+const host = process.env.EMBED_HOST || '127.0.0.1';
 const key = process.env.EMBED_SERVER_KEY || '';
 const embedder = createEmbedder({ model: process.env.EMBED_MODEL || DEFAULT_MODEL });
 
@@ -44,7 +45,7 @@ const server = http.createServer((req, res) => {
 const started = Date.now();
 embedder.warmUp().then(() => {
   console.log(`model ${embedder.model} ready in ${Date.now() - started} ms`);
-  server.listen(port, () => console.log(`Towinly embed server: POST http://localhost:${port}/v1/embeddings`));
+  server.listen(port, host, () => console.log(`Towinly embed server on ${host}:${port}: POST /v1/embeddings`));
 }).catch((e) => {
   console.error('could not load the model:', e.message);
   process.exit(1);

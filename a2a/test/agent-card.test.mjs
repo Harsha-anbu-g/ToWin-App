@@ -13,6 +13,8 @@ test('the card names Towinly, one text skill, and the JSON-RPC interface at the 
   assert.equal(card.skills.length, 1);
   assert.equal(card.skills[0].id, 'ask-towinly');
   assert.equal(card.capabilities.streaming, false);
+  assert.equal(card.securitySchemes.bearer.httpAuthSecurityScheme.scheme, 'bearer');
+  assert.equal(card.securityRequirements.length, 1);
 });
 
 test('without a public url it points at localhost', () => {

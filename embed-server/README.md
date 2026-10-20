@@ -18,6 +18,7 @@ Then:
 
 | Variable | What it is |
 |---|---|
+| `EMBED_HOST` | optional; default `127.0.0.1` (set `0.0.0.0` to serve the backend from another machine, with a key) |
 | `EMBED_PORT` | optional; default 7422 |
 | `EMBED_MODEL` | optional; another Transformers.js feature-extraction model |
 | `EMBED_SERVER_KEY` | optional; when set, requests need `Authorization: Bearer <key>` |
