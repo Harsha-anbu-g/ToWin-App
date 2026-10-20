@@ -200,3 +200,31 @@ home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
         __tests__/tab-lens-geometry.test.js (explicit OK); My Family member rows now open
         app/family/member/[linkId].jsx (Message / Make main contact / Remove moved there via
         src/lib/useFamilyMemberActions.js). LinkRow's dead `collapsible` branch removed.
+
+# Queue — 2026-10-19 AI roadmap (owner: "do it all in order")
+
+Spec: docs/superpowers/specs/2026-10-19-ai-roadmap-design.md. Backend work on
+branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
+
+1. [x] Step 1: token accounting from Groq usage + daily token cap. Done 2026-10-19:
+       5 commits on ai/ask-ai-roadmap (c4217d2 usage, 1b59344 token ceiling, d5dfa9d
+       AssistantSpend, Task 4 service booking, config). Backend suite 1064 green, 74 DB skips.
+2. [x] Step 2: eval set for Ask AI (evals.json, gated live runner, file test). Done
+       2026-10-19: f183394 scorer, fb5a27f 36 cases, live runner commit; dry run with an
+       invalid key prints a full FAIL scorecard. Backend suite 1082 green, 75 skips.
+       OWNER: run TOWINLY_AI_EVALS=true GROQ_API_KEY=... ./mvnw -Dtest=AssistantEvalsTest test
+3. [x] Step 3: read-only tools for Ask AI (connections, help requests, family). Done
+       2026-10-19: 51bc5b3 Groq tools, 0be70fd AssistantTools, service round commit, 2 eval
+       cases. Targeted 101 green (1 skipped), full suite green. Live tool use is checked
+       only by the owner's eval run.
+4. [x] Step 4: MCP server. Built by another session on feat/mcp-server in
+       .worktrees/App-mcp-server: 11 commits to dc8e1e3 (catalog, bundle, session, tools,
+       stdio entry, README), worktree clean at 20:59. Not touched by this session; the
+       branch is unmerged and unpushed. Owner reviews and merges it.
+5. [x] Step 5: RAG over the user guide on pgvector. Done 2026-10-19: gate passed (Railway
+       Postgres 18.6, pgvector 0.8.6 available); 201 guide chunks (fcb46f3), V62 migration,
+       EmbeddingClient, GuideChunkStore, GuideIndexer, GuideRetriever, prompt block; app
+       consent + fr/ta + privacy labels (d4773a1); website policy. Backend suite 1124 green,
+       76 skips. OWNER: set EMBEDDINGS_API_KEY on Railway (OpenAI key); run the gated
+       GuideChunkStoreDbTest once on a local Postgres with pgvector; review consent copy.
+6. [ ] Step 6: semantic matching in discovery (profile + need embeddings).

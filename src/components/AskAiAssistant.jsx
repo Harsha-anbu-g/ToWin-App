@@ -5,7 +5,7 @@
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
 // fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
 // The very first question is gated by a one-time plain-words consent note
-// naming Groq, the outside AI service (App Store AI-consent rule, STORE-203).
+// naming Groq and OpenAI, the outside AI services (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -295,19 +295,25 @@ export default function AskAiAssistant() {
       title: tr('Before your first question'),
       message:
         tr(
-          "Towinly's helper uses Groq, an outside AI service, to write its answers. " +
-            'Your question, this chat, and a short summary of your own Towinly activity ' +
-            '(like your first name and trust score) are shared with Groq. Your contact ' +
-            'details are never shared. The answers are written by a machine, so they can ' +
-            'be wrong. Every answer has a "Report this answer" button if one looks wrong ' +
-            'or upsetting. Is that okay?'
+          "Towinly's helper uses two outside AI services to answer. Groq writes the " +
+            'answers. OpenAI turns your question into a search of the user guide, so the ' +
+            'helper can find the right page. Towinly sends your question, this chat, and ' +
+            'a short summary of your own Towinly activity (like your first name and trust ' +
+            'score) to Groq. If you ask about your connections, family or requests, it also ' +
+            'sends their first names and the request titles. It sends only your question ' +
+            'to OpenAI. It never sends your contact details. A machine writes the answers, ' +
+            'so they can be wrong. Every answer has a "Report this answer" button if one ' +
+            'looks wrong or upsetting. Is that okay?'
         ),
       cancelLabel: tr('Not now'),
       confirmLabel: tr("Yes, that's okay"),
     });
     if (!ok) return false;
     setAiConsented(true);
-    grantAiConsent(user?.userId);
+    // Awaited: the version must be on disk before the question leaves the phone,
+    // or a crash right after the send would ask again next time (harmless) and a
+    // crash during the write could leave a half state (not harmless).
+    await grantAiConsent(user?.userId);
     return true;
   };
 
