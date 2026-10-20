@@ -244,8 +244,9 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
     9. [x] Step 9: A2A agent, App/a2a (card, SendMessage, GetTask; proposals as metadata only).
 10. [x] Step 10: model serving, App/embed-server (MiniLM behind /v1/embeddings; 2.5 s load,
        10 ms per request, zero-padded to 1536).
-11. [ ] Step 11: AI safety and guardrails (PiiGuard, OutputGuard, red-team evals, docs/ai-safety.md).
-12. [ ] Step 12: two end-to-end agents: App/agent (goal to tool calls with confirm) and
+11. [x] Step 11: AI safety and guardrails (website e08c15b; App db74452) (PiiGuard, OutputGuard, red-team evals, docs/ai-safety.md).
+12. [x] Step 12: two end-to-end agents (agent: session towin-app-0a, e2f5dae and its fix;
+       evaluator: b9c2ec9): App/agent (goal to tool calls with confirm) and
        App/evaluator (A2A client that scores the helper with embeddings).
    Pushes 2026-10-20: both blocked by the permission layer; owner runs them.
    Security review 2026-10-20 on the registry (all three fixed, c39352e): composer content
