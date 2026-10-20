@@ -257,6 +257,38 @@ query.
 
 Not doing: a search box, a "why this match" label, or a new screen.
 
+## Step 7: one write tool, behind a native confirm (added 2026-10-19, owner: "do all")
+
+Goal: the tortoise can act, once, in the smallest safe way: when an elder says
+"check me in" or "I am here today", it proposes the daily check-in and the app
+asks the person to confirm with a native dialog before anything is written.
+
+Design:
+
+- The model gets a fourth tool, `propose_check_in`, described as a proposal
+  only. Calling it never writes: the tool result tells the model the app will
+  ask for a confirmation, and the service marks the answer with an action
+  named `check_in`. The reply text still comes from the model.
+- `POST /api/assistant/chat` returns `{reply, action}`; `action` is null for
+  every answer that proposes nothing. `AssistantService.answer` keeps returning
+  the text for its existing callers; a new `answerWithAction` returns both.
+- The app, on `action === "check_in"`, shows the native confirm (the same
+  `confirm` the consent note uses) with "Check in today?" and, on yes, calls
+  the app's own `checkIn` function from `src/api/streaks.js` (Rule 6: the
+  assistant proposes, the app's named API function acts). It then appends one
+  plain bubble: done, or could not, with the check-in screen as the fallback.
+  On no, nothing happens and nothing is sent.
+- The backend's own rule still applies: only an elder can check in, so a helper
+  who talks the model into proposing it gets the API's refusal, not a check-in.
+- The prompt's TOOLS paragraph gains one line: propose, never claim it is done.
+
+Tests: the tool definition and its proposal text; the service marks the action
+on a propose call and leaves it null otherwise; the app confirms before calling
+`checkIn`, calls it on yes, and never on no.
+
+Not doing: a second write tool. The pattern is the deliverable; more writes are
+each an owner decision.
+
 ## Order, branches and what the owner does
 
 - Backend steps run on branch `ai/ask-ai-roadmap`, cut from origin/main 26003ff
