@@ -62,7 +62,23 @@ test('wording the Post Request screen would refuse is refused here too, before a
   if (!sample) return; // the filter has no word list in this build; nothing to assert
   const out = await runAssistantAction({ name: 'postHelpRequest', arguments: { title: sample } }, { confirm: yes });
   expect(postHelpRequest).not.toHaveBeenCalled();
+  expect(yes).not.toHaveBeenCalled(); // refused before the dialog, so nothing objectionable is shown
   expect(out).toBe("That wording can't be posted. Please use Post Request.");
+});
+
+test('what is shown is exactly what is sent: long text is cut once, for both', async () => {
+  const long = 'L'.repeat(300);
+  await runAssistantAction({ name: 'postHelpRequest', arguments: { title: long, description: 'D'.repeat(500) } }, { confirm: yes });
+  const shown = yes.mock.calls[0][0].message.split('\n');
+  expect(shown[1]).toHaveLength(80);
+  expect(shown[2]).toHaveLength(200);
+  expect(postHelpRequest).toHaveBeenCalledWith(expect.objectContaining({ title: shown[1], description: shown[2] }));
+});
+
+test('a category named like an inherited property is not a category', async () => {
+  await runAssistantAction({ name: 'postHelpRequest', arguments: { title: 'Lift', category: 'constructor' } }, { confirm: yes });
+  expect(yes.mock.calls[0][0].message).toContain('Other');
+  expect(postHelpRequest).toHaveBeenCalledWith(expect.objectContaining({ category: 'OTHER' }));
 });
 
 test('an empty title is refused, never posted', async () => {

@@ -7,21 +7,30 @@ import { checkInToday } from '../api/streaks';
 import { postHelpRequest } from '../api/needs';
 import { objectionableError } from './contentFilter';
 
-// Literal tr() calls, so the i18n coverage test can see every word.
-const CATEGORY_WORDS = {
-  TRANSPORTATION: () => tr('Transport'),
-  CLEANING: () => tr('Cleaning'),
-  COMPANIONSHIP: () => tr('Company'),
-  ERRANDS: () => tr('Errands'),
-  OTHER: () => tr('Other'),
+// The allowlist is an array, never an object lookup: a category named like an
+// inherited property ("constructor") must not pass. Literal tr() calls, so the
+// i18n coverage test can see every word.
+const CATEGORIES = ['TRANSPORTATION', 'CLEANING', 'COMPANIONSHIP', 'ERRANDS', 'OTHER'];
+const categoryWord = (category) => {
+  switch (category) {
+    case 'TRANSPORTATION':
+      return tr('Transport');
+    case 'CLEANING':
+      return tr('Cleaning');
+    case 'COMPANIONSHIP':
+      return tr('Company');
+    case 'ERRANDS':
+      return tr('Errands');
+    default:
+      return tr('Other');
+  }
 };
 
-// The backend's own limits (NeedRequest), so a confirmed post is never refused for length.
-const TITLE_MAX = 200;
-const DESCRIPTION_MAX = 2000;
-// What the dialog shows: short, one line each, so model text cannot restate what Yes does.
-const SHOW_TITLE_MAX = 80;
-const SHOW_DESCRIPTION_MAX = 200;
+// One cap for what is shown AND what is sent, so nothing the person could not
+// read is ever posted. Short and single-line, so model text cannot restate what
+// Yes does. Longer requests belong on the Post Request screen.
+const TITLE_MAX = 80;
+const DESCRIPTION_MAX = 200;
 
 const oneLine = (value, max) => String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 
@@ -31,7 +40,7 @@ function shapeRequest(a) {
   return {
     title: oneLine(a.title, TITLE_MAX),
     description: description || null,
-    category: CATEGORY_WORDS[a.category] ? a.category : 'OTHER',
+    category: CATEGORIES.includes(a.category) ? a.category : 'OTHER',
     urgency: a.urgency === 'URGENT' ? 'URGENT' : 'NORMAL',
   };
 }
@@ -60,20 +69,27 @@ const ACTIONS = {
       const r = shapeRequest(a);
       return [
         tr('The helper wants to post this request for you:'),
-        oneLine(r.title, SHOW_TITLE_MAX),
-        r.description ? oneLine(r.description, SHOW_DESCRIPTION_MAX) : null,
-        CATEGORY_WORDS[r.category]() + (r.urgency === 'URGENT' ? ' · ' + tr('Urgent') : ''),
+        r.title,
+        r.description,
+        categoryWord(r.category) + (r.urgency === 'URGENT' ? ' · ' + tr('Urgent') : ''),
       ]
         .filter(Boolean)
         .join('\n');
     },
     confirmLabel: () => tr('Yes, post it'),
-    // The same gate the Post Request screen runs before a human post.
-    run: async (a) => {
+    // The same gate the Post Request screen runs before a human post. Checked
+    // before the dialog (validate) and again before the call (run).
+    validate: (a) => {
       const r = shapeRequest(a);
       if (!r.title || objectionableError(r.title) || (r.description && objectionableError(r.description))) {
-        throw new Refused(tr("That wording can't be posted. Please use Post Request."));
+        return tr("That wording can't be posted. Please use Post Request.");
       }
+      return null;
+    },
+    run: async (a) => {
+      const r = shapeRequest(a);
+      const refusal = ACTIONS.postHelpRequest.validate(a);
+      if (refusal) throw new Refused(refusal);
       return postHelpRequest(r);
     },
     done: () => tr('Done. Your request is posted. Helpers nearby can see it now.'),
@@ -91,6 +107,9 @@ export async function runAssistantAction(action, { confirm }) {
   const entry = action && ACTIONS[action.name];
   if (!entry) return null;
   const args = action.arguments ?? {};
+  // Refuse before the person is even asked: nothing objectionable is rendered.
+  const refusal = entry.validate ? entry.validate(args) : null;
+  if (refusal) return refusal;
   const ok = await confirm({
     title: entry.title(args),
     message: entry.message(args),
