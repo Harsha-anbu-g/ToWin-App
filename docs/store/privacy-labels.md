@@ -95,13 +95,15 @@ Facts these labels rest on, each verified in code:
   still collected, and the backend texts them at trust milestones per
   `docs/store-listing.md`.
 - **AI assistant is consent-gated per user.** The first question triggers a
-  plain-words dialog naming Groq (the consent gate in
+  plain-words dialog naming Groq and OpenAI (the consent gate in
   `src/components/AskAiAssistant.jsx`, stored by `src/lib/aiConsent.js`),
   persisted per account (`src/lib/aiConsent.js`, key from
   `src/lib/storageKeys.js aiConsentKey`). The app sends `{message, history}`
   to `POST /assistant/chat`; the backend appends the user's first name and
   trust score to the prompt and forwards it to Groq (verified in the
   reference backend, `ToWin/backend/.../AssistantService.java:174-179`).
+  Since 2026-10-19 the question alone also goes to OpenAI, which turns it into
+  a search of the user guide (backend `GuideRetriever`); nothing else does.
   Contact details are never included.
 - **Encrypted in transit:** the committed base URL is HTTPS only. The
   plaintext LAN override (`EXPO_PUBLIC_API_BASE_URL`) is a dev-shell
@@ -157,7 +159,7 @@ Functionality** for all types unless a second purpose is listed.
 | Location | Coarse Location | **Yes** (optional) | App Functionality | Two sources: the device fix rounded to a ~2 km cell (Add Friends, Posted Help, Offer Help and Edit Profile, foreground only, permission asked), and the hand-typed town geocoded server-side via OpenStreetMap. Only the rounded/town-level coordinate and the city are stored; the city is shown to members. |
 | Sensitive Info | Sensitive Info | No | | Apple's definition (race, sexual orientation, religion, biometrics, etc.) matches nothing collected. DOB and gender are declared under Other Data Types. |
 | Contacts | Contacts | No | | The address book is never read. |
-| User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to Groq after explicit per-user consent. |
+| User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to Groq after explicit per-user consent; the question alone also goes to OpenAI for the guide search. |
 | User Content | Photos or Videos | **Yes** (optional) | App Functionality | Profile photo (`PUT /profile/photo`) and the optional government ID photo (`POST /auth/verify-id`, +3 trust points, staff review only, stored in AWS S3). Both picked from the photo library, never the camera. |
 | User Content | Audio Data | No | | Mic blocked; OS keyboard dictation never reaches the app. |
 | User Content | Gameplay Content | No | | `app/game.jsx` is fully on-device. |
