@@ -20,7 +20,7 @@ test('discover reads the JSON-RPC url from the card; ask returns the artifact te
     assert.equal(init.headers.Authorization, 'Bearer k');
     assert.equal(JSON.parse(init.body).method, 'SendMessage');
     return okJson(completed);
-  }), 'Seven.');
+  }, 'http://x'), 'Seven.');
   assert.equal(await ask('http://x/a2a/v1', 'k', 'q', async () => okJson({ result: { task: { status: { state: 'TASK_STATE_FAILED' } } } })), null);
 });
 
@@ -54,4 +54,13 @@ test('a card that points at another origin is refused, so the key never leaves',
 test('remote text loses control and escape characters before it is logged or reported', () => {
   assert.equal(clean('ok\u001b[2Jdone\nnext'), 'ok [2Jdone next');
   assert.equal(clean('x'.repeat(900)).length, 500);
+});
+
+test('ask attaches the key only for the configured origin', async () => {
+  const done = { result: { task: { status: { state: 'TASK_STATE_COMPLETED' }, artifacts: [{ parts: [{ text: 'ok' }] }] } } };
+  let headers;
+  await ask('https://evil.example/rpc', 'k', 'q', async (url, init) => { headers = init.headers; return okJson(done); }, 'http://127.0.0.1:7421');
+  assert.equal(headers.Authorization, undefined);
+  await ask('http://127.0.0.1:7421/a2a/v1', 'k', 'q', async (url, init) => { headers = init.headers; return okJson(done); });
+  assert.equal(headers.Authorization, undefined);
 });

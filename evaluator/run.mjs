@@ -13,7 +13,7 @@ const cases = JSON.parse(readFileSync(new URL('./cases.json', import.meta.url), 
 const report = await evaluate({
   cases,
   discover: () => discover(a2aUrl),
-  ask: (url, text) => ask(url, key, text),
+  ask: (url, text) => ask(url, key, text, fetch, new URL(a2aUrl).origin),
   embed: (texts) => embed(texts, { url: embedUrl, key: process.env.EMBED_SERVER_KEY || '' }),
   threshold: Number(process.env.EVAL_THRESHOLD || 0.6),
   log: (line) => console.log(line),

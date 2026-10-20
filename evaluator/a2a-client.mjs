@@ -19,10 +19,12 @@ export async function discover(baseUrl, fetchFn = fetch) {
 }
 
 /** The reply text, or null when the task failed. */
-export async function ask(url, key, text, fetchFn = fetch) {
+export async function ask(url, key, text, fetchFn = fetch, allowedOrigin = null) {
+  // Defence in depth: the key is attached only for the origin the operator configured.
+  const sendKey = Boolean(key) && allowedOrigin !== null && new URL(url).origin === allowedOrigin;
   const res = await fetchFn(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(key ? { Authorization: `Bearer ${key}` } : {}) },
+    headers: { 'Content-Type': 'application/json', ...(sendKey ? { Authorization: `Bearer ${key}` } : {}) },
     body: JSON.stringify({
       jsonrpc: '2.0', id: randomUUID(), method: 'SendMessage',
       params: { message: { role: 'ROLE_USER', parts: [{ text }], messageId: randomUUID() } },
