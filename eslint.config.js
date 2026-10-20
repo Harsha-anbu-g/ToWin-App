@@ -10,7 +10,7 @@ module.exports = defineConfig([
     // Build output, not source. All three are gitignored; eslint needs telling
     // separately, and without it `npm run lint` drowns in thousands of errors
     // from a web export and hides the real ones.
-    ignores: ['node_modules/**', 'dist/**', 'android/**', 'ios/**'],
+    ignores: ['node_modules/**', 'dist/**', 'android/**', 'ios/**', 'mcp/**'],
   },
   {
     rules: {
