@@ -109,6 +109,7 @@ function parseParamTag(tag) {
   }
   const optional = rest.startsWith('[');
   const nameMatch = /^\[?([\w.]+)(?:=[^\]]*)?\]?/.exec(rest);
+  if (!nameMatch) throw new Error(`@param without a name: "${tag}"`);
   const name = nameMatch[1];
   const text = rest.slice(nameMatch[0].length).trim().replace(/\s+/g, ' ');
   return { type, name, optional: optional && !/\(required\)/i.test(text), text };

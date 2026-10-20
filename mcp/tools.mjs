@@ -66,7 +66,7 @@ export function errorText(error) {
   if (error instanceof Error && !error.isAxiosError && !error.response) return error.message;
   const res = error?.response;
   if (!res) return 'Towinly could not be reached. Check the connection and try again.';
-  if (res.status === 401) return 'Sign-in failed. Check TOWINLY_IDENTIFIER and TOWINLY_PASSWORD.';
+  if (res.status === 401) return 'Sign-in failed. Check TOWINLY_IDENTIFIER and TOWINLY_PASSWORD, or TOWINLY_TOKEN.';
   if (res.status === 403) return 'Please verify your email first. Check your inbox for the link, then try again.';
   if (res.status >= 500) return "Something is wrong on Towinly's side. Please try again in a minute.";
   return res.data?.message || `Towinly refused the request (${res.status}).`;
