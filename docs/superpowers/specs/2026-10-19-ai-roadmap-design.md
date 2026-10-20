@@ -357,6 +357,46 @@ Tests: pure handlers with fake transports and a fake pipeline, run with
 `node --test`; one real smoke run of each server on this Mac when the network
 allows.
 
+## Steps 11 and 12: safety guardrails, and two end-to-end agent projects (added 2026-10-20)
+
+Owner, 2026-10-20: "ai safety and guardrails, and build 2 end to end ai projects, ai agents, do this also."
+
+**Step 11, AI safety and guardrails (backend, `assistant/guard`).** The
+guardrails that already exist (consent gate, prompt sanitizer, rate and token
+caps, read-only tools, propose-then-confirm, the composer's content filter)
+become one named layer with two new guards and a written policy:
+
+- `PiiGuard`: before a question leaves for Groq, phone numbers, email
+  addresses and long digit runs (cards, accounts) in the question and the
+  history are replaced with `[number]` and `[email]`. The helper never needed
+  them, and a person typing their own number into a chat box should not send it
+  to a third party.
+- `OutputGuard`: a reply is replaced by the fallback sentence, and a warning is
+  logged, when it asks for a password, a bank or card number or a verification
+  code, tells someone to send money, leaks a prompt section marker, or contains
+  a phone number or email address (the helper knows none, so any is invented).
+- Red-team cases in `evals.json`: PII extraction, money and password requests,
+  self-harm wording that must point to SOS, and three more injections.
+- `docs/ai-safety.md` in the App repo: the layers, what each stops, and how
+  each is tested.
+
+**Step 12, two end-to-end agent projects (Node, `App/agent/` and
+`App/evaluator/`).**
+
+- Project A, the Towinly agent: a goal in plain words ("find me a helper who
+  can drive and send them a connection request") becomes a plan and a sequence
+  of tool calls against the MCP catalog, run by a tool-calling loop over Groq,
+  with the guardrails from above: read tools run on their own, write tools stop
+  for a typed yes, every step is traced to the console and a JSON file, and a
+  step budget ends a runaway. Tested with a fake model and fake tools; one
+  real run documented.
+- Project B, the evaluator agent: an agent that discovers the Towinly A2A card,
+  asks every question from the eval set over A2A, scores each reply by cosine
+  similarity to a reference answer using the embed server, and writes a
+  scorecard. An agent that tests another agent, over A2A, with embeddings as
+  the judge. Tested with fake A2A and embedding transports; one real run against
+  the local servers documented.
+
 ## Order, branches and what the owner does
 
 - Backend steps run on branch `ai/ask-ai-roadmap`, cut from origin/main 26003ff
