@@ -20,6 +20,14 @@ test('the bundle exports every catalog function, logIn and the client hooks', as
   assert.match(bundle.client.default.defaults.baseURL, LIVE_URL);
 });
 
+test('two builds at the same time each import a working module', async () => {
+  delete process.env.TOWINLY_API_BASE_URL;
+  const [a, b] = await Promise.all([buildApiBundle(), buildApiBundle()]);
+  assert.equal(typeof a.getMyProfile, 'function');
+  assert.equal(typeof b.getMyProfile, 'function');
+  assert.notEqual(a, b, 'each build is its own module instance');
+});
+
 test('TOWINLY_API_BASE_URL overrides the base URL and a stray LAN variable never leaks in', async () => {
   process.env.TOWINLY_API_BASE_URL = 'https://example.test/api';
   const overridden = await buildApiBundle();

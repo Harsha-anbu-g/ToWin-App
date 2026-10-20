@@ -10,7 +10,7 @@ Needs Node 22 or newer.
     npm install
     TOWINLY_IDENTIFIER=you@example.com TOWINLY_PASSWORD=yourpassword node server.mjs
 
-The server speaks MCP over stdio. It signs in on the first tool call and keeps the token in memory. If the session expires it signs in again once. The only file it writes is the rebuilt bundle in `.bundle/`.
+The server speaks MCP over stdio. It signs in on the first tool call and keeps the token in memory. If the session expires it signs in again once. The only file it writes is the rebuilt bundle, in a fresh folder under the system temp directory.
 
 ## Environment
 

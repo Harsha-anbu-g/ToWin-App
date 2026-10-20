@@ -2,10 +2,11 @@
 // that re-exports every action file, so the whole bundle shares a single
 // axios instance (the one setTokenGetter configures).
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { build } from 'esbuild';
-import { API_DIR, BUNDLE_DIR, MCP_DIR, STUBS_DIR } from './paths.mjs';
+import { API_DIR, MCP_DIR, STUBS_DIR } from './paths.mjs';
 import { listApiFiles } from './catalog.mjs';
 
 // The one relative import that must not be followed: i18n lazily requires
@@ -44,8 +45,10 @@ export async function buildApiBundle() {
     nodePaths: [path.join(MCP_DIR, 'node_modules')],
     plugins: [storageStub],
   });
-  fs.mkdirSync(BUNDLE_DIR, { recursive: true });
-  const out = path.join(BUNDLE_DIR, 'api.mjs');
+  // A fresh folder per build: the test runner builds from several processes
+  // at once, and two of them sharing one output path can import a file the
+  // other is still writing.
+  const out = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'towinly-mcp-')), 'api.mjs');
   fs.writeFileSync(out, result.outputFiles[0].text);
 
   // config.js reads EXPO_PUBLIC_API_BASE_URL. The documented variable is
@@ -54,5 +57,5 @@ export async function buildApiBundle() {
   if (process.env.TOWINLY_API_BASE_URL) process.env.EXPO_PUBLIC_API_BASE_URL = process.env.TOWINLY_API_BASE_URL;
   else delete process.env.EXPO_PUBLIC_API_BASE_URL;
 
-  return import(`${pathToFileURL(out).href}?t=${Date.now()}`);
+  return import(pathToFileURL(out).href);
 }
