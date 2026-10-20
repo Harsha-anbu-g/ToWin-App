@@ -197,7 +197,10 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
 1. [x] Step 1: token accounting from Groq usage + daily token cap. Done 2026-10-19:
        5 commits on ai/ask-ai-roadmap (c4217d2 usage, 1b59344 token ceiling, d5dfa9d
        AssistantSpend, Task 4 service booking, config). Backend suite 1064 green, 74 DB skips.
-2. [ ] Step 2: eval set for Ask AI (evals.json, gated live runner, file test).
+2. [x] Step 2: eval set for Ask AI (evals.json, gated live runner, file test). Done
+       2026-10-19: f183394 scorer, fb5a27f 36 cases, live runner commit; dry run with an
+       invalid key prints a full FAIL scorecard. Backend suite 1082 green, 75 skips.
+       OWNER: run TOWINLY_AI_EVALS=true GROQ_API_KEY=... ./mvnw -Dtest=AssistantEvalsTest test
 3. [ ] Step 3: read-only tools for Ask AI (connections, help requests, family).
 4. [ ] Step 4: MCP server. Being built by another session on feat/mcp-server
        in .worktrees/App-mcp-server; report its state, do not touch.
