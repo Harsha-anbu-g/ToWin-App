@@ -10,5 +10,6 @@ export const EXCLUDED = Object.freeze({
   exchangeOAuthCode: 'second half of a Google sign-in that starts in a browser',
   completeOAuthSignup: 'finishes a Google sign-up; needs the browser flow above',
   submitIdPhoto: 'multipart photo upload from a phone camera',
+  updateProfilePhoto: 'multipart photo from a phone picker',
   syncBlockedPeople: "one-time migration of a phone's old local block list",
 });

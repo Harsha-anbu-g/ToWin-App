@@ -24,9 +24,9 @@ An assistant still cannot reach them, for three small reasons:
    positional values (`blockPerson(userId)`, `reportUser(id, reason)`), or
    one destructured object (`postHelpRequest({ title, ... })`). A tool needs
    one declared input shape.
-3. Seven of them only make sense on a phone or in a browser (push tokens,
-   Google sign-in exchange, ID photo upload, block-list migration, the
-   network probe, and `logIn` itself).
+3. Eight of them only make sense on a phone or in a browser (push tokens,
+   Google sign-in exchange, ID photo upload, profile photo upload,
+   block-list migration, the network probe, and `logIn` itself).
 
 ## Chosen approach
 
@@ -63,6 +63,7 @@ Everything lives in `App/mcp/`, its own small package so the mobile app's
 | `stubs/expo-constants.mjs` | `{ expoConfig: { extra: {} } }` so `config.js` falls through to the env var or the live URL |
 | `stubs/storage.mjs` | no-op get/set/remove; the language store never finds a saved choice |
 | `stubs/react.mjs` | `useSyncExternalStore` that throws if called; only the import must resolve |
+| `stubs/expo-crypto.mjs` | `randomUUID` from `node:crypto`; idempotency asks for it only when Web Crypto is missing |
 | `catalog.mjs` | reads `src/api/*.js`, returns the tool definitions (pure, no network) |
 | `schema.mjs` | doc type string to zod schema |
 | `exclude.mjs` | the seven phone-or-browser-only functions, each with its reason |
@@ -114,6 +115,7 @@ Type map (`schema.mjs`), covering every type the 18 files use today:
 | `string[]`, `Array<T>` | `z.array(...)` of the mapped `T` |
 | `'A'\|'B'` | `z.enum(['A', 'B'])` |
 | `T\|null` | mapped `T`, `.nullable().optional()` (an agent may send null or leave it out) |
+| `A\|B` of plain types (`number\|string`) | `z.union` of the mapped parts |
 | `{a: string, b?: number}` inline | `z.object` with each field mapped, `?` optional |
 | `object` with documented `head.field` lines | `z.object` built from those lines |
 | `object` with no field lines | `z.record(z.string(), z.unknown())` |
@@ -154,6 +156,10 @@ Environment variables, read once:
 | `TOWINLY_IDENTIFIER` + `TOWINLY_PASSWORD` | the account the assistant acts as; username, email or phone, same as the login screen |
 | `TOWINLY_TOKEN` | a ready JWT instead of the pair above |
 | `TOWINLY_API_BASE_URL` | optional; defaults to the live Railway URL the app uses |
+
+`config.js` reads `EXPO_PUBLIC_API_BASE_URL`; `bundle.mjs` copies
+`TOWINLY_API_BASE_URL` into it before importing the bundle, and clears it
+otherwise so a developer's LAN URL in the shell never reaches the server.
 
 `session.mjs` wires the bundle's `setTokenGetter` to its in-memory token and
 `setOnSessionExpired` to a flag. On the first call with no token it calls the
@@ -236,8 +242,8 @@ runs, with the field named.
 
 ## Tests, written first
 
-Runner: `node --test mcp/test/` (no jest-expo, no babel; the server is plain
-Node). Fakes: an axios adapter that records requests and answers from a
+Runner: `node --test 'test/*.test.mjs'` from `mcp/` (no jest-expo, no
+babel; the server is plain Node, 22 or newer). Fakes: an axios adapter that records requests and answers from a
 script, so no test touches the network.
 
 1. `catalog.test.mjs`: every export in `src/api/*.js` (minus plumbing and

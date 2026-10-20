@@ -16,6 +16,23 @@
 
 ---
 
+## Amendments after plan review (2026-10-19)
+
+The reviewer ran the plan's code against the real `src/api` and found these. They override the task text below.
+
+1. **Task 1, exclude.mjs**: add `updateProfilePhoto: 'multipart photo from a phone picker'`. Counts become 8 excluded, 93 tools (goal line, README "Eight functions", spec). `engines.node` is `>=22` (`node --test` with a glob needs 21+). Both already applied to the files.
+2. **Task 2, catalog.mjs**: when an object-shaped param has no documented children (`sendFeedback`, `updateHelperProfile`, `updateElderProfile`), keep its prose: add `argNote: children.length ? null : head.text` to the returned entry (null for every other shape). Per-task test runs use `node --test test/<file>`, never `npm test -- <file>`.
+3. **Task 3, schema.mjs**: unions of plain types (`number|string`, used by `addEmergencyContact`): after the nullable handling and before the `t === 'string'` branch, `const alts = splitTop(t, '|'); if (alts.length > 1 && !ENUM_RE.test(t)) schema = z.union(alts.map((a) => zodFromDocType(a, where)));` and make the rest an `else if` chain. Test: `zodFromDocType('number|string', 't')` accepts `5` and `'5'`, rejects `true`.
+4. **Task 5, stubs/storage.mjs**: export `getItemAsync` (resolves null), `setItemAsync`, `deleteItemAsync` (resolve undefined), plus a default object of the three.
+5. **Task 5, bundle.mjs**: (a) add `banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" }` to `build()` (bundled axios pulls form-data, which calls `require('util')`); (b) before the `import()`: `if (process.env.TOWINLY_API_BASE_URL) process.env.EXPO_PUBLIC_API_BASE_URL = process.env.TOWINLY_API_BASE_URL; else delete process.env.EXPO_PUBLIC_API_BASE_URL;` so the documented variable works and a developer's LAN URL never leaks in.
+6. **Task 5, bundle test**: delete the `defaults.adapter` assertion. Add: with `process.env.TOWINLY_API_BASE_URL = 'https://example.test/api'` set before `buildApiBundle()`, `bundle.client.default.defaults.baseURL` equals it; then delete the variable, rebuild, and `baseURL` matches `/^https:\/\//`.
+7. **Task 7, tools.mjs**: in `errorText`, after the session-error line add `if (error instanceof Error && !error.isAxiosError && !error.response) return error.message;` (api functions throw plain Errors like "sendMessage needs content"). Test: `errorText(new Error('x needs y'))` is `'x needs y'`. In `describeTool`, append `entry.argNote` when present, after the description and before any safety note.
+8. **Task 8**: drop the jest `testPathIgnorePatterns` change (jest-expo never matches `.mjs`). Instead add `'mcp/**'` to the `ignores` array in `eslint.config.js` so `npm run lint` in App skips this package. Before writing server.mjs: `grep -rl serveStdio node_modules/@modelcontextprotocol/server/dist | head -2`; if present, read its signature and use it, otherwise keep `server.connect(new StdioServerTransport())`.
+9. **Task 9 README**: "Seven functions" becomes "Eight functions"; "Node 20" becomes "Node 22".
+10. **Header fixes**: security-review and code-review run in Task 10; humanizer and stop-slop in Task 9; doc fixes are Task 2 step 5.
+
+---
+
 ## File structure
 
 | Path (under `mcp/`) | Responsibility |
