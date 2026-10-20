@@ -1,3 +1,15 @@
+# Queue — 2026-10-19
+
+1. [ ] Towinly MCP server (owner: "do it now"; everything a person can do;
+       this Mac only). Superpowers flow: brainstorm → spec → plan → TDD build.
+       Spec: docs/superpowers/specs/2026-10-19-mcp-server-design.md
+2. [x] Use superpowers + the skills the job needs (brainstorming, writing-plans,
+       test-driven-development, mcp-builder, ecc:mcp-server-patterns, context7).
+3. [x] Skill check: live-catalog scan shown to the owner before the build.
+4. [ ] Use all skills that apply (owner, mid-build): trust-and-safety and
+       privacy-two-markets on the spec; security + code review, humanizer then
+       stop-slop on the README, verification-before-completion at the end.
+
 # Queue — 2026-08-26
 
 1. [x] Messages badges: segment badges count PEOPLE waiting, not messages
