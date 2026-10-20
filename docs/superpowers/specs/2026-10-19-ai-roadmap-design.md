@@ -289,6 +289,43 @@ on a propose call and leaves it null otherwise; the app confirms before calling
 Not doing: a second write tool. The pattern is the deliverable; more writes are
 each an owner decision.
 
+## Step 8: the write tools the owner approves, same pattern (added 2026-10-19)
+
+Owner's words (relayed by the session that built the MCP server, and inside the
+owner's direct "do all" to this session): "an elder could say 'post a request for
+a lift on Thursday' in the app and it would happen", read and write, with a native
+confirm before any write. First write: post a help request.
+
+Design:
+
+- The contract from step 7 holds and becomes general: `action.name` is the name
+  of an app API function in `src/api/`, `action.arguments` is that function's
+  one object input (object-shape functions; nothing positional is proposed yet).
+  Step 7's name becomes `checkInToday`.
+- Backend: a second proposal tool, `propose_help_request`, with a parameter
+  schema (title, description, category, urgency). `AssistantActions` turns a
+  proposal call into an `Action`: it parses the model's JSON arguments, keeps
+  only the keys the action allows, sanitizes every string through
+  `PromptSanitizer` and caps it to the backend's own limits, and maps an unknown
+  category or urgency to the safe default. `onBehalfOfElderId` can never come
+  from the model. One action per answer: the first proposal wins.
+- App: `src/lib/assistantActions.js` holds the registry of approved actions.
+  Each entry names the function, the confirm title and the plain-words summary
+  of what will happen (the request's title, detail, category and urgency), the
+  confirm label, and the done and failed sentences. `runAssistantAction` shows
+  the native confirm and calls the named function only on yes. The chat
+  component calls that one function. Anything not in the registry is ignored.
+- The backend's own validation still guards the write (`NeedRequest`: title up
+  to 200 characters, category required, description up to 2,000).
+
+Tests: argument shaping (whitelist, sanitize, caps, enum defaults, bad JSON);
+the service names the action after the app function; the app registry confirms
+before calling, calls with the shaped arguments on yes, never on no, and reports
+done or failed.
+
+Not doing: positional-shape or destructive functions (block, report, SOS,
+delete account). Each further write is an owner decision and one registry entry.
+
 ## Order, branches and what the owner does
 
 - Backend steps run on branch `ai/ask-ai-roadmap`, cut from origin/main 26003ff
