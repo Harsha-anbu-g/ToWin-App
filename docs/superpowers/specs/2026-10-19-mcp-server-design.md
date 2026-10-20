@@ -113,7 +113,7 @@ Type map (`schema.mjs`), covering every type the 18 files use today:
 | `string`, `number`, `boolean` | the matching primitive |
 | `string[]`, `Array<T>` | `z.array(...)` of the mapped `T` |
 | `'A'\|'B'` | `z.enum(['A', 'B'])` |
-| `T\|null` | mapped `T`, `.nullable()` |
+| `T\|null` | mapped `T`, `.nullable().optional()` (an agent may send null or leave it out) |
 | `{a: string, b?: number}` inline | `z.object` with each field mapped, `?` optional |
 | `object` with documented `head.field` lines | `z.object` built from those lines |
 | `object` with no field lines | `z.record(z.string(), z.unknown())` |
