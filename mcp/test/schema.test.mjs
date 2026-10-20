@@ -57,6 +57,17 @@ test('an unknown type fails naming the place', () => {
   );
 });
 
+test('arguments named like ids only accept id characters', () => {
+  const by = Object.fromEntries(buildCatalog().map((e) => [e.fn, e]));
+  const uuid = '934c2f1d-dc08-4210-8096-c3664d1b4ea3';
+  ok(inputSchemaFor(by.blockPerson), { userId: uuid });
+  bad(inputSchemaFor(by.blockPerson), { userId: '../admin' });
+  bad(inputSchemaFor(by.getUserProfile), { userId: 'me/../../needs' });
+  ok(inputSchemaFor(by.armPassOn), { personIds: [uuid], approvalsNeeded: 1, notAWillAck: true, keyTruthAck: true });
+  bad(inputSchemaFor(by.armPassOn), { personIds: ['../x'], approvalsNeeded: 1, notAWillAck: true, keyTruthAck: true });
+  bad(inputSchemaFor(by.postReview), { revieweeId: 'a/b', rating: 5, comment: null });
+});
+
 test('inputSchemaFor builds the three shapes from real entries', () => {
   const by = Object.fromEntries(buildCatalog().map((e) => [e.fn, e]));
   assert.equal(inputSchemaFor(by.sendSos), null);

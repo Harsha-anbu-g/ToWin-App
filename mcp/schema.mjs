@@ -5,6 +5,20 @@ import * as z from 'zod/v4';
 
 const ENUM_RE = /^'[^']*'(\|'[^']*')*$/;
 
+// Towinly ids are UUIDs. Anything named ...Id or ...Ids takes id characters
+// only, so an argument can never carry a path into the request URL.
+const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const idString = () => z.string().regex(ID_RE, 'must be an id: letters, digits, _ or -');
+const isIdName = (name) => /Ids?$/.test(name);
+
+/** The schema for one named field: the id rule when the name says id, the doc type otherwise. */
+function schemaFor(type, name, where) {
+  const t = (type ?? '').trim();
+  if (isIdName(name) && t === 'string') return idString();
+  if (isIdName(name) && t === 'string[]') return z.array(idString());
+  return zodFromDocType(t, `${where}.${name}`);
+}
+
 /** Split at `sep` outside braces, angle brackets, parentheses and quotes. */
 function splitTop(s, sep) {
   const out = [];
@@ -37,7 +51,7 @@ export function fieldsFromInline(type, where) {
   for (const field of splitTop(type.slice(1, -1), ',')) {
     const m = /^(\w+)(\?)?\s*:\s*(.+)$/.exec(field);
     if (!m) throw new Error(`${where}: cannot read inline field "${field}"`);
-    const s = zodFromDocType(m[3], `${where}.${m[1]}`);
+    const s = schemaFor(m[3], m[1], where);
     shape[m[1]] = m[2] ? s.optional() : s;
   }
   return shape;
@@ -68,7 +82,7 @@ export function zodFromDocType(type, where) {
 }
 
 function fieldSchema(p, where) {
-  const s = zodFromDocType(p.type, `${where}.${p.name}`).describe(p.text || p.name);
+  const s = schemaFor(p.type, p.name, where).describe(p.text || p.name);
   return p.optional ? s.optional() : s;
 }
 
