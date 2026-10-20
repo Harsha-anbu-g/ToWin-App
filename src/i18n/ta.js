@@ -1991,6 +1991,18 @@ export default {
     "Towinly ஆமைச் சின்னம்",
   "Towinly's helper uses two outside AI services to answer. Groq writes the answers. OpenAI turns your question into a search of the user guide, so the helper can find the right page. Towinly sends your question, this chat, and a short summary of your own Towinly activity (like your first name and trust score) to Groq. If you ask about your connections, family or requests, it also sends their first names and the request titles. It sends only your question to OpenAI. It never sends your contact details. A machine writes the answers, so they can be wrong. Every answer has a \"Report this answer\" button if one looks wrong or upsetting. Is that okay?":
     "Towinly உதவியாளர் பதில் சொல்ல இரண்டு வெளிப்புற AI சேவைகளைப் பயன்படுத்துகிறது. Groq பதில்களை எழுதுகிறது. OpenAI உங்கள் கேள்வியை வழிகாட்டியில் தேடலாக மாற்றுகிறது; அதனால் உதவியாளர் சரியான பக்கத்தைக் கண்டறிகிறது. உங்கள் கேள்வி, இந்த உரையாடல், உங்கள் Towinly செயல்பாட்டின் சிறு சுருக்கம் (உங்கள் முதல் பெயர், நம்பிக்கை மதிப்பெண் போன்றவை) ஆகியவற்றை Towinly Groq-க்கு அனுப்புகிறது. உங்கள் தொடர்புகள், குடும்பம் அல்லது கோரிக்கைகள் பற்றிக் கேட்டால், அவர்களின் முதல் பெயர்களையும் கோரிக்கைத் தலைப்புகளையும் அனுப்புகிறது. உங்கள் கேள்வியை மட்டுமே OpenAI-க்கு அனுப்புகிறது. உங்கள் தொடர்பு விவரங்களை ஒருபோதும் அனுப்பாது. பதில்களை இயந்திரம் எழுதுவதால் அவை தவறாக இருக்கலாம். தவறாகவோ வருத்தமளிப்பதாகவோ தோன்றினால், ஒவ்வொரு பதிலுக்கும் \"இந்தப் பதிலைப் புகார் செய்\" பொத்தான் உண்டு. இது சரியா?",
+  "Post this request?":
+    "இந்தக் கோரிக்கையை வெளியிடவா?",
+  "Yes, post it":
+    "ஆம், வெளியிடு",
+  "Transport":
+    "போக்குவரத்து",
+  "Errands":
+    "சிறு வேலைகள்",
+  "Done. Your request is posted. Helpers nearby can see it now.":
+    "முடிந்தது. உங்கள் கோரிக்கை வெளியிடப்பட்டது. அருகிலுள்ள உதவியாளர்கள் இப்போது அதைப் பார்க்கலாம்.",
+  "Could not post the request. Please use Post Request.":
+    "கோரிக்கையை வெளியிட முடியவில்லை. கோரிக்கையை வெளியிடு திரையைப் பயன்படுத்துங்கள்.",
   "Check in today?":
     "இன்று வருகை பதிவு செய்யவா?",
   "The helper suggests marking you as here today. Your family will see it.":

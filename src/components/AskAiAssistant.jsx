@@ -24,7 +24,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { Flag, Send, Volume2, X } from './icons';
 import { askAssistant } from '../api/ai';
-import { checkInToday } from '../api/streaks';
+import { runAssistantAction } from '../lib/assistantActions';
 import { useAuth } from '../context/AuthContext';
 import { ConfirmHost, useConfirm, useConfirmShield } from '../context/ConfirmContext';
 import { announce } from '../lib/announce';
@@ -296,25 +296,6 @@ export default function AskAiAssistant() {
     announce(text);
   };
 
-  // The helper can only PROPOSE the daily check-in (AI step 7). The person
-  // confirms with the same native dialog the consent note uses, and the app's
-  // own named API function does the writing (Rule 6). No means nothing is sent.
-  const offerCheckIn = async () => {
-    const ok = await confirm({
-      title: tr('Check in today?'),
-      message: tr('The helper suggests marking you as here today. Your family will see it.'),
-      cancelLabel: tr('Not now'),
-      confirmLabel: tr('Yes, check in'),
-    });
-    if (!ok || !mounted.current) return;
-    try {
-      await checkInToday();
-      if (mounted.current) say(tr('Done. You are checked in for today.'));
-    } catch {
-      if (mounted.current) say(tr('Could not check in. Please use the check-in screen.'));
-    }
-  };
-
   const ensureAiConsent = async () => {
     if (aiConsented) return true;
     const ok = await confirm({
@@ -405,8 +386,11 @@ export default function AskAiAssistant() {
       const data = await askAssistant({ message: q, history });
       if (!mounted.current) return;
       say(data.reply);
-      // The model may only propose; the app asks, and only a Yes acts.
-      if (data.action?.name === 'check_in') await offerCheckIn();
+      // The model may only propose; the app asks, and only a Yes acts (src/lib/assistantActions).
+      if (data.action) {
+        const outcome = await runAssistantAction(data.action, { confirm });
+        if (outcome && mounted.current) say(outcome);
+      }
     } catch {
       if (!mounted.current) return;
       // "Please try again" must not mean retyping — put the question back

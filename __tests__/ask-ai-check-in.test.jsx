@@ -34,7 +34,7 @@ jest.mock('../src/api/client', () => ({
 jest.mock('../src/api/ai', () => ({
   askAssistant: jest.fn(async () => ({
     reply: 'The app will ask you to confirm.',
-    action: { name: 'check_in', arguments: {} },
+    action: { name: 'checkInToday', arguments: {} },
   })),
 }));
 

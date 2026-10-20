@@ -13,7 +13,8 @@ import api from './client';
  * @param {Array<{role: string, content: string}>} [params.history] recent turns, oldest first
  * @returns {Promise<{reply: string, action: {name: string, arguments: object} | null}>} rejects with
  *   the axios error. `action` is the one thing the helper proposed and the app must ask the person
- *   to confirm before calling the matching named API function (today: "check_in" → checkInToday).
+ *   to confirm before calling the matching named API function; see src/lib/assistantActions.js
+ *   (today: checkInToday and postHelpRequest).
  */
 export async function askAssistant({ message, history = [] } = {}) {
   if (!message || !String(message).trim()) {
