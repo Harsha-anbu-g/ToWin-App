@@ -86,7 +86,7 @@
     "description": "Set a new password using the token from the emailed reset link.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -231,7 +231,7 @@
     "description": "Set the first password on a Google-signup account that has none yet (profile hasPassword === false). No current password exists, so none is sent. Signing in with Google keeps working afterwards.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -257,7 +257,7 @@
     "description": "Change the signed-in account's password. The backend checks the current one before accepting the new one.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -764,7 +764,7 @@
     "description": "Replace the WHOLE set of powers the elder delegates on one family link — an absent power is turned off, matching the endpoint's replace semantics.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -1410,7 +1410,7 @@
     "description": "Arm the sealed box — the last step of setup, one call; the chosen Keyholders are only asked anything from this moment.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -1521,7 +1521,7 @@
     "description": "Open one sealed item with the owner's password. The password travels in the body, never in the address; the answer goes straight back to the caller and is kept nowhere else.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {
@@ -1661,7 +1661,7 @@
     "description": "Save the signed-in person's phone number. Only shared with a friend after both people reach the phone trust stage.",
     "argNote": null,
     "readOnly": false,
-    "destructive": false,
+    "destructive": true,
     "shape": "object",
     "params": [
       {

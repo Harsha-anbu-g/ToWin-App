@@ -87,6 +87,18 @@ test('no credentials is a readable tool error', async () => {
   assert.equal(fake.calls.length, 0);
 });
 
+test('every destructive tool asks for confirm, and refuses without it', async () => {
+  const { client, fake } = await connect();
+  const { tools } = await client.listTools();
+  const destructive = tools.filter((t) => t.annotations.destructiveHint);
+  assert.ok(destructive.length >= 19, `expected the extended destructive set, got ${destructive.length}`);
+  for (const t of destructive) assert.ok(t.inputSchema?.properties?.confirm, `${t.name} asks for confirm`);
+  const res = await client.callTool({ name: 'towinly_remove_help_request', arguments: { needId: 'n1' } });
+  assert.equal(res.isError, true);
+  assert.match(text(res), /confirm: true/);
+  assert.equal(fake.calls.length, 0);
+});
+
 test('send_sos without confirm refuses and sends nothing', async () => {
   const { client, fake } = await connect();
   const res = await client.callTool({ name: 'towinly_send_sos', arguments: {} });
