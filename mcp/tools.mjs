@@ -24,9 +24,18 @@ export const DESCRIPTION_NOTES = Object.freeze({
   towinly_report_pass_on_story: REPORT_NOTE,
 });
 
-/** The description the assistant reads: the doc sentence, the prose field list if any, the safety note if any. */
+/**
+ * The description the assistant reads: the doc sentence, the prose field
+ * list if any, the safety note if any. Dashes the doc comments use as
+ * asides become plain punctuation (house rule: no em dashes in anything a
+ * person reads).
+ */
 export function describeTool(entry) {
-  return [entry.description, entry.argNote, DESCRIPTION_NOTES[entry.tool]].filter(Boolean).join(' ');
+  return [entry.description, entry.argNote, DESCRIPTION_NOTES[entry.tool]]
+    .filter(Boolean)
+    .join(' ')
+    .replace(/\s*—\s*/g, ', ')
+    .replace(/,\s*,/g, ',');
 }
 
 /** Call the bundled function the way its signature expects. */

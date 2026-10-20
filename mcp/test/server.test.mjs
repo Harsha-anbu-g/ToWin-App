@@ -116,3 +116,7 @@ test('describeTool appends the safety note and the prose field list only where t
   assert.ok(by.towinly_update_helper_profile.argNote, 'fixture: helper profile fields live in prose');
   assert.match(describeTool(by.towinly_update_helper_profile), new RegExp(by.towinly_update_helper_profile.argNote.slice(0, 20)));
 });
+
+test('no tool description carries an em dash', () => {
+  for (const e of catalog) assert.doesNotMatch(describeTool(e), /—/, e.tool);
+});
