@@ -241,8 +241,28 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        mine is pushed. Done 2026-10-19: app 95764ef; backend full suite green; app jest
        1696/1697 (the one failure is demo-buttons-claim on a sibling session's uncommitted
        docs/store/console-answers.md, not this work).
-       Security review 2026-10-20 on the registry (all three fixed, c39352e): composer content
+    9. [x] Step 9: A2A agent, App/a2a (card, SendMessage, GetTask; proposals as metadata only).
+10. [x] Step 10: model serving, App/embed-server (MiniLM behind /v1/embeddings; 2.5 s load,
+       10 ms per request, zero-padded to 1536).
+11. [ ] Step 11: AI safety and guardrails (PiiGuard, OutputGuard, red-team evals, docs/ai-safety.md).
+12. [ ] Step 12: two end-to-end agents: App/agent (goal to tool calls with confirm) and
+       App/evaluator (A2A client that scores the helper with embeddings).
+   Pushes 2026-10-20: both blocked by the permission layer; owner runs them.
+   Security review 2026-10-20 on the registry (all three fixed, c39352e): composer content
        filter runs before a proposed post; dialog and call share one normalized request; the
        dialog's own sentence comes first and model text is capped to one line.
    Security review 2026-10-19 (both fixed): consent record versioned (re-asks on new
    wording); city + verification status dropped from the prompt; policy names tool data.
+9. [ ] JD-driven AI gaps (owner 2026-10-20, "i need this also"; waits on owner go per
+       Rule 0b). What the JD names and Towinly lacks: (a) A2A server on the backend
+       (a2a-java-sdk 1.0.0.Final: AgentCard + AgentExecutor over the same named
+       functions the MCP server wraps); (b) an LLM orchestration framework: Spring AI
+       over Spring Boot 3.5.16 / Java 21, replacing the hand-rolled GroqClient +
+       AssistantTools + GuideRetriever with ChatClient, @Tool and the pgvector store,
+       and spring-ai-starter-mcp-server-webmvc to serve the MCP tools from the backend
+       itself; (c) model serving: in-process ONNX embeddings (TransformersEmbeddingModel,
+       all-MiniLM-L6-v2, 384 dims) behind the existing EmbeddingClient switch, so
+       profile and request text stops going to OpenAI; (d) cost/latency evidence: a
+       PostHog view over ask_ai_answered (tokens, ms, cached), streaming, and small-model
+       routing for guide questions, measured against the step 2 evals. Already covered
+       by steps 1 to 8: MCP, agentic workflows, prompt engineering, RAG, vector DB.
