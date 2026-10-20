@@ -209,5 +209,10 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        .worktrees/App-mcp-server: 11 commits to dc8e1e3 (catalog, bundle, session, tools,
        stdio entry, README), worktree clean at 20:59. Not touched by this session; the
        branch is unmerged and unpushed. Owner reviews and merges it.
-5. [ ] Step 5: RAG over the user guide on pgvector (gate: pgvector on Railway).
+5. [x] Step 5: RAG over the user guide on pgvector. Done 2026-10-19: gate passed (Railway
+       Postgres 18.6, pgvector 0.8.6 available); 201 guide chunks (fcb46f3), V62 migration,
+       EmbeddingClient, GuideChunkStore, GuideIndexer, GuideRetriever, prompt block; app
+       consent + fr/ta + privacy labels (d4773a1); website policy. Backend suite 1124 green,
+       76 skips. OWNER: set EMBEDDINGS_API_KEY on Railway (OpenAI key); run the gated
+       GuideChunkStoreDbTest once on a local Postgres with pgvector; review consent copy.
 6. [ ] Step 6: semantic matching in discovery (profile + need embeddings).
