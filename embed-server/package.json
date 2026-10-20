@@ -1,0 +1,15 @@
+{
+  "name": "towinly-embed-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-hosted sentence embeddings behind the OpenAI /v1/embeddings shape, so Towinly's backend can use a local model.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test 'test/*.test.mjs'"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "@huggingface/transformers": "4.3.1"
+  }
+}

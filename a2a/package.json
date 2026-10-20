@@ -1,0 +1,15 @@
+{
+  "name": "towinly-a2a-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Towinly's helper as an Agent2Agent (A2A) agent: an Agent Card and a JSON-RPC endpoint other agents can call, on this machine.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test 'test/*.test.mjs'"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "axios": "1.20.0"
+  }
+}
