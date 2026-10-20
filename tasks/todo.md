@@ -227,4 +227,7 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        consent + fr/ta + privacy labels (d4773a1); website policy. Backend suite 1124 green,
        76 skips. OWNER: set EMBEDDINGS_API_KEY on Railway (OpenAI key); run the gated
        GuideChunkStoreDbTest once on a local Postgres with pgvector; review consent copy.
-6. [ ] Step 6: semantic matching in discovery (profile + need embeddings).
+6. [x] Step 6: semantic matching in discovery. Done 2026-10-19: EmbeddingText, V63 tables,
+       EmbeddingStore (gated pgvector test), EmbeddingIndex (refresh on hash change, lift =
+       distance - 5 km x similarity), EmbeddingBackfill (500/boot), wired into discovery,
+       browse and profile/request saves (ebcfa2e). Targeted 129 green, full suite green.
