@@ -1,0 +1,1943 @@
+[
+  {
+    "fn": "deleteMyAccount",
+    "tool": "towinly_delete_my_account",
+    "file": "account.js",
+    "description": "Permanently delete the signed-in person's account — profile, friendships, messages and requests. There is no undo on the server.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "exportMyData",
+    "tool": "towinly_export_my_data",
+    "file": "account.js",
+    "description": "Everything Towinly holds about the signed-in person, in one object, as GET /account/export returns it. Nothing is emailed; the caller decides how the copy reaches the person (download, share sheet).",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "askAssistant",
+    "tool": "towinly_ask_assistant",
+    "file": "ai.js",
+    "description": "Ask the Towinly assistant one question, with the recent turns for context. Waits up to 30s, not the client default 15s: a thoughtful Groq answer can outrun 15s under load, and a timeout reads as \"the AI is broken\" (owner report from the first TestFlight build, 2026-08-17).",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "message",
+            "optional": false,
+            "text": "the question, already trimmed and non-empty"
+          },
+          {
+            "type": "Array<{role: string, content: string}>",
+            "name": "history",
+            "optional": true,
+            "text": "recent turns, oldest first"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "requestPasswordReset",
+    "tool": "towinly_request_password_reset",
+    "file": "auth.js",
+    "description": "Ask for a password-reset email. The backend answers the same whether or not the address has an account, so a resolved call never proves one exists.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "email",
+            "optional": false,
+            "text": "where the reset link goes"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "resetPassword",
+    "tool": "towinly_reset_password",
+    "file": "auth.js",
+    "description": "Set a new password using the token from the emailed reset link.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "token",
+            "optional": false,
+            "text": "the reset token off the link's query string"
+          },
+          {
+            "type": "string",
+            "name": "newPassword",
+            "optional": false,
+            "text": "at least 8 characters"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "resendVerificationEmail",
+    "tool": "towinly_resend_verification_email",
+    "file": "auth.js",
+    "description": "Send the signed-in account's email-verification link again. Used from the verify-pending gate when the first email never arrived.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "registerAccount",
+    "tool": "towinly_register_account",
+    "file": "auth.js",
+    "description": "Start a Towinly signup. No account exists until the person opens the emailed link, so this never returns a session — the caller sends them to check their inbox.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "username",
+            "optional": false,
+            "text": "3-20 chars, lowercase letters, digits, underscores"
+          },
+          {
+            "type": "string",
+            "name": "email",
+            "optional": false,
+            "text": "where the confirmation link goes"
+          },
+          {
+            "type": "string",
+            "name": "password",
+            "optional": false,
+            "text": "at least 8 characters"
+          },
+          {
+            "type": "'ELDER'|'HELPER'|'FAMILY'",
+            "name": "role",
+            "optional": false,
+            "text": "who they are joining as"
+          },
+          {
+            "type": "string",
+            "name": "dateOfBirth",
+            "optional": false,
+            "text": "YYYY-MM-DD; the backend refuses under-18s"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "resendSignupEmail",
+    "tool": "towinly_resend_signup_email",
+    "file": "auth.js",
+    "description": "Send the confirmation email again for a signup that has not been opened yet. No account exists at this point, so nobody is logged in when this runs.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "email",
+            "optional": false,
+            "text": "the address the signup used"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "verifyEmail",
+    "tool": "towinly_verify_email",
+    "file": "auth.js",
+    "description": "Confirm an emailed signup link. This is what actually creates the account: the backend checks the token and finishes the signup it belongs to.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "token",
+            "optional": false,
+            "text": "the token from the /verify-email link"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "setPassword",
+    "tool": "towinly_set_password",
+    "file": "auth.js",
+    "description": "Set the first password on a Google-signup account that has none yet (profile hasPassword === false). No current password exists, so none is sent. Signing in with Google keeps working afterwards.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "newPassword",
+            "optional": false,
+            "text": "at least 8 characters"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "changePassword",
+    "tool": "towinly_change_password",
+    "file": "auth.js",
+    "description": "Change the signed-in account's password. The backend checks the current one before accepting the new one.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "currentPassword",
+            "optional": false,
+            "text": "the password used today"
+          },
+          {
+            "type": "string",
+            "name": "newPassword",
+            "optional": false,
+            "text": "at least 8 characters"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "listBlockedPeople",
+    "tool": "towinly_list_blocked_people",
+    "file": "blocks.js",
+    "description": "The people the signed-in account has blocked, newest first.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "blockPerson",
+    "tool": "towinly_block_person",
+    "file": "blocks.js",
+    "description": "Block one person. Idempotent on the server: blocking twice is one block.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "userId",
+        "optional": false,
+        "text": "the person to block"
+      }
+    ]
+  },
+  {
+    "fn": "unblockPerson",
+    "tool": "towinly_unblock_person",
+    "file": "blocks.js",
+    "description": "Unblock one person. Never an error when they were not blocked.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "userId",
+        "optional": false,
+        "text": "the person to unblock"
+      }
+    ]
+  },
+  {
+    "fn": "listMyConnections",
+    "tool": "towinly_list_my_connections",
+    "file": "connections.js",
+    "description": "Every connection the signed-in person is part of — friendships and family links alike — with status, current trust level, per-side confirm flags, and the other person's id and name, as GET /connections returns it.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "discoverElders",
+    "tool": "towinly_discover_elders",
+    "file": "connections.js",
+    "description": "Elders near the signed-in helper who could use company, closest first, as GET /discover/elders returns them. The distance goes on the wire — without it the backend caps the search at its own 10 km default.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "number",
+        "name": "radiusKm",
+        "optional": false,
+        "text": "how far to look, in kilometres"
+      }
+    ]
+  },
+  {
+    "fn": "discoverHelpers",
+    "tool": "towinly_discover_helpers",
+    "file": "connections.js",
+    "description": "Helpers near the signed-in elder, closest first, as GET /discover/helpers returns them. The distance goes on the wire — without it the backend caps the search at its own 10 km default.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "number",
+        "name": "radiusKm",
+        "optional": false,
+        "text": "how far to look, in kilometres"
+      }
+    ]
+  },
+  {
+    "fn": "sendConnectionRequest",
+    "tool": "towinly_send_connection_request",
+    "file": "connections.js",
+    "description": "Send a friend request to one person. The server refuses a repeat request or one to an existing friend.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "targetUserId",
+        "optional": false,
+        "text": "the person to ask"
+      }
+    ]
+  },
+  {
+    "fn": "respondToConnectionRequest",
+    "tool": "towinly_respond_to_connection_request",
+    "file": "connections.js",
+    "description": "Accept or decline a friend request someone sent me.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "connectionId",
+            "optional": false,
+            "text": "the pending connection to answer"
+          },
+          {
+            "type": "boolean",
+            "name": "accept",
+            "optional": false,
+            "text": "true to become friends, false to decline"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "endConnection",
+    "tool": "towinly_end_connection",
+    "file": "connections.js",
+    "description": "End one friendship for good — the server removes the connection for both sides. This cannot be undone.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the friendship to end"
+      }
+    ]
+  },
+  {
+    "fn": "setFamilyVisibility",
+    "tool": "towinly_set_family_visibility",
+    "file": "connections.js",
+    "description": "The elder's per-friendship choice of whether family may see it. Sharing never moves the trust score.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "connectionId",
+            "optional": false,
+            "text": "the friendship the choice is about"
+          },
+          {
+            "type": "boolean",
+            "name": "shared",
+            "optional": false,
+            "text": "true to let family see it, false to keep it private"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "listEmergencyContacts",
+    "tool": "towinly_list_emergency_contacts",
+    "file": "emergency.js",
+    "description": "The signed-in account's emergency contacts (at most 3).",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "addEmergencyContact",
+    "tool": "towinly_add_emergency_contact",
+    "file": "emergency.js",
+    "description": "Add one emergency contact. inactivityDays is how many quiet days pass before this person is alerted; it is coerced to a number like the website and must be a whole number from 1 to 30 — this function is the tool boundary (Rule 6), so it refuses bad input itself instead of forwarding NaN or an out-of-range number for the server to reject.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "{name: string, phone: string, relationship: string, inactivityDays: number|string}",
+        "name": "contact",
+        "optional": false,
+        "text": "",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "removeEmergencyContact",
+    "tool": "towinly_remove_emergency_contact",
+    "file": "emergency.js",
+    "description": "Remove one emergency contact by its id.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "contactId",
+        "optional": false,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "fn": "sendSos",
+    "tool": "towinly_send_sos",
+    "file": "emergency.js",
+    "description": "Send an SOS: immediately alert every one of the signed-in person's emergency contacts that they need help.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getFamilyTransparency",
+    "tool": "towinly_get_family_transparency",
+    "file": "family.js",
+    "description": "Which of the signed-in elder's family members are connected with which helpers — Step 4 transparency: nothing about you happens out of your sight. Names and ids only, never contact details.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getFamilyLinks",
+    "tool": "towinly_get_family_links",
+    "file": "family.js",
+    "description": "The signed-in person's family links from both seats, as GET /family/links returns them: activeLinks (each saying whether I am the elder in it) and any pending invitations.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getFamilyBehindMe",
+    "tool": "towinly_get_family_behind_me",
+    "file": "family.js",
+    "description": "Who stands behind each of the signed-in helper's elder friendships — the family members those elders have chosen to share with, as GET /family/behind-me returns them (an `entries` array keyed by connectionId). Derived server-side from the elder's own sharing.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getFamilyJourney",
+    "tool": "towinly_get_family_journey",
+    "file": "family.js",
+    "description": "The family member's view of each linked parent's journey: check-in, open requests, and the friendships the parent chose to share, as GET /family/journey returns it (an object with `elders`).",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listFamilyAlerts",
+    "tool": "towinly_list_family_alerts",
+    "file": "family.js",
+    "description": "The alerts a family member sees about their linked parents (SOS, quiet lately, new friendships), newest first. In-app only — nothing is sent by text or email.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "sendFamilyRequest",
+    "tool": "towinly_send_family_request",
+    "file": "family.js",
+    "description": "Ask to link with someone as family. Nothing is shared until they accept.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "identifier",
+            "optional": false,
+            "text": "their exact Towinly username, email or phone"
+          },
+          {
+            "type": "string",
+            "name": "relationship",
+            "optional": false,
+            "text": "what the identified person is (Daughter, Son, …)"
+          },
+          {
+            "type": "'elder'|'family'",
+            "name": "side",
+            "optional": false,
+            "text": "the seat the IDENTIFIED person takes: 'elder' = adding your parent, 'family' = an elder adding a family member"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "respondToFamilyRequest",
+    "tool": "towinly_respond_to_family_request",
+    "file": "family.js",
+    "description": "Answer a pending family link request. Accepting turns the link ACTIVE; declining removes it.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "requestId",
+            "optional": false,
+            "text": "the pending request"
+          },
+          {
+            "type": "boolean",
+            "name": "accept",
+            "optional": false,
+            "text": "true to accept, false to decline"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "respondToPowerRequest",
+    "tool": "towinly_respond_to_power_request",
+    "file": "family.js",
+    "description": "The elder answers a family member's ask for a delegated power (acting for them). A yes grants exactly that one power; a no changes nothing.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "requestId",
+            "optional": false,
+            "text": "the pending power request"
+          },
+          {
+            "type": "boolean",
+            "name": "accept",
+            "optional": false,
+            "text": "true to grant, false to refuse"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "removeFamilyLink",
+    "tool": "towinly_remove_family_link",
+    "file": "family.js",
+    "description": "Remove a family link — an active member, or a request still waiting. The other person loses all sight of the elder; either seat can call it.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "linkId",
+        "optional": false,
+        "text": "the link (or pending request) to remove"
+      }
+    ]
+  },
+  {
+    "fn": "makePrimaryFamilyContact",
+    "tool": "towinly_make_primary_family_contact",
+    "file": "family.js",
+    "description": "Make one active family member the elder's main contact — the person the app names first when something needs family attention.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "linkId",
+        "optional": false,
+        "text": "the active link to promote"
+      }
+    ]
+  },
+  {
+    "fn": "openFamilyChat",
+    "tool": "towinly_open_family_chat",
+    "file": "family.js",
+    "description": "Open (or reopen) the private chat with a linked family member. The family link is the only permission; the server checks it.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "otherUserId",
+        "optional": false,
+        "text": "the family member to chat with"
+      }
+    ]
+  },
+  {
+    "fn": "getFamilyStandings",
+    "tool": "towinly_get_family_standings",
+    "file": "family.js",
+    "description": "The family member's inherited standings: for each shared friendship at Messaging or above, whether the standing is live, paused, or removed, and the chat it opens into.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "setDelegatedPowers",
+    "tool": "towinly_set_delegated_powers",
+    "file": "family.js",
+    "description": "Replace the WHOLE set of powers the elder delegates on one family link — an absent power is turned off, matching the endpoint's replace semantics.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "linkId",
+            "optional": false,
+            "text": "the family link the powers belong to"
+          },
+          {
+            "type": "string[]",
+            "name": "powers",
+            "optional": false,
+            "text": "every power that should stay on"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "askForPower",
+    "tool": "towinly_ask_for_power",
+    "file": "family.js",
+    "description": "Ask the elder for one power. Grants nothing — it puts a yes/no card in front of the parent; the 7-day re-ask cooldown is enforced server-side.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "linkId",
+            "optional": false,
+            "text": "the family link to ask on"
+          },
+          {
+            "type": "string",
+            "name": "power",
+            "optional": false,
+            "text": "the power key being asked for"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "pauseFamilyStanding",
+    "tool": "towinly_pause_family_standing",
+    "file": "family.js",
+    "description": "Pause the family member's inherited chat on one shared friendship — neither side can send messages until it is resumed.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the standing's connection id"
+      }
+    ]
+  },
+  {
+    "fn": "resumeFamilyStanding",
+    "tool": "towinly_resume_family_standing",
+    "file": "family.js",
+    "description": "Resume a paused or removed inherited standing — the same connection comes back, nothing is re-requested.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the elder's friendship connection id"
+      }
+    ]
+  },
+  {
+    "fn": "revokeFamilyStanding",
+    "tool": "towinly_revoke_family_standing",
+    "file": "family.js",
+    "description": "Remove the family member's inherited standing on one shared friendship. Reversible: resumeFamilyStanding restores the same connection.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the standing's connection id"
+      }
+    ]
+  },
+  {
+    "fn": "openFamilyStandingChat",
+    "tool": "towinly_open_family_standing_chat",
+    "file": "family.js",
+    "description": "Open (or reopen) the direct chat an inherited standing allows with the elder's helper — no request, no accept.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "standingConnectionId",
+        "optional": false,
+        "text": "the standing's connection id"
+      }
+    ]
+  },
+  {
+    "fn": "sendFeedback",
+    "tool": "towinly_send_feedback",
+    "file": "feedback.js",
+    "description": "Send one piece of feedback to the Towinly team. The body goes to the server exactly as given: name, email and phone may be null, message is required, and any star ratings ride along as their own fields.",
+    "argNote": "the POST /feedback body — message plus optional name, email, phone and per-question rating fields (null when unanswered)",
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "feedback",
+        "optional": false,
+        "text": "the POST /feedback body — message plus optional name, email, phone and per-question rating fields (null when unanswered)",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "listMessages",
+    "tool": "towinly_list_messages",
+    "file": "messages.js",
+    "description": "The newest messages in one conversation, newest page first, exactly as GET /messages/{connectionId} returns them (a page object with `content`).",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "connectionId",
+            "optional": false,
+            "text": "the conversation to read"
+          },
+          {
+            "type": "'MAIN'|'FAMILY_UPDATES'",
+            "name": "channel",
+            "optional": true,
+            "text": "pass FAMILY_UPDATES for the shared family thread; anything else reads the private chat"
+          },
+          {
+            "type": "number",
+            "name": "size",
+            "optional": true,
+            "text": "how many messages, default 50"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "markMessagesSeen",
+    "tool": "towinly_mark_messages_seen",
+    "file": "messages.js",
+    "description": "Tell the server the signed-in person has read this conversation, so unread counts and badges clear.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the conversation just read"
+      }
+    ]
+  },
+  {
+    "fn": "sendMessage",
+    "tool": "towinly_send_message",
+    "file": "messages.js",
+    "description": "Send one message into a conversation. The backend enforces the trust gate (below-Messaging chats are refused with a 409) and the paused state.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "connectionId",
+            "optional": false,
+            "text": "the conversation to write into"
+          },
+          {
+            "type": "string",
+            "name": "content",
+            "optional": false,
+            "text": "the message text"
+          },
+          {
+            "type": "'MAIN'|'FAMILY_UPDATES'",
+            "name": "channel",
+            "optional": true,
+            "text": "pass FAMILY_UPDATES to write into the shared family thread; anything else sends privately"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "getUnreadMessageCount",
+    "tool": "towinly_get_unread_message_count",
+    "file": "messages.js",
+    "description": "How many conversations hold messages the signed-in person has not read. The server answers a plain integer.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listMyHelpRequests",
+    "tool": "towinly_list_my_help_requests",
+    "file": "needs.js",
+    "description": "The help requests the signed-in person has posted, newest first. The server answers a page object; the rows sit in its `content` array.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "postHelpRequest",
+    "tool": "towinly_post_help_request",
+    "file": "needs.js",
+    "description": "Post a new help request. Family members pass onBehalfOfElderId to ask for their parent; the server re-checks that grant before the request goes out.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "title",
+            "optional": false,
+            "text": "short title of the request (required)"
+          },
+          {
+            "type": "string|null",
+            "name": "description",
+            "optional": true,
+            "text": "longer detail, or null"
+          },
+          {
+            "type": "string",
+            "name": "category",
+            "optional": false,
+            "text": "e.g. 'COMPANIONSHIP', 'ERRANDS', 'OTHER'"
+          },
+          {
+            "type": "string",
+            "name": "urgency",
+            "optional": false,
+            "text": "'NORMAL' or 'URGENT'"
+          },
+          {
+            "type": "string",
+            "name": "onBehalfOfElderId",
+            "optional": true,
+            "text": "elder this is posted for (family only)"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "listOpenHelpRequests",
+    "tool": "towinly_list_open_help_requests",
+    "file": "needs.js",
+    "description": "Every open help request, with no distance attached — the browse feed for a helper who has not shared a position.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listNearbyHelpRequests",
+    "tool": "towinly_list_nearby_help_requests",
+    "file": "needs.js",
+    "description": "Open help requests near a point, each row carrying a real distanceKm. Coordinates should already be snapped to the coarse on-device grid.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "number",
+            "name": "lat",
+            "optional": false,
+            "text": "latitude of the searcher"
+          },
+          {
+            "type": "number",
+            "name": "lng",
+            "optional": false,
+            "text": "longitude of the searcher"
+          },
+          {
+            "type": "number",
+            "name": "radiusKm",
+            "optional": false,
+            "text": "how far to look, in kilometres"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "listMyApplications",
+    "tool": "towinly_list_my_applications",
+    "file": "needs.js",
+    "description": "The help requests the signed-in helper has offered on — waiting, accepted, and completed alike.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "applyToHelpRequest",
+    "tool": "towinly_apply_to_help_request",
+    "file": "needs.js",
+    "description": "Offer to help on one open request.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "needId",
+        "optional": false,
+        "text": "the request to offer on"
+      }
+    ]
+  },
+  {
+    "fn": "withdrawApplication",
+    "tool": "towinly_withdraw_application",
+    "file": "needs.js",
+    "description": "Withdraw the signed-in helper's own offer on one request.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "needId",
+        "optional": false,
+        "text": "the request to withdraw from"
+      }
+    ]
+  },
+  {
+    "fn": "acceptHelper",
+    "tool": "towinly_accept_helper",
+    "file": "needs.js",
+    "description": "Accept one helper's offer on the signed-in elder's request. The server also opens the connection that carries their chat.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "needId",
+            "optional": false,
+            "text": "the request being answered"
+          },
+          {
+            "type": "string",
+            "name": "helperId",
+            "optional": false,
+            "text": "the helper whose offer is accepted"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "completeHelpRequest",
+    "tool": "towinly_complete_help_request",
+    "file": "needs.js",
+    "description": "Mark the signed-in elder's request as completed.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "needId",
+        "optional": false,
+        "text": "the request to complete"
+      }
+    ]
+  },
+  {
+    "fn": "removeHelpRequest",
+    "tool": "towinly_remove_help_request",
+    "file": "needs.js",
+    "description": "Remove (close) one of the signed-in person's own help requests.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "needId",
+        "optional": false,
+        "text": "the request to remove"
+      }
+    ]
+  },
+  {
+    "fn": "getMyPassOnItems",
+    "tool": "towinly_get_my_pass_on_items",
+    "file": "passon.js",
+    "description": "The signed-in elder's own stories and letters, unlocked and readable to her, as GET /passon/mine returns them.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getPassOnSetup",
+    "tool": "towinly_get_pass_on_setup",
+    "file": "passon.js",
+    "description": "The sealed-box setup state: whether the box is armed, email/password prerequisites, and the arming record.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listKeyholders",
+    "tool": "towinly_list_keyholders",
+    "file": "passon.js",
+    "description": "The Keyholders on the signed-in elder's sealed box and where each stands. Returns the body as-is; callers guard the shape (a captive portal can answer 200 with HTML).",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listKeyholderAsksOfMe",
+    "tool": "towinly_list_keyholder_asks_of_me",
+    "file": "passon.js",
+    "description": "Keyholder invitations waiting for the signed-in person's yes or no.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "listSealedItems",
+    "tool": "towinly_list_sealed_items",
+    "file": "passon.js",
+    "description": "The items in the signed-in elder's sealed box, by name only — the server never decrypts a body for this list. Returns the body as-is; callers guard the shape.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "createPassOnItem",
+    "tool": "towinly_create_pass_on_item",
+    "file": "passon.js",
+    "description": "Save a new story or letter.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "item",
+        "optional": false,
+        "text": "what the writer form collected",
+        "children": [
+          {
+            "type": "'STORY'|'LETTER'",
+            "name": "kind",
+            "optional": false,
+            "text": ""
+          },
+          {
+            "type": "string",
+            "name": "title",
+            "optional": false,
+            "text": ""
+          },
+          {
+            "type": "string",
+            "name": "body",
+            "optional": false,
+            "text": ""
+          },
+          {
+            "type": "string",
+            "name": "audience",
+            "optional": false,
+            "text": "who may read it (e.g. EVERYONE, FAMILY, ONE_PERSON)"
+          },
+          {
+            "type": "string",
+            "name": "audienceUserId",
+            "optional": true,
+            "text": "the one person, when audience is one person"
+          },
+          {
+            "type": "string",
+            "name": "releaseWhen",
+            "optional": true,
+            "text": "when it unlocks"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "updatePassOnItem",
+    "tool": "towinly_update_pass_on_item",
+    "file": "passon.js",
+    "description": "Rewrite an existing story or letter in place.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "itemId",
+            "optional": false,
+            "text": "which story or letter to change"
+          },
+          {
+            "type": "object",
+            "name": "changes",
+            "optional": false,
+            "text": "the full item fields, same shape createPassOnItem takes"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "deletePassOnItem",
+    "tool": "towinly_delete_pass_on_item",
+    "file": "passon.js",
+    "description": "Take a story or letter down for good.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "itemId",
+        "optional": false,
+        "text": "which story or letter to remove"
+      }
+    ]
+  },
+  {
+    "fn": "armPassOn",
+    "tool": "towinly_arm_pass_on",
+    "file": "passon.js",
+    "description": "Arm the sealed box — the last step of setup, one call; the chosen Keyholders are only asked anything from this moment.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "the setup choices",
+        "children": [
+          {
+            "type": "string[]",
+            "name": "personIds",
+            "optional": false,
+            "text": "the Keyholders, from her family list"
+          },
+          {
+            "type": "number",
+            "name": "approvalsNeeded",
+            "optional": false,
+            "text": "how many must agree before opening"
+          },
+          {
+            "type": "boolean",
+            "name": "notAWillAck",
+            "optional": false,
+            "text": "she read that this is not a will"
+          },
+          {
+            "type": "boolean",
+            "name": "keyTruthAck",
+            "optional": false,
+            "text": "she read what the key does and does not do"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "undoPassOnArming",
+    "tool": "towinly_undo_pass_on_arming",
+    "file": "passon.js",
+    "description": "Undo the arming quietly — \"if this was not your idea, undo it.\" Nothing is said to anybody about it.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "addSealedItem",
+    "tool": "towinly_add_sealed_item",
+    "file": "passon.js",
+    "description": "Put one item into the sealed box.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "item",
+        "optional": false,
+        "text": "what the sealed-item form collected",
+        "children": [
+          {
+            "type": "string",
+            "name": "label",
+            "optional": false,
+            "text": "the name shown in the box list (never encrypted)"
+          },
+          {
+            "type": "string",
+            "name": "body",
+            "optional": false,
+            "text": "the content that gets sealed"
+          },
+          {
+            "type": "string",
+            "name": "kindHint",
+            "optional": true,
+            "text": "what kind of thing this is"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "removeSealedItem",
+    "tool": "towinly_remove_sealed_item",
+    "file": "passon.js",
+    "description": "Take one item out of the sealed box. The one delete in this feature nobody can reverse — not support, not the operator, nobody.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "itemId",
+        "optional": false,
+        "text": "which sealed item to remove"
+      }
+    ]
+  },
+  {
+    "fn": "revealSealedItem",
+    "tool": "towinly_reveal_sealed_item",
+    "file": "passon.js",
+    "description": "Open one sealed item with the owner's password. The password travels in the body, never in the address; the answer goes straight back to the caller and is kept nowhere else.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "itemId",
+            "optional": false,
+            "text": "which sealed item to open"
+          },
+          {
+            "type": "string",
+            "name": "password",
+            "optional": false,
+            "text": "the sealed-box password"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "getPassOnSheet",
+    "tool": "towinly_get_pass_on_sheet",
+    "file": "passon.js",
+    "description": "The one-page copy the server builds from her box list — names only, no decrypted bodies — plus when she last saved a copy.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "recordPassOnSheetSaved",
+    "tool": "towinly_record_pass_on_sheet_saved",
+    "file": "passon.js",
+    "description": "Record that she kept a copy of her one-page sheet. A courtesy note for the \"last saved\" line, nothing more.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "respondToKeyholderAsk",
+    "tool": "towinly_respond_to_keyholder_ask",
+    "file": "passon.js",
+    "description": "Answer one keyholder invitation: accept or decline holding a key.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "{askId: string, accept: boolean}",
+        "name": "answer",
+        "optional": false,
+        "text": "which ask, and the answer",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "getPassedOnFrom",
+    "tool": "towinly_get_passed_on_from",
+    "file": "passon.js",
+    "description": "One elder's passed-on page as this visitor may read it — the server decides visibility, this function only carries the answer.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "ownerId",
+        "optional": false,
+        "text": "the elder whose writing is being read"
+      }
+    ]
+  },
+  {
+    "fn": "getMyProfile",
+    "tool": "towinly_get_my_profile",
+    "file": "profile.js",
+    "description": "The signed-in person's own profile record (name, bio, date of birth, ...), exactly as GET /profile/me returns it. Includes hasPassword, which is false for a Google-signup account that has never set a password.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "updateHelperProfile",
+    "tool": "towinly_update_helper_profile",
+    "file": "profile.js",
+    "description": "Save a helper's profile fields (name, age, bio, languages, occupation, gender, social links, dateOfBirth, skillsOffered, hobbies). The body is sent exactly as given — PUT /profile/helper replaces those fields.",
+    "argNote": "the helper profile fields to save",
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "fields",
+        "optional": false,
+        "text": "the helper profile fields to save",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "updateElderProfile",
+    "tool": "towinly_update_elder_profile",
+    "file": "profile.js",
+    "description": "Save an elder's profile fields (name, age, bio, languages, occupation, gender, social links, dateOfBirth, interests, lookingFor). The body is sent exactly as given — PUT /profile/elder replaces those fields.",
+    "argNote": "the elder profile fields to save",
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "fields",
+        "optional": false,
+        "text": "the elder profile fields to save",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "updatePhoneNumber",
+    "tool": "towinly_update_phone_number",
+    "file": "profile.js",
+    "description": "Save the signed-in person's phone number. Only shared with a friend after both people reach the phone trust stage.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "phone",
+            "optional": false,
+            "text": "the phone number as typed"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "geocodePlace",
+    "tool": "towinly_geocode_place",
+    "file": "profile.js",
+    "description": "Look up a typed town or city and get its coordinates, the same lookup the website uses before saving a location.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "query",
+            "optional": false,
+            "text": "the place as typed, e.g. \"Montreal\""
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "updateProfileLocation",
+    "tool": "towinly_update_profile_location",
+    "file": "profile.js",
+    "description": "Save a position and/or town against the account (PUT /profile/location, every field optional). Only the fields given are sent: the backend sets its columns from whatever the body carries, so an absent coordinate leaves the stored one alone while an explicit null would clear it. Coordinates must already be coarsened (src/lib/coarseLocation) — this module never rounds.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "input",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "number",
+            "name": "locationLat",
+            "optional": true,
+            "text": "rounded latitude"
+          },
+          {
+            "type": "number",
+            "name": "locationLng",
+            "optional": true,
+            "text": "rounded longitude"
+          },
+          {
+            "type": "string",
+            "name": "city",
+            "optional": true,
+            "text": "town name to store"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "getUserProfile",
+    "tool": "towinly_get_user_profile",
+    "file": "profile.js",
+    "description": "Another person's public profile (name, bio, interests, trust level), as GET /profile/{id} returns it.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "userId",
+        "optional": false,
+        "text": "whose profile to read"
+      }
+    ]
+  },
+  {
+    "fn": "listUserReviews",
+    "tool": "towinly_list_user_reviews",
+    "file": "reviews.js",
+    "description": "The reviews written about one person, as GET /reviews/user/{id} returns them.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "userId",
+        "optional": false,
+        "text": "whose reviews to read"
+      }
+    ]
+  },
+  {
+    "fn": "postReview",
+    "tool": "towinly_post_review",
+    "file": "reviews.js",
+    "description": "Post a review of a person. Guardian mode passes onBehalfOfElderId so the review is saved as the parent's, with the writer's name on it; the server checks the grant.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "{revieweeId: string, rating: number, comment: string|null, onBehalfOfElderId?: string}",
+        "name": "review",
+        "optional": false,
+        "text": "",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "listMyReviews",
+    "tool": "towinly_list_my_reviews",
+    "file": "reviews.js",
+    "description": "The reviews written about the signed-in person, as GET /reviews/mine returns them.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "reportUser",
+    "tool": "towinly_report_user",
+    "file": "safety.js",
+    "description": "Report a person to the Towinly team, with one reason in the person's words.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reportedUserId",
+        "optional": false,
+        "text": "the person being reported"
+      },
+      {
+        "type": "string",
+        "name": "reason",
+        "optional": false,
+        "text": "one of the offered reasons, sent as both reason and description"
+      }
+    ]
+  },
+  {
+    "fn": "reportPassOnStory",
+    "tool": "towinly_report_pass_on_story",
+    "file": "safety.js",
+    "description": "Report one passed-on story or letter, naming the exact item so an admin is told what was written, not only who wrote it.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "{reportedUserId: string, contentId: string, reason: string, description: string}",
+        "name": "report",
+        "optional": false,
+        "text": "the writer, the item, and the visitor's reason in their own words",
+        "children": []
+      }
+    ]
+  },
+  {
+    "fn": "getMyStreak",
+    "tool": "towinly_get_my_streak",
+    "file": "streaks.js",
+    "description": "The signed-in elder's check-in streak: current run, longest run ever, last check-in date, and whether today's check-in is already done.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "checkInToday",
+    "tool": "towinly_check_in_today",
+    "file": "streaks.js",
+    "description": "Record today's check-in and return the updated streak. Safe to repeat: a same-day repeat returns alreadyCheckedIn=true instead of an error, so an exception here means the check-in genuinely failed.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getMyTrustScore",
+    "tool": "towinly_get_my_trust_score",
+    "file": "trust.js",
+    "description": "The signed-in person's live trust score with the per-friendship breakdown (one card per person: stage index, points earned, maximums), exactly as GET /trust/my-score returns it.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "confirmTrustStep",
+    "tool": "towinly_confirm_trust_step",
+    "file": "trust.js",
+    "description": "Start — or, on the other seat, accept — the next trust step on one friendship. The backend counts the step only once BOTH sides confirm, and refuses a repeat confirm from the same side.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": "the friendship the step belongs to"
+      }
+    ]
+  },
+  {
+    "fn": "pauseTrustSteps",
+    "tool": "towinly_pause_trust_steps",
+    "file": "trust.js",
+    "description": "Pause trust steps and messages on one friendship until either side resumes. Nothing is lost: the ladder keeps its rung.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": ""
+      }
+    ]
+  },
+  {
+    "fn": "resumeTrustSteps",
+    "tool": "towinly_resume_trust_steps",
+    "file": "trust.js",
+    "description": "Resume a paused friendship: trust steps and messages come back on.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "connectionId",
+        "optional": false,
+        "text": ""
+      }
+    ]
+  }
+]
