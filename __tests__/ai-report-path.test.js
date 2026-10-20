@@ -45,7 +45,8 @@ describe('reporting a bad answer from the AI helper', () => {
 
   test('the consent gate warns answers are machine-written and names the report button', () => {
     // Assert — consent that omits the caveat is the thing Play objects to.
-    expect(ASSISTANT).toContain('written by a machine');
+    // 2026-10-19 wording (consent version 2): active voice, same promise.
+    expect(ASSISTANT).toContain('A machine writes the answers');
     expect(ASSISTANT).toMatch(/Report this answer" button/);
   });
 });
