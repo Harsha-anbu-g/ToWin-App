@@ -299,17 +299,21 @@ export default function AskAiAssistant() {
             'answers. OpenAI turns your question into a search of the user guide, so the ' +
             'helper can find the right page. Towinly sends your question, this chat, and ' +
             'a short summary of your own Towinly activity (like your first name and trust ' +
-            'score) to Groq. It sends only your question to OpenAI. It never sends your ' +
-            'contact details. A machine writes the answers, so they can be wrong. Every ' +
-            'answer has a "Report this answer" button if one looks wrong or upsetting. ' +
-            'Is that okay?'
+            'score) to Groq. If you ask about your connections, family or requests, it also ' +
+            'sends their first names and the request titles. It sends only your question ' +
+            'to OpenAI. It never sends your contact details. A machine writes the answers, ' +
+            'so they can be wrong. Every answer has a "Report this answer" button if one ' +
+            'looks wrong or upsetting. Is that okay?'
         ),
       cancelLabel: tr('Not now'),
       confirmLabel: tr("Yes, that's okay"),
     });
     if (!ok) return false;
     setAiConsented(true);
-    grantAiConsent(user?.userId);
+    // Awaited: the version must be on disk before the question leaves the phone,
+    // or a crash right after the send would ask again next time (harmless) and a
+    // crash during the write could leave a half state (not harmless).
+    await grantAiConsent(user?.userId);
     return true;
   };
 

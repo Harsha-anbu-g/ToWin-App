@@ -95,7 +95,9 @@ Facts these labels rest on, each verified in code:
   still collected, and the backend texts them at trust milestones per
   `docs/store-listing.md`.
 - **AI assistant is consent-gated per user.** The first question triggers a
-  plain-words dialog naming Groq and OpenAI (the consent gate in
+  plain-words dialog naming Groq and OpenAI, stored as a consent VERSION so a
+  changed disclosure re-asks everyone once (version 2 since 2026-10-19; the
+  consent gate in
   `src/components/AskAiAssistant.jsx`, stored by `src/lib/aiConsent.js`),
   persisted per account (`src/lib/aiConsent.js`, key from
   `src/lib/storageKeys.js aiConsentKey`). The app sends `{message, history}`
