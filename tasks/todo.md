@@ -231,3 +231,13 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        EmbeddingStore (gated pgvector test), EmbeddingIndex (refresh on hash change, lift =
        distance - 5 km x similarity), EmbeddingBackfill (500/boot), wired into discovery,
        browse and profile/request saves (ebcfa2e). Targeted 129 green, full suite green.
+7. [x] Step 7: write tool for Ask AI behind a native confirm (owner "do all"). Done
+       2026-10-19: backend 7376b21 + e328b4b (propose_check_in, {reply, action}); app
+       AskAiAssistant confirms natively, then checkInToday. Both suites green.
+8. [ ] Step 8: approved write actions on the same pattern (owner via peer towin-app-ac
+       + "do all"): backend 58bc641 (AssistantActions, propose_help_request); app
+       registry src/lib/assistantActions.js (checkInToday, postHelpRequest). Peer is
+       out; App/mcp stays theirs; their feat/mcp-server was pushed as a PR, nothing of
+       mine is pushed.
+   Security review 2026-10-19 (both fixed): consent record versioned (re-asks on new
+   wording); city + verification status dropped from the prompt; policy names tool data.
