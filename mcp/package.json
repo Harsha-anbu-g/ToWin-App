@@ -1,0 +1,23 @@
+{
+  "name": "towinly-mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Towinly's app functions as MCP tools, over stdio, for an assistant on this machine.",
+  "type": "module",
+  "bin": { "towinly-mcp-server": "server.mjs" },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test 'test/*.test.mjs'",
+    "catalog": "node catalog.mjs --write"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@modelcontextprotocol/server": "2.3.1",
+    "axios": "^1.18.1",
+    "esbuild": "0.28.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/client": "2.3.1"
+  }
+}

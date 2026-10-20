@@ -1374,7 +1374,7 @@ The first rewrites `catalog.snapshot.json`; the second fails on any function who
 
 - [ ] **Step 2: Prose passes**
 
-Load `humanizer`, run it on `README.md`; then load `stop-slop` and run it. Then: `grep -c '—' README.md` must print `0`.
+Load `humanizer`, run it on `README.md`; then load `stop-slop` and run it. Then: `grep -c ', ' README.md` must print `0`.
 
 - [ ] **Step 3: Commit**
 
