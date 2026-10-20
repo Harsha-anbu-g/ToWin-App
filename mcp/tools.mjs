@@ -7,7 +7,9 @@ import { inputSchemaFor } from './schema.mjs';
 
 export const SERVER_NAME = 'towinly-mcp-server';
 
-// The two actions nothing can take back. They refuse without confirm: true.
+// Every destructive tool (catalog flag) refuses without confirm: true. This
+// set adds any tool that must confirm without being flagged destructive;
+// today it only names the two the owner called out first.
 export const CONFIRM_REQUIRED = new Set(['towinly_delete_my_account', 'towinly_send_sos']);
 const CONFIRM_FIELD = z
   .boolean()
@@ -85,7 +87,7 @@ const refuse = (text) => ({ isError: true, content: [{ type: 'text', text }] });
 export function buildServer({ catalog, bundle, session, version = '0.1.0', log = (line) => process.stderr.write(line + '\n') }) {
   const server = new McpServer({ name: SERVER_NAME, version });
   for (const entry of catalog) {
-    const needsConfirm = CONFIRM_REQUIRED.has(entry.tool);
+    const needsConfirm = entry.destructive || CONFIRM_REQUIRED.has(entry.tool);
     let schema = inputSchemaFor(entry);
     if (needsConfirm) schema = (schema ?? z.object({})).extend({ confirm: CONFIRM_FIELD });
     const config = {

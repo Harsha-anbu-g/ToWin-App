@@ -32,7 +32,7 @@ Then, in a new session: "List my open help requests."
 
 The server builds its tools from the doc comments in `src/api/`. Read `catalog.snapshot.json` for the full list, or ask the server (`tools/list`). Names are `towinly_` plus the function name in snake case: `postHelpRequest` becomes `towinly_post_help_request`.
 
-Two tools need `confirm: true` or they do nothing: `towinly_delete_my_account` and `towinly_send_sos`.
+Every tool flagged destructive (19 of 93, from removing a request to changing a password) needs `confirm: true` or it does nothing. Arguments named like ids accept id characters only.
 
 Eight functions are not tools because they belong on a phone or in a browser; `exclude.mjs` lists each with its reason.
 

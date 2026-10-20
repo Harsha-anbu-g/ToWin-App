@@ -98,6 +98,14 @@ test('read, write and destructive flags follow the body and the name', () => {
   assert.equal(by.unblockPerson.destructive, false);
 });
 
+test('credential and authority changes count as destructive', () => {
+  const by = Object.fromEntries(buildCatalog().map((e) => [e.fn, e]));
+  for (const fn of ['changePassword', 'setPassword', 'resetPassword', 'setDelegatedPowers', 'armPassOn', 'revealSealedItem', 'updatePhoneNumber']) {
+    assert.equal(by[fn].destructive, true, fn);
+  }
+  assert.equal(by.requestPasswordReset.destructive, false, 'asking for a reset email changes nothing yet');
+});
+
 test('call shapes match the three signature styles', () => {
   const by = Object.fromEntries(buildCatalog().map((e) => [e.fn, e]));
   assert.equal(by.sendSos.shape, 'none');

@@ -17,8 +17,21 @@ import { API_DIR, SNAPSHOT_PATH } from './paths.mjs';
 import { EXCLUDED, PLUMBING_FILES } from './exclude.mjs';
 
 export const TOOL_PREFIX = 'towinly_';
+// Destructive: no undo, or a change to who may act on the account (credentials,
+// delegated powers, the sealed box, the phone number friends see). Every
+// destructive tool asks for confirm: true (tools.mjs).
 const DESTRUCTIVE_VERBS = /^(delete|remove|end|block|revoke|withdraw|undo)[A-Z]/;
-const DESTRUCTIVE_NAMES = new Set(['sendSos', 'deleteMyAccount']);
+const DESTRUCTIVE_NAMES = new Set([
+  'sendSos',
+  'deleteMyAccount',
+  'changePassword',
+  'setPassword',
+  'resetPassword',
+  'setDelegatedPowers',
+  'armPassOn',
+  'revealSealedItem',
+  'updatePhoneNumber',
+]);
 const EXPORT_RE = /^export (?:async )?(?:function (\w+)\s*\(([^)]*)\)|const (\w+)\s*=)/gm;
 const API_CALL_RE = /\bapi\.(get|post|put|patch|delete)\(/g;
 

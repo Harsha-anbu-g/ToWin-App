@@ -102,7 +102,8 @@ the export line and extracts:
   `api.get(` → read. Anything with `post`, `put`, `patch` or `delete` →
   write.
 - **Destructive:** the name starts with `delete`, `remove`, `end`, `block`,
-  `revoke`, `withdraw` or `undo`, or is `sendSos` or `deleteMyAccount`.
+  `revoke`, `withdraw` or `undo`, or is one of the names listed under Safety
+  (`sendSos`, `deleteMyAccount`, the credential and authority changes).
 - **Tool name:** `towinly_` + the function name in snake_case:
   `postHelpRequest` → `towinly_post_help_request`. Verb first, service
   prefix, no collision with any other server's tools.
@@ -193,13 +194,18 @@ runs, with the field named.
 
 - `readOnlyHint: true` on every read; `destructiveHint: true` on the
   destructive set above; `openWorldHint: false` everywhere (one backend).
-- Two tools carry an extra `confirm` field and refuse to run without
-  `confirm: true`: `towinly_delete_my_account` and `towinly_send_sos`. These
-  are the two actions the app itself makes a person confirm and that no undo
-  can take back. Owner approved exactly these two on 2026-10-19.
-- All other destructive tools rely on `destructiveHint`; the MCP client
-  (Claude Code asks before running a tool by default) and the assistant's own
-  judgement do the confirming, the same way the app's dialog does.
+- Every tool flagged destructive carries an extra `confirm` field and refuses
+  to run without `confirm: true`. Destructive means: the name starts with
+  delete, remove, end, block, revoke, withdraw or undo, or it is one of
+  `sendSos`, `deleteMyAccount`, `changePassword`, `setPassword`,
+  `resetPassword`, `setDelegatedPowers`, `armPassOn`, `revealSealedItem`,
+  `updatePhoneNumber` (19 tools on 2026-10-20). The owner first approved two
+  on 2026-10-19, then extended it to all of them after the push-time security
+  review the same evening.
+- `destructiveHint` is set on the same tools, so clients that confirm on
+  their own (Claude Code) ask as well.
+- Arguments named `...Id` or `...Ids` accept `[A-Za-z0-9_-]{1,64}` only
+  (Towinly ids are UUIDs), so no argument can carry a path into a request URL.
 - Credentials live in the MCP client's configuration, never in the repo.
 
 ### Review against trust-and-safety and privacy-two-markets
