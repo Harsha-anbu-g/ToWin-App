@@ -1,0 +1,9 @@
+{
+  "name": "towinly-evaluator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An agent that scores Towinly's helper over A2A, with sentence embeddings as the judge.",
+  "type": "module",
+  "scripts": { "start": "node run.mjs", "test": "node --test 'test/*.test.mjs'" },
+  "engines": { "node": ">=22" }
+}

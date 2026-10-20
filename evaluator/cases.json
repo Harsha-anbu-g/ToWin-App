@@ -1,0 +1,18 @@
+[
+  {"id": "trust-stages", "question": "How many stages does the trust journey have?",
+   "reference": "The trust journey has seven stages, and both people must agree before moving to the next one."},
+  {"id": "trust-points", "question": "How many trust points can one person earn me?",
+   "reference": "Each person you help can earn you up to 15 points: up to 7 for trust stages, up to 5 from their review, and up to 3 for your profile."},
+  {"id": "tiers", "question": "What are the trust tiers?",
+   "reference": "New Member at 0 points, Getting Started from 1 to 14, Reliable from 15 to 44, Highly Trusted from 45 to 89, and Community Champion at 90 or more."},
+  {"id": "checkin", "question": "Who does the daily check-in?",
+   "reference": "Only elders check in each day by tapping I'm here today; their linked family then sees they are alright."},
+  {"id": "sos", "question": "What does the SOS button do?",
+   "reference": "The red SOS button alerts your emergency contacts right away when you need help fast."},
+  {"id": "family-limit", "question": "How many family members can an elder have?",
+   "reference": "An elder can have up to five family members, counting open requests, and must say yes to each one."},
+  {"id": "free", "question": "Does Towinly cost anything?",
+   "reference": "No. Towinly is free to sign up for and to use."},
+  {"id": "delete", "question": "How do I delete my account?",
+   "reference": "Email agharsha.anbu@gmail.com and ask; the Towinly team will delete the account or send a full data export."}
+]
