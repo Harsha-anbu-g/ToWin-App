@@ -326,6 +326,37 @@ done or failed.
 Not doing: positional-shape or destructive functions (block, report, SOS,
 delete account). Each further write is an owner decision and one registry entry.
 
+## Steps 9 and 10: A2A agent and model serving (added 2026-10-20)
+
+The owner's job description names MCP and A2A tooling, RAG, vector databases,
+model serving, and cost and latency work. Steps 1 to 8 cover all but two. These
+two close the gap without touching the phone app or the backend.
+
+**Step 9, A2A agent (`App/a2a/`).** A small Node server that presents Towinly's
+assistant to other agents under the Agent2Agent protocol: an Agent Card at
+`/.well-known/agent-card.json` (one skill, "ask Towinly", text in and text
+out) and a JSON-RPC 2.0 endpoint at `/a2a/v1` that accepts `SendMessage` (and
+the older `message/send` name), signs in to the backend with the same
+environment variables the MCP server uses, forwards the message text to
+`POST /api/assistant/chat`, and returns a completed Task whose artifact is the
+reply. A proposed action from step 7 or 8 is passed back in the task's metadata
+and never performed: an outside agent gets the proposal, not the write.
+`GetTask` returns a task from an in-memory store. Runs on this Mac only, like
+the MCP server.
+
+**Step 10, model serving (`App/embed-server/`).** A self-hosted embedding
+model behind the OpenAI-compatible `POST /v1/embeddings` shape, so
+`EMBEDDINGS_BASE_URL` can point at it instead of OpenAI. Transformers.js runs
+`Xenova/all-MiniLM-L6-v2` (384 dimensions) with mean pooling and L2
+normalization; a `dimensions` request larger than the model's is met by
+zero-padding, which leaves cosine similarity unchanged, so the backend's
+`vector(1536)` columns need no migration. Optional bearer key. The model is
+downloaded once into a local cache.
+
+Tests: pure handlers with fake transports and a fake pipeline, run with
+`node --test`; one real smoke run of each server on this Mac when the network
+allows.
+
 ## Order, branches and what the owner does
 
 - Backend steps run on branch `ai/ask-ai-roadmap`, cut from origin/main 26003ff
