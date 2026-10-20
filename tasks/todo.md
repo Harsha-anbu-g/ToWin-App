@@ -241,5 +241,8 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        mine is pushed. Done 2026-10-19: app 95764ef; backend full suite green; app jest
        1696/1697 (the one failure is demo-buttons-claim on a sibling session's uncommitted
        docs/store/console-answers.md, not this work).
+       Security review 2026-10-20 on the registry (all three fixed, c39352e): composer content
+       filter runs before a proposed post; dialog and call share one normalized request; the
+       dialog's own sentence comes first and model text is capped to one line.
    Security review 2026-10-19 (both fixed): consent record versioned (re-asks on new
    wording); city + verification status dropped from the prompt; policy names tool data.
