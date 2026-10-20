@@ -188,3 +188,16 @@ home-hierarchy.test.js, app/(tabs)/_layout.jsx); not mine, not touched.
         __tests__/tab-lens-geometry.test.js (explicit OK); My Family member rows now open
         app/family/member/[linkId].jsx (Message / Make main contact / Remove moved there via
         src/lib/useFamilyMemberActions.js). LinkRow's dead `collapsible` branch removed.
+
+# Queue — 2026-10-19 AI roadmap (owner: "do it all in order")
+
+Spec: docs/superpowers/specs/2026-10-19-ai-roadmap-design.md. Backend work on
+branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
+
+1. [ ] Step 1: token accounting from Groq usage + daily token cap.
+2. [ ] Step 2: eval set for Ask AI (evals.json, gated live runner, file test).
+3. [ ] Step 3: read-only tools for Ask AI (connections, help requests, family).
+4. [ ] Step 4: MCP server. Being built by another session on feat/mcp-server
+       in .worktrees/App-mcp-server; report its state, do not touch.
+5. [ ] Step 5: RAG over the user guide on pgvector (gate: pgvector on Railway).
+6. [ ] Step 6: semantic matching in discovery (profile + need embeddings).
