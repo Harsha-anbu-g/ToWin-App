@@ -2,8 +2,12 @@
   "name": "towinly-agent",
   "version": "0.1.0",
   "private": true,
-  "description": "A goal in plain words becomes a plan and tool calls over Towinly's MCP catalog, with a typed yes before any write.",
+  "description": "A goal-driven agent that operates Towinly through its API catalog, asking the person before every write.",
   "type": "module",
-  "scripts": { "start": "node run.mjs", "test": "node --test 'test/*.test.mjs'" },
+  "bin": { "towinly-agent": "run.mjs" },
+  "scripts": {
+    "start": "node run.mjs",
+    "test": "node --test 'test/*.test.mjs'"
+  },
   "engines": { "node": ">=22" }
 }

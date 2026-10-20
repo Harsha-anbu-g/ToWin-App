@@ -35,6 +35,6 @@ Options:
 
     npm test
 
-Twelve tests cover the loop (read runs at once, write asks first, no runs nothing, errors are told not thrown, the step budget, the trace order), the catalog conversion, and the Groq transport. They use a scripted model and fake tools; no network.
+Thirteen tests cover the loop (read runs at once, write asks first, no runs nothing, errors are told not thrown, the step budget, the trace order), the catalog conversion (including the real 93-entry snapshot), and the Groq transport. They use a scripted model and fake tools; no network.
 
 The tool path was also checked live on 2026-10-20 against the production backend with the demo elder account: `getMyTrustScore` through the catalog returned a score of 38, tier Reliable, with four friendships. A live planning run needs a Groq key, which this machine does not hold.
