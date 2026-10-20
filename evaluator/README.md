@@ -14,6 +14,9 @@ Needs Node 22 or newer, the A2A agent (`../a2a`) and the embed server (`../embed
 | `A2A_SERVER_KEY` | the bearer key the A2A agent requires |
 | `EMBED_URL` | the embeddings endpoint; default `http://127.0.0.1:7422/v1` |
 | `EVAL_THRESHOLD` | the passing cosine score; default 0.6 |
+| `EVAL_KEEP_REPLIES` | set to 1 to keep the replies in the report; by default it keeps scores only, written readable by you alone |
+
+The bearer key is sent only to the origin you configured: a card that names another origin is refused, and a non-loopback agent must use https.
 
 ## Test
 

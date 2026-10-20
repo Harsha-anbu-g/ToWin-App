@@ -20,6 +20,8 @@ const report = await evaluate({
 });
 mkdirSync(new URL('./reports/', import.meta.url), { recursive: true });
 const file = new URL(`./reports/${new Date().toISOString().replace(/[:.]/g, '-')}.json`, import.meta.url);
-writeFileSync(file, JSON.stringify(report, null, 2));
+// Replies can quote the signed-in account's own data: owner-only, and only scores unless asked.
+const saved = process.env.EVAL_KEEP_REPLIES === '1' ? report : { ...report, rows: report.rows.map(({ reply, ...r }) => r) };
+writeFileSync(file, JSON.stringify(saved, null, 2), { mode: 0o600 });
 console.log(`\n${formatReport(report)}\n(report: ${file.pathname})`);
 process.exit(report.passed === report.total ? 0 : 1);

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cosine, evaluate, formatReport } from '../evaluate.mjs';
+import { clean, cosine, evaluate, formatReport } from '../evaluate.mjs';
 import { discover, ask } from '../a2a-client.mjs';
 
 const okJson = (body) => ({ ok: true, status: 200, json: async () => body });
@@ -12,9 +12,9 @@ test('cosine is 1 for the same direction, 0 for orthogonal, 0 for an empty vecto
 });
 
 test('discover reads the JSON-RPC url from the card; ask returns the artifact text or null on a failed task', async () => {
-  const card = { name: 'Towinly helper', supportedInterfaces: [{ url: 'http://x/a2a/v1', protocolBinding: 'JSONRPC' }] };
-  const d = await discover('http://x/', async () => okJson(card));
-  assert.equal(d.url, 'http://x/a2a/v1');
+  const card = { name: 'Towinly helper', supportedInterfaces: [{ url: 'http://127.0.0.1:7421/a2a/v1', protocolBinding: 'JSONRPC' }] };
+  const d = await discover('http://127.0.0.1:7421/', async () => okJson(card));
+  assert.equal(d.url, 'http://127.0.0.1:7421/a2a/v1');
   const completed = { result: { task: { status: { state: 'TASK_STATE_COMPLETED' }, artifacts: [{ parts: [{ text: 'Seven.' }] }] } } };
   assert.equal(await ask('http://x/a2a/v1', 'k', 'q', async (url, init) => {
     assert.equal(init.headers.Authorization, 'Bearer k');
@@ -42,4 +42,16 @@ test('evaluate scores each case, flags below the threshold, and scores a failed 
   assert.deepEqual(report.rows.map((r) => r.pass), [true, false, false]);
   assert.equal(report.rows[2].score, 0);
   assert.match(formatReport(report), /^T: 1\/3 at threshold 0.6\ngood/);
+});
+
+test('a card that points at another origin is refused, so the key never leaves', async () => {
+  const card = { name: 'x', supportedInterfaces: [{ url: 'https://evil.example/rpc', protocolBinding: 'JSONRPC' }] };
+  await assert.rejects(discover('http://127.0.0.1:7421', async () => okJson(card)), /refused/);
+  const plain = { name: 'x', supportedInterfaces: [{ url: 'http://agent.example/a2a/v1', protocolBinding: 'JSONRPC' }] };
+  await assert.rejects(discover('http://agent.example', async () => okJson(plain)), /https/);
+});
+
+test('remote text loses control and escape characters before it is logged or reported', () => {
+  assert.equal(clean('ok\u001b[2Jdone\nnext'), 'ok [2Jdone next');
+  assert.equal(clean('x'.repeat(900)).length, 500);
 });

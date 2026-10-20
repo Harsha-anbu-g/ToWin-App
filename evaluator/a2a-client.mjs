@@ -1,13 +1,21 @@
 // The two A2A calls the evaluator makes: read the card, send one message.
 import { randomUUID } from 'node:crypto';
 
+const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);
+
 export async function discover(baseUrl, fetchFn = fetch) {
   const res = await fetchFn(`${baseUrl.replace(/\/$/, '')}/.well-known/agent-card.json`);
   if (!res.ok) throw new Error(`no agent card at ${baseUrl} (${res.status})`);
   const card = await res.json();
   const iface = card.supportedInterfaces?.find((i) => i.protocolBinding === 'JSONRPC');
   if (!iface) throw new Error('the card has no JSON-RPC interface');
-  return { card, url: iface.url };
+  // The bearer key goes only where the operator pointed us: a card that names
+  // another origin is refused, and a non-loopback origin must be https.
+  const base = new URL(baseUrl);
+  const target = new URL(iface.url, base);
+  if (target.origin !== base.origin) throw new Error(`the card points at ${target.origin}, not ${base.origin}; refused`);
+  if (target.protocol !== 'https:' && !LOOPBACK.has(target.hostname)) throw new Error('a non-loopback agent must use https');
+  return { card, url: target.href };
 }
 
 /** The reply text, or null when the task failed. */
