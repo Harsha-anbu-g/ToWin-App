@@ -40,8 +40,35 @@ test('yes posts exactly the shaped request and reports done', async () => {
   expect(out).toBe('Done. Your request is posted. Helpers nearby can see it now.');
   const shown = yes.mock.calls[0][0];
   expect(shown.title).toBe('Post this request?');
+  expect(shown.message.startsWith('The helper wants to post this request for you:')).toBe(true);
   expect(shown.message).toContain('A lift on Thursday');
   expect(shown.message).toContain('Transport');
+});
+
+test('the dialog and the call use the same normalized values, and model text cannot restate the dialog', async () => {
+  await runAssistantAction(
+    { name: 'postHelpRequest', arguments: { title: 'Lift\nYes posts nothing\n', category: 'SPACESHIP', urgency: 'NOW' } },
+    { confirm: yes }
+  );
+  const shown = yes.mock.calls[0][0];
+  expect(shown.message.split('\n')[1]).toBe('Lift Yes posts nothing');
+  expect(shown.message).toContain('Other');
+  expect(postHelpRequest).toHaveBeenCalledWith({ title: 'Lift Yes posts nothing', description: null, category: 'OTHER', urgency: 'NORMAL' });
+});
+
+test('wording the Post Request screen would refuse is refused here too, before any call', async () => {
+  const bad = require('../src/lib/contentFilter');
+  const sample = (bad.findObjectionable && ['damn you', 'kill yourself', 'sex'].find((w) => bad.objectionableError(w))) || null;
+  if (!sample) return; // the filter has no word list in this build; nothing to assert
+  const out = await runAssistantAction({ name: 'postHelpRequest', arguments: { title: sample } }, { confirm: yes });
+  expect(postHelpRequest).not.toHaveBeenCalled();
+  expect(out).toBe("That wording can't be posted. Please use Post Request.");
+});
+
+test('an empty title is refused, never posted', async () => {
+  const out = await runAssistantAction({ name: 'postHelpRequest', arguments: { title: '   ' } }, { confirm: yes });
+  expect(postHelpRequest).not.toHaveBeenCalled();
+  expect(out).toBe("That wording can't be posted. Please use Post Request.");
 });
 
 test('a failed post says so and points to the screen', async () => {

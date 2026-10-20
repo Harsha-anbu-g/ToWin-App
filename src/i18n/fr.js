@@ -1990,6 +1990,10 @@ export default {
     "Logo tortue de Towinly",
   "Towinly's helper uses two outside AI services to answer. Groq writes the answers. OpenAI turns your question into a search of the user guide, so the helper can find the right page. Towinly sends your question, this chat, and a short summary of your own Towinly activity (like your first name and trust score) to Groq. If you ask about your connections, family or requests, it also sends their first names and the request titles. It sends only your question to OpenAI. It never sends your contact details. A machine writes the answers, so they can be wrong. Every answer has a \"Report this answer\" button if one looks wrong or upsetting. Is that okay?":
     "L'assistant de Towinly utilise deux services d'IA externes pour répondre. Groq écrit les réponses. OpenAI transforme votre question en recherche dans le guide, pour que l'assistant trouve la bonne page. Towinly envoie votre question, cette discussion et un court résumé de votre activité sur Towinly (comme votre prénom et votre score de confiance) à Groq. Si vous posez une question sur vos relations, votre famille ou vos demandes, il envoie aussi leurs prénoms et les titres des demandes. Il envoie seulement votre question à OpenAI. Il n'envoie jamais vos coordonnées. Une machine écrit les réponses, elles peuvent donc être fausses. Chaque réponse a un bouton « Signaler cette réponse » si elle semble fausse ou blessante. Êtes-vous d'accord?",
+  "The helper wants to post this request for you:":
+    "L'assistant veut publier cette demande pour vous :",
+  "That wording can't be posted. Please use Post Request.":
+    "Ces mots ne peuvent pas être publiés. Utilisez Publier une demande.",
   "Post this request?":
     "Publier cette demande?",
   "Yes, post it":
