@@ -201,8 +201,13 @@ branch ai/ask-ai-roadmap in a worktree of ~/Documents/Projects/ToWin. No push.
        2026-10-19: f183394 scorer, fb5a27f 36 cases, live runner commit; dry run with an
        invalid key prints a full FAIL scorecard. Backend suite 1082 green, 75 skips.
        OWNER: run TOWINLY_AI_EVALS=true GROQ_API_KEY=... ./mvnw -Dtest=AssistantEvalsTest test
-3. [ ] Step 3: read-only tools for Ask AI (connections, help requests, family).
-4. [ ] Step 4: MCP server. Being built by another session on feat/mcp-server
-       in .worktrees/App-mcp-server; report its state, do not touch.
+3. [x] Step 3: read-only tools for Ask AI (connections, help requests, family). Done
+       2026-10-19: 51bc5b3 Groq tools, 0be70fd AssistantTools, service round commit, 2 eval
+       cases. Targeted 101 green (1 skipped), full suite green. Live tool use is checked
+       only by the owner's eval run.
+4. [x] Step 4: MCP server. Built by another session on feat/mcp-server in
+       .worktrees/App-mcp-server: 11 commits to dc8e1e3 (catalog, bundle, session, tools,
+       stdio entry, README), worktree clean at 20:59. Not touched by this session; the
+       branch is unmerged and unpushed. Owner reviews and merges it.
 5. [ ] Step 5: RAG over the user guide on pgvector (gate: pgvector on Railway).
 6. [ ] Step 6: semantic matching in discovery (profile + need embeddings).
