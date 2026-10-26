@@ -1763,6 +1763,449 @@
     ]
   },
   {
+    "fn": "listMyReunions",
+    "tool": "towinly_list_my_reunions",
+    "file": "reunions.js",
+    "description": "Every reunion the signed-in person is part of, as the elder who wished for it or as the organiser, newest first. Each row carries its step, the guest counts and the guests.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "none",
+    "params": []
+  },
+  {
+    "fn": "getReunion",
+    "tool": "towinly_get_reunion",
+    "file": "reunions.js",
+    "description": "One reunion with its guests and counts. Only the elder and the organiser can read it; anyone else is refused.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reunionId",
+        "optional": false,
+        "text": "the reunion to read"
+      }
+    ]
+  },
+  {
+    "fn": "postReunionWish",
+    "tool": "towinly_post_reunion_wish",
+    "file": "reunions.js",
+    "description": "Step 1, the wish. The elder says who they want to see again. The reunion opens on \"Who plans\", waiting for the elder to choose an organiser.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "institution",
+            "optional": false,
+            "text": "the college, school or workplace (required)"
+          },
+          {
+            "type": "string",
+            "name": "years",
+            "optional": true,
+            "text": "the years, in the elder's words"
+          },
+          {
+            "type": "string",
+            "name": "city",
+            "optional": true,
+            "text": "where it was"
+          },
+          {
+            "type": "string",
+            "name": "note",
+            "optional": true,
+            "text": "names remembered, anything that helps find them"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "listReunionOrganisers",
+    "tool": "towinly_list_reunion_organisers",
+    "file": "reunions.js",
+    "description": "Step 2, who may plan: the elder's helpers who reached full trust, and family members with an active link. Each row says why they are allowed.",
+    "argNote": null,
+    "readOnly": true,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reunionId",
+        "optional": false,
+        "text": "the reunion"
+      }
+    ]
+  },
+  {
+    "fn": "chooseReunionOrganiser",
+    "tool": "towinly_choose_reunion_organiser",
+    "file": "reunions.js",
+    "description": "Step 2, the elder chooses the organiser from the people allowed. The reunion moves to \"Finding\" and the organiser is told.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "organiserId",
+            "optional": false,
+            "text": "the person chosen, from listReunionOrganisers"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "addReunionGuest",
+    "tool": "towinly_add_reunion_guest",
+    "file": "reunions.js",
+    "description": "Step 3, add a guest to the list. A name and, when known, a phone and a note (mobility, hearing, diet, who has their number). Never money: a note that asks for money is refused. The guest starts as Remembered.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "name",
+            "optional": false,
+            "text": "the guest's name (required)"
+          },
+          {
+            "type": "string",
+            "name": "phone",
+            "optional": true,
+            "text": "their phone, if known"
+          },
+          {
+            "type": "string",
+            "name": "note",
+            "optional": true,
+            "text": "what the organiser should know"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "setReunionGuestState",
+    "tool": "towinly_set_reunion_guest_state",
+    "file": "reunions.js",
+    "description": "Step 3, where the organiser is with one guest.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "guestId",
+            "optional": false,
+            "text": "the guest"
+          },
+          {
+            "type": "'REMEMBERED'|'FOUND'|'REACHED'|'COMING'|'CANNOT_COME'",
+            "name": "state",
+            "optional": false,
+            "text": "the new state"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "removeReunionGuest",
+    "tool": "towinly_remove_reunion_guest",
+    "file": "reunions.js",
+    "description": "Step 3, take a guest off the list.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "guestId",
+            "optional": false,
+            "text": "the guest to remove"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "setReunionPlan",
+    "tool": "towinly_set_reunion_plan",
+    "file": "reunions.js",
+    "description": "Step 4, the plan, in words the elder reads: the day, the place, a ride for each guest, the food, the budget. Any field that asks for money is refused.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "plannedOn",
+            "optional": true,
+            "text": "the day and time, e.g. \"Sunday 14 December, 11 in the morning\""
+          },
+          {
+            "type": "string",
+            "name": "venue",
+            "optional": true,
+            "text": "the place: a public place or a family home"
+          },
+          {
+            "type": "string",
+            "name": "rides",
+            "optional": true,
+            "text": "who brings whom"
+          },
+          {
+            "type": "string",
+            "name": "food",
+            "optional": true,
+            "text": "what is served"
+          },
+          {
+            "type": "string",
+            "name": "budget",
+            "optional": true,
+            "text": "who covers what"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "advanceReunion",
+    "tool": "towinly_advance_reunion",
+    "file": "reunions.js",
+    "description": "One step forward. Finding to the plan and the plan to the day are the elder's alone, each with its condition (someone coming; a day and a place). The day to the send-off is either side's.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reunionId",
+        "optional": false,
+        "text": "the reunion"
+      }
+    ]
+  },
+  {
+    "fn": "checkInReunionGuest",
+    "tool": "towinly_check_in_reunion_guest",
+    "file": "reunions.js",
+    "description": "Step 5, the day: check a guest in as they arrive. Only a guest who said they are coming can be checked in.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "guestId",
+            "optional": false,
+            "text": "the guest who arrived"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "confirmReunionGuestHome",
+    "tool": "towinly_confirm_reunion_guest_home",
+    "file": "reunions.js",
+    "description": "Step 6, the send-off: confirm a guest who came is home.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "guestId",
+            "optional": false,
+            "text": "the guest now home"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "closeReunion",
+    "tool": "towinly_close_reunion",
+    "file": "reunions.js",
+    "description": "Step 6, close the reunion once every guest who came is home, with the thank-you that goes to each of them. Refused while anyone is still out.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "object",
+    "params": [
+      {
+        "type": "object",
+        "name": "params",
+        "optional": false,
+        "text": "",
+        "children": [
+          {
+            "type": "string",
+            "name": "reunionId",
+            "optional": false,
+            "text": "the reunion"
+          },
+          {
+            "type": "string",
+            "name": "thankYou",
+            "optional": true,
+            "text": "the thank-you, in the elder's or organiser's words"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "fn": "stopReunion",
+    "tool": "towinly_stop_reunion",
+    "file": "reunions.js",
+    "description": "The elder stops the reunion at any step before it is done. The organiser is told. Nothing else is deleted.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": true,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reunionId",
+        "optional": false,
+        "text": "the reunion to stop"
+      }
+    ]
+  },
+  {
+    "fn": "stepDownFromReunion",
+    "tool": "towinly_step_down_from_reunion",
+    "file": "reunions.js",
+    "description": "The organiser steps down before the day. The reunion goes back to \"Who plans\" and keeps its guest list; the elder is told.",
+    "argNote": null,
+    "readOnly": false,
+    "destructive": false,
+    "shape": "positional",
+    "params": [
+      {
+        "type": "string",
+        "name": "reunionId",
+        "optional": false,
+        "text": "the reunion to leave"
+      }
+    ]
+  },
+  {
     "fn": "listUserReviews",
     "tool": "towinly_list_user_reviews",
     "file": "reviews.js",

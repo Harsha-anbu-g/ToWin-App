@@ -25,6 +25,7 @@ import {
   ShieldCheck,
   Users,
   UserX,
+  UsersRound,
   Vibrate,
 } from '../../src/components/icons';
 import { deleteMyAccount, exportMyData } from '../../src/api/account';
@@ -322,27 +323,27 @@ export default function ProfileScreen() {
           these rows they would be unreachable. Same role guards the drawer
           used: family circle and boxes are the elder seat's, offers are the
           helper's, check-in belongs to everyone with a streak. */}
-      {!isFamily ? (
-        <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
-          {isHelper ? (
-            <Row
-              icon={Briefcase}
-              label={tr('My offers & jobs')}
-              onPress={() => router.push('/my-jobs')}
-              divider
-            />
-          ) : null}
-          {!isFamily ? (
-            <Row icon={CalendarCheck} label={tr('Daily check-in')} onPress={() => router.push('/checkin')} divider={isElder} />
-          ) : null}
-          {isElder ? (
-            <>
-              <Row icon={Users} label={tr('My Family')} onPress={() => router.push('/family')} divider />
-              <Row icon={Archive} label={tr('My boxes')} onPress={() => router.push('/pass-on')} />
-            </>
-          ) : null}
-        </Card>
-      ) : null}
+      <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>
+        {isHelper ? (
+          <Row
+            icon={Briefcase}
+            label={tr('My offers & jobs')}
+            onPress={() => router.push('/my-jobs')}
+            divider
+          />
+        ) : null}
+        {!isFamily ? (
+          <Row icon={CalendarCheck} label={tr('Daily check-in')} onPress={() => router.push('/checkin')} divider />
+        ) : null}
+        {isElder ? (
+          <>
+            <Row icon={Users} label={tr('My Family')} onPress={() => router.push('/family')} divider />
+            <Row icon={Archive} label={tr('My boxes')} onPress={() => router.push('/pass-on')} divider />
+          </>
+        ) : null}
+        {/* Reunion (2026-10-26): every seat. Elders wish; helpers and family plan. */}
+        <Row icon={UsersRound} label={tr('Reunion')} onPress={() => router.push('/reunion')} />
+      </Card>
 
       {/* The 3h list: Trust Score · Peekaboo · Guide · Night mode · SOS */}
       <Card style={{ marginTop: spacing[3] }} contentStyle={{ paddingVertical: 2 }}>

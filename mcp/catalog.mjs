@@ -31,6 +31,9 @@ const DESTRUCTIVE_NAMES = new Set([
   'armPassOn',
   'revealSealedItem',
   'updatePhoneNumber',
+  // Stopping a reunion is the elder's exit: the organiser is told, the list stays, but the
+  // reunion itself is over. removeReunionGuest is caught by the verb list above.
+  'stopReunion',
 ]);
 const EXPORT_RE = /^export (?:async )?(?:function (\w+)\s*\(([^)]*)\)|const (\w+)\s*=)/gm;
 const API_CALL_RE = /\bapi\.(get|post|put|patch|delete)\(/g;

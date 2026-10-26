@@ -108,6 +108,9 @@ function ThemedShell() {
         <Stack.Screen name="change-password" options={{ gestureEnabled: false }} />
         <Stack.Screen name="emergency-contacts" options={{ gestureEnabled: false }} />
         <Stack.Screen name="pass-on/index" options={{ gestureEnabled: false }} />
+        {/* reunion/index carries the wish form; the reunion page itself is mostly
+            read and taps, so its edge-swipe stays alive (HIG). */}
+        <Stack.Screen name="reunion/index" options={{ gestureEnabled: false }} />
       </Stack>
     </PaperProvider>
   );

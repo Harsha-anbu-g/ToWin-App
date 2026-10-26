@@ -243,8 +243,9 @@ describe('input semantics source scans', () => {
 
   test('a phone keyboard implies tel autofill, unless the number belongs to someone else', () => {
     // emergency-contacts asks for ANOTHER person's number: autofill would
-    // offer the elder their own, which is exactly the wrong suggestion.
-    const LEDGER = ['app/emergency-contacts.jsx'];
+    // offer the elder their own, which is exactly the wrong suggestion. The
+    // reunion guest list is the same case: a classmate's number, never yours.
+    const LEDGER = ['app/emergency-contacts.jsx', 'src/components/reunion/GuestList.jsx'];
     const offenders = SOURCE_FILES.filter((f) => {
       const code = fs.readFileSync(f, 'utf8');
       if (!code.includes('keyboardType="phone-pad"')) return false;

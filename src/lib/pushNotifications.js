@@ -128,6 +128,7 @@ export function routeForNotification(data) {
       : `/chat/${data.connectionId}`;
   }
   if (data.type === 'need') return '/my-requests';
+  if (data.type === 'reunion' && data.reunionId) return `/reunion/${data.reunionId}`;
   if (data.type === 'need_accepted') return '/my-jobs';
   return null;
 }
@@ -159,6 +160,7 @@ export function queryKeysForNotification(data) {
     return [['unread-count'], ['connections'], thread];
   }
   if (data.type === 'need') return [['needs-mine'], ['needs-open']];
+  if (data.type === 'reunion') return [['reunions'], ['reunion', data.reunionId]];
   if (data.type === 'need_accepted') return [['connections'], ['needs-applications']];
   return [];
 }

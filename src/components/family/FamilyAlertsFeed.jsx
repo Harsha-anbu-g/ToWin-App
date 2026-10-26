@@ -46,6 +46,13 @@ const alertKindsFor = (t) => ({
     line: t.greenLine,
     wash: t.greenTint,
   },
+  REUNION: {
+    label: tr('Reunion planned'),
+    explain: tr('They approved a reunion with old friends. A person they trust is organising it.'),
+    color: t.trustGold,
+    line: t.greenLine,
+    wash: t.greenTint,
+  },
 });
 
 function AlertRow({ alert, kind, first, showExplain, t, spacing, radius, type }) {
