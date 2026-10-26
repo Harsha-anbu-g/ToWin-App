@@ -127,6 +127,21 @@ checkout, worktree `.worktrees/reunion`):
 - `src/i18n/fr.js` and `ta.js`: every new sentence.
 - MCP catalog regenerated; `stopReunion` added to the destructive names.
 
+**Website** (laptop side, same branch `feat/reunion`, owner call the same day: "also
+the website in lap top"):
+
+- `frontend/src/api/reunions.js`: the website's first named-function catalog, the
+  same fifteen functions as the app, plus `reunionErrorLine` for the server's 400
+  sentence.
+- `frontend/src/lib/reunionSteps.js`: the app's file, unchanged.
+- `frontend/src/components/reunion/`: `ReunionLadder`, `ReunionWishForm`,
+  `OrganiserPicker`, `GuestList`, `PlanCard`, built on the kit (`.card`, `.field`,
+  `.btn-primary`, `.btn-text`, `ConfirmDialog`, `Avatar`).
+- Pages `Reunion.jsx` at `/reunion` and `ReunionDetail.jsx` at `/reunion/:reunionId`,
+  both behind `PrivateRoute`. Reached from the account menu and the drawer, every seat.
+- Same step rules, same copy, same French and Tamil lines. Phones on towinly.com
+  still get the app build, so this is the laptop view only.
+
 ### Endpoints
 
 | Method | Path | Who | Does |
