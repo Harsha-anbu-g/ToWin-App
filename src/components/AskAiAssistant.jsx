@@ -5,7 +5,7 @@
 // Same API: POST /assistant/chat {message, history} → {reply}; friendly
 // fallback on any failure. Mounted in the tabs layout only (HCI rule 8).
 // The very first question is gated by a one-time plain-words consent note
-// naming Groq and OpenAI, the outside AI services (App Store AI-consent rule, STORE-203).
+// naming OpenAI, the outside AI service (App Store AI-consent rule, STORE-203).
 import * as Speech from 'expo-speech';
 import { usePathname, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -215,7 +215,7 @@ const MessageBubble = memo(function MessageBubble({ item, onSpeak, onReport }) {
           </Pressable>
           {/* Google Play's AI-Generated Content policy requires an in-app way to
               flag offensive AI output. The /reports endpoint needs a
-              reportedUserId and there is no user behind a Groq answer, so this
+              reportedUserId and there is no user behind an AI answer, so this
               carries the answer into the feedback form instead. */}
           <Pressable
             accessibilityRole="button"
@@ -302,15 +302,14 @@ export default function AskAiAssistant() {
       title: tr('Before your first question'),
       message:
         tr(
-          "Towinly's helper uses two outside AI services to answer. Groq writes the " +
-            'answers. OpenAI turns your question into a search of the user guide, so the ' +
-            'helper can find the right page. Towinly sends your question, this chat, and ' +
-            'a short summary of your own Towinly activity (like your first name and trust ' +
-            'score) to Groq. If you ask about your connections, family or requests, it also ' +
-            'sends their first names and the request titles. It sends only your question ' +
-            'to OpenAI. It never sends your contact details. A machine writes the answers, ' +
-            'so they can be wrong. Every answer has a "Report this answer" button if one ' +
-            'looks wrong or upsetting. Is that okay?'
+          "Towinly's helper uses one outside AI service, OpenAI, to write its answers " +
+            'and to find the right page of the user guide. Towinly sends your question, ' +
+            'this chat, and a short summary of your own Towinly activity (like your first ' +
+            'name and trust score) to OpenAI. If you ask about your connections, family or ' +
+            'requests, it also sends their first names and the request titles. It never ' +
+            'sends your contact details. A machine writes the answers, so they can be ' +
+            'wrong. Every answer has a "Report this answer" button if one looks wrong or ' +
+            'upsetting. Is that okay?'
         ),
       cancelLabel: tr('Not now'),
       confirmLabel: tr("Yes, that's okay"),
@@ -380,7 +379,7 @@ export default function AskAiAssistant() {
     announce(tr('Thinking…'));
     try {
       // askAssistant carries the 30s timeout (not the client default 15s):
-      // a thoughtful Groq answer can outrun 15s under load, and a timeout
+      // a thoughtful answer can outrun 15s under load, and a timeout
       // here reads as "the AI is broken" (owner report, first TestFlight
       // build, 2026-08-17).
       const data = await askAssistant({ message: q, history });

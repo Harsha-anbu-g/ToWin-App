@@ -8,7 +8,7 @@ Needs Node 22 or newer, and the MCP package installed (`cd ../mcp && npm install
 
 ## Run
 
-    export GROQ_API_KEY=...                       # the planner
+    export OPENAI_API_KEY=...                     # the planner
     export TOWINLY_IDENTIFIER=you@example.com     # the account it acts for
     export TOWINLY_PASSWORD=...
     node run.mjs "Which of my friendships is closest to Fully Trusted, and what is my score?"
@@ -20,7 +20,7 @@ Options:
 | `--only getMyTrustScore,listMyConnections` | offer only these functions to the model |
 | `--max-steps 8` | model calls allowed before it stops |
 
-`GROQ_MODEL` picks another model; the default is `openai/gpt-oss-120b`.
+`LLM_MODEL` picks another model; the default is `gpt-6-luna`.
 
 ## How it decides
 
@@ -35,6 +35,6 @@ Options:
 
     npm test
 
-Thirteen tests cover the loop (read runs at once, write asks first, no runs nothing, errors are told not thrown, the step budget, the trace order), the catalog conversion (including the real 93-entry snapshot), and the Groq transport. They use a scripted model and fake tools; no network.
+Thirteen tests cover the loop (read runs at once, write asks first, no runs nothing, errors are told not thrown, the step budget, the trace order), the catalog conversion (including the real 93-entry snapshot), and the model transport. They use a scripted model and fake tools; no network.
 
-The tool path was also checked live on 2026-10-20 against the production backend with the demo elder account: `getMyTrustScore` through the catalog returned a score of 38, tier Reliable, with four friendships. A live planning run needs a Groq key, which this machine does not hold.
+The tool path was also checked live on 2026-10-20 against the production backend with the demo elder account: `getMyTrustScore` through the catalog returned a score of 38, tier Reliable, with four friendships. A live planning run needs an OpenAI key, which this machine does not hold.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createComplete } from '../groq.mjs';
+import { createComplete } from '../llm.mjs';
 
 test('sends messages and tools with auto choice, and reads text and tool calls back', async () => {
   let sent;
@@ -13,10 +13,15 @@ test('sends messages and tools with auto choice, and reads text and tool calls b
   const complete = createComplete({ apiKey: 'k', model: 'm', fetch });
   const out = await complete({ messages: [{ role: 'user', content: 'hi' }], tools: [{ type: 'function', function: { name: 't' } }] });
 
-  assert.equal(sent.url, 'https://api.groq.com/openai/v1/chat/completions');
+  assert.equal(sent.url, 'https://api.openai.com/v1/chat/completions');
   assert.equal(sent.init.headers.Authorization, 'Bearer k');
   assert.equal(sent.body.tool_choice, 'auto');
   assert.equal(sent.body.model, 'm');
+  // gpt-6-luna calls tools on Chat Completions only with reasoning off, and
+  // reasoning models take max_completion_tokens, not max_tokens.
+  assert.equal(sent.body.reasoning_effort, 'none');
+  assert.equal(sent.body.max_completion_tokens, 1000);
+  assert.equal(sent.body.max_tokens, undefined);
   assert.deepEqual(out.toolCalls, [{ id: 'c1', name: 'towinly_get_my_trust_score', arguments: '{}' }]);
   assert.equal(out.text, '');
   assert.deepEqual(out.usage, { prompt: 900, completion: 20 });
@@ -29,5 +34,5 @@ test('an HTTP error throws with the status, never a silent empty answer', async 
 });
 
 test('no key is refused before any call', () => {
-  assert.throws(() => createComplete({ apiKey: '' }), /GROQ_API_KEY/);
+  assert.throws(() => createComplete({ apiKey: '' }), /OPENAI_API_KEY/);
 });

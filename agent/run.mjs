@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // towinly-agent "<goal>" [--only fnA,fnB] [--max-steps N]
 // Signs in with TOWINLY_IDENTIFIER and TOWINLY_PASSWORD (or TOWINLY_TOKEN),
-// plans with GROQ_API_KEY, asks in the terminal before every write, and writes
+// plans with OPENAI_API_KEY, asks in the terminal before every write, and writes
 // the full trace to ./traces/.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import readline from 'node:readline/promises';
@@ -9,7 +9,7 @@ import { buildApiBundle } from '../mcp/bundle.mjs';
 import { createSession } from '../mcp/session.mjs';
 import { callEntry } from '../mcp/tools.mjs';
 import { runAgent } from './agent.mjs';
-import { createComplete } from './groq.mjs';
+import { createComplete } from './llm.mjs';
 import { loadCatalog, toolsFromCatalog } from './tools.mjs';
 
 const args = process.argv.slice(2);
@@ -25,7 +25,7 @@ if (!goal) {
   process.exit(2);
 }
 
-const complete = createComplete({ apiKey: process.env.GROQ_API_KEY, model: process.env.GROQ_MODEL });
+const complete = createComplete({ apiKey: process.env.OPENAI_API_KEY, model: process.env.LLM_MODEL });
 const tools = toolsFromCatalog(loadCatalog(), { only });
 const bundle = await buildApiBundle();
 const session = createSession({ client: bundle.client, logIn: bundle.logIn });

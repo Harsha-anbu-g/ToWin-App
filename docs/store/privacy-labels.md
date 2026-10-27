@@ -95,17 +95,17 @@ Facts these labels rest on, each verified in code:
   still collected, and the backend texts them at trust milestones per
   `docs/store-listing.md`.
 - **AI assistant is consent-gated per user.** The first question triggers a
-  plain-words dialog naming Groq and OpenAI, stored as a consent VERSION so a
-  changed disclosure re-asks everyone once (version 2 since 2026-10-19; the
+  plain-words dialog naming OpenAI, stored as a consent VERSION so a
+  changed disclosure re-asks everyone once (version 3 since 2026-10-27, OpenAI
+  alone; version 2 named Groq and OpenAI; the
   consent gate in
   `src/components/AskAiAssistant.jsx`, stored by `src/lib/aiConsent.js`),
   persisted per account (`src/lib/aiConsent.js`, key from
   `src/lib/storageKeys.js aiConsentKey`). The app sends `{message, history}`
   to `POST /assistant/chat`; the backend appends the user's first name and
-  trust score to the prompt and forwards it to Groq (verified in the
-  reference backend, `ToWin/backend/.../AssistantService.java:174-179`).
-  Since 2026-10-19 the question alone also goes to OpenAI, which turns it into
-  a search of the user guide (backend `GuideRetriever`); nothing else does.
+  trust score to the prompt and forwards it to OpenAI, which writes the answer
+  (backend `AssistantService`, `LlmClient`) and turns the question into a
+  search of the user guide (backend `GuideRetriever`); nothing else does.
   Contact details are never included.
 - **Encrypted in transit:** the committed base URL is HTTPS only. The
   plaintext LAN override (`EXPO_PUBLIC_API_BASE_URL`) is a dev-shell
@@ -150,7 +150,7 @@ Functionality** for all types unless a second purpose is listed.
 
 | Apple category | Data type | Collected? | Purpose(s) | Notes |
 |---|---|---|---|---|
-| Contact Info | Name | **Yes** | App Functionality | Profile name, shown to members. First name also goes to Groq with AI questions, after per-user consent. |
+| Contact Info | Name | **Yes** | App Functionality | Profile name, shown to members. First name also goes to OpenAI with AI questions, after per-user consent. |
 | Contact Info | Email Address | **Yes** | App Functionality, Account Management (declare as App Functionality; Apple has no separate account purpose) | Signup, login, verification email. |
 | Contact Info | Phone Number | **Yes** (optional) | App Functionality | Profile field; delivered to Twilio for SMS codes; revealed to a connection only at the Phone Ready trust step. |
 | Contact Info | Physical Address | No | | Only a town is collected; declared under Coarse Location. |
@@ -161,7 +161,7 @@ Functionality** for all types unless a second purpose is listed.
 | Location | Coarse Location | **Yes** (optional) | App Functionality | Two sources: the device fix rounded to a ~2 km cell (Add Friends, Posted Help, Offer Help and Edit Profile, foreground only, permission asked), and the hand-typed town geocoded server-side via OpenStreetMap. Only the rounded/town-level coordinate and the city are stored; the city is shown to members. |
 | Sensitive Info | Sensitive Info | No | | Apple's definition (race, sexual orientation, religion, biometrics, etc.) matches nothing collected. DOB and gender are declared under Other Data Types. |
 | Contacts | Contacts | No | | The address book is never read. |
-| User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to Groq after explicit per-user consent; the question alone also goes to OpenAI for the guide search. |
+| User Content | Emails or Text Messages | **Yes** | App Functionality | Private member chat (`/messages/{id}/send`), family chat, and the AI chat transcript. The AI transcript, with first name and trust score, goes to OpenAI after explicit per-user consent, for the answer and the guide search. |
 | User Content | Photos or Videos | **Yes** (optional) | App Functionality | Profile photo (`PUT /profile/photo`) and the optional government ID photo (`POST /auth/verify-id`, +3 trust points, staff review only, stored in AWS S3). Both picked from the photo library, never the camera. |
 | User Content | Audio Data | No | | Mic blocked; OS keyboard dictation never reaches the app. |
 | User Content | Gameplay Content | No | | `app/game.jsx` is fully on-device. |
@@ -212,24 +212,24 @@ Play Console: App content > Data safety.
 "Shared" uses Play's definition: transfer to a third party. Twilio (SMS
 delivery), AWS S3 (file storage), OpenStreetMap Nominatim (geocoding a bare
 town string), Railway (hosting) act as service providers processing on
-Towinly's behalf, which Play does not count as sharing. **Groq is declared
+Towinly's behalf, which Play does not count as sharing. **OpenAI is declared
 as sharing**: the AI transcript plus first name and trust score leave
 Towinly's processing boundary, and honesty beats arguing the exemption. The
-in-app consent dialog says "shared with Groq" in so many words.
+in-app consent dialog says Towinly "sends" them "to OpenAI" in so many words.
 
 | Play category | Data type | Collected? | Shared? | Optional? | Purpose(s) |
 |---|---|---|---|---|---|
-| Personal info | Name | **Yes** | **Yes** (first name to Groq, only with the user's one-time consent, only when they use Ask AI) | Optional | App functionality |
+| Personal info | Name | **Yes** | **Yes** (first name to OpenAI, only with the user's one-time consent, only when they use Ask AI) | Optional | App functionality |
 | Personal info | Email address | **Yes** | **No** (resolved 2026-08-15: the owner cleared the production PostHog key and the backend redeployed, so the plaintext-email signup event no longer leaves the server; section 5 item 1) | Required | App functionality, Account management |
 | Personal info | User IDs | **Yes** | No | Required | App functionality, Account management |
 | Personal info | Address | No | | | |
 | Personal info | Phone number | **Yes** | No (Twilio delivers SMS as a service provider) | Optional | App functionality |
 | Personal info | Race/ethnicity, political, religious, sexual orientation | No | | | |
-| Personal info | Other info | **Yes** | **Yes** (trust score to Groq, same consent gate) | DOB required, rest optional | App functionality. Covers: date of birth, gender, occupation, languages, social media URLs, trust score. |
+| Personal info | Other info | **Yes** | **Yes** (trust score to OpenAI, same consent gate) | DOB required, rest optional | App functionality. Covers: date of birth, gender, occupation, languages, social media URLs, trust score. |
 | Financial info | all | No | | | |
 | Health and fitness | all | No | | | |
 | Messages | Emails / SMS | No | | | |
-| Messages | Other in-app messages | **Yes** | **Yes** (the Ask AI transcript to Groq after consent; member-to-member chat is never shared) | Optional | App functionality |
+| Messages | Other in-app messages | **Yes** | **Yes** (the Ask AI transcript to OpenAI after consent; member-to-member chat is never shared) | Optional | App functionality |
 | Photos and videos | Photos | **Yes** | No (S3 stores; staff review the ID; members see only the profile photo) | Optional | App functionality; the ID photo also: Fraud prevention, security, and compliance |
 | Photos and videos | Videos | No | | | |
 | Audio | all | No | | | Mic permission removed from the manifest. |
@@ -249,8 +249,8 @@ in-app consent dialog says "shared with Groq" in so many words.
 
 - Emergency contacts and the family-link identifier are about a third party,
   typed by the account holder; the app never reads the device address book.
-- AI questions are answered by Groq, an outside AI provider. Nothing goes to
-  Groq before a per-account consent dialog that names Groq; the user can
+- AI questions are answered by OpenAI, an outside AI provider. Nothing goes to
+  OpenAI before a per-account consent dialog that names OpenAI; the user can
   decline and the question is not sent.
 - The government ID photo is optional, reviewed by staff for a one-time
   identity check, never shown to other members.
@@ -292,7 +292,7 @@ network call must re-check the row (and section 6).
 
 | Recipient | What reaches it | When | Role |
 |---|---|---|---|
-| **Groq** | AI question, recent chat history, first name, trust score. Never contact details. | Only after the user's one-time consent dialog naming Groq, and only when they ask the assistant something | Declared as **sharing** on Play; covered under collected categories on Apple |
+| **OpenAI** | AI question, recent chat history, first name, trust score. Never contact details. | Only after the user's one-time consent dialog naming OpenAI, and only when they ask the assistant something | Declared as **sharing** on Play; covered under collected categories on Apple |
 | Twilio | Phone number (verification codes); emergency contact numbers (milestone/quiet-period texts; SOS texts only if the SOS button ever returns) | SMS delivery | Service provider |
 | AWS S3 | Profile photo, government ID photo | Upload | Service provider (storage) |
 | OpenStreetMap Nominatim | The bare town string the user typed | Server-side geocoding | Utility lookup; no account data attached by the app |
@@ -334,7 +334,7 @@ No ads. No data brokers. No sale of personal data.
      `Personal info / Email address` becomes **shared** with an analytics third
      party, and Play `App activity / App interactions` becomes collected. Add
      PostHog to the processor list in `src/data/legalContent.js`, which today
-     names Amazon, Twilio, OpenStreetMap, Groq and Railway but not PostHog.
+     names Amazon, Twilio, OpenStreetMap, OpenAI and Railway but not PostHog.
    - **Clear `POSTHOG_API_KEY` on the production backend.** One owner command.
      `PostHogService` is a documented no-op when the key is blank
      (`PostHogService.java:22-26`), so the labels below stand exactly as

@@ -5,7 +5,7 @@ import api from './client';
 
 /**
  * Ask the Towinly assistant one question, with the recent turns for context.
- * Waits up to 30s, not the client default 15s: a thoughtful Groq answer can
+ * Waits up to 30s, not the client default 15s: a thoughtful answer can
  * outrun 15s under load, and a timeout reads as "the AI is broken" (owner
  * report from the first TestFlight build, 2026-08-17).
  * @param {object} params

@@ -266,7 +266,7 @@ export function privacySections(email) {
       p: 'A few outside companies do jobs for Towinly, and each one sees only what it needs. '
         + 'Amazon keeps your photos and identity documents. Twilio sends the text messages, so '
         + 'it sees the phone number a message is going to. OpenStreetMap turns the name of your '
-        + 'town into a rough position, and is told nothing about you. Groq writes the answers '
+        + 'town into a rough position, and is told nothing about you. OpenAI writes the answers '
         + 'from the Towinly helper, and only when you have said yes to that. Railway runs the '
         + 'servers everything sits on. Expo delivers the notification that makes your phone '
         + 'ring, and sees the delivery address your phone made for that purpose and the few '
