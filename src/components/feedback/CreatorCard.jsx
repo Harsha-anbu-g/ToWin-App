@@ -102,7 +102,7 @@ export default function CreatorCard() {
       <Pressable
         accessibilityRole="link"
         accessibilityLabel={tr('Visit my portfolio')}
-        onPress={() => open('https://portfolioharsha.vercel.app/')}
+        onPress={() => open('https://harshavardhanag.com/')}
         style={({ pressed }) => ({
           backgroundColor: t.canvas,
           borderWidth: 1,

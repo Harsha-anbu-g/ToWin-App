@@ -5,6 +5,8 @@
 // parchment survives only on the check-in hero card, and the SF type ramp + shape
 // scale below are locked. Dark block mirrors the CSS cascade; palette otherwise
 // unchanged. Last website sync: commit 494fa79 (dark --sky-bar-from added).
+// Re-checked 2026-10-07 against website commit 9c49ecb (48 commits pulled):
+// frontend/src/index.css is untouched, so no token here needs to move.
 
 export const light = {
   // Brand blue — sky-blue scale
