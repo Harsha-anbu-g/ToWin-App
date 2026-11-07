@@ -79,7 +79,7 @@ directory.
 ## 4. The one command
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 npm run submit:config -- \
   --asc-app-id 1234567891 \
   --apple-team-id ABCDE12345 \
@@ -158,7 +158,7 @@ None of this needs Apple money or a card. It does need a browser, so it cannot
 run unattended. Do it before enrollment day.
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 eas login          # opens a browser, free Expo account
 eas whoami         # confirm it prints an account name and not "Not logged in"
 eas init           # writes extra.eas.projectId into app.json

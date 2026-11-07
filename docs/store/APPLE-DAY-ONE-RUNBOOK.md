@@ -38,7 +38,7 @@ the day, do it first, before you touch Apple.
 ### 0.1 Link the project to EAS
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 npm install -g eas-cli          # or use npx eas-cli@21.7.0 everywhere below
 eas login
 eas whoami
@@ -309,7 +309,7 @@ rename needs a version review. Either create the record by hand as above, or set
 ### 6. Set up signing credentials
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 eas credentials -p ios
 ```
 
@@ -441,7 +441,7 @@ including uncommitted edits. As of today this repo has an uncommitted `eas.json`
 and an untracked `docs/` directory.
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 git status
 git branch --show-current
 ```
@@ -913,7 +913,7 @@ then build, then upload. Everything else can be overlapped.
 For the day itself, when you do not want to read prose.
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 
 # once, before Apple exists
 eas login

@@ -52,7 +52,7 @@ path in `enrollment-decision.md` sections 1 and 5.
 browser, so it cannot be done unattended.
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 eas login
 eas whoami        # must print an account name. Today it prints "Not logged in"
 eas init          # writes extra.eas.projectId into app.json
@@ -122,7 +122,7 @@ Do not let `eas submit` create the record: the automatic path names the app from
 Then write them into `eas.json` with one command:
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 npm run submit:config -- \
   --asc-app-id <the numeric Apple ID> \
   --apple-team-id <the 10 character Team ID> \

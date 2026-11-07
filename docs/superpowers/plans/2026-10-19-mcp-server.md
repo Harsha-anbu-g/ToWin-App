@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/plans/../specs/2026-10-19-mcp-server-design.md`. Read it first.
 
-**Working directory for every command:** `/Users/aghar/Documents/Projects/ToWin App/.worktrees/App-mcp-server/mcp` unless a step says otherwise. Branch `feat/mcp-server`. Commit after every task, staging only the files the task names. Never push.
+**Working directory for every command:** `/Users/aghar/Documents/Projects/Towinly app/worktrees/App-mcp-server/mcp` unless a step says otherwise. Branch `feat/mcp-server`. Commit after every task, staging only the files the task names. Never push.
 
 **Skills to load as you go:** `test-driven-development` before Task 2; `security-review` and `code-review` in Task 11; `humanizer` then `stop-slop` on `README.md` in Task 10; `verification-before-completion` before telling the owner anything is done.
 
@@ -66,7 +66,7 @@ Outside `mcp/`: `package.json` (App) gets `"/mcp/"` in jest `testPathIgnorePatte
 - [ ] **Step 1: Create the folder and package.json**
 
 ```bash
-mkdir -p "/Users/aghar/Documents/Projects/ToWin App/.worktrees/App-mcp-server/mcp/stubs" "/Users/aghar/Documents/Projects/ToWin App/.worktrees/App-mcp-server/mcp/test"
+mkdir -p "/Users/aghar/Documents/Projects/Towinly app/worktrees/App-mcp-server/mcp/stubs" "/Users/aghar/Documents/Projects/Towinly app/worktrees/App-mcp-server/mcp/test"
 ```
 
 `mcp/package.json`:
@@ -1428,7 +1428,7 @@ Load `verification-before-completion`. Run `npm test` and the inspector `tools/l
 
 - [ ] **Step 2: On "looks good"**: merge `feat/mcp-server` into `main` in the main checkout only if the owner says so (fast-forward or merge commit; do not touch the other session's uncommitted files), run `npm run lint` and `npm test` in `App/` once to confirm the app's own checks still pass, then register the server for the owner:
 
-`claude mcp add --scope user towinly --env TOWINLY_IDENTIFIER=... --env TOWINLY_PASSWORD=... -- node "/Users/aghar/Documents/Projects/ToWin App/App/mcp/server.mjs"`
+`claude mcp add --scope user towinly --env TOWINLY_IDENTIFIER=... --env TOWINLY_PASSWORD=... -- node "/Users/aghar/Documents/Projects/Towinly app/App/mcp/server.mjs"`
 
 (The owner supplies the account. Never put their password in a chat message or a file.)
 

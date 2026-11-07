@@ -291,7 +291,7 @@ hour spent here is an hour not spent on the meter.
 Three reasons, in order of weight:
 
 1. `git rev-parse --show-toplevel` returns
-   `/Users/aghar/Documents/Projects/ToWin App/App`. The project root holds no
+   `/Users/aghar/Documents/Projects/Towinly app/App`. The project root holds no
    git repository at all, so the previously named `docs/store-images/` sits
    outside version control. A store upload asset that no commit records is an
    asset nobody can roll back.

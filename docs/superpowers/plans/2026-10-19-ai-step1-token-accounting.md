@@ -872,7 +872,7 @@ git commit -m "chore: ASSISTANT_MAX_TOKENS_PER_DAY, the Ask AI spend ceiling in 
 In `App/tasks/todo.md`, change `1. [ ] Step 1` to `1. [x] Step 1` and append the commit hashes. Commit that file alone in the App repo:
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 git add tasks/todo.md
 git commit -m "docs: AI roadmap step 1 done"
 ```

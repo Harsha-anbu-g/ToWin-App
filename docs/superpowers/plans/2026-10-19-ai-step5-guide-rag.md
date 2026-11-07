@@ -53,8 +53,8 @@ Provider facts (OpenAI-compatible embeddings, the shape OpenAI, Gemini and Mistr
 ### Task 1: The exporter and its test
 
 **Files:**
-- Create: `/Users/aghar/Documents/Projects/ToWin App/docs/user-guide/tools/export_chunks.py`
-- Test: `/Users/aghar/Documents/Projects/ToWin App/docs/user-guide/tools/test_export_chunks.py`
+- Create: `/Users/aghar/Documents/Projects/Towinly app/docs/user-guide/tools/export_chunks.py`
+- Test: `/Users/aghar/Documents/Projects/Towinly app/docs/user-guide/tools/test_export_chunks.py`
 
 The guide source is `docs/user-guide/guide/guide_content.py`: `PARTS` is a list of parts (`id`, `title`, `roles`, `intro`, `chapters`); each chapter has `id`, `title`, `roles`, `lead`, `blocks`; each block is a one-key dict by kind: `p` (paragraph), `h` and `h3` (headings), `side` (a figure beside nested `blocks`, with a `caption`), `table` (rows of cells), `note`, `care`, `tip` (callouts), `steps` and `bullets` (lists), `fig` and `figs` (pictures with `caption` or `captions`). Markup inside strings: `[[Name]]` is a button, `*x*` italic, `**x**` bold. The file imports reportlab, so the exporter reads it with `ast` instead of importing it.
 
@@ -155,7 +155,7 @@ if __name__ == "__main__":
 - [ ] **Step 2: Run to see it fail**
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/docs/user-guide/tools" && python3 -I -m unittest test_export_chunks 2>&1 | tail -3
+cd "/Users/aghar/Documents/Projects/Towinly app/docs/user-guide/tools" && python3 -I -m unittest test_export_chunks 2>&1 | tail -3
 ```
 
 Expected: `ModuleNotFoundError: No module named 'export_chunks'`.
@@ -323,7 +323,7 @@ Note on `_Literal`: `visit_Name` turns a bare name into `None`; the only names i
 - [ ] **Step 4: Run the tests**
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/docs/user-guide/tools" && python3 -I -m unittest test_export_chunks 2>&1 | tail -3
+cd "/Users/aghar/Documents/Projects/Towinly app/docs/user-guide/tools" && python3 -I -m unittest test_export_chunks 2>&1 | tail -3
 ```
 
 Expected: `Ran 7 tests ... OK`.
@@ -331,7 +331,7 @@ Expected: `Ran 7 tests ... OK`.
 - [ ] **Step 5: Generate the corpus**
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App" && python3 -I docs/user-guide/tools/export_chunks.py \
+cd "/Users/aghar/Documents/Projects/Towinly app" && python3 -I docs/user-guide/tools/export_chunks.py \
   --out ~/Documents/Projects/ToWin/.worktrees/ai-roadmap/backend/src/main/resources/assistant/guide-chunks.json
 ```
 
@@ -1391,7 +1391,7 @@ git commit -m "feat: Ask AI carries the four nearest user-guide passages in its 
 
 ### Task 7: The consent names the second service
 
-**Files (App repo, `/Users/aghar/Documents/Projects/ToWin App/App`):**
+**Files (App repo, `/Users/aghar/Documents/Projects/Towinly app/App`):**
 - Modify: `src/components/AskAiAssistant.jsx` (the `confirm({...message})` string, around line 297)
 - Modify: `src/i18n/fr.js` and `src/i18n/ta.js` (the key is the English sentence; both key and value change)
 - Modify: `docs/store/privacy-labels.md` (the three places that say the AI data goes to Groq)
@@ -1432,7 +1432,7 @@ In `docs/store/privacy-labels.md`, where it says the AI question and summary go 
 - [ ] **Step 4: Commit (App repo and website branch)**
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 git add src/components/AskAiAssistant.jsx src/i18n/fr.js src/i18n/ta.js docs/store/privacy-labels.md
 git commit -m "feat: Ask AI consent names OpenAI for the guide search beside Groq"
 

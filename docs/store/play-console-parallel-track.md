@@ -659,7 +659,7 @@ awkward to reverse. Then check whether a project already exists under that
 account.
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 eas project:info    # if this fails, no project is linked yet
 eas init            # creates or links, and writes extra.eas.projectId into app.json
 ```
@@ -670,7 +670,7 @@ change it.
 ### Build
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 eas build -p android --profile production
 ```
 

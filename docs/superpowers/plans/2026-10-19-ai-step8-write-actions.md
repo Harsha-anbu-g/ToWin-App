@@ -6,7 +6,7 @@
 
 **Architecture:** Backend: `AssistantActions` maps a proposal tool call to an `Action(name, arguments)` where `name` is the app API function and `arguments` are whitelisted, sanitized and capped; a second proposal tool `propose_help_request` carries a parameter schema. App: `src/lib/assistantActions.js` is a registry of approved actions (`checkInToday`, `postHelpRequest`) with the confirm copy and the named function; `runAssistantAction` confirms, then calls. Step 7's `check_in` name becomes `checkInToday` so every name is an app function.
 
-**Tech Stack:** as steps 3 and 7. Backend worktree `~/Documents/Projects/ToWin/.worktrees/ai-roadmap` (paths relative to `backend/`), app `/Users/aghar/Documents/Projects/ToWin App/App`. Test commands as in the step 7 plan.
+**Tech Stack:** as steps 3 and 7. Backend worktree `~/Documents/Projects/ToWin/.worktrees/ai-roadmap` (paths relative to `backend/`), app `/Users/aghar/Documents/Projects/Towinly app/App`. Test commands as in the step 7 plan.
 
 Spec: `App/docs/superpowers/specs/2026-10-19-ai-roadmap-design.md`, section "Step 8". Backend limits (from `NeedRequest`): title 1 to 200 chars, description up to 2,000, category one of TRANSPORTATION, CLEANING, COMPANIONSHIP, ERRANDS, OTHER, urgency NORMAL or URGENT. The app function: `postHelpRequest({ title, description, category, urgency, onBehalfOfElderId })` in `src/api/needs.js`.
 

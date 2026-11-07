@@ -6,7 +6,7 @@
 
 **Architecture:** Backend: a fourth tool `propose_check_in` whose result is a sentence, never a write; `AssistantService.answerWithAction` returns the reply plus an action object (`{name: "check_in", arguments: {}}` or null); `ChatResponse` carries it, and the object shape is the contract a generic app-side dispatcher can grow into (one `name` per app API function, `arguments` as that function's input). App: on `action?.name === "check_in"`, the existing `confirm` dialog asks, then `checkInToday()` from `src/api/streaks.js` runs, and one plain bubble reports the outcome. Everything else in the chat is unchanged.
 
-**Tech Stack:** Spring Boot 3.5 + Mockito (backend, worktree `~/Documents/Projects/ToWin/.worktrees/ai-roadmap`, paths relative to `backend/`); React Native + Expo SDK 54, jest-expo, RNTL (app, `/Users/aghar/Documents/Projects/ToWin App/App`).
+**Tech Stack:** Spring Boot 3.5 + Mockito (backend, worktree `~/Documents/Projects/ToWin/.worktrees/ai-roadmap`, paths relative to `backend/`); React Native + Expo SDK 54, jest-expo, RNTL (app, `/Users/aghar/Documents/Projects/Towinly app/App`).
 
 Spec: `App/docs/superpowers/specs/2026-10-19-ai-roadmap-design.md`, section "Step 7".
 
@@ -20,7 +20,7 @@ caffeinate -i ./mvnw -Dtest='Assistant*,Groq*,Eval*' -Dsurefire.failIfNoSpecifie
 App test command (never pipe jest into head or tail; write to a file and grep it):
 
 ```bash
-cd "/Users/aghar/Documents/Projects/ToWin App/App"
+cd "/Users/aghar/Documents/Projects/Towinly app/App"
 npx jest --forceExit --testPathPattern 'ask-ai|i18n' > /tmp/app-jest.log 2>&1; grep -E '^Tests:|^Test Suites:|✕' /tmp/app-jest.log
 ```
 
