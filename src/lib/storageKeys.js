@@ -26,6 +26,9 @@ export const KEYS = {
   language: 'towinly-app-language',
   checkinPrompted: 'towin-checkin-prompted',
   checkinExplained: 'towin-checkin-explained',
+  // The one-time note on the Trust Score page: points count after a help is
+  // finished (trust tiers step 1). Set when the person taps "Got it".
+  trustRuleExplained: 'towin-trust-rule-explained',
   // LEGACY device-wide block list, from before blocks were scoped per account.
   // Read once, moved into the signed-in account's key, then deleted — see
   // blockList.js. Never written again.
@@ -94,6 +97,7 @@ export const APP_WRITTEN_KEYS = [
   KEYS.language,
   KEYS.checkinPrompted,
   KEYS.checkinExplained,
+  KEYS.trustRuleExplained,
   KEYS.blockedUsers,
   KEYS.onboarded,
   KEYS.oauthState,
@@ -121,6 +125,7 @@ export const SHARED_SESSION_TOKEN = 'token';
  *   towinly-theme / towin-theme    — ThemeContext.jsx (current / legacy)
  *   towinly_beta_banner_dismissed  — BetaBanner.jsx
  *   cookieConsent                  — CookieConsent.jsx
+ *   towinly_trust_rule_explained   — Trust.jsx (the one-time "points count" note)
  */
 export const WEBSITE_OWNED_KEYS = [
   SHARED_SESSION_TOKEN,
@@ -128,6 +133,7 @@ export const WEBSITE_OWNED_KEYS = [
   KEYS.themeLegacyReadOnly,
   'towinly_beta_banner_dismissed',
   'cookieConsent',
+  'towinly_trust_rule_explained',
 ];
 
 /** Website keys built at runtime — lib/useSeenIds.js: `towinly_seen_<user>_<category>`. */

@@ -58,7 +58,7 @@ test('copy is verbatim from landingContent.jsx (spot checks)', () => {
     'An older person looking for friendship, company, or help with daily tasks.'
   );
   expect(COPY.trust.note).toBe(
-    'Each person you help can earn you a maximum of 15 points, so your score grows with every new connection.'
+    'Each person you help can earn you a maximum of 15 points, so your score grows with every help you finish.'
   );
   expect(COPY.trust.total).toEqual({
     formula: '3 + 7 + 5 =',

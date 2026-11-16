@@ -14,6 +14,7 @@ import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
 import LoadError from '../../src/components/ui/LoadError';
 import Screen from '../../src/components/ui/Screen';
+import TrustRuleNote from '../../src/components/trust/TrustRuleNote';
 import SkeletonCard from '../../src/components/ui/Skeleton';
 import { useAuth } from '../../src/context/AuthContext';
 import { SHORT_STAGES } from '../../src/lib/trustStages';
@@ -231,9 +232,33 @@ function ProfilePointsCard({ profile, onGoToProfile }) {
   );
 }
 
+// A friendship adds points once the elder has ended a help between the two
+// (trust tiers step 1). Until then the server sends `counted: false` with
+// every point at 0 and the live step in `stageIndex`. An older server sends
+// no `counted` at all, and that card counts as it always did.
+const isWaiting = (card) => card.counted === false;
+
 function HelperPointsCard({ card }) {
   const { t, radius, type } = useTheme();
   const pct = card.totalMax > 0 ? card.total / card.totalMax : 0;
+  // One plain line stands in for a bar and three meters that would all read
+  // zero: who it is, the step the two are on, and when the points arrive.
+  if (isWaiting(card)) {
+    return (
+      <Card style={{ marginTop: 12 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
+          <Avatar name={card.customerName} uri={card.customerPhotoUrl} size={40} />
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: type.body, fontWeight: '600', color: t.ink }}>{card.customerName}</Text>
+            <Text style={{ fontSize: type.caption, color: t.inkSlate, marginTop: 1 }}>{tr(SHORT_STAGES[Math.min(card.stageIndex, 6)])}</Text>
+          </View>
+        </View>
+        <Text style={{ fontSize: type.meta, color: t.inkSlate, lineHeight: 18, marginTop: 10 }}>
+          {tr('Counts after a help is finished')}
+        </Text>
+      </Card>
+    );
+  }
   return (
     <Card style={{ marginTop: 12 }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 11 }}>
@@ -300,6 +325,8 @@ export default function TrustScreen() {
 
   const score = breakdown ? Math.round(breakdown.totalScore) : 0;
   const customers = breakdown?.customers ?? [];
+  // Only friendships that add points "helped you reach this".
+  const countedCustomers = customers.filter((c) => !isWaiting(c));
   const next = nextTier(score);
 
   return (
@@ -350,6 +377,8 @@ export default function TrustScreen() {
               growing, so nothing here implies a max. Mobile wears the trust
               accent in the settled deep-green family (design call
               2026-07-12), hairline border, no drop shadow. */}
+          {/* Shown once (HCI 10): why a score may be lower than it was. */}
+          <TrustRuleNote customers={customers} style={{ marginTop: spacing[4] }} />
           <Card style={{ marginTop: spacing[4] }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[4] }}>
               <View
@@ -425,17 +454,17 @@ export default function TrustScreen() {
                 </Text>
               </View>
             </View>
-            {customers.length > 0 ? (
+            {countedCustomers.length > 0 ? (
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
                 <View style={{ flexDirection: 'row' }}>
-                  {customers.slice(0, 3).map((c, i) => (
+                  {countedCustomers.slice(0, 3).map((c, i) => (
                     <View key={c.connectionId} style={{ marginLeft: i === 0 ? 0 : -8 }}>
                       <Avatar name={c.customerName} uri={c.customerPhotoUrl} size={26} />
                     </View>
                   ))}
                 </View>
                 <Text style={{ fontSize: type.caption, color: t.inkSlate }}>
-                  {customers.length} {customers.length === 1 ? tr('person') : tr('people')}{' '}{tr('helped you reach this')}
+                  {countedCustomers.length} {countedCustomers.length === 1 ? tr('person') : tr('people')}{' '}{tr('helped you reach this')}
                 </Text>
               </View>
             ) : null}
@@ -468,7 +497,7 @@ export default function TrustScreen() {
                   ? // No "add someone" for FAMILY — the role has no way to do
                     // it, and their score never grows from connections.
                     tr('Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.')
-                  : tr('Trust starts with a friend. Add someone, and your points appear here.')}
+                  : tr('Trust starts with a friend. Add someone, finish a help together, and your points appear here.')}
               </Text>
               {/* The empty state carries its own starter action (rulebook) */}
               {!isFamily ? (

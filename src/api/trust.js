@@ -6,7 +6,9 @@ import api from './client';
 /**
  * The signed-in person's live trust score with the per-friendship breakdown
  * (one card per person: stage index, points earned, maximums), exactly as
- * GET /trust/my-score returns it.
+ * GET /trust/my-score returns it. A card's `counted` is false until the elder
+ * has ended a help between the two; until then every point on that card is 0
+ * and `stageIndex` still shows the live step.
  * @returns {Promise<{totalScore: number, customers: Array<object>}>} rejects
  *   with the axios error
  */

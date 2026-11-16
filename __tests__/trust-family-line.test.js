@@ -209,6 +209,6 @@ test('FAMILY: profile-only copy — no elder scoring rules, no add-someone dead 
     'Your trust score grows from your profile. Trust between your parent and their helpers grows on their side.'
   );
   expect(r.queryByText(/Each helper you grow trust with/)).toBeNull();
-  expect(r.queryByText('Trust starts with a friend. Add someone, and your points appear here.')).toBeNull();
+  expect(r.queryByText('Trust starts with a friend. Add someone, finish a help together, and your points appear here.')).toBeNull();
   expect(r.queryByText('Family connected')).toBeNull();
 });

@@ -3,6 +3,16 @@
 // *highlight* markers must survive translation (__tests__/i18n-coverage.test.js).
 // Machine-drafted: have a native speaker read it before a Tamil release.
 export default {
+  "A friendship adds to your score once a help between you two is finished. If your score went down, this is why.":
+    "உங்கள் இருவருக்கும் இடையே ஓர் உதவி முடிந்ததும், அந்த நட்பு உங்கள் மதிப்பெண்ணில் சேரும். உங்கள் மதிப்பெண் குறைந்திருந்தால், காரணம் இதுதான்.",
+  "Counts after a help is finished":
+    "ஓர் உதவி முடிந்த பிறகு கணக்கில் சேரும்",
+  "Points count after a help is finished":
+    "ஓர் உதவி முடிந்த பிறகே புள்ளிகள் கணக்கில் சேரும்",
+  "See your score":
+    "உங்கள் மதிப்பெண்ணைப் பாருங்கள்",
+  "Trust starts with a friend. Add someone, finish a help together, and your points appear here.":
+    "நம்பிக்கை ஒரு நண்பரில் தொடங்குகிறது. ஒருவரைச் சேருங்கள், சேர்ந்து ஓர் உதவியை முடியுங்கள், உங்கள் புள்ளிகள் இங்கே தோன்றும்.",
   "\n\nTheir message:\n“{message}”":
     "\n\nஅவர்களின் செய்தி:\n“{message}”",
   " by ":
@@ -525,8 +535,8 @@ export default {
     "முடிந்தது. இனி அவர்கள் இதை உங்களுக்காகச் செய்யலாம்.",
   "Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.":
     "நீங்கள் நம்பிக்கை வளர்க்கும் ஒவ்வொரு உதவியாளரும் உங்களுக்கு 15 புள்ளிகள் வரை தரலாம்: சேர்ந்து நம்பிக்கை வளர்த்ததற்கு 7, அவர்களின் மதிப்புரைக்கு 5, உங்கள் சுயவிவரத்திற்கு 2, இணைந்த குடும்பத்திற்கு 1.",
-  "Each person you help can earn you a maximum of 15 points, so your score grows with every new connection.":
-    "நீங்கள் உதவும் ஒவ்வொருவரும் அதிகபட்சம் 15 புள்ளிகள் தரலாம், எனவே ஒவ்வொரு புதிய இணைப்பிலும் உங்கள் மதிப்பெண் வளரும்.",
+  "Each person you help can earn you a maximum of 15 points, so your score grows with every help you finish.":
+    "நீங்கள் உதவும் ஒவ்வொருவரும் அதிகபட்சம் 15 புள்ளிகள் தரலாம், எனவே நீங்கள் முடிக்கும் ஒவ்வொரு உதவியிலும் உங்கள் மதிப்பெண் வளரும்.",
   "Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.":
     "நீங்கள் உதவும் ஒவ்வொருவரும் 15 புள்ளிகள் வரை தரலாம்: சேர்ந்து நம்பிக்கை வளர்த்ததற்கு 7, அவர்களின் மதிப்புரைக்கு 5, உங்கள் சுயவிவரத்திற்கு 3.",
   "Ease of Use":
@@ -2037,8 +2047,6 @@ export default {
     "நம்பிக்கை மதிப்பெண் {totalMax}-இல் {total}. உங்கள் நம்பிக்கை மதிப்பெண் பக்கத்தைத் திறக்கவும்",
   "Trust stages":
     "நம்பிக்கைப் படிகள்",
-  "Trust starts with a friend. Add someone, and your points appear here.":
-    "நம்பிக்கை ஒரு நண்பரில் தொடங்குகிறது. ஒருவரைச் சேருங்கள், உங்கள் புள்ளிகள் இங்கே தோன்றும்.",
   "Trust steps and messages with this elder pause until either of you resumes. Nothing is lost.":
     "உங்களில் யாராவது மீண்டும் தொடங்கும் வரை இந்த மூத்தவருடனான நம்பிக்கைப் படிகளும் செய்திகளும் இடைநிறுத்தப்படும். எதுவும் இழக்கப்படாது.",
   "Trust steps and messages with {customerName} pause until either of you resumes. Nothing is lost.":

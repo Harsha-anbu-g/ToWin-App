@@ -12,6 +12,7 @@ import RefreshControl from '../../src/components/ui/RefreshControl';
 import { listMyConnections } from '../../src/api/connections';
 import { getMyStreak } from '../../src/api/streaks';
 import { getMyTrustScore } from '../../src/api/trust';
+import TrustRuleNote from '../../src/components/trust/TrustRuleNote';
 import FamilyHomePanel from '../../src/components/family/FamilyHomePanel';
 import MyEldersPanel from '../../src/components/trust/MyEldersPanel';
 import MyHelpersPanel from '../../src/components/trust/MyHelpersPanel';
@@ -162,6 +163,8 @@ export default function HomeScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingHorizontal: spacing[4], paddingTop: spacing[2], paddingBottom: 120, gap: spacing[4] }} // 120 clears the Ask-AI FAB band so the last card is never under it
       >
+        {/* Shown once: why the score in the pill above may be lower than it was. */}
+        <TrustRuleNote customers={trust?.customers} onSeeScore={() => router.push('/trust')} />
         {isHelper ? <MyEldersPanel /> : <MyHelpersPanel />}
         {/* My boxes card removed from Home (owner call 2026-08-17):
             What I pass on stays reachable through the menu. */}

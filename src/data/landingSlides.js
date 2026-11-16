@@ -55,7 +55,7 @@ export const COPY = {
   trust: {
     // Title renders as gold "Trust" + " is earned, not given"
     get lead() { return tr('Letting someone new into your life is a big step. So every member has a Trust Score, visible to elders before they ever say yes.'); },
-    get note() { return tr('Each person you help can earn you a maximum of 15 points, so your score grows with every new connection.'); },
+    get note() { return tr('Each person you help can earn you a maximum of 15 points, so your score grows with every help you finish.'); },
     cards: [
       { get title() { return tr('Profile'); }, badge: '+3', get body() { return tr('Full profile with ID, phone, and photo, all checked.'); } },
       {

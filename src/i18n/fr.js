@@ -2,6 +2,16 @@
 // text passed to tr(); see src/i18n/index.js. Placeholders like {name} and the
 // *highlight* markers must survive translation (__tests__/i18n-coverage.test.js).
 export default {
+  "A friendship adds to your score once a help between you two is finished. If your score went down, this is why.":
+    "Une amitié s'ajoute à votre score dès qu'une aide entre vous deux est terminée. Si votre score a baissé, voilà pourquoi.",
+  "Counts after a help is finished":
+    "Compte une fois une aide terminée",
+  "Points count after a help is finished":
+    "Les points comptent une fois une aide terminée",
+  "See your score":
+    "Voir votre score",
+  "Trust starts with a friend. Add someone, finish a help together, and your points appear here.":
+    "La confiance commence par un ami. Ajoutez quelqu'un, terminez une aide ensemble, et vos points apparaîtront ici.",
   "\n\nTheir message:\n“{message}”":
     "\n\nSon message :\n« {message} »",
   " by ":
@@ -524,8 +534,8 @@ export default {
     "C'est fait. Cette personne peut maintenant le faire pour vous.",
   "Each helper you grow trust with can earn you up to 15 points: 7 for growing trust together, 5 from their review, 2 for your profile, and 1 for family connected.":
     "Chaque aidant avec qui vous bâtissez la confiance peut vous rapporter jusqu'à 15 points : 7 pour la confiance bâtie ensemble, 5 pour son avis, 2 pour votre profil et 1 pour une famille liée.",
-  "Each person you help can earn you a maximum of 15 points, so your score grows with every new connection.":
-    "Chaque personne que vous aidez peut vous rapporter au plus 15 points : votre score grandit avec chaque nouveau lien.",
+  "Each person you help can earn you a maximum of 15 points, so your score grows with every help you finish.":
+    "Chaque personne que vous aidez peut vous rapporter au plus 15 points : votre score grandit avec chaque aide terminée.",
   "Each person you help can earn you up to 15 points: 7 for growing trust together, 5 from their review, and 3 for your profile.":
     "Chaque personne que vous aidez peut vous rapporter jusqu'à 15 points : 7 pour la confiance bâtie ensemble, 5 pour son avis et 3 pour votre profil.",
   "Ease of Use":
@@ -2036,8 +2046,6 @@ export default {
     "Score de confiance {total} sur {totalMax}. Ouvrir votre page Score de confiance",
   "Trust stages":
     "Étapes de confiance",
-  "Trust starts with a friend. Add someone, and your points appear here.":
-    "La confiance commence par un ami. Ajoutez quelqu'un, et vos points apparaîtront ici.",
   "Trust steps and messages with this elder pause until either of you resumes. Nothing is lost.":
     "Les étapes de confiance et les messages avec cet aîné sont suspendus jusqu'à ce que l'un de vous reprenne. Rien n'est perdu.",
   "Trust steps and messages with {customerName} pause until either of you resumes. Nothing is lost.":
