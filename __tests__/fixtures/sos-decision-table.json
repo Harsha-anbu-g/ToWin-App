@@ -1,0 +1,143 @@
+{
+  "about": [
+    "The SOS decision table. One box per situation: what the texts did, against what family could see.",
+    "given is the situation. answer is exactly what the server sends for it. told names the sentence the screen must show.",
+    "The server test (SosDecisionTableTest) and the website's SOS button tests both read this file,",
+    "so the answer the server writes and the answer the screens read cannot drift apart.",
+    "The phone app keeps a copy at __tests__/fixtures/sos-decision-table.json. Change both together."
+  ],
+  "boxes": [
+    {
+      "box": "no contacts on file, no family",
+      "given": { "contacts": 0, "textsThatFail": 0, "family": "none" },
+      "answer": {
+        "status": 409,
+        "body": {
+          "contactsTexted": 0,
+          "contactsTotal": 0,
+          "familyAlerted": false,
+          "message": "You have no emergency contacts yet, so no one was alerted. Please call your local emergency number."
+        }
+      },
+      "told": "nobody on file"
+    },
+    {
+      "box": "no contacts on file, family alerted",
+      "given": { "contacts": 0, "textsThatFail": 0, "family": "alerted" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 0, "contactsTotal": 0, "familyAlerted": true }
+      },
+      "told": "family only"
+    },
+    {
+      "box": "no contacts on file, family blocked",
+      "given": { "contacts": 0, "textsThatFail": 0, "family": "blocked" },
+      "answer": {
+        "status": 409,
+        "body": {
+          "contactsTexted": 0,
+          "contactsTotal": 0,
+          "familyAlerted": false,
+          "message": "You have no emergency contacts yet, so no one was alerted. Please call your local emergency number."
+        }
+      },
+      "told": "nobody on file"
+    },
+    {
+      "box": "every text failed, no family",
+      "given": { "contacts": 2, "textsThatFail": 2, "family": "none" },
+      "answer": {
+        "status": 502,
+        "body": {
+          "contactsTexted": 0,
+          "contactsTotal": 2,
+          "familyAlerted": false,
+          "message": "Could not send SOS. Please call your emergency contact directly."
+        }
+      },
+      "told": "texts failed"
+    },
+    {
+      "box": "every text failed, family alerted",
+      "given": { "contacts": 2, "textsThatFail": 2, "family": "alerted" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 0, "contactsTotal": 2, "familyAlerted": true }
+      },
+      "told": "family only"
+    },
+    {
+      "box": "every text failed, family blocked",
+      "given": { "contacts": 2, "textsThatFail": 2, "family": "blocked" },
+      "answer": {
+        "status": 502,
+        "body": {
+          "contactsTexted": 0,
+          "contactsTotal": 2,
+          "familyAlerted": false,
+          "message": "Could not send SOS. Please call your emergency contact directly."
+        }
+      },
+      "told": "texts failed"
+    },
+    {
+      "box": "some texts sent, no family",
+      "given": { "contacts": 3, "textsThatFail": 1, "family": "none" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 2, "contactsTotal": 3, "familyAlerted": false }
+      },
+      "told": "some contacts texted"
+    },
+    {
+      "box": "some texts sent, family alerted",
+      "given": { "contacts": 3, "textsThatFail": 1, "family": "alerted" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 2, "contactsTotal": 3, "familyAlerted": true }
+      },
+      "told": "some contacts texted"
+    },
+    {
+      "box": "some texts sent, family blocked",
+      "given": { "contacts": 3, "textsThatFail": 1, "family": "blocked" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 2, "contactsTotal": 3, "familyAlerted": false }
+      },
+      "told": "some contacts texted"
+    },
+    {
+      "box": "every text sent, no family",
+      "given": { "contacts": 3, "textsThatFail": 0, "family": "none" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 3, "contactsTotal": 3, "familyAlerted": false }
+      },
+      "told": "all contacts texted"
+    },
+    {
+      "box": "every text sent, family alerted",
+      "given": { "contacts": 3, "textsThatFail": 0, "family": "alerted" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 3, "contactsTotal": 3, "familyAlerted": true }
+      },
+      "told": "all contacts texted"
+    },
+    {
+      "box": "every text sent, family blocked",
+      "given": { "contacts": 3, "textsThatFail": 0, "family": "blocked" },
+      "answer": {
+        "status": 200,
+        "body": { "contactsTexted": 3, "contactsTotal": 3, "familyAlerted": false }
+      },
+      "told": "all contacts texted"
+    }
+  ],
+  "secondPress": {
+    "status": 429,
+    "message": "Your alert was already sent. If no one has called you back, please call them or your local emergency number."
+  }
+}
