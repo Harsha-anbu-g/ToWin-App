@@ -146,6 +146,8 @@ describe('a tapped notification opens the screen it is about', () => {
     ],
     [{ type: 'need', needId: 'n1' }, '/my-requests'],
     [{ type: 'need_accepted', needId: 'n1', connectionId: 'c2' }, '/my-jobs'],
+    // A parent pressed SOS: the family member lands on the alert itself.
+    [{ type: 'family_alert' }, '/updates'],
   ])('%o opens %s', (data, path) => {
     expect(routeForNotification(data)).toBe(path);
   });
@@ -205,6 +207,7 @@ describe('a ping refreshes what it is about', () => {
     [{ type: 'message', connectionId: 'c1' }, [['unread-count'], ['connections'], ['messages', 'c1']]],
     [{ type: 'need', needId: 'n1' }, [['needs-mine'], ['needs-open']]],
     [{ type: 'need_accepted', needId: 'n1' }, [['connections'], ['needs-applications']]],
+    [{ type: 'family_alert' }, [['family-alerts']]],
   ])('%o refreshes %j', (data, keys) => {
     expect(queryKeysForNotification(data)).toEqual(keys);
   });
@@ -259,6 +262,7 @@ describe('the foreground policy', () => {
     [{ type: 'need', needId: 'n1' }],
     [{ type: 'need_accepted', needId: 'n1' }],
     [{ type: 'message', connectionId: 'c1', channel: 'FAMILY_UPDATES' }],
+    [{ type: 'family_alert' }],
   ])('%o shows a banner even in-app: no badge covers it', async (data) => {
     const handle = handlerFor();
     const answer = await handle(pingOf(data));

@@ -130,6 +130,8 @@ export function routeForNotification(data) {
   if (data.type === 'need') return '/my-requests';
   if (data.type === 'reunion' && data.reunionId) return `/reunion/${data.reunionId}`;
   if (data.type === 'need_accepted') return '/my-jobs';
+  // A parent pressed SOS: Updates lists it first, marked urgent.
+  if (data.type === 'family_alert') return '/updates';
   return null;
 }
 
@@ -162,6 +164,7 @@ export function queryKeysForNotification(data) {
   if (data.type === 'need') return [['needs-mine'], ['needs-open']];
   if (data.type === 'reunion') return [['reunions'], ['reunion', data.reunionId]];
   if (data.type === 'need_accepted') return [['connections'], ['needs-applications']];
+  if (data.type === 'family_alert') return [['family-alerts']];
   return [];
 }
 

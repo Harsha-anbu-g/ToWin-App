@@ -11,6 +11,8 @@ export default {
     "ஓர் உதவி முடிந்த பிறகே புள்ளிகள் கணக்கில் சேரும்",
   "See your score":
     "உங்கள் மதிப்பெண்ணைப் பாருங்கள்",
+  "SOS sent to {sent} of your {total} emergency contacts. Call them to be sure.":
+    "உங்கள் {total} அவசரத் தொடர்புகளில் {sent} பேருக்கு SOS அனுப்பப்பட்டது. உறுதிசெய்ய அவர்களை அழையுங்கள்.",
   "Trust starts with a friend. Add someone, finish a help together, and your points appear here.":
     "நம்பிக்கை ஒரு நண்பரில் தொடங்குகிறது. ஒருவரைச் சேருங்கள், சேர்ந்து ஓர் உதவியை முடியுங்கள், உங்கள் புள்ளிகள் இங்கே தோன்றும்.",
   "\n\nTheir message:\n“{message}”":
@@ -2415,6 +2417,8 @@ export default {
     "நீங்கள் ஒவ்வொருவரும் உங்கள் Instagram, Facebook அல்லது பிற சுயவிவரங்களைப் பகிர்கிறீர்கள்.",
   "You found them all. Slow and steady wins!":
     "எல்லாவற்றையும் கண்டுபிடித்தீர்கள். நிதானமே வெற்றி!",
+  "You have no emergency contacts yet, so no one was alerted. Please call your local emergency number.":
+    "உங்களுக்கு இன்னும் அவசரத் தொடர்புகள் இல்லை, அதனால் யாருக்கும் எச்சரிக்கை போகவில்லை. உங்கள் பகுதியின் அவசர எண்ணை அழையுங்கள்.",
   "You have no friendships yet. Once you do, you choose here which ones your family can see.":
     "உங்களுக்கு இன்னும் நட்புகள் இல்லை. நட்புகள் வந்ததும், உங்கள் குடும்பம் எவற்றைப் பார்க்கலாம் என்று இங்கே தேர்ந்தெடுப்பீர்கள்.",
   "You have not saved a copy yet.":
@@ -2471,6 +2475,8 @@ export default {
     "நீங்கள் அடுத்த படியைத் தொடங்கினீர்கள். {otherUserName} ஏற்கக் காத்திருக்கிறது.",
   "Your *Trust* Score":
     "உங்கள் *நம்பிக்கை* மதிப்பெண்",
+  "Your family will see your alert in Towinly. No text message was sent. If it is urgent, call them now.":
+    "உங்கள் குடும்பத்தினர் Towinly-இல் உங்கள் எச்சரிக்கையைப் பார்ப்பார்கள். குறுஞ்செய்தி எதுவும் அனுப்பப்படவில்லை. அவசரம் என்றால், இப்போதே அவர்களை அழையுங்கள்.",
   "Your ID is verified. It earns profile trust points.":
     "உங்கள் அடையாள அட்டை சரிபார்க்கப்பட்டது. அது சுயவிவர நம்பிக்கைப் புள்ளிகளைத் தருகிறது.",
   "Your Keyholders":

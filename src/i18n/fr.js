@@ -10,6 +10,8 @@ export default {
     "Les points comptent une fois une aide terminée",
   "See your score":
     "Voir votre score",
+  "SOS sent to {sent} of your {total} emergency contacts. Call them to be sure.":
+    "SOS envoyé à {sent} de vos {total} contacts d'urgence. Appelez-les pour en être sûr.",
   "Trust starts with a friend. Add someone, finish a help together, and your points appear here.":
     "La confiance commence par un ami. Ajoutez quelqu'un, terminez une aide ensemble, et vos points apparaîtront ici.",
   "\n\nTheir message:\n“{message}”":
@@ -2414,6 +2416,8 @@ export default {
     "Vous partagez chacun votre Instagram, votre Facebook ou d'autres profils.",
   "You found them all. Slow and steady wins!":
     "Vous les avez toutes trouvées. Rien ne sert de courir!",
+  "You have no emergency contacts yet, so no one was alerted. Please call your local emergency number.":
+    "Vous n'avez pas encore de contact d'urgence, donc personne n'a été prévenu. Appelez le numéro d'urgence de votre région.",
   "You have no friendships yet. Once you do, you choose here which ones your family can see.":
     "Vous n'avez pas encore d'amitiés. Quand vous en aurez, vous choisirez ici celles que votre famille peut voir.",
   "You have not saved a copy yet.":
@@ -2470,6 +2474,8 @@ export default {
     "Vous avez commencé la prochaine étape. En attente de l'accord de {otherUserName}.",
   "Your *Trust* Score":
     "Votre score de *confiance*",
+  "Your family will see your alert in Towinly. No text message was sent. If it is urgent, call them now.":
+    "Votre famille verra votre alerte dans Towinly. Aucun SMS n'a été envoyé. Si c'est urgent, appelez vos proches maintenant.",
   "Your ID is verified. It earns profile trust points.":
     "Votre pièce d'identité est vérifiée. Elle vous donne des points de confiance.",
   "Your Keyholders":

@@ -70,15 +70,17 @@ describe('emergency contact API module', () => {
     expect(api.post).not.toHaveBeenCalled();
   });
 
-  test('sendSos posts to /emergency/sos with no body', async () => {
+  test('sendSos posts to /emergency/sos with no body and returns who was reached', async () => {
     // Arrange
-    api.post.mockResolvedValue({});
+    const outcome = { contactsTexted: 1, contactsTotal: 2, familyAlerted: true };
+    api.post.mockResolvedValue({ data: outcome });
 
     // Act
-    await sendSos();
+    const result = await sendSos();
 
     // Assert
     expect(api.post).toHaveBeenCalledWith('/emergency/sos');
+    expect(result).toEqual(outcome);
   });
 
   test('removeEmergencyContact deletes by id', async () => {

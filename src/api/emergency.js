@@ -47,10 +47,14 @@ export async function removeEmergencyContact(contactId) {
 }
 
 /**
- * Send an SOS: immediately alert every one of the signed-in person's
- * emergency contacts that they need help.
- * @returns {Promise<void>}
+ * Send an SOS: text every one of the signed-in person's emergency contacts
+ * that they need help, and alert their family in Towinly with a ping to each
+ * family phone. Rejects when it reached no one at all.
+ * @returns {Promise<{contactsTexted: number, contactsTotal: number, familyAlerted: boolean}>}
+ *   how many emergency contacts were texted, out of how many on file, and
+ *   whether family can see the alert. A text counts once sent, not once read.
  */
 export async function sendSos() {
-  await api.post('/emergency/sos');
+  const res = await api.post('/emergency/sos');
+  return res?.data;
 }

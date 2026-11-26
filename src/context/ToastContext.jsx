@@ -39,8 +39,9 @@ export function ToastProvider({ children }) {
     // "sent" / "saved" / errors (announce() picks the right one per platform).
     announce(message);
     // A toast carrying an action needs longer on screen — the person has to
-    // read it AND decide; 4s is the no-decision case.
-    const ttl = options.actionLabel ? 6000 : 4000;
+    // read it AND decide; 4s is the no-decision case. A caller with more to
+    // say than a glance holds (who an SOS did not reach) asks for its own time.
+    const ttl = options.duration ?? (options.actionLabel ? 6000 : 4000);
     timer.current = setTimeout(() => setToast(null), ttl);
   }, []);
 

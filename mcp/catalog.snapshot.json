@@ -528,7 +528,7 @@
     "fn": "sendSos",
     "tool": "towinly_send_sos",
     "file": "emergency.js",
-    "description": "Send an SOS: immediately alert every one of the signed-in person's emergency contacts that they need help.",
+    "description": "Send an SOS: text every one of the signed-in person's emergency contacts that they need help, and alert their family in Towinly with a ping to each family phone. Rejects when it reached no one at all.",
     "argNote": null,
     "readOnly": false,
     "destructive": true,

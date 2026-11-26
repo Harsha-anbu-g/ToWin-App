@@ -1,9 +1,11 @@
 // Emergency SOS — prominent but calm (red is semantic only, never themed).
-// Confirms before sending (HCI rule 5); POST /emergency/sos alerts all
-// emergency contacts (mirrors EmergencyContacts.jsx / NavBar).
+// Confirms before sending (HCI rule 5); POST /emergency/sos texts the emergency
+// contacts and alerts family (mirrors EmergencyContacts.jsx / NavBar). The
+// answer says who was reached, and the toast repeats exactly that.
 import { useMutation } from '@tanstack/react-query';
 import { Text, View } from 'react-native';
 import { sendSos } from '../../api/emergency';
+import { SOS_NOTICE_MS, sosFailedMessage, sosSentMessage } from '../../lib/sosOutcome';
 import Button from '../ui/Button';
 import { useConfirm } from '../../context/ConfirmContext';
 import { useToast } from '../../context/ToastContext';
@@ -17,8 +19,11 @@ export default function SosCard() {
 
   const sos = useMutation({
     mutationFn: sendSos,
-    onSuccess: () => showToast(tr('SOS sent to all emergency contacts.'), 'success'),
-    onError: () => showToast(tr('Failed to send SOS. Please call your contacts directly.'), 'error'),
+    onSuccess: (outcome) => {
+      const sent = sosSentMessage(outcome);
+      showToast(sent.text, sent.ok ? 'success' : 'error', { duration: SOS_NOTICE_MS });
+    },
+    onError: (err) => showToast(sosFailedMessage(err), 'error', { duration: SOS_NOTICE_MS }),
   });
 
   const confirmSos = async () => {
