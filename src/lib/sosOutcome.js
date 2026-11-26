@@ -48,7 +48,14 @@ export function sosSentMessage(outcome) {
   const facts = readFacts(outcome);
   if (!facts) return { ok: false, text: CALL_YOUR_CONTACTS() };
   const { sent, total, family } = facts;
-  if (total > 0 && sent >= total) return { ok: true, text: tr('SOS sent to all emergency contacts.') };
+  if (total > 0 && sent >= total) {
+    // Sent is not the same as read: a phone can be off or out of signal, and
+    // nothing tells us. So even a full send says what to do if it stays quiet.
+    return {
+      ok: true,
+      text: `${tr('SOS sent to all emergency contacts.')} ${tr('If no one calls you back in a few minutes, call them.')}`,
+    };
+  }
   if (sent > 0) {
     return {
       ok: false,

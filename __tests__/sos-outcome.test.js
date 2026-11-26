@@ -4,10 +4,18 @@ import { sosFailedMessage, sosSentMessage } from '../src/lib/sosOutcome';
 
 describe('sosSentMessage', () => {
   test('says all contacts were told only when every one of them was texted', () => {
-    expect(sosSentMessage({ contactsTexted: 2, contactsTotal: 2, familyAlerted: false })).toEqual({
-      ok: true,
-      text: 'SOS sent to all emergency contacts.',
-    });
+    const sent = sosSentMessage({ contactsTexted: 2, contactsTotal: 2, familyAlerted: false });
+
+    expect(sent.ok).toBe(true);
+    expect(sent.text).toContain('SOS sent to all emergency contacts.');
+  });
+
+  test('says what to do if nobody answers, because sent is not the same as read', () => {
+    const sent = sosSentMessage({ contactsTexted: 1, contactsTotal: 1, familyAlerted: true });
+
+    expect(sent.text).toBe(
+      'SOS sent to all emergency contacts. If no one calls you back in a few minutes, call them.'
+    );
   });
 
   test('names the count when a text did not go out', () => {

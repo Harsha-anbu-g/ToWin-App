@@ -6,6 +6,8 @@ export default {
     "Une amitié s'ajoute à votre score dès qu'une aide entre vous deux est terminée. Si votre score a baissé, voilà pourquoi.",
   "Counts after a help is finished":
     "Compte une fois une aide terminée",
+  "If no one calls you back in a few minutes, call them.":
+    "Si personne ne vous rappelle dans quelques minutes, appelez-les.",
   "Points count after a help is finished":
     "Les points comptent une fois une aide terminée",
   "See your score":
